@@ -87,7 +87,7 @@ export default function HelpSupportPage() {
 
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* Hero */}
-        <div className="relative overflow-hidden rounded-2xl border border-[var(--text-color)]/20 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 backdrop-blur-xl px-6 py-8 md:px-10 md:py-12 text-center">
+        <div className="relative overflow-hidden rounded-2xl border border-[var(--text-color)]/20 bg-gradient-to-br from-[#142B4A]/5 via-teal-500/5 to-[#0D9488]/10 backdrop-blur-xl px-6 py-8 md:px-10 md:py-12 text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-500/20 mb-4">
             <LifeBuoy className="w-6 h-6 text-indigo-500" />
           </div>
