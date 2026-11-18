@@ -23,6 +23,7 @@ import {
   StudyLibraryResultsHeader,
 } from "./StudyLibraryStates";
 import { StudySetCard } from "./StudySetCard";
+import { useFeedback } from "@/lib/feedback/feedback-context";
 
 interface StudyLibraryViewProps {
   isPublic?: boolean;
@@ -84,7 +85,7 @@ export function StudyLibraryView({
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [retryCount, setRetryCount] = React.useState(0);
-  const [toast, setToast] = React.useState<string | null>(null);
+  const { showSuccess, showError, showInfo } = useFeedback();
 
   // Debounce search input
   React.useEffect(() => {
@@ -100,13 +101,6 @@ export function StudyLibraryView({
     setPathway(queryTrack);
     setCategory(queryCategory);
   }, [queryTrack, queryCategory]);
-
-  // Auto-dismiss toast notifications
-  React.useEffect(() => {
-    if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), 3500);
-    return () => window.clearTimeout(timer);
-  }, [toast]);
 
   // Fetch data-driven filters & live catalog summary once
   React.useEffect(() => {
@@ -204,11 +198,11 @@ export function StudyLibraryView({
       setStudySets((prev) =>
         prev.map((item) => (item.id === studySet.id ? { ...item, isSaved: !nextSaved } : item))
       );
-      setToast(res.message || "Could not update your personal library.");
+      showError(res.message || "Could not update your personal library.");
       return;
     }
 
-    setToast(nextSaved ? "Saved to My Library." : "Removed from My Library.");
+    showSuccess(nextSaved ? "Saved to My Library." : "Removed from My Library.");
   };
 
   const handleClearAllFilters = () => {
@@ -229,16 +223,6 @@ export function StudyLibraryView({
   return (
     <div className="space-y-6">
       <StudyLibraryHeader isPublic={isPublic} summary={summary} />
-
-      {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed bottom-5 right-5 z-50 rounded-xl border border-brand-teal/40 bg-surface px-4 py-2.5 text-xs font-semibold text-foreground shadow-lg"
-        >
-          {toast}
-        </div>
-      )}
 
       <StudyLibrarySearch
         value={searchInput}
@@ -329,7 +313,7 @@ export function StudyLibraryView({
                 studySet={studySet}
                 isPublic={isPublic}
                 onToggleSave={handleToggleSave}
-                onNotify={setToast}
+                onNotify={(msg) => showInfo(msg)}
               />
             ))}
           </div>
