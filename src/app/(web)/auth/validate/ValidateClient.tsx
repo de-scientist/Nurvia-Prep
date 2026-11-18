@@ -166,31 +166,34 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
 
     const loginHref = `/auth?tab=login${ctx?.email ? `&email=${encodeURIComponent(ctx.email)}` : ""}`;
     const input =
-        "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500";
+        "w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]";
 
     return (
-        <div className="flex items-start justify-center bg-gradient-to-br from-indigo-100 via-white to-blue-100 px-3 pt-8 pb-6 min-h-screen">
-            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 md:p-7">
-                <div className="text-center mb-5">
-                    <h1 className="text-xl md:text-2xl font-extrabold text-blue-800">{APP_NAME}</h1>
-                    <p className="text-xs text-gray-600">{REASON_LABEL[reason] ?? "Verification"}</p>
+        <div className="flex items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1220] px-4 py-12 min-h-[80vh]">
+            <div className="w-full max-w-md bg-white dark:bg-[#111C2E] rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 p-6 md:p-8">
+                <div className="text-center mb-6">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3 py-0.5 text-[11px] font-semibold text-[#0D9488] dark:text-teal-300 mb-2">
+                        NURVIA Account Verification
+                    </div>
+                    <h1 className="text-xl md:text-2xl font-extrabold text-[#142B4A] dark:text-white">{APP_NAME}</h1>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{REASON_LABEL[reason] ?? "Verification"}</p>
                 </div>
 
                 {phase === "checking" && (
-                    <div className="py-10 text-center text-gray-600">
-                        <FiLoader className="mx-auto mb-3 h-8 w-8 animate-spin text-blue-600" />
-                        <p className="text-sm font-medium">Validating . . . ⚓</p>
+                    <div className="py-10 text-center text-slate-600 dark:text-slate-300">
+                        <FiLoader className="mx-auto mb-3 h-8 w-8 animate-spin text-[#0D9488]" />
+                        <p className="text-sm font-medium">Validating…</p>
                     </div>
                 )}
 
                 {phase === "success" && (
                     <div className="py-6 text-center">
-                        <FiCheckCircle className="mx-auto mb-3 h-14 w-14 text-green-500" />
-                        <h2 className="text-lg font-bold text-green-700">Success</h2>
-                        <p className="mt-2 text-sm text-gray-700">{message}</p>
+                        <FiCheckCircle className="mx-auto mb-3 h-14 w-14 text-[#0D9488]" />
+                        <h2 className="text-lg font-bold text-[#0F172A] dark:text-white">Verified</h2>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{message}</p>
                         <Link
                             href={loginHref}
-                            className="mt-6 inline-block rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+                            className="mt-6 inline-block rounded-xl bg-[#142B4A] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#1E3A5F]"
                         >
                             Continue to Login
                         </Link>
@@ -199,20 +202,20 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
 
                 {phase === "error" && (
                     <div className="py-6 text-center">
-                        <FiAlertTriangle className="mx-auto mb-3 h-14 w-14 text-red-500" />
-                        <h2 className="text-lg font-bold text-red-700">Validation failed</h2>
-                        <p className="mt-2 text-sm text-gray-700">{message}</p>
+                        <FiAlertTriangle className="mx-auto mb-3 h-14 w-14 text-rose-500" />
+                        <h2 className="text-lg font-bold text-rose-700 dark:text-rose-400">Validation failed</h2>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{message}</p>
                         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
                             <button
                                 type="button"
                                 onClick={() => { ran.current = true; setPhase("form"); setMessage(""); }}
-                                className="rounded-lg border border-indigo-600 px-5 py-2 text-sm font-semibold text-indigo-600 hover:bg-indigo-50"
+                                className="rounded-xl border border-slate-300 dark:border-slate-700 px-5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-[#0D9488] hover:text-[#0D9488]"
                             >
                                 Enter a code instead
                             </button>
                             <Link
                                 href="/auth/recovery/password"
-                                className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                                className="rounded-xl bg-[#142B4A] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#1E3A5F]"
                             >
                                 Request a new link
                             </Link>
@@ -222,11 +225,11 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
 
                 {phase === "form" && (
                     <form onSubmit={submitCode} className="space-y-4">
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-slate-600 dark:text-slate-300">
                             Enter the email you used and the verification code we sent you.
                         </p>
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">What are you doing?</label>
+                            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Action</label>
                             <select value={reason} onChange={(e) => setReason(e.target.value)} className={input}>
                                 {Object.entries(REASON_LABEL).map(([k, v]) => (
                                     <option key={k} value={k}>{v}</option>
@@ -234,11 +237,11 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
                             </select>
                         </div>
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
+                            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Email</label>
                             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={input} />
                         </div>
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">Verification code</label>
+                            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Verification code</label>
                             <input
                                 required
                                 value={code}
@@ -248,7 +251,7 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
                                 className={`${input} font-mono tracking-widest`}
                             />
                         </div>
-                        <button type="submit" className="w-full rounded-lg bg-blue-600 py-2 font-semibold text-white hover:bg-blue-700">
+                        <button type="submit" className="w-full rounded-xl bg-[#142B4A] py-3 text-sm font-semibold text-white hover:bg-[#1E3A5F]">
                             Validate
                         </button>
                     </form>
@@ -256,13 +259,13 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
 
                 {phase === "credentials" && ctx && (
                     <form onSubmit={submitCredentials} className="space-y-4">
-                        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+                        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 px-3.5 py-2.5 text-sm text-emerald-800 dark:text-emerald-200">
                             <FiCheckCircle className="shrink-0" />
                             Verified {ctx.email}. Choose your new credentials.
                         </div>
 
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-700">Login method</label>
+                            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Login method</label>
                             <select value={method} onChange={(e) => setMethod(e.target.value as Method)} className={input}>
                                 <option value="password">Password</option>
                                 <option value="pin">PIN</option>
@@ -273,12 +276,12 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
                         {method !== "pin" && (
                             <>
                                 <div>
-                                    <label className="mb-1 block text-sm font-medium text-gray-700">New password</label>
+                                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">New password</label>
                                     <input type="password" autoComplete="new-password" maxLength={24} value={password}
                                         onChange={(e) => setPassword(e.target.value)} className={input} />
                                 </div>
                                 <div>
-                                    <label className="mb-1 block text-sm font-medium text-gray-700">Confirm password</label>
+                                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Confirm password</label>
                                     <input type="password" autoComplete="new-password" maxLength={24} value={passwordConfirmation}
                                         onChange={(e) => setPasswordConfirmation(e.target.value)} className={input} />
                                 </div>
@@ -288,12 +291,12 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
                         {method !== "password" && (
                             <>
                                 <div>
-                                    <label className="mb-1 block text-sm font-medium text-gray-700">New PIN (4 to 24 digits)</label>
+                                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">New PIN (4 to 24 digits)</label>
                                     <input inputMode="numeric" maxLength={24} value={pin}
                                         onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} className={input} />
                                 </div>
                                 <div>
-                                    <label className="mb-1 block text-sm font-medium text-gray-700">Confirm PIN</label>
+                                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Confirm PIN</label>
                                     <input inputMode="numeric" maxLength={24} value={pinConfirmation}
                                         onChange={(e) => setPinConfirmation(e.target.value.replace(/\D/g, ""))} className={input} />
                                 </div>
@@ -301,12 +304,12 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
                         )}
 
                         {formError && (
-                            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</p>
+                            <p role="alert" className="rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/30 px-3.5 py-2.5 text-sm text-rose-800 dark:text-rose-200">{formError}</p>
                         )}
 
                         <button type="submit" disabled={saving}
-                            className="w-full rounded-lg bg-blue-600 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-70">
-                            {saving ? "Saving . . . ⚓" : "Save and continue"}
+                            className="w-full rounded-xl bg-[#142B4A] py-3 text-sm font-semibold text-white hover:bg-[#1E3A5F] disabled:opacity-70">
+                            {saving ? "Saving…" : "Save and continue"}
                         </button>
                     </form>
                 )}

@@ -86,65 +86,68 @@ export default function SupportPage() {
   // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col items-center justify-center bg-gradient-to-br from-blue-300 to-white px-4 py-8 min-h-screen">
+    <div className="flex flex-col items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1220] px-4 py-12 min-h-[85vh]">
 
       {/* App Title / Branding */}
-      <div className="flex flex-col items-center justify-center mb-3 text-center">
+      <div className="flex flex-col items-center justify-center mb-6 text-center">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3.5 py-1 text-xs font-semibold text-[#0D9488] dark:text-teal-300 mb-2">
+          NURVIA Learner Support
+        </div>
         <div className="flex items-center justify-center gap-2">
-          <span className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-500 drop-shadow-md">
+          <span className="text-2xl md:text-3xl font-extrabold text-slate-600 dark:text-slate-300">
             Support at
           </span>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-blue-800 drop-shadow-md">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-[#142B4A] dark:text-white">
             {APP_NAME}
           </h1>
-          <FiCheckCircle className="text-green-500 text-xl md:text-2xl drop-shadow-sm" title="Verified" />
+          <FiCheckCircle className="text-[#0D9488] text-xl md:text-2xl" title="Verified" />
         </div>
-        <p className="text-xs text-gray-600 mt-1">
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
           Having trouble? Tell us what happened and we&apos;ll help you sort it out.
         </p>
       </div>
 
       {/* Card Container */}
-      <div className="max-w-5xl w-full bg-white rounded-2xl shadow-2xl grid grid-cols-1 md:grid-cols-2 overflow-hidden">
+      <div className="max-w-5xl w-full bg-white dark:bg-[#111C2E] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg grid grid-cols-1 md:grid-cols-2 overflow-hidden">
 
         {/* LEFT SIDE: Photo */}
-        <div className="hidden md:flex relative w-full h-full items-end justify-center overflow-hidden">
+        <div className="hidden md:flex relative w-full h-full items-end justify-center overflow-hidden bg-[#142B4A]">
           <Image
             src="/web/auth/support/supportFoto.jpg"
             alt="Support"
             layout="fill"
             objectFit="cover"
             priority
-            className="z-0"
+            className="z-0 opacity-85"
           />
 
-          <div className="z-10 w-full p-8 bg-gradient-to-t from-black/70 via-black/40 to-transparent text-white text-center">
-            <h2 className="text-3xl font-extrabold drop-shadow-lg">We&apos;ve Got You ⚓</h2>
-            <p className="text-sm mt-2 drop-shadow-md">
-              Let us know what&apos;s going on and our team will follow up directly.
+          <div className="z-10 w-full p-8 bg-gradient-to-t from-[#142B4A] via-[#142B4A]/70 to-transparent text-white text-left">
+            <h2 className="text-2xl font-extrabold">We&apos;ve Got You Covered</h2>
+            <p className="text-sm text-slate-200 mt-1.5">
+              Let us know what&apos;s going on and our support team will follow up directly.
             </p>
           </div>
         </div>
 
         {/* RIGHT SIDE: Form */}
-        <div className="w-full p-8 space-y-6 border-l border-gray-200">
+        <div className="w-full p-8 space-y-6 border-l border-slate-200 dark:border-slate-800">
 
           {/* Alert Message */}
           {(error || success) && (
             <div className="flex justify-center">
               <div
-                className={`relative max-w-md w-full px-4 py-3 rounded-xl shadow-md text-sm flex items-center gap-3
-                ${error ? 'bg-red-100 border border-red-200 text-red-800' : ''}
-                ${success ? 'bg-green-100 border border-green-200 text-green-800' : ''}`}
+                role="alert"
+                className={`relative max-w-md w-full px-4 py-3 rounded-xl text-sm flex items-center gap-3 ${
+                  error
+                    ? 'bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200'
+                    : 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                }`}
               >
-                <span className="flex items-center justify-center leading-none">
-                  {error ? '⚠️' : '✔️'}
-                </span>
                 <span className="flex-1 leading-tight">{error || success}</span>
                 <button
                   type="button"
                   onClick={() => { setError(''); setSuccess('') }}
-                  className={`absolute top-2 right-2 font-bold hover:text-gray-700 ${error ? 'text-red-800' : 'text-green-800'}`}
+                  className="opacity-70 hover:opacity-100"
                 >
                   ✕
                 </button>
@@ -155,12 +158,12 @@ export default function SupportPage() {
           {!submitted ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
                   Email
-                  {userLoading && <span className="ml-2 text-xs text-gray-400">(checking session . . .)</span>}
+                  {userLoading && <span className="ml-2 text-xs text-slate-400 font-normal">(checking session…)</span>}
                 </label>
                 <div className="relative">
-                  <FiMail className="absolute top-3 left-3 text-gray-400" />
+                  <FiMail className="absolute top-3 left-3 text-slate-400" />
                   <input
                     type="email"
                     name="email"
@@ -168,14 +171,15 @@ export default function SupportPage() {
                     readOnly={!!user}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${user ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'text-cyan-800'
-                      }`}
+                    className={`w-full border border-slate-300 dark:border-slate-700 rounded-xl pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] ${
+                      user ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-white dark:bg-slate-900 text-[#0F172A] dark:text-white'
+                    }`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
                   Phone
                 </label>
                 <PhoneInput
@@ -185,23 +189,23 @@ export default function SupportPage() {
                   onChange={handlePhoneChange}
                   name="phone"
                   disabled={!!user}
-                  className={`w-full border border-gray-300 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all ${user ? 'bg-gray-100 cursor-not-allowed' : ''
-                    }`}
-                  countrySelectProps={{ className: 'text-blue-600 text-sm' }}
+                  className={`w-full border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 focus-within:ring-2 focus-within:ring-[#0D9488]/30 focus-within:border-[#0D9488] transition-all ${
+                    user ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed' : 'bg-white dark:bg-slate-900'
+                  }`}
+                  countrySelectProps={{ className: 'text-[#0D9488] text-sm' }}
                 />
 
                 <style jsx global>{`
                   .PhoneInputInput {
                     width: 100%;
-                    font-size: 1rem;
-                    padding: 0rem 0;
-                    color: #1f2937;
+                    font-size: 0.875rem;
+                    padding: 0;
+                    color: inherit;
                     background-color: transparent;
                     border: none;
                     outline: none;
                     box-shadow: none;
                   }
-
                   .PhoneInputInput:focus {
                     outline: none;
                     box-shadow: none;
@@ -210,13 +214,13 @@ export default function SupportPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  What&apos;s this about ?
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  What&apos;s this about?
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value as IssueCategory)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
                 >
                   <option value="Unable To Access Account">Unable To Access Account</option>
                   <option value="Account Recovery Problem">Account Recovery Problem</option>
@@ -227,7 +231,7 @@ export default function SupportPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
                   Describe your issue
                 </label>
                 <textarea
@@ -235,54 +239,52 @@ export default function SupportPage() {
                   rows={5}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Tell us what happened, what you expected, and any error messages you saw . . ."
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  placeholder="Tell us what happened, what you expected, and any error messages you saw…"
+                  className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] resize-none"
                 />
-                <p className="text-xs text-gray-400 mt-1">{message.length} characters</p>
+                <p className="text-xs text-slate-400 mt-1">{message.length} characters</p>
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading || userLoading}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full bg-[#142B4A] hover:bg-[#1E3A5F] text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Submitting . . . ⚓' : userLoading ? 'Checking Your Session . . . ⚓' : 'Submit the Issue'}
+                {isLoading ? 'Submitting…' : userLoading ? 'Checking Session…' : 'Submit Issue'}
               </button>
             </form>
           ) : (
-            <div className="text-center space-y-3">
-              <FiCheckCircle className="text-green-500 text-4xl mx-auto" />
-              <h3 className="text-lg font-semibold text-gray-800">Thanks for Reaching Out ⚓</h3>
-              <p className="text-sm text-gray-600">
-                We&apos;ve logged your issue and will follow up at {email} or by phoneasap.
+            <div className="text-center space-y-3 py-6">
+              <FiCheckCircle className="text-[#0D9488] text-4xl mx-auto" />
+              <h3 className="text-lg font-bold text-[#0F172A] dark:text-white">Thanks for Reaching Out</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                We&apos;ve logged your issue and will follow up at {email} or by phone shortly.
               </p>
             </div>
           )}
 
           {/* Links */}
-          <div className="mt-6 flex flex-row space-x-3 w-full">
+          <div className="mt-6 flex flex-row gap-3 w-full">
             <Link
               href="/auth/login"
-              className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
+              className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
             >
               Back to Login
             </Link>
             <Link
               href="/auth/recovery/password"
-              className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
+              className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
             >
-              Forgot Password ?
+              Forgot Password?
             </Link>
           </div>
 
-
-          {/* Links */}
-          <div className="mt-6 flex flex-row space-x-3 w-full">
+          <div className="mt-3 flex flex-row w-full">
             <Link
               href="/auth/recovery/social"
-              className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
+              className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
             >
-              Switch to use Email and Password / Pin  ?
+              Switch to Email and Password / PIN?
             </Link>
           </div>
 
