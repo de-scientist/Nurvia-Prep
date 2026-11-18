@@ -107,10 +107,10 @@ export function CustomMiniCalculator() {
                         }
                         className={`
                             text-sm font-bold py-3 rounded-xl transition-all active:scale-95
-                            ${k === "=" ? "bg-blue-600 text-white"
-                              : k === "C" ? "bg-red-500 text-white"
-                              : ["÷","×","-","+"].includes(k) ? "bg-amber-500 text-white"
-                              : "bg-slate-200 dark:bg-slate-700"}
+                            ${k === "=" ? "bg-[#0D9488] hover:bg-[#0F766E] text-white shadow-xs"
+                              : k === "C" ? "bg-[#BE123C] hover:bg-rose-800 text-white"
+                              : ["÷","×","-","+"].includes(k) ? "bg-[#142B4A] hover:bg-[#0F2036] text-white"
+                              : "bg-slate-100 hover:bg-slate-200 text-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100"}
                         `}
                     >
                         {k}
