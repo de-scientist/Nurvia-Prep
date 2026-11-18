@@ -54,7 +54,7 @@ const SECTIONS: ActionSection[] = [
             { title: "Update 2FA", description: "Manage two-factor authentication on your account.", href: "/auth/update/2fa", icon: FiShield },
             {
                 title: "Switch to Email Login",
-                description: "Signed up with Google, Apple, FaFacebookF, GitHub, LinkedIn, or Microsoft? Set up direct email + password/PIN login here.",
+                description: "Signed up with Google, Apple, Facebook, GitHub, LinkedIn, or Microsoft? Set up direct email + password/PIN login here.",
                 href: "/auth/recovery/social",
                 icon: FiRefreshCw,
             },
@@ -129,24 +129,17 @@ function ActionCard({ title, description, href, icon: Icon }: ActionLink) {
     return (
         <Link
             href={href}
-            className="group flex flex-col gap-3 rounded-2xl border border-[var(--text-color)]/15 bg-[var(--content-bg)] p-4 hover:border-indigo-400/50 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
+            className="group flex flex-col gap-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-5 hover:border-[#0D9488]/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
         >
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/15 flex items-center justify-center group-hover:bg-indigo-500/25 transition-colors">
-                <Icon className="w-4.5 h-4.5 text-indigo-500" />
+            <div className="w-10 h-10 rounded-xl bg-[#0D9488]/10 flex items-center justify-center group-hover:bg-[#0D9488]/20 transition-colors">
+                <Icon className="w-5 h-5 text-[#0D9488] dark:text-teal-300" />
             </div>
             <div className="space-y-1">
-                <h3 className="font-bold text-sm text-[var(--text-color)]">{title}</h3>
-                <p className="text-xs opacity-65 text-[var(--text-color)] leading-relaxed">{description}</p>
+                <h3 className="font-bold text-sm text-[#0F172A] dark:text-white">{title}</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{description}</p>
             </div>
-            <span
-                className="mt-auto mx-auto inline-flex items-center justify-center rounded-xl
-             bg-gradient-to-r from-indigo-600 to-purple-600
-             px-5 py-1 text-xs font-bold text-white
-             shadow-md shadow-indigo-500
-             transition-all duration-200
-             hover:scale-105 hover:shadow-lg"
-            >
-                Click & Open Now  →
+            <span className="mt-auto inline-flex items-center justify-center rounded-xl bg-[#142B4A] group-hover:bg-[#0D9488] px-4 py-2 text-xs font-semibold text-white transition-colors">
+                Open Route →
             </span>
         </Link>
     );
@@ -156,33 +149,27 @@ function ActionCard({ title, description, href, icon: Icon }: ActionLink) {
 
 export default function ActionsPage() {
     return (
-        <main
-            className="py-5 transition-all duration-300 ease-in-out overflow-x-hidden"
-            style={{
-                backgroundColor: "var(--content-bg)",
-                color: "var(--content-text)",
-            }}
-        >
-            <div className="p-3 md:p-4 space-y-3 w-full max-w-7xl mx-auto">
-
+        <main className="py-10 bg-[#F8FAFC] dark:bg-[#0B1220] text-[#0F172A] dark:text-slate-100 overflow-x-hidden">
+            <div className="px-4 sm:px-6 lg:px-8 space-y-8 w-full max-w-7xl mx-auto">
                 {/* Hero */}
                 <div className="text-center space-y-2">
-                    <h1 className="text-2xl md:text-3xl font-bold text-[var(--text-color)]">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3.5 py-1 text-xs font-semibold text-[#0D9488] dark:text-teal-300">
+                        Platform Navigation Directory
+                    </div>
+                    <h1 className="text-2xl md:text-3xl font-extrabold text-[#0F172A] dark:text-white">
                         Everywhere You Can Go
                     </h1>
-                    <p className="text-sm opacity-65 text-[var(--text-color)] max-w-2xl mx-auto">
-                        A single place to jump into your account, explore our programs, or find your dashboard.
+                    <p className="text-sm text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+                        A single directory to jump into your account, explore our clinical programmes, or open your learner dashboard.
                     </p>
                 </div>
 
                 {/* Sections */}
                 {SECTIONS.map((section) => (
                     <section key={section.title} className="space-y-4">
-                        <div
-                            className={`rounded-2xl border border-[var(--text-color)]/15 bg-gradient-to-br ${section.gradient} px-5 py-4`}
-                        >
-                            <h2 className="text-lg font-bold text-[var(--text-color)]">{section.title}</h2>
-                            <p className="text-xs opacity-70 text-[var(--text-color)] mt-1">{section.subtitle}</p>
+                        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] px-6 py-4">
+                            <h2 className="text-lg font-bold text-[#0F172A] dark:text-white">{section.title}</h2>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{section.subtitle}</p>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -192,7 +179,6 @@ export default function ActionsPage() {
                         </div>
                     </section>
                 ))}
-
             </div>
         </main>
     );
