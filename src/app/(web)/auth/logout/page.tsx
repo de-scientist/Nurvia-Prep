@@ -33,41 +33,41 @@ export default function WebLogoutPage() {
   const [message, setMessage] = useState('')
 
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-blue-300 to-white px-4 py-8">
+    <div className="min-h-[80vh] flex flex-col items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1220] px-4 py-12">
 
       <Suspense fallback={null}>
         <LogoutSearchParamsHandler onMessage={setMessage} />
       </Suspense>
 
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden text-center">
+      <div className="max-w-md w-full bg-white dark:bg-[#111C2E] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg overflow-hidden text-center">
 
         {/* Top image / brand strip */}
-        <div className="relative w-full h-40 bg-gradient-to-br from-indigo-100 via-purple-100 to-cyan-100 flex items-center justify-center">
+        <div className="relative w-full h-36 bg-[#142B4A] flex items-center justify-center">
           <Image
             src="/web/auth/login/loginFoto.jpg"
             alt="See you soon"
             fill
             style={{ objectFit: 'cover' }}
-            className="opacity-80"
+            className="opacity-70"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-          <FiHeart className="absolute text-white text-4xl drop-shadow-lg animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#142B4A] via-[#142B4A]/40 to-transparent" />
+          <FiHeart className="absolute text-white text-3xl drop-shadow-md" />
         </div>
 
         <div className="p-8 space-y-4">
-          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-800">
-            We&apos;ll Miss You !
+          <h1 className="text-2xl font-extrabold text-[#0F172A] dark:text-white">
+            Signed Out Safely
           </h1>
 
-          <p className="text-sm text-gray-600">
-            You&apos;ve been signed out of <span className="font-semibold text-blue-700">{APP_NAME}</span>.
-            Thanks for spending time with us today — your progress is safe and waiting for you.
+          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            You&apos;ve been signed out of <span className="font-semibold text-[#0D9488]">{APP_NAME}</span>.
+            Thanks for studying with us today — your progress is saved and waiting for you.
           </p>
 
           {message && (
             <div className="flex justify-center">
-              <div className="max-w-sm w-full bg-green-50 border border-green-200 text-green-800 px-4 py-2.5 rounded-xl shadow-sm text-xs">
+              <div className="max-w-sm w-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 px-4 py-2.5 rounded-xl text-xs">
                 {message}
               </div>
             </div>
@@ -76,7 +76,7 @@ export default function WebLogoutPage() {
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <Link
               href="/"
-              className="flex-1 inline-flex items-center justify-center gap-2 bg-white border border-indigo-600 text-indigo-600 font-semibold py-2.5 px-4 rounded-lg hover:bg-indigo-50 hover:scale-[1.02] transition-all duration-300"
+              className="flex-1 inline-flex items-center justify-center gap-2 bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
             >
               <FiHome />
               Go Home
@@ -84,14 +84,14 @@ export default function WebLogoutPage() {
 
             <Link
               href="/auth/login"
-              className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-lg hover:bg-blue-700 hover:scale-[1.02] transition-all duration-300"
+              className="flex-1 inline-flex items-center justify-center gap-2 bg-[#142B4A] text-white text-xs font-semibold py-2.5 px-4 rounded-xl hover:bg-[#1E3A5F] transition"
             >
               <FiLogIn />
-              Login Again
+              Sign In Again
             </Link>
           </div>
 
-          <p className="text-[11px] text-gray-400 pt-2">
+          <p className="text-[11px] text-slate-400 pt-2">
             For your security, remember to close this tab on shared or public devices.
           </p>
         </div>

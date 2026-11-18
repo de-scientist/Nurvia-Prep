@@ -126,27 +126,31 @@ export default function GoogleOneTapPage() {
         strategy="afterInteractive"
       />
 
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-800">Continue with Google</h1>
-        <p className="text-sm text-gray-600 text-center max-w-sm">
-          Choose your Google account to continue. This uses Google&apos;s One Tap sign-in.
-        </p>
-
-        {error && (
-          <div className="max-w-md w-full bg-yellow-100 border border-red-200 text-red-800 px-4 py-3 rounded-xl shadow-md text-sm flex items-center gap-3">
-            <span className="text-red-600 text-base shrink-0">⚓</span>
-            <span className="flex-1 leading-tight">{error}</span>
+      <div className="flex flex-col items-center justify-center min-h-[65vh] bg-[#F8FAFC] dark:bg-[#0B1220] px-4 py-12">
+        <div className="max-w-md w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-8 shadow-sm text-center flex flex-col items-center gap-4">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3 py-0.5 text-[11px] font-semibold text-[#0D9488] dark:text-teal-300">
+            NURVIA Single Sign-On
           </div>
-        )}
+          <h1 className="text-2xl font-extrabold text-[#0F172A] dark:text-white">Continue with Google</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-300 text-center max-w-sm">
+            Choose your Google account to continue. This uses Google&apos;s One Tap sign-in.
+          </p>
 
-        {status === 'loading' && (
-          <p className="text-sm text-blue-600">Signing you in . . . ⚓</p>
-        )}
-        {status === 'success' && (
-          <p className="text-sm text-green-600">Success! Redirecting . . . ⚓</p>
-        )}
+          {error && (
+            <div role="alert" className="w-full bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 px-4 py-3 rounded-xl text-sm flex items-center gap-3">
+              <span className="flex-1 leading-tight">{error}</span>
+            </div>
+          )}
 
-        <div ref={buttonRef} />
+          {status === 'loading' && (
+            <p className="text-sm font-medium text-[#0D9488]">Signing you in…</p>
+          )}
+          {status === 'success' && (
+            <p className="text-sm font-medium text-emerald-600">Success! Redirecting…</p>
+          )}
+
+          <div ref={buttonRef} className="mt-2" />
+        </div>
       </div>
     </>
   )
