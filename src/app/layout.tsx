@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { LeftSidebarProvider } from "@/lib/contexts/panel/layout/includes/sidebar/LeftSidebarContext";
 import { RightSidebarProvider } from "@/lib/contexts/panel/layout/includes/sidebar/RightSidebarContext";
 import { ThemeProvider } from "@/lib/contexts/panel/layout/theme/PanelThemeContext";
+import { AuthProvider } from "@/components/auth/auth-provider";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -38,11 +39,13 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={`${plusJakartaSans.variable} ${inter.variable}`}>
       <body className="antialiased bg-background text-foreground selection:bg-[#0D9488] selection:text-white transition-colors duration-200">
         <ThemeProvider>
-          <LeftSidebarProvider>
-            <RightSidebarProvider>
-              {children}
-            </RightSidebarProvider>
-          </LeftSidebarProvider>
+          <AuthProvider>
+            <LeftSidebarProvider>
+              <RightSidebarProvider>
+                {children}
+              </RightSidebarProvider>
+            </LeftSidebarProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
