@@ -186,9 +186,9 @@ export default function StrataSubjectsPage() {
               <div
                 key={toastType.id}
                 className={`
-                  px-5 py-2 rounded-xl shadow-2xl text-black font-semibold
+                  px-5 py-2 rounded-xl shadow-2xl text-white font-semibold
                   transition-all duration-300 flex items-center justify-between gap-3
-                  bg-gradient-to-r ${toastType.type === "success" ? "from-green-300 via-pink-300 to-indigo-300 " : ""
+                  bg-gradient-to-r ${toastType.type === "success" ? "from-[#142B4A] to-[#0D9488] " : ""
                   } ${toastType.type === "error" ? "from-red-500 to-red-700" : ""} ${toastType.type === "info" ? "from-blue-500 to-blue-700" : ""
                   }
                 `}
@@ -196,7 +196,7 @@ export default function StrataSubjectsPage() {
                 <span>{toastType.message}</span>
                 <button
                   onClick={() => removeStaticToast(toastType.id)}
-                  className="ml-3 px-2 py-1 text-sm font-bold bg-yellow-300 border border-cyan-500 text-black rounded-lg hover:bg-gray-200 transition"
+                  className="ml-3 px-2 py-1 text-sm font-bold bg-white/15 border border-white/25 text-white rounded-lg hover:bg-white/25 transition"
                 >
                   ✕
                 </button>
@@ -212,9 +212,9 @@ export default function StrataSubjectsPage() {
               <div
                 key={toastType.id}
                 className={`
-                  px-5 py-2 rounded-xl shadow-2xl text-black font-semibold
+                  px-5 py-2 rounded-xl shadow-2xl text-white font-semibold
                   transition-all duration-300 flex items-center justify-between gap-3
-                  bg-gradient-to-r ${toastType.type === "success" ? "from-green-300 via-pink-300 to-indigo-300 " : ""
+                  bg-gradient-to-r ${toastType.type === "success" ? "from-[#142B4A] to-[#0D9488] " : ""
                   } ${toastType.type === "error" ? "from-red-500 to-red-700" : ""} ${toastType.type === "info" ? "from-blue-500 to-blue-700" : ""
                   }
                 `}
@@ -222,7 +222,7 @@ export default function StrataSubjectsPage() {
                 <span>{toastType.message}</span>
                 <button
                   onClick={() => removeStaticToast(toastType.id)}
-                  className="ml-3 px-2 py-1 text-sm font-bold bg-yellow-300 border border-cyan-500 text-black rounded-lg hover:bg-gray-200 transition"
+                  className="ml-3 px-2 py-1 text-sm font-bold bg-white/15 border border-white/25 text-white rounded-lg hover:bg-white/25 transition"
                 >
                   ✕
                 </button>
@@ -274,11 +274,11 @@ export default function StrataSubjectsPage() {
             {sortedSubjects.length > 0 && (
               <div
                 className="rounded-lg overflow-hidden transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg"
-                style={{ background: "#e2edff" }}
+                style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px" }}
               >
                 <div
                   className="px-3 pb-3"
-                  style={{ borderTop: "1px solid #9b8d8d", borderLeft: "1px solid #9b8d8d", borderRight: "1px solid #9b8d8d", borderRadius: "8px" }}
+                  style={{ borderBottom: "1px solid #f1f5f9" }}
                 >
                   <div className="flex items-center gap-2 pt-2">
                     <PlusCircle className="w-4 h-4 shrink-0 text-gray-800" />
@@ -296,7 +296,7 @@ export default function StrataSubjectsPage() {
                 </div>
 
                 {/* ASSUMPTION: adjust this href to your real custom-exam-builder route */}
-                <div className="flex justify-center" style={{ borderRadius: "8px", border: "1px solid #9b8d8d" }}>
+                <div className="flex justify-center" style={{ borderRadius: "12px" }}>
                   <Link
                     href="#"
                     className="block w-full py-2 text-center text-sm font-semibold rounded"
@@ -328,11 +328,11 @@ export default function StrataSubjectsPage() {
                 <div
                   key={strataName.id}
                   className="rounded-lg overflow-hidden transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg"
-                  style={{ background: "#e2edff" }}
+                  style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px" }}
                 >
                   <div
                     className="relative px-3 pb-3"
-                    style={{ borderTop: "1px solid #9b8d8d", borderLeft: "1px solid #9b8d8d", borderRight: "1px solid #9b8d8d", borderRadius: "8px" }}
+                    style={{ borderBottom: "1px solid #f1f5f9" }}
                   >
                     {strataName.isFeatured && (
                       <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-500 text-black shadow-md">
@@ -351,13 +351,13 @@ export default function StrataSubjectsPage() {
                       >
                         {cardStatus}
                       </span>
-                      <span className="px-2 py-1 border rounded text-xs font-bold text-black" style={{ background: "#dfff80" }}>
+                      <span className="px-2 py-1 border rounded text-xs font-bold text-black" style={{ background: "#f0fdfa", color: "#0D9488", borderColor: "#99f6e4" }}>
                         {cardPct}%
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex justify-center" style={{ borderRadius: "8px", border: "1px solid #9b8d8d" }}>
+                  <div className="flex justify-center" style={{ borderRadius: "12px" }}>
                     <button
                       type="button"
                       onClick={() => handleCardClick(strataName)}
@@ -403,9 +403,9 @@ export default function StrataSubjectsPage() {
                 text-center
                 text-[var(--text-color)]
                 bg-gradient-to-r
-                from-blue-300
-                via-yellow-700
-                to-indigo-300
+                from-[#142B4A]
+                via-[#0F2036]
+                to-[#0D9488] text-white
               ">
           <div className="text-3xl font-bold mb-3">
             Missing Parent Identifier ⚓
@@ -446,9 +446,9 @@ export default function StrataSubjectsPage() {
             border
             backdrop-blur-xl
             bg-gradient-to-r
-            from-purple-500/10
-            via-pink-500/10
-            to-cyan-500/10
+            from-[#142B4A]/5
+            via-teal-500/5
+            to-[#0D9488]/10
             shadow-lg
             transition-all duration-500
           "
