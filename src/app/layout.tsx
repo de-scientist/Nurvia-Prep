@@ -1,16 +1,32 @@
-// This is the root layout
-import './globals.css';
-import { Outfit } from 'next/font/google';
-import type { Metadata } from 'next';
-import { LeftSidebarProvider } from '@/lib/contexts/panel/layout/includes/sidebar/LeftSidebarContext';
-import { RightSidebarProvider } from '@/lib/contexts/panel/layout/includes/sidebar/RightSidebarContext';
-import { ThemeProvider } from '@/lib/contexts/panel/layout/theme/PanelThemeContext';
+// Root Application Layout — NURVIA Design System
+import "./globals.css";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google";
+import type { Metadata } from "next";
+import { LeftSidebarProvider } from "@/lib/contexts/panel/layout/includes/sidebar/LeftSidebarContext";
+import { RightSidebarProvider } from "@/lib/contexts/panel/layout/includes/sidebar/RightSidebarContext";
+import { ThemeProvider } from "@/lib/contexts/panel/layout/theme/PanelThemeContext";
 
-const outfit = Outfit({ subsets: ['latin'] });
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-brand",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-ui",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: 'Castoline LMS',
-  description: 'Global LMS system',
+  title: "Nurvia-Prep — Your Path to Nursing Confidence",
+  description:
+    "NURVIA comprehensive nursing education and exam-preparation platform for ATI TEAS, HESI A2, RN, LPN, NCLEX-RN, and NCLEX-PN.",
+  icons: {
+    icon: "/brand/favicon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -19,10 +35,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body
-        className={`${outfit.className} bg-white text-black dark:bg-gray-900 dark:text-white transition-colors duration-300`}
-      >
+    <html lang="en" suppressHydrationWarning className={`${plusJakartaSans.variable} ${inter.variable}`}>
+      <body className="antialiased bg-background text-foreground selection:bg-[#0D9488] selection:text-white transition-colors duration-200">
         <ThemeProvider>
           <LeftSidebarProvider>
             <RightSidebarProvider>
