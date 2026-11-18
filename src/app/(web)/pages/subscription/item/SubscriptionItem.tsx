@@ -137,27 +137,30 @@ export default function SubscriptionItem({
                     value={subscriptionItemSearch}
                     onChange={(e) => setSubscriptionItemSearch(e.target.value)}
                     placeholder="Search plans…"
-                    className="w-full max-w-md rounded-lg border border-slate-300 px-4 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full max-w-md rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm shadow-2xs focus:border-[#0D9488] focus:outline-none focus:ring-2 focus:ring-[#0D9488]/20"
                 />
             </div>
             )}
 
             {sortedItems.length === 0 && (
-                <p className="text-center text-slate-400">No Plans Found ⚓</p>
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-8 text-center">
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">No Subscription Plans Currently Listed</p>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Plans for this track will appear here once published.</p>
+                </div>
             )}
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {sortedItems.map((item) => {
                     const style = item.style;
 
-                    const titleBg = style?.titleBackground ?? "#4F46E5";
+                    const titleBg = style?.titleBackground ?? "#142B4A";
                     const titleColor = style?.titleColor ?? "#FFFFFF";
                     const bodyGradient =
                         style?.bodyGradientStart && style?.bodyGradientEnd
                             ? `linear-gradient(${style.bodyGradientDirection ?? "to bottom"}, ${style.bodyGradientStart}, ${style.bodyGradientEnd})`
                             : undefined;
                     const descriptionColor = style?.descriptionColor ?? "#475569";
-                    const footerBg = style?.footerButtonBackground ?? "#4F46E5";
+                    const footerBg = style?.footerButtonBackground ?? "#0D9488";
                     const footerColor = style?.footerButtonColor ?? "#FFFFFF";
                     const footerText = style?.footerButtonText || "Subscribe Now";
 
