@@ -1,23 +1,28 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef, RefObject } from 'react';
-import Link from 'next/link';
-import Image from 'next/image'
-import { APP_NAME } from '@/lib/config/config';
+import React, { useState, useEffect, useRef, RefObject } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { APP_NAME } from "@/lib/config/config";
 import SeekModal from "@/components/common/modals/seek/SeekModal";
-
-import { Search, ChevronDown, X, Menu } from 'lucide-react';
+import { NurviaLogo } from "@/components/common/NurviaLogo";
 import { useCurrentSystemUser } from "@/lib/hooks/users/account/current/useCurrentSystemUser";
 import { useRelativeStrataPrograms } from "@/lib/hooks/nexus/strata/learning/programs/relative/useRelativeStrataPrograms";
-
-// imported icons from lucide-react to use in the navbar dropdowns
+import { useThemeContext } from "@/lib/contexts/panel/layout/theme/PanelThemeContext";
 import {
+  Search,
+  ChevronDown,
+  X,
+  Menu,
+  Sparkles,
+  ArrowRight,
+  Sun,
+  Moon,
   Info,
   HelpingHand,
   Mail,
   HelpCircle,
   Briefcase,
-  BarChart,
   MessageCircle,
   Heart,
   FileText,
@@ -26,890 +31,569 @@ import {
   Users,
   Video,
   UsersRound,
-} from 'lucide-react';
+  LayoutDashboard,
+  LogIn,
+  UserPlus,
+  LogOut,
+  Compass,
+  Stethoscope,
+  GraduationCap,
+} from "lucide-react";
 
-// Placed outside the component
 const getIcon = (name: string) => {
   const icons: Record<string, React.ReactNode> = {
     info: <Info className="w-4 h-4" />,
-    'helping-hand': <HelpingHand className="w-4 h-4" />,
+    "helping-hand": <HelpingHand className="w-4 h-4" />,
     mail: <Mail className="w-4 h-4" />,
-    'help-circle': <HelpCircle className="w-4 h-4" />,
+    "help-circle": <HelpCircle className="w-4 h-4" />,
     briefcase: <Briefcase className="w-4 h-4" />,
-    'bar-chart': <BarChart className="w-4 h-4" />,
-    'message-circle': <MessageCircle className="w-4 h-4" />,
+    "message-circle": <MessageCircle className="w-4 h-4" />,
     heart: <Heart className="w-4 h-4" />,
-    'file-text': <FileText className="w-4 h-4" />,
+    "file-text": <FileText className="w-4 h-4" />,
     shield: <Shield className="w-4 h-4" />,
     file: <File className="w-4 h-4" />,
     users: <Users className="w-4 h-4" />,
     video: <Video className="w-4 h-4" />,
-    'users-round': <UsersRound className="w-4 h-4" />,
+    "users-round": <UsersRound className="w-4 h-4" />,
   };
   return icons[name] || <File className="w-4 h-4" />;
 };
 
 const SEGMENT_DASHBOARD_MAP: Record<string, string> = {
-  ATI_TEAS: 'ati-teas',
-  HESI_A2: 'hesi-a2',
-  PRE_NURSING: 'pre-nursing',
-  RN_NURSING: 'rn-nursing',
-  LPN_NURSING: 'lpn-nursing',
-  NCLEX_RN: 'nclex-rn',
-  NCLEX_PN: 'nclex-pn',
-  CERTIFICATION: 'certification',
+  ATI_TEAS: "ati-teas",
+  HESI_A2: "hesi-a2",
+  PRE_NURSING: "pre-nursing",
+  RN_NURSING: "rn-nursing",
+  LPN_NURSING: "lpn-nursing",
+  NCLEX_RN: "nclex-rn",
+  NCLEX_PN: "nclex-pn",
+  CERTIFICATION: "certification",
 };
+
+const DIRECT_NAV_ITEMS = [
+  { name: "Home", href: "/" },
+  { name: "ATI TEAS", href: "/pages/exams/ati-teas" },
+  { name: "HESI A2", href: "/pages/exams/hesi-a2" },
+  { name: "RN Nursing", href: "/pages/exams/rn-nursing" },
+  { name: "LPN Nursing", href: "/pages/exams/lpn-nursing" },
+  { name: "NCLEX-RN", href: "/pages/exams/nclex-rn" },
+  { name: "NCLEX-PN", href: "/pages/exams/nclex-pn" },
+  { name: "Study Notes", href: "/pages/notes" },
+  { name: "Resources", href: "/pages/resources" },
+];
+
+const MORE_LINKS = [
+  { name: "All Exam Tracks", href: "/pages/entrance", icon: "briefcase" },
+  { name: "Resource Directory", href: "/pages/resources", icon: "file" },
+  { name: "Advanced Search", href: "/pages/seek", icon: "help-circle" },
+  { name: "About Us", href: "/pages/about-us", icon: "info" },
+  { name: "How We Help", href: "/pages/documentation", icon: "helping-hand" },
+  { name: "Contact Us", href: "/pages/contact-us", icon: "mail" },
+  { name: "Frequently Asked Questions", href: "/pages/faqs", icon: "help-circle" },
+  { name: "Reviews & Testimonials", href: "/pages/reviews", icon: "briefcase" },
+  { name: "Our Values", href: "/pages/values", icon: "heart" },
+  { name: "Our Team", href: "/pages/team", icon: "users" },
+  { name: "Live Sessions", href: "/pages/live-sessions", icon: "video" },
+  { name: "Social Study Groups", href: "/pages/social-groups", icon: "users-round" },
+  { name: "Blog & Articles", href: "/pages/blogs", icon: "file-text" },
+  { name: "Terms of Service", href: "/pages/terms-of-service", icon: "file-text" },
+  { name: "Privacy Policy", href: "/pages/privacy-policy", icon: "shield" },
+];
+
+const FALLBACK_DASHBOARDS = [
+  { name: "ATI TEAS Dashboard", slug: "ati-teas" },
+  { name: "HESI A2 Dashboard", slug: "hesi-a2" },
+  { name: "RN Nursing Dashboard", slug: "rn-nursing" },
+  { name: "LPN Nursing Dashboard", slug: "lpn-nursing" },
+  { name: "NCLEX-RN Dashboard", slug: "nclex-rn" },
+  { name: "NCLEX-PN Dashboard", slug: "nclex-pn" },
+];
 
 export default function Navbar() {
   const { user } = useCurrentSystemUser();
   const { programs } = useRelativeStrataPrograms();
+  const { theme, toggleTheme } = useThemeContext();
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [seekOpen, setSeekOpen] = useState(false);
 
   const dropdownRefs: {
-    services: RefObject<HTMLDivElement | null>;
-    resources: RefObject<HTMLDivElement | null>;
-    nursingExams: RefObject<HTMLDivElement | null>;
     more: RefObject<HTMLDivElement | null>;
-    dashboards: RefObject<HTMLDivElement | null>;
-    nclexExams: RefObject<HTMLDivElement | null>;
     account: RefObject<HTMLDivElement | null>;
   } = {
-    services: useRef<HTMLDivElement>(null),
-    resources: useRef<HTMLDivElement>(null),
-    nursingExams: useRef<HTMLDivElement>(null),
     more: useRef<HTMLDivElement>(null),
-    dashboards: useRef<HTMLDivElement>(null),
-    nclexExams: useRef<HTMLDivElement>(null),
     account: useRef<HTMLDivElement>(null),
   };
 
   const navbarRef = useRef<HTMLElement>(null);
-  const [showSearch] = useState(false);
-  const [seekOpen, setSeekOpen] = useState(false);
+
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
-    // Close dropdowns when clicking outside
     const handleClickOutside = (event: MouseEvent) => {
       if (navbarRef.current && !navbarRef.current.contains(event.target as Node)) {
         setActiveDropdown(null);
       }
     };
 
-    // Close dropdowns on escape key press
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         setActiveDropdown(null);
+        setMobileMenuOpen(false);
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setSeekOpen((prev) => !prev);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
-
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
-  const toggleDropdown = (dropdownName: string) => {
-    setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
-  };
-
-  const isDropdownActive = (dropdownName: string) => {
-    return activeDropdown === dropdownName;
-  };
-
-  // Check if dropdown would go off screen and adjust position
-  const getDropdownPosition = (dropdownRef: React.RefObject<HTMLDivElement | null>): string => {
-    if (!dropdownRef.current) return 'left-0';
-
-    const rect = dropdownRef.current.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-
-    if (rect.right > viewportWidth) {
-      return 'right-0';
-    }
-    return 'left-0';
-  };
-
-  const inputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
-    if (showSearch) {
-      const t = setTimeout(() => inputRef.current?.focus(), 150);
-      return () => clearTimeout(t);
+    if (typeof document !== "undefined") {
+      document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
     }
-  }, [showSearch]);
+    return () => {
+      if (typeof document !== "undefined") {
+        document.body.style.overflow = "";
+      }
+    };
+  }, [mobileMenuOpen]);
 
+  const toggleDropdown = (name: string) => {
+    setActiveDropdown((prev) => (prev === name ? null : name));
+  };
+
+  const isDark = theme.global === "dark";
 
   return (
-    <header
-      ref={navbarRef}
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-emerald-200 shadow-md py-2' : 'bg-blue-200 py-4'
+    <>
+      {/* Canonical NURVIA Top Announcement Banner */}
+      <div className="bg-[#142B4A] dark:bg-[#0F2036] text-white text-xs py-2 px-4 text-center font-medium flex items-center justify-center gap-2 border-b border-white/10">
+        <span className="inline-flex items-center gap-1 bg-[#0D9488]/25 text-teal-300 px-2.5 py-0.5 rounded-full text-[11px] font-semibold">
+          <Sparkles className="w-3 h-3" /> NURVIA Education
+        </span>
+        <span className="hidden sm:inline">
+          {APP_NAME} — Your Path to Nursing Confidence. Next-Gen NCLEX, ATI TEAS &amp; HESI A2 preparation.
+        </span>
+        <span className="sm:hidden">{APP_NAME} — Nursing Confidence</span>
+      </div>
+
+      {/* Main Sticky NURVIA Header */}
+      <header
+        ref={navbarRef}
+        className={`sticky top-0 z-40 w-full transition-all duration-200 bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md ${
+          scrolled
+            ? "border-b border-slate-200 dark:border-slate-800 shadow-xs"
+            : "border-b border-slate-200/80 dark:border-slate-800/80"
         }`}
-    >
-      <div className="w-full px-1 md:px-0 lg:px-4 flex items-center justify-between md:w-[90%] md:mx-auto">
-        {/* Logo and System Name */}
-        <div className="flex items-center gap-2 mr-6 lg:mr-10">
-          <div className="block">
-            <Image
-              src="/logo/logo.png"
-              alt=""
-              width={40}
-              height={40}
-              priority
-              className="rounded w-8 h-8 md:w-8 md:h-8 lg:w-10 lg:h-10"
+      >
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 gap-3">
+          {/* Brand Logo & Wordmark */}
+          <div onClick={() => setActiveDropdown(null)}>
+            <NurviaLogo
+              size="md"
+              variant="full"
+              label="NURVIA"
+              subtitle="NURVIA-PREP"
             />
           </div>
-          <Link
-            href="/"
-            className="font-bold text-2xl md:text-2xl lg:text-3xl text-black md:text-gray-900 hover:opacity-90 transition-opacity"
-            onClick={() => setActiveDropdown(null)}
+
+          {/* Desktop Navigation — Direct NURVIA Links + Structured More Menu */}
+          <nav
+            className="hidden xl:flex items-center gap-1"
+            aria-label="Main Navigation"
           >
-            {APP_NAME}
-          </Link>
-        </div>
+            {DIRECT_NAV_ITEMS.map((item) => {
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname === item.href ||
+                    (pathname ? pathname.startsWith(item.href + "/") : false);
 
-        {/* Center Navigation */}
-        <nav className="hidden md:flex flex-1 min-w-0 items-center justify-center gap-2 lg:gap-4 whitespace-nowrap font-medium text-sm md:text-[11px] lg:text-sm xl:text-base">
-
-          <Link
-            href="/"
-            className="hidden lg:inline-block font-bold hover:text-blue-500 transition-colors text-white md:text-gray-900 text-sm lg:text-sm xl:text-base"
-            onClick={() => setActiveDropdown(null)}
-          >
-            HOME
-          </Link>
-
-          <Link
-            href="/pages/exams/ati-teas"
-            className="font-bold hover:text-blue-500 transition-colors text-white md:text-gray-900 text-sm md:text-xs lg:text-sm xl:text-base"
-            onClick={() => setActiveDropdown(null)}
-          >
-            ATI-TEAS
-          </Link>
-
-          <Link
-            href="/pages/exams/hesi-a2"
-            className="font-bold hover:text-blue-500 transition-colors text-white md:text-gray-900 text-sm md:text-xs lg:text-sm xl:text-base"
-            onClick={() => setActiveDropdown(null)}
-          >
-            HESI-A2
-          </Link>
-
-          {/* Mega Dropdown: Nursing Exams */}
-          <div className="relative" ref={dropdownRefs.nursingExams}>
-            <button
-              className={`font-bold flex items-center gap-1 hover:text-blue-500 transition-colors text-white md:text-gray-900 text-sm md:text-xs lg:text-sm xl:text-base ${isDropdownActive('nursingExams') ? 'text-blue-500' : ''
-                }`}
-              onMouseEnter={() => setActiveDropdown('nursingExams')}
-              onClick={() => toggleDropdown('nursingExams')}
-              aria-expanded={isDropdownActive('nursingExams')}
-              aria-haspopup="true"
-              aria-controls="nursingExams-dropdown"
-            >
-              Nursing School
-              <ChevronDown
-                className={`w-4 h-4 transition-transform ${isDropdownActive('nursingExams') ? 'rotate-180' : ''
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => setActiveDropdown(null)}
+                  className={`px-2.5 py-1.5 rounded-md text-xs lg:text-[13px] font-medium transition-colors whitespace-nowrap ${
+                    isActive
+                      ? "text-[#0D9488] dark:text-teal-400 font-bold bg-[#0D9488]/10"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
-              />
-            </button>
-
-            {isDropdownActive('nursingExams') && (
-              <div
-                className={`absolute ${getDropdownPosition(
-                  dropdownRefs.nursingExams
-                )} top-full pt-3 z-50 transform -translate-x-1/2`}
-                onMouseEnter={() => setActiveDropdown('nursingExams')}
-                onMouseLeave={() => setActiveDropdown(null)}
-              >
-                <div
-                  id="nursingExams-dropdown"
-                  className="w-[320px] bg-white text-gray-800 shadow-xl rounded-xl p-4 transition-all duration-300 opacity-100 translate-y-0 pointer-events-auto"
+                  aria-current={isActive ? "page" : undefined}
                 >
-                  <ul className="space-y-3">
-                    {/* RN-Nursing Exams */}
-                    <li>
-                      <Link
-                        href="/pages/exams/rn-nursing"
-                        className="hover:text-blue-600 transition-colors flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 group"
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 group-hover:bg-blue-200">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-5 h-5"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M12 20h9" />
-                            <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <h5 className="font-medium">RN-Nursing Test Bank</h5>
-                          <p className="text-xs text-gray-500">Registered Nurse prep</p>
-                        </div>
-                      </Link>
-                    </li>
+                  {item.name}
+                </Link>
+              );
+            })}
 
-                    {/* LPN-Nursing Exams */}
-                    <li>
-                      <Link
-                        href="/pages/exams/lpn-nursing"
-                        className="hover:text-blue-600 transition-colors flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 group"
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 group-hover:bg-blue-200">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-5 h-5"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M12 20h9" />
-                            <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <h5 className="font-medium">LPN-Nursing Test Bank</h5>
-                          <p className="text-xs text-gray-500">Licensed Practical Nurse</p>
-                        </div>
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Mega Dropdown: NCLEX Exams */}
-          <div className="relative" ref={dropdownRefs.nclexExams}>
-            <button
-              className={`font-bold flex items-center gap-1 hover:text-blue-500 transition-colors text-white md:text-gray-900 text-sm md:text-xs lg:text-sm xl:text-base ${isDropdownActive('nclexExams') ? 'text-blue-500' : ''
+            {/* More Dropdown */}
+            <div className="relative" ref={dropdownRefs.more}>
+              <button
+                type="button"
+                onClick={() => toggleDropdown("more")}
+                onMouseEnter={() => setActiveDropdown("more")}
+                aria-expanded={activeDropdown === "more"}
+                aria-haspopup="true"
+                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs lg:text-[13px] font-medium transition-colors ${
+                  activeDropdown === "more"
+                    ? "text-[#0D9488] bg-[#0D9488]/10 font-semibold"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
-              onMouseEnter={() => setActiveDropdown('nclexExams')}
-              onClick={() => toggleDropdown('nclexExams')}
-              aria-expanded={isDropdownActive('nclexExams')}
-              aria-haspopup="true"
-              aria-controls="nclexExams-dropdown"
-            >
-              NCLEX Exams
-              <ChevronDown
-                className={`w-4 h-4 transition-transform ${isDropdownActive('nclexExams') ? 'rotate-180' : ''
+              >
+                <span>More</span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    activeDropdown === "more" ? "rotate-180" : ""
                   }`}
-              />
-            </button>
+                />
+              </button>
 
-            {isDropdownActive('nclexExams') && (
-              <div
-                className="absolute left-1/2 top-full pt-3 z-50 -translate-x-1/2"
-                onMouseEnter={() => setActiveDropdown('nclexExams')}
-                onMouseLeave={() => setActiveDropdown(null)}
-              >
+              {activeDropdown === "more" && (
                 <div
-                  id="nclexExams-dropdown"
-                  className="w-[320px] max-w-[calc(100vw-2rem)] whitespace-normal bg-white text-gray-800 shadow-xl rounded-xl p-4 transition-all duration-300 opacity-100 translate-y-0 pointer-events-auto"
+                  className="absolute right-0 top-full pt-2 z-50"
+                  onMouseEnter={() => setActiveDropdown("more")}
+                  onMouseLeave={() => setActiveDropdown(null)}
                 >
-                  <ul className="space-y-3">
-                    {/* RN-NCLEX Exams */}
-                    <li>
-                      <Link
-                        href="/pages/exams/nclex-rn"
-                        className="hover:text-blue-600 transition-colors flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 group [&>div:first-child]:shrink-0"
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 group-hover:bg-blue-200">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-5 h-5"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                  <div className="w-72 max-h-[420px] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-2 shadow-xl">
+                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Platform &amp; Resources
+                    </div>
+                    <ul className="space-y-0.5">
+                      {MORE_LINKS.map((item) => (
+                        <li key={item.href}>
+                          <Link
+                            href={item.href}
+                            onClick={() => setActiveDropdown(null)}
+                            className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-[#0D9488] transition-colors group"
                           >
-                            <path d="M12 20h9" />
-                            <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                          </svg>
-                        </div>
-                        <div className="min-w-0">
-                          <h5 className="font-medium">NCLEX - RN Test Bank</h5>
-                          <p className="text-xs text-gray-500">National Council Licensure Examination for Registered Nurses</p>
-                        </div>
-                      </Link>
-                    </li>
-
-                    {/* LPN-NCLEX Exams */}
-                    <li>
-                      <Link
-                        href="/pages/exams/nclex-pn"
-                        className="hover:text-blue-600 transition-colors flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 group [&>div:first-child]:shrink-0"
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 group-hover:bg-blue-200">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-5 h-5"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M12 20h9" />
-                            <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                          </svg>
-                        </div>
-                        <div className="min-w-0">
-                          <h5 className="font-medium">NCLEX - PN Test Bank</h5>
-                          <p className="text-xs text-gray-500">National Council Licensure Examination for Practical/Vocational Nurses</p>
-                        </div>
-                      </Link>
-                    </li>
-                  </ul>
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#0D9488]/10 text-[#0D9488] group-hover:bg-[#0D9488] group-hover:text-white transition-colors">
+                              {getIcon(item.icon)}
+                            </span>
+                            <span>{item.name}</span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-
-          <Link
-            href="/pages/notes"
-            className="inline-flex items-center rounded-lg border border-green-300 md:border-green-500 px-2 py-1.5 lg:px-4 lg:py-2 font-bold bg-yellow-200 text-white md:text-gray-900 
-            text-sm md:text-[11px] lg:text-sm xl:text-base transition-all duration-200 hover:border-blue-500 hover:text-blue-500 hover:bg-pink-200"
-            onClick={() => setActiveDropdown(null)}
-          >
-            Nursing Notes
-          </Link>
-
-        </nav>
-
-
-        {/* Mega Dropdown: More */}
-        <div className="relative hidden lg:block" ref={dropdownRefs.more}>
-          <button
-            className={`flex items-center gap-1 font-bold hover:text-blue-500 transition-colors text-green-800 md:text-gray-900 text-sm md:text-xs lg:text-sm xl:text-base ${isDropdownActive('more') ? 'text-blue-500' : ''
-              }`}
-            onMouseEnter={() => setActiveDropdown('more')}
-            onClick={() => toggleDropdown('more')}
-            aria-expanded={isDropdownActive('more')}
-            aria-haspopup="true"
-            aria-controls="more-dropdown"
-          >
-            More
-            <ChevronDown
-              className={`w-4 h-4 transition-transform ${isDropdownActive('more') ? 'rotate-180' : ''
-                }`}
-            />
-          </button>
-
-          {isDropdownActive('more') && (
-            <div
-              className="absolute left-1/2 transform -translate-x-1/2 top-full pt-3 z-50"
-              onMouseEnter={() => setActiveDropdown('more')}
-              onMouseLeave={() => setActiveDropdown(null)}
-            >
-              <div
-                id="more-dropdown"
-                className="w-[320px] max-h-[400px] overflow-y-auto bg-white text-gray-800 shadow-xl rounded-xl p-4 transition-all duration-300 opacity-100 translate-y-0 pointer-events-auto"
-              >
-                <ul className="space-y-2">
-                  {[
-                    { name: 'About Us', href: '/pages/about-us', icon: 'info' },
-                    { name: 'How we Help', href: '/pages/documentation', icon: 'helping-hand' },
-                    { name: 'Contact Us', href: '/pages/contact-us', icon: 'mail' },
-                    { name: 'F.A.Qs', href: '/pages/faqs', icon: 'help-circle' },
-                    { name: 'Reviews & Testimonials', href: '/pages/reviews', icon: 'briefcase' },
-                    { name: 'Our Staff', href: '/pages/team', icon: 'message-circle' },
-                    { name: 'Our Values', href: '/pages/values', icon: 'heart' },
-                    { name: 'Terms of Service', href: '/pages/terms-of-service', icon: 'file-text' },
-                    { name: 'Privacy Policy', href: '/pages/privacy-policy', icon: 'shield' },
-                    { name: 'Our Blog Posts', href: '/pages/blogs', icon: 'file' },
-                    { name: 'Our Team', href: '/pages/our-team', icon: 'users' },
-                    { name: 'Live Sessions', href: '/pages/live-sessions', icon: 'video' },
-                    { name: 'Social Groups', href: '/pages/social-groups', icon: 'users-round' },
-                  ].map((item) => (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        onClick={() => setActiveDropdown(null)}
-                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 text-sm text-gray-800 transition-colors group"
-                      >
-                        <div className="w-7 h-7 bg-blue-100 rounded-md flex items-center justify-center text-blue-600 group-hover:bg-blue-200">
-                          {getIcon(item.icon)}
-                        </div>
-                        <span className="font-medium">{item.name}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              )}
             </div>
-          )}
-        </div>
-        {/* Search */}
-        <div
-          className="relative"
-        >
+          </nav>
 
-          <div className="relative flex items-center">
-            <input
-              ref={inputRef}
-              type="search"
-              placeholder="Type & Search . . ."
-              tabIndex={showSearch ? 0 : -1}
-              className={`absolute right-0 h-10 rounded-md border border-green-300 bg-white pl-4 pr-12 text-sm text-black
-              focus:outline-none focus:ring-2 focus:ring-green-500
-              transition-all duration-300 ease-in-out
-              ${showSearch ? "w-64 opacity-100" : "w-0 opacity-0 border-transparent px-0"}`}
-            />
+          {/* Right Header Controls */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Search Button (Ctrl+K) */}
             <button
-              onClick={() => { setActiveDropdown(null); setSeekOpen(true); }}
-              className="relative z-10 p-2 rounded-md border border-green-300 bg-white hover:bg-gray-100 transition-colors"
-              aria-label="Search"
-              aria-expanded={showSearch}
+              type="button"
+              onClick={() => {
+                setActiveDropdown(null);
+                setSeekOpen(true);
+              }}
+              aria-label="Search exams and study resources (Ctrl+K)"
+              title="Search (Ctrl+K)"
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-[#F8FAFC] dark:bg-slate-800/80 px-2.5 text-xs font-medium text-slate-600 dark:text-slate-300 transition-colors hover:border-[#0D9488]/50 hover:text-slate-900 dark:hover:text-white"
             >
-              <Search
-                className={`w-5 h-5 text-green-800 md:text-gray-900 transition-transform duration-300 ${showSearch ? "rotate-90 scale-110" : ""
-                  }`}
-              />
-            </button>
-          </div>
-
-
-        </div>
-
-        {/* Right Side Buttons */}
-        <div className="hidden md:flex items-center gap-4">
-
-          <div className="relative" ref={dropdownRefs.account}>
-            <button
-              className={`flex items-center gap-1
-              px-3 py-1.5 md:px-2 md:py-1 lg:px-4 lg:py-2
-              text-sm md:text-xs lg:text-sm xl:text-base
-              rounded-xl font-semibold shadow-md border border-blue-300 transition-all
-              bg-yellow-200 text-blue-600
-              hover:bg-indigo-200 hover:shadow-lg hover:outline-1 hover:outline-black hover:outline-offset-0
-              ${isDropdownActive('account')
-                  ? 'bg-indigo-200 text-blue-700 border-pink-500'
-                  : ''
-                }
-              `}
-              onClick={() => toggleDropdown('account')}
-              onMouseEnter={() => setActiveDropdown('account')}
-              aria-expanded={isDropdownActive('account')}
-              aria-haspopup="true"
-              aria-controls="account-dropdown"
-            >
-              Account
-              <ChevronDown
-                className={`w-4 h-4 transition-transform ${isDropdownActive('account') ? 'rotate-180' : ''
-                  }`}
-              />
+              <Search className="h-4 w-4 text-[#0D9488]" />
+              <span className="hidden md:inline text-slate-500 dark:text-slate-400">Search…</span>
+              <kbd className="hidden lg:inline-flex items-center rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-1.5 py-0.5 text-[10px] font-mono text-slate-400">
+                Ctrl K
+              </kbd>
             </button>
 
-            {/* Centered Dropdown with precise hover behavior */}
-            {isDropdownActive('account') && (
-              <div
-                className="absolute left-1/2 top-full pt-3 transform -translate-x-1/2 z-50"
-                onMouseEnter={() => setActiveDropdown('account')}
-                onMouseLeave={() => setActiveDropdown(null)}
-              >
-                <div
-                  id="account-dropdown"
-                  className="bg-gradient-to-br from-green-200 to-orange-200 text-gray-800 shadow-xl rounded-xl p-2 transition-all duration-300 opacity-100 translate-y-0 pointer-events-auto min-w-[220px] backdrop-blur-sm border border-blue-100"
+            {/* Theme Toggle */}
+            <button
+              type="button"
+              onClick={() => toggleTheme("global")}
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-[#F8FAFC] dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 transition-colors hover:border-[#0D9488]/50 hover:text-[#0D9488]"
+            >
+              {isDark ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4" />}
+            </button>
+
+            {/* Authenticated vs Unauthenticated Controls */}
+            {!user ? (
+              <div className="hidden sm:flex items-center gap-2">
+                <Link
+                  href="/auth/login"
+                  className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors hover:border-[#0D9488]/60 hover:bg-slate-50 dark:hover:bg-slate-800"
                 >
-                  {!user ? (
-                    <>
-                      <Link
-                        href="/auth/login"
-                        className="px-4 py-2 hover:bg-red-100 hover:border border-black rounded-lg transition-colors flex items-center gap-3"
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        <div className="w-7 h-7 flex items-center justify-center text-blue-600 bg-white rounded-md shadow-sm">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-4 h-4"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                            <polyline points="10 17 15 12 10 7" />
-                            <line x1="15" y1="12" x2="3" y2="12" />
-                          </svg>
-                        </div>
-                        <span className="text-sm font-bold">Login</span>
-                      </Link>
+                  Sign In
+                </Link>
+                <Link
+                  href="/auth/register"
+                  className="inline-flex h-9 items-center justify-center rounded-lg bg-[#0D9488] hover:bg-[#0F766E] px-3.5 text-xs font-semibold text-white shadow-2xs transition-colors"
+                >
+                  Sign Up
+                </Link>
+                <Link
+                  href="/pages/entrance"
+                  className="hidden lg:inline-flex h-9 items-center justify-center rounded-lg bg-[#142B4A] hover:bg-[#0F2036] px-3.5 text-xs font-semibold text-white shadow-2xs transition-colors"
+                >
+                  Explore Exams
+                </Link>
+              </div>
+            ) : (
+              <div className="relative hidden sm:block" ref={dropdownRefs.account}>
+                <button
+                  type="button"
+                  onClick={() => toggleDropdown("account")}
+                  onMouseEnter={() => setActiveDropdown("account")}
+                  aria-expanded={activeDropdown === "account"}
+                  aria-haspopup="true"
+                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#142B4A] hover:bg-[#0F2036] px-3.5 text-xs font-semibold text-white shadow-2xs transition-colors"
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5 text-[#2DD4BF]" />
+                  <span className="max-w-[110px] truncate">
+                    {user.userName || "My Account"}
+                  </span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform ${
+                      activeDropdown === "account" ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
 
-                      <Link
-                        href="/auth/register"
-                        className="px-4 py-2 hover:bg-blue-200 hover:border border-black rounded-lg transition-colors flex items-center gap-3"
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        <div className="w-7 h-7 flex items-center justify-center text-blue-800 bg-white rounded-md shadow-sm">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-4 h-4"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                          </svg>
-                        </div>
-                        <span className="text-sm font-bold">Register</span>
-                      </Link>
-
-                      <Link
-                        href="/pages/actions"
-                        className="px-4 py-2 hover:bg-blue-200 hover:border border-black rounded-lg transition-colors flex items-center gap-3"
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        <div className="w-7 h-7 flex items-center justify-center text-blue-800 bg-white rounded-md shadow-sm">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-4 h-4"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                          </svg>
-                        </div>
-                        <span className="text-sm font-bold">Get Started</span>
-                      </Link>
-                      <Link
-                        href="/auth/support"
-                        className="px-4 py-2 hover:bg-blue-200 hover:border border-black rounded-lg transition-colors flex items-center gap-3"
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        <div className="w-7 h-7 flex items-center justify-center text-blue-800 bg-white rounded-md shadow-sm">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-4 h-4"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                          </svg>
-                        </div>
-                        <span className="text-sm font-bold">Having Issues ?</span>
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      {/* Programs list - only shown when logged in */}
-                      <div className="px-2 pt-1 pb-2">
-                        <p className="text-[10px] font-bold text-gray-600 text-center uppercase tracking-wide px-2 mb-1">
-                          Select Target Program
+                {activeDropdown === "account" && (
+                  <div
+                    className="absolute right-0 top-full pt-2 z-50"
+                    onMouseEnter={() => setActiveDropdown("account")}
+                    onMouseLeave={() => setActiveDropdown(null)}
+                  >
+                    <div className="w-64 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-2 shadow-xl">
+                      <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
+                        <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                          {user.userName || "Learner Account"}
                         </p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                          {user.email || "Active Session"}
+                        </p>
+                      </div>
 
-                        <div className="border-t border-black my-2"></div>
-
-                        <ul className="space-y-1 max-h-[240px] overflow-y-auto">
-                          {programs.map((program) => {
-                            const slug = SEGMENT_DASHBOARD_MAP[program.segment ?? ''];
-                            if (!slug) return null;
-                            return (
-                              <li key={program.guidId}>
-                                <Link
-                                  href={`/dashboards/${slug}`}
-                                  className="px-3 py-2 hover:bg-indigo-100 hover:border border-black rounded-lg transition-colors flex items-center gap-2 text-sm"
-                                  onClick={() => setActiveDropdown(null)}
-                                >
-                                  <span className="font-medium">{program.name}</span>
-                                </Link>
-                              </li>
-                            );
-                          })}
+                      <div className="py-1.5">
+                        <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                          Programme Dashboards
+                        </p>
+                        <ul className="space-y-0.5 max-h-52 overflow-y-auto">
+                          {programs.length > 0
+                            ? programs.map((program) => {
+                                const slug = SEGMENT_DASHBOARD_MAP[program.segment ?? ""];
+                                if (!slug) return null;
+                                return (
+                                  <li key={program.guidId}>
+                                    <Link
+                                      href={`/dashboards/${slug}`}
+                                      onClick={() => setActiveDropdown(null)}
+                                      className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#0D9488] transition-colors"
+                                    >
+                                      <span>{program.name}</span>
+                                      <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                                    </Link>
+                                  </li>
+                                );
+                              })
+                            : FALLBACK_DASHBOARDS.map((d) => (
+                                <li key={d.slug}>
+                                  <Link
+                                    href={`/dashboards/${d.slug}`}
+                                    onClick={() => setActiveDropdown(null)}
+                                    className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#0D9488] transition-colors"
+                                  >
+                                    <span>{d.name}</span>
+                                    <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                                  </Link>
+                                </li>
+                              ))}
                         </ul>
                       </div>
 
-                      <div className="border-t border-black my-2"></div>
-
-                      {/* Contact Us - only when logged in */}
-                      <Link
-                        href="/pages/contact-us"
-                        className="px-4 py-2 hover:bg-yellow-100 hover:border border-black rounded-lg transition-colors flex items-center gap-3"
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        <div className="w-7 h-7 flex items-center justify-center text-green-600 bg-white rounded-md shadow-sm">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-4 h-4"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M21 10c0 6-9 13-9 13s-9-7-9-13a9 9 0 0 1 18 0z" />
-                            <circle cx="12" cy="10" r="3" />
-                          </svg>
-                        </div>
-                        <span className="text-sm font-medium">Contact Us</span>
-                      </Link>
-
-                      {/* Actions - only when logged in */}
-                      <Link
-                        href="/pages/actions"
-                        className="flex items-center gap-3 rounded-lg border border-transparent px-4 py-2 transition-all duration-200 hover:border-green-300 hover:bg-green-100"
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-blue-600 shadow-sm">
-                          <Info className="h-4 w-4 stroke-[2.5]" />
-                        </div>
-
-                        <span className="text-sm font-medium">Get started</span>
-                      </Link>
-
-                      {/* About - only when logged in */}
-                      <Link
-                        href="/pages/about-us"
-                        className="flex items-center gap-3 rounded-lg border border-transparent px-4 py-2 transition-all duration-200 hover:border-green-300 hover:bg-green-100"
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-blue-600 shadow-sm">
-                          <Info className="h-4 w-4 stroke-[2.5]" />
-                        </div>
-
-                        <span className="text-sm font-medium">About Us</span>
-                      </Link>
-                    </>
-                  )}
-                </div>
-
+                      <div className="border-t border-slate-100 dark:border-slate-800 pt-1.5 space-y-0.5">
+                        <Link
+                          href="/pages/actions"
+                          onClick={() => setActiveDropdown(null)}
+                          className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        >
+                          <Compass className="w-3.5 h-3.5 text-[#0D9488]" />
+                          <span>Study Tracks Hub</span>
+                        </Link>
+                        <Link
+                          href="/pages/contact-us"
+                          onClick={() => setActiveDropdown(null)}
+                          className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        >
+                          <Mail className="w-3.5 h-3.5 text-[#0D9488]" />
+                          <span>Contact Support</span>
+                        </Link>
+                        <Link
+                          href="/auth/logout"
+                          onClick={() => setActiveDropdown(null)}
+                          className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          <span>Sign Out</span>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
+
+            {/* Mobile Hamburger Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open navigation menu"
+              className="xl:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
           </div>
         </div>
+      </header>
 
-        {/* Mobile Toggle */}
-        <button
-          className="md:hidden text-indigo-950 border-1 rounded text-2xl p-1"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
-      {/* Mobile Dropdown */}
+      {/* Mobile Drawer Backdrop and Slide-Over Navigation */}
       {mobileMenuOpen && (
-        <div
-          className="bg-gradient-to-b from-fuchsia-100 via-emerald-100 to-gray-200 rounded text-black px-4 pt-2 pb-6 md:hidden shadow-lg max-h-[calc(100vh-70px)] overflow-y-auto"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ul className="space-y-2 font-medium">
-            <li>
-              <Link
-                href="/"
-                className="block py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/about"
-                className="block py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                About
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/contact"
-                className="block py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Contact
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/policy"
-                className="block py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Policy
-              </Link>
-            </li>
+        <div className="fixed inset-0 z-50 xl:hidden" role="dialog" aria-modal="true">
+          <div
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
+          />
 
-            {/* Mobile Services Dropdown */}
-            <li>
-              <button
-                className={`w-full flex justify-between items-center py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors ${activeDropdown === 'mobile-services' ? 'bg-blue-50' : ''
-                  }`}
-                onClick={() => toggleDropdown('mobile-services')}
-              >
-                Services
-                <ChevronDown className={`w-4 h-4 transition-transform ${activeDropdown === 'mobile-services' ? 'rotate-180' : ''
-                  }`} />
-              </button>
-              {activeDropdown === 'mobile-services' && (
-                <ul className="pl-4 mt-1 space-y-2">
-                  <li>
+          <div className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-xs bg-white dark:bg-[#0F172A] border-l border-slate-200 dark:border-slate-800 p-6 shadow-2xl flex flex-col justify-between overflow-y-auto">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                <NurviaLogo size="sm" variant="full" label="NURVIA" subtitle="NURVIA-PREP" />
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(false)}
+                  aria-label="Close menu"
+                  className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <nav className="flex flex-col space-y-1" aria-label="Mobile Navigation">
+                {DIRECT_NAV_ITEMS.map((item, idx) => {
+                  const isActive =
+                    item.href === "/"
+                      ? pathname === "/"
+                      : pathname === item.href ||
+                        (pathname ? pathname.startsWith(item.href + "/") : false);
+
+                  return (
                     <Link
-                      href="/services/ati-teas"
-                      className="block py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors text-sm"
+                      key={item.name}
+                      href={item.href}
                       onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                        isActive
+                          ? "bg-[#0D9488]/10 text-[#0D9488] font-bold"
+                          : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      }`}
                     >
-                      ATI TEAS
+                      <span className="flex items-center gap-2.5">
+                        <span className="w-5 text-[11px] font-mono text-slate-400">
+                          0{idx + 1}
+                        </span>
+                        <span>{item.name}</span>
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-slate-400" />
                     </Link>
-                  </li>
-                  <li>
+                  );
+                })}
+
+                <div className="pt-3 mt-2 border-t border-slate-200 dark:border-slate-800">
+                  <p className="px-3.5 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    More Resources &amp; Support
+                  </p>
+                  {MORE_LINKS.slice(0, 8).map((item) => (
                     <Link
-                      href="/services/hesi-a2"
-                      className="block py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors text-sm"
+                      key={item.href}
+                      href={item.href}
                       onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                     >
-                      HESI A2
+                      <span>{item.name}</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
                     </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/services/ged"
-                      className="block py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors text-sm"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      GED
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/services/assignments"
-                      className="block py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors text-sm"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Assignments Help
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/services/tutoring"
-                      className="block py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors text-sm"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Tutoring
-                    </Link>
-                  </li>
-                </ul>
+                  ))}
+                </div>
+              </nav>
+            </div>
+
+            <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-3">
+              {!user ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <Link
+                    href="/auth/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-800 dark:text-slate-100"
+                  >
+                    <LogIn className="w-3.5 h-3.5" /> Sign In
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#0D9488] text-xs font-semibold text-white"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" /> Sign Up
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Link
+                    href="/pages/entrance"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#142B4A] text-xs font-semibold text-white"
+                  >
+                    <GraduationCap className="w-4 h-4 text-[#2DD4BF]" />
+                    Open Programme Dashboards
+                  </Link>
+                  <Link
+                    href="/auth/logout"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-rose-200 text-xs font-semibold text-rose-600"
+                  >
+                    <LogOut className="w-3.5 h-3.5" /> Sign Out
+                  </Link>
+                </div>
               )}
-            </li>
 
-            {/* Mobile Resources Dropdown */}
-            <li>
-              <button
-                className={`w-full flex justify-between items-center py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors ${activeDropdown === 'mobile-resources' ? 'bg-blue-50' : ''
-                  }`}
-                onClick={() => toggleDropdown('mobile-resources')}
-              >
-                Resources
-                <ChevronDown className={`w-4 h-4 transition-transform ${activeDropdown === 'mobile-resources' ? 'rotate-180' : ''
-                  }`} />
-              </button>
-              {activeDropdown === 'mobile-resources' && (
-                <ul className="pl-4 mt-1 space-y-2">
-                  <li>
-                    <Link
-                      href="/resources/blog"
-                      className="block py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors text-sm"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Blog
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/resources/faq"
-                      className="block py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors text-sm"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      FAQs
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/resources/team"
-                      className="block py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors text-sm"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Team
-                    </Link>
-                  </li>
-                </ul>
-              )}
-            </li>
-
-            <li className="border-t border-gray-100 mt-2 pt-2">
-              <Link
-                href="/auth/login"
-                className="block py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Login
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/auth/register"
-                className="block py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Register
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/pages/actions"
-                className="block bg-blue-500 text-white px-4 py-2 rounded-lg text-center mt-2 font-medium shadow-md"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Get Started
-              </Link>
-            </li>
-          </ul>
+              <div className="flex items-center justify-between text-xs text-slate-500 pt-2">
+                <span className="flex items-center gap-1.5">
+                  <Stethoscope className="w-3.5 h-3.5 text-[#0D9488]" />
+                  {APP_NAME} Platform
+                </span>
+                <Link
+                  href="/explore"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-[#0D9488] font-semibold hover:underline"
+                >
+                  Directory
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       )}
+
       <SeekModal open={seekOpen} onClose={() => setSeekOpen(false)} />
-    </header>
+    </>
   );
 }
