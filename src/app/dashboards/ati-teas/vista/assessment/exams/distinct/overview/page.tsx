@@ -300,10 +300,10 @@ export default function StrataExamsPage() {
         color: "var(--content-text)",
       }}
     >
-      <div className="p-5 space-y-1 w-full bg-[#ecfaff]">
+      <div className="p-5 space-y-1 w-full bg-transparent">
 
         {/* Header */}
-        <div className="relative border border-yellow-200 rounded-2xl bg-[var(--content-bg)] text-[var(--text-color)] px-3 sm:px-4 py-2">
+        <div className="relative border border-slate-200 dark:border-slate-800 rounded-2xl bg-[var(--content-bg)] text-[var(--text-color)] px-3 sm:px-4 py-2">
           {/* Centered Title */}
           {filteredExams[0] && (() => {
             const strataPath = [
@@ -349,9 +349,9 @@ export default function StrataExamsPage() {
               <div
                 key={toastType.id}
                 className={`
-                    px-5 py-2 rounded-xl shadow-2xl text-black font-semibold
+                    px-5 py-2 rounded-xl shadow-2xl text-white font-semibold
                     transition-all duration-300 flex items-center justify-between gap-3
-                    bg-gradient-to-r ${toastType.type === "success" ? "from-green-300 via-pink-300 to-indigo-300 " : ""
+                    bg-gradient-to-r ${toastType.type === "success" ? "from-[#142B4A] to-[#0D9488] " : ""
                   } ${toastType.type === "error" ? "from-red-500 to-red-700" : ""} ${toastType.type === "info" ? "from-blue-500 to-blue-700" : ""
                   }
                   `}
@@ -359,7 +359,7 @@ export default function StrataExamsPage() {
                 <span>{toastType.message}</span>
                 <button
                   onClick={() => removeStaticToast(toastType.id)}
-                  className="ml-3 px-2 py-1 text-sm font-bold bg-yellow-300 border border-cyan-500 text-black rounded-lg hover:bg-gray-200 transition"
+                  className="ml-3 px-2 py-1 text-sm font-bold bg-white/15 border border-white/25 text-white rounded-lg hover:bg-white/25 transition"
                 >
                   ✕
                 </button>
@@ -375,9 +375,9 @@ export default function StrataExamsPage() {
               <div
                 key={toastType.id}
                 className={`
-                    px-5 py-2 rounded-xl shadow-2xl text-black font-semibold
+                    px-5 py-2 rounded-xl shadow-2xl text-white font-semibold
                     transition-all duration-300 flex items-center justify-between gap-3
-                    bg-gradient-to-r ${toastType.type === "success" ? "from-green-300 via-pink-300 to-indigo-300 " : ""
+                    bg-gradient-to-r ${toastType.type === "success" ? "from-[#142B4A] to-[#0D9488] " : ""
                   } ${toastType.type === "error" ? "from-red-500 to-red-700" : ""} ${toastType.type === "info" ? "from-blue-500 to-blue-700" : ""
                   }
                   `}
@@ -385,7 +385,7 @@ export default function StrataExamsPage() {
                 <span>{toastType.message}</span>
                 <button
                   onClick={() => removeStaticToast(toastType.id)}
-                  className="ml-3 px-2 py-1 text-sm font-bold bg-yellow-300 border border-cyan-500 text-black rounded-lg hover:bg-gray-200 transition"
+                  className="ml-3 px-2 py-1 text-sm font-bold bg-white/15 border border-white/25 text-white rounded-lg hover:bg-white/25 transition"
                 >
                   ✕
                 </button>
@@ -455,7 +455,7 @@ export default function StrataExamsPage() {
                   className="shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold rounded-md border transition-all"
                   style={
                     activeYear === "all"
-                      ? { background: "#ff914d", color: "#0000ff", borderColor: "#ff914d" }
+                      ? { background: "#142B4A", color: "#ffffff", borderColor: "#142B4A" }
                       : { borderColor: "var(--text-color)", color: "var(--text-color)" }
                   }
                 >
@@ -470,7 +470,7 @@ export default function StrataExamsPage() {
                     className="shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold rounded-md border transition-all"
                     style={
                       activeYear === String(y)
-                        ? { background: "#ff914d", color: "#0000ff", borderColor: "#ff914d" }
+                        ? { background: "#142B4A", color: "#ffffff", borderColor: "#142B4A" }
                         : { borderColor: "var(--text-color)", color: "var(--text-color)" }
                     }
                   >
@@ -487,7 +487,7 @@ export default function StrataExamsPage() {
                   className="shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold rounded-md border transition-all"
                   style={
                     activeSeason === "all"
-                      ? { background: "#cb6ce6", color: "#fff", borderColor: "#cb6ce6" }
+                      ? { background: "#0D9488", color: "#ffffff", borderColor: "#0D9488" }
                       : { borderColor: "var(--text-color)", color: "var(--text-color)" }
                   }
                 >
@@ -502,7 +502,7 @@ export default function StrataExamsPage() {
                     className="shrink-0 px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold rounded-md border transition-all"
                     style={
                       activeSeason === s
-                        ? { background: "#cb6ce6", color: "#fff", borderColor: "#cb6ce6" }
+                        ? { background: "#0D9488", color: "#ffffff", borderColor: "#0D9488" }
                         : { borderColor: "var(--text-color)", color: "var(--text-color)" }
                     }
                   >
@@ -554,7 +554,7 @@ export default function StrataExamsPage() {
                 </span>
 
                 {dynamicLearningStrataName ? (
-                  <div className="px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-indigo-400 via-pink-400 to-purple-400">
+                  <div className="px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#142B4A] to-[#0D9488] text-white">
                     {dynamicLearningStrataName.toUpperCase()}
                   </div>
                 ) : (
@@ -636,7 +636,7 @@ export default function StrataExamsPage() {
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-xs uppercase font-bold tracking-wide">Sorted By</span>
                 {sortColumn ? (
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-green-300 via-pink-500 to-cyan-300 text-[var(--text-color)] text-xs font-semibold shadow-md">
+                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-[#142B4A] to-[#0D9488] text-white text-xs font-semibold shadow-md">
                     {String(sortColumn).toUpperCase()}
                     <span className="text-[10px]">{sortDirection === "asc" ? "▲" : "▼"}</span>
                   </div>
@@ -705,7 +705,7 @@ export default function StrataExamsPage() {
                   px-4 py-1.5
                   text-xs font-semibold
                   rounded-full
-                  bg-gradient-to-r from-gray-500 via-fuchsia-700 to-gray-700
+                  bg-gradient-to-r from-[#142B4A] to-slate-700
                   text-white
                   hover:scale-105
                   transition-all duration-200
@@ -731,11 +731,11 @@ export default function StrataExamsPage() {
                 <div
                   key={strataName.id}
                   className="rounded-lg transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg"
-                  style={{ background: "#e2edff" }}
+                  style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px" }}
                 >
                   <div
                     className="relative px-2 sm:px-3 pt-1"
-                    style={{ borderTop: "1px solid #9b8d8d", borderLeft: "1px solid #9b8d8d", borderRight: "1px solid #9b8d8d", borderRadius: "8px" }}
+                    style={{ borderBottom: "1px solid #f1f5f9" }}
                   >
                     {/* Top Row — Featured, Status, Activity all on one line */}
                     <div className="flex items-center justify-between min-h-[10px] gap-1.5">
@@ -822,7 +822,7 @@ export default function StrataExamsPage() {
                         <div className="flex items-center gap-1 whitespace-nowrap">
                           <span className="text-green-800 font-bold">
                             <span className="sm:hidden">Quiz : {strataName.questionsCount ?? 0}</span>
-                            <span className="hidden sm:inline px-2 py-0.5 rounded-md border border-green-300 bg-green-700 text-white">
+                            <span className="hidden sm:inline px-2 py-0.5 rounded-md border border-teal-200 bg-teal-50 text-[#0D9488] font-semibold">
                               Total Questions : {strataName.questionsCount ?? 0}
                             </span>
                           </span>
@@ -836,7 +836,7 @@ export default function StrataExamsPage() {
                         </div>
 
                         {/* Year */}
-                        <div className="flex items-center rounded-md px-2 border border-green-300 bg-green-700 text-white gap-1 whitespace-nowrap">
+                        <div className="flex items-center rounded-md px-2 border border-teal-200 bg-teal-50 text-[#0D9488] font-semibold gap-1 whitespace-nowrap">
                           Year :
                           <span className="font-medium">
                             {strataName.year ?? "—"}
@@ -850,7 +850,7 @@ export default function StrataExamsPage() {
 
                   {/* Start Exam button — toggles inline mode section below (like the Laravel accordion) */}
                   <div data-mode-toggle-group>
-                    <div className="flex justify-center" style={{ borderRadius: "8px", border: "1px solid #9b8d8d" }}>
+                    <div className="flex justify-center" style={{ borderRadius: "12px" }}>
                       <button
                         type="button"
                         onClick={() => {
@@ -944,7 +944,7 @@ export default function StrataExamsPage() {
                     type="button"
                     onClick={() => handlePageChange(p)}
                     className={`px-3 py-1 rounded-md border text-sm font-semibold ${p === currentPage
-                      ? "bg-blue-400 border-red-500 text-white"
+                      ? "bg-[#142B4A] border-[#142B4A] text-white"
                       : "bg-white border-gray-300 text-gray-700 hover:bg-gray-100"
                       }`}
                   >
@@ -982,9 +982,9 @@ export default function StrataExamsPage() {
                   text-center
                   text-[var(--text-color)]
                   bg-gradient-to-r
-                  from-blue-300
-                  via-yellow-700
-                  to-indigo-300
+                  from-[#142B4A]
+                  via-[#0F2036]
+                  to-[#0D9488] text-white
                 ">
           <div className="text-3xl font-bold mb-3">
             Missing Parent Identifier ⚓
@@ -1028,9 +1028,9 @@ export default function StrataExamsPage() {
               border
               backdrop-blur-xl
               bg-gradient-to-r
-              from-purple-500/10
-              via-pink-500/10
-              to-cyan-500/10
+              from-[#142B4A]/5
+              via-teal-500/5
+              to-[#0D9488]/10
               shadow-lg
               transition-all duration-500
             "
@@ -1075,7 +1075,7 @@ export default function StrataExamsPage() {
             >
               <X size={18} />
             </button>
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#ff6b35]/15 text-[#ea580c]">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#0D9488]/15 text-[#0D9488]">
               <Lock size={22} />
             </div>
             <h3 className="text-lg font-bold text-slate-900 mb-2">
@@ -1091,7 +1091,7 @@ export default function StrataExamsPage() {
                 setNavigatingPackages(true);
                 router.push(packagesHref);
               }}
-              className="inline-flex w-full items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold bg-[#ff6b35] hover:bg-[#ea580c] text-white transition disabled:opacity-70 cursor-pointer"
+              className="inline-flex w-full items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold bg-[#142B4A] hover:bg-[#0D9488] text-white transition disabled:opacity-70 cursor-pointer"
             >
               {navigatingPackages ? "Opening . . ." : "View Packages"}
             </button>

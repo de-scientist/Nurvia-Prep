@@ -215,18 +215,18 @@ function ReportCard({
 
   // Cycled by card position — same card always gets the same color on
   const CARD_BG_PALETTE = [
-    "bg-green-100",
-    "bg-sky-100",
-    "bg-rose-100",
-    "bg-amber-100",
-    "bg-violet-100",
-    "bg-teal-100",
-    "bg-orange-100",
-    "bg-cyan-100",
-    "bg-fuchsia-100",
-    "bg-lime-100",
-    "bg-indigo-100",
-    "bg-red-100",
+    "bg-white",
+    "bg-white",
+    "bg-white",
+    "bg-white",
+    "bg-white",
+    "bg-white",
+    "bg-white",
+    "bg-white",
+    "bg-white",
+    "bg-white",
+    "bg-white",
+    "bg-white",
   ];
   const [cardBg] = useState(
     () => CARD_BG_PALETTE[Math.floor(Math.random() * CARD_BG_PALETTE.length)]
@@ -254,7 +254,7 @@ function ReportCard({
             onClick={() => setShowComparisonModal(true)}
             className="flex-shrink-0 flex flex-col items-center gap-0.5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 transition"
           >
-            <span className="text-[11px] font-black text-indigo-700 border rounded bg-amber-400 p-2 uppercase tracking-wide">Open Comparison Table</span>
+            <span className="text-[11px] font-black text-[#142B4A] border border-teal-200 rounded-lg bg-teal-50 px-2.5 py-1 uppercase tracking-wide">Open Comparison Table</span>
             <span className="text-xs font-bold text-indigo-500">
               You Rank Number{" "}
               <span className="font-black text-indigo-700">
@@ -275,7 +275,7 @@ function ReportCard({
               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-0.5">Your Score</span>
               <span className="text-xl font-black text-slate-800">{score}%</span>
             </div>
-            <span className="text-md font-bold border rounded-2xl py-1 px-2 bg-yellow-300 text-black">Open to View More Details</span>
+            <span className="text-md font-bold border border-slate-200 rounded-xl py-1 px-2.5 bg-slate-50 text-slate-700 text-xs">Open to View More Details</span>
             <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} />
           </div>
 
@@ -293,7 +293,7 @@ function ReportCard({
         <div className="px-5 pb-5 border-t border-slate-100 pt-4 space-y-4">
 
           {comparison && (
-            <div className="rounded-xl border border-indigo-100 bg-green-100 px-4 py-3 space-y-3">
+            <div className="rounded-xl border border-teal-200 bg-teal-50/50 px-4 py-3 space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <p className="text-md font-black text-indigo-900 uppercase tracking-wide">
                   How You Compare on This Exam ⚓
@@ -349,7 +349,7 @@ function ReportCard({
             </div>
           )}
 
-          <div className="rounded-xl border border-slate-800 bg-yellow-200 px-4 py-3 space-y-3">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-3">
             <p className="text-md font-black text-indigo-900 uppercase tracking-wide">
               Your Exam Attempt Breakdown ⚓
             </p>
@@ -375,13 +375,13 @@ function ReportCard({
           <div className="flex justify-center flex-wrap gap-2 pt-1">
             <button
               onClick={() => onViewFull(report)}
-              className="flex items-center gap-1.5 rounded-lg bg-yellow-300 border hover:bg-blue-200 text-black text-md font-bold px-4 py-2 transition"
+              className="flex items-center gap-1.5 rounded-xl bg-[#142B4A] hover:bg-[#0D9488] text-white text-xs font-semibold px-4 py-2 transition"
             >
               <FileText size={13} /> View Full Report for This Exam
             </button>
             <button
               onClick={() => onRetake(report)}
-              className="flex items-center gap-1.5 rounded-lg bg-yellow-300 border hover:bg-green-200 text-black text-md font-bold px-4 py-2 transition"
+              className="flex items-center gap-1.5 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white text-xs font-semibold px-4 py-2 transition"
             >
               <RotateCcw size={13} /> Retake This Exam
             </button>
@@ -618,13 +618,13 @@ export default function ExamsReportsAbsolutePage() {
           <div className="flex items-center gap-2 print:hidden">
             <button
               onClick={() => exportToCsv(myAttempts)}
-              className="flex items-center gap-1.5 rounded-lg border border-slate-300 bg-yellow-200 px-4 py-2 text-md font-bold text-slate-600 hover:bg-slate-50 transition"
+              className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
             >
               <Download size={13} /> Export CSV
             </button>
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-1.5 rounded-lg border border-slate-300 bg-pink-100 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition"
+              className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
             >
               <Printer size={13} /> Print
             </button>
@@ -733,7 +733,7 @@ export default function ExamsReportsAbsolutePage() {
 
         {/* QUOTE */}
         <div className="w-full flex justify-center items-center py-4 print:hidden">
-          <div className="max-w-5xl w-full text-center px-6 py-4 rounded-2xl border backdrop-blur-xl bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10 shadow-lg">
+          <div className="max-w-5xl w-full text-center px-6 py-4 rounded-2xl border backdrop-blur-xl bg-gradient-to-r from-[#142B4A]/5 via-teal-500/5 to-[#0D9488]/10 shadow-lg">
             <div className="flex flex-col md:flex-row justify-center items-center gap-2 text-sm">
               <span className="font-bold tracking-wide text-[var(--text-color)]">{randomQuote.quoteTitle}</span>
               <span className="opacity-70 text-[var(--text-color)]">— {randomQuote.quoteDescription}</span>
@@ -744,13 +744,13 @@ export default function ExamsReportsAbsolutePage() {
 
       {/* STICKY ACTION BAR */}
       <div
-        className="fixed bottom-0 bg-green-100 border-t border-slate-200 px-4 py-3 z-20 transition-all duration-300 ease-in-out print:hidden"
+        className="fixed bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 z-20 transition-all duration-300 ease-in-out print:hidden"
         style={{ left: leftWidth, right: rightWidth }}
       >
         <div className="max-w-4xl mx-auto flex gap-3">
           <button
             onClick={() => router.push(`${EXAMS_BASE}/progress/absolute`)}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-indigo-400 via-green-800 to-indigo-400 hover:from-indigo-700 hover:to-purple-700 text-white text-md font-bold flex items-center justify-center gap-2 transition"
+            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#142B4A] to-[#0D9488] hover:from-[#0F2036] hover:to-[#0F766E] text-white text-md font-bold flex items-center justify-center gap-2 transition"
           >
             View My Exam Progress <ArrowRight size={16} />
           </button>
@@ -788,7 +788,7 @@ export default function ExamsReportsAbsolutePage() {
               aria-label="Close"
               className="
                 absolute -top-5 right-4 flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700
-                bg-pink-200 text-black shadow-sm backdrop-blur-md transition-all duration-300 ease-out
+                bg-white text-slate-700 shadow-md transition-all duration-200
                 hover:scale-110 hover:border-red-500 hover:bg-black hover:text-red-600 hover:shadow-lg
                 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500
               "
@@ -822,9 +822,9 @@ export default function ExamsReportsAbsolutePage() {
                     flex flex-col items-center justify-center gap-1
                     transition-all duration-200
                     hover:scale-105
-                    bg-gradient-to-r from-purple-100 to-green-50
-                    hover:bg-indigo-600
-                    hover:text-green-700
+                    bg-slate-50 border-slate-200 hover:border-[#0D9488]
+                    hover:bg-[#142B4A]
+                    hover:text-white
                     group
                   "
                 >
@@ -836,7 +836,7 @@ export default function ExamsReportsAbsolutePage() {
 
             <button
               onClick={() => { setShowModePopup(false); setModePopupTarget(null); }}
-              className="w-full py-2 rounded-xl border text-xs font-bold bg-gradient-to-r from-purple-200 to-green-200 text-black hover:opacity-80 transition-all"
+              className="w-full py-2 rounded-xl border text-xs font-bold bg-slate-100 text-slate-700 border-slate-200 hover:opacity-80 transition-all"
             >
               Cancel &amp; Close
             </button>
