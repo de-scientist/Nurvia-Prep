@@ -4,10 +4,11 @@
 // -----------------------------------------------------------------------------
 // APP INFO
 // -----------------------------------------------------------------------------
-export const APP_NAME = process.env.SKEW_LINE_APP_NAME || "EXAM GEN SYSTEM";
-export const APP_TITLE = process.env.SKEW_LINE_APP_TITLE || "EXAM GEN";
-export const APP_ACRONYM = process.env.SKEW_LINE_APP_ACRONNYM || "EG";
-export const APP_DESCRIPTION = process.env.SKEW_LINE_APP_DESCRIPTION || "Examination Generation System for Nursing Exams";
+export const SITE_HEADER_NAME = process.env.SKEW_LINE_APP_NAME || "Nurvia-Prep";
+export const APP_NAME = "Nurvia-Prep";
+export const APP_TITLE = "Nurvia-Prep";
+export const APP_ACRONYM = "NP";
+export const APP_DESCRIPTION = process.env.SKEW_LINE_APP_DESCRIPTION || "NURVIA Clinical Nursing Examination & Preparation Platform";
 export const APP_VERSION = process.env.SKEW_LINE_APP_VERSION || "1.0.0";
 export const APP_ENV = process.env.SKEW_LINE_APP_ENV || "live";
 export const APP_DEBUG = process.env.SKEW_LINE_APP_DEBUG === "true";
@@ -48,9 +49,9 @@ export const CONTACT = {
 // EMAILS CONFIGURATION
 // -----------------------------------------------------------------------------
 export const EMAILS = {
-  SUPPORT: process.env.SKEW_LINE_SUPPORT_EMAIL || "support@examgen.com",
-  SYSTEM: process.env.SKEW_LINE_SYSTEM_EMAIL || "support@examgen.com",
-  HELP: process.env.SKEW_LINE_HELP_EMAIL || "support@examgen.com",
+  SUPPORT: process.env.SKEW_LINE_SUPPORT_EMAIL || "support@nurvia.app",
+  SYSTEM: process.env.SKEW_LINE_SYSTEM_EMAIL || "system@nurvia.app",
+  HELP: process.env.SKEW_LINE_HELP_EMAIL || "help@nurvia.app",
 };
 
 // -----------------------------------------------------------------------------
@@ -87,8 +88,8 @@ export const DEVELOPER = {
 // SEO CONFIG
 // -----------------------------------------------------------------------------
 export const SEO = {
-  author: DEVELOPER.NAME || "Exam Gen Team",
-  keywords: "Register, Login, Exam Generation, SaaS, Tech, Platform, Cloud, Web Solutions",
-  ogImage: `${CONTACT.CANONICALLINK || "https://skewblanc.com"}/images/og-banner.jpg`,
-  siteUrl: CONTACT.CANONICALLINK || "https://skewblanc.com",
+  author: DEVELOPER.NAME || "NURVIA Team",
+  keywords: "Nurvia-Prep, NURVIA, Nursing Exam Preparation, NCLEX-RN, NCLEX-PN, ATI TEAS 7, HESI A2, RN, LPN",
+  ogImage: `${CONTACT.CANONICALLINK || "https://nurvia-black.vercel.app"}/images/og-banner.jpg`,
+  siteUrl: CONTACT.CANONICALLINK || "https://nurvia-black.vercel.app",
 };
