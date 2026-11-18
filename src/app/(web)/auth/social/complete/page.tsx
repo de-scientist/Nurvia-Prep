@@ -22,5 +22,9 @@ export default function SocialCompletePage() {
     window.location.replace(next); // full reload on /pages/entrance
   }, []);
 
-  return <p className="p-8 text-center text-sm text-gray-600">Signing you in . . . ⚓</p>;
+  return (
+    <div className="min-h-[60vh] flex items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1220] p-8">
+      <p className="text-center text-sm font-semibold text-[#142B4A] dark:text-slate-200">Completing sign-in…</p>
+    </div>
+  );
 }
