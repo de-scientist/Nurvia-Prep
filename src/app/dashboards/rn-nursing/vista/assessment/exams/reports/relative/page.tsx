@@ -154,7 +154,7 @@ function ReportCard({
 
         <div className="flex items-center gap-3 flex-shrink-0 text-blue-600">
           <span className="text-xl font-black text-slate-800">{score}%</span>
-          <span className="text-md font-bold border rounded-2xl py-1 px-2 bg-yellow-300 text-black">Open to View More Details</span>
+          <span className="text-md font-bold border border-slate-200 rounded-xl py-1 px-2.5 bg-slate-50 text-slate-700 text-xs">Open to View More Details</span>
           <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} />
         </div>
       </button>
@@ -181,14 +181,14 @@ function ReportCard({
           <div className="flex justify-center flex-wrap gap-2 pt-1">
             <button
               onClick={() => onViewFull(report)}
-              className="flex items-center gap-1.5 rounded-lg bg-yellow-300 border hover:bg-blue-200 text-black text-md font-bold px-4 py-2 transition"
+              className="flex items-center gap-1.5 rounded-xl bg-[#142B4A] hover:bg-[#0D9488] text-white text-xs font-semibold px-4 py-2 transition"
             >
               <FileText size={13} /> View Full Report for This Exam
             </button>
 
             <button
               onClick={() => onRetake(report)}
-              className="flex items-center gap-1.5 rounded-lg bg-yellow-300 border hover:bg-green-200 text-black text-md font-bold px-4 py-2 transition"
+              className="flex items-center gap-1.5 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] text-white text-xs font-semibold px-4 py-2 transition"
             >
               <RotateCcw size={13} /> Retake This Exam
             </button>
@@ -508,7 +508,7 @@ export default function ExamsReportsAbsolutePage() {
 
         {/* QUOTE */}
         <div className="w-full flex justify-center items-center py-4 print:hidden">
-          <div className="max-w-5xl w-full text-center px-6 py-4 rounded-2xl border backdrop-blur-xl bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10 shadow-lg">
+          <div className="max-w-5xl w-full text-center px-6 py-4 rounded-2xl border backdrop-blur-xl bg-gradient-to-r from-[#142B4A]/5 via-teal-500/5 to-[#0D9488]/10 shadow-lg">
             <div className="flex flex-col md:flex-row justify-center items-center gap-2 text-sm">
               <span className="font-bold tracking-wide text-[var(--text-color)]">{randomQuote.quoteTitle}</span>
               <span className="opacity-70 text-[var(--text-color)]">— {randomQuote.quoteDescription}</span>
@@ -519,13 +519,13 @@ export default function ExamsReportsAbsolutePage() {
 
       {/* STICKY ACTION BAR */}
       <div
-        className="fixed bottom-0 bg-green-100 border-t border-slate-200 px-4 py-3 z-20 transition-all duration-300 ease-in-out print:hidden"
+        className="fixed bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 z-20 transition-all duration-300 ease-in-out print:hidden"
         style={{ left: leftWidth, right: rightWidth }}
       >
         <div className="max-w-4xl mx-auto flex gap-3">
           <button
             onClick={() => router.push(`${EXAMS_BASE}/progress/absolute`)}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-indigo-400 via-green-800 to-indigo-400 hover:from-indigo-700 hover:to-purple-700 text-white text-md font-bold flex items-center justify-center gap-2 transition"
+            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#142B4A] to-[#0D9488] hover:from-[#0F2036] hover:to-[#0F766E] text-white text-md font-bold flex items-center justify-center gap-2 transition"
           >
             View My Exam Progress <ArrowRight size={16} />
           </button>
@@ -563,7 +563,7 @@ export default function ExamsReportsAbsolutePage() {
               aria-label="Close"
               className="
                 absolute -top-5 right-4 flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700
-                bg-pink-200 text-black shadow-sm backdrop-blur-md transition-all duration-300 ease-out
+                bg-white text-slate-700 shadow-md transition-all duration-200
                 hover:scale-110 hover:border-red-500 hover:bg-black hover:text-red-600 hover:shadow-lg
                 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500
               "
@@ -597,9 +597,9 @@ export default function ExamsReportsAbsolutePage() {
                     flex flex-col items-center justify-center gap-1
                     transition-all duration-200
                     hover:scale-105
-                    bg-gradient-to-r from-purple-100 to-green-50
-                    hover:bg-indigo-600
-                    hover:text-green-700
+                    bg-slate-50 border-slate-200 hover:border-[#0D9488]
+                    hover:bg-[#142B4A]
+                    hover:text-white
                     group
                   "
                 >
@@ -611,7 +611,7 @@ export default function ExamsReportsAbsolutePage() {
 
             <button
               onClick={() => { setShowModePopup(false); setModePopupTarget(null); }}
-              className="w-full py-2 rounded-xl border text-xs font-bold bg-gradient-to-r from-purple-200 to-green-200 text-black hover:opacity-80 transition-all"
+              className="w-full py-2 rounded-xl border text-xs font-bold bg-slate-100 text-slate-700 border-slate-200 hover:opacity-80 transition-all"
             >
               Cancel &amp; Close
             </button>

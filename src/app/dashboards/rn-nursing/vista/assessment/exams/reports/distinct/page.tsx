@@ -130,7 +130,7 @@ function StatusBox({
       }}
     >
       <div
-        className="px-6 py-4 rounded-lg border bg-gradient-to-br from-purple-300 via-green-200 to-purple-300 shadow-md font-bold animate-pulse"
+        className="px-6 py-4 rounded-lg border bg-gradient-to-br from-[#142B4A] to-[#0D9488] text-white border-teal-400/30 shadow-md font-bold animate-pulse"
         style={{ fontSize: "var(--exam-content-font-lg)" }}
       >
         {children}
@@ -226,15 +226,15 @@ function StatCard({
   tone?: "slate" | "emerald" | "red" | "indigo" | "amber";
 }) {
   const toneMap: Record<string, string> = {
-    slate: "text-slate-500 bg-slate-300",
-    emerald: "text-emerald-600 bg-emerald-300",
-    red: "text-red-500 bg-red-300",
-    indigo: "text-indigo-600 bg-indigo-300",
-    amber: "text-amber-600 bg-amber-300",
+    slate: "text-slate-600 bg-slate-100",
+    emerald: "text-[#0D9488] bg-teal-50",
+    red: "text-rose-600 bg-rose-50",
+    indigo: "text-[#142B4A] bg-slate-100",
+    amber: "text-amber-600 bg-amber-50",
   };
 
   return (
-    <div className="bg-yellow-100 border border-slate-300 rounded-xl px-4 py-3 shadow-sm flex items-start gap-3">
+    <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm flex items-start gap-3">
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${toneMap[tone]}`}>
         <Icon size={16} />
       </div>
@@ -743,7 +743,7 @@ export default function DistinctExamResultsPage() {
 
         {/* HEADER / HERO CARD */}
         <div className="bg-white border border-slate-200 rounded-2xl shadow-lg overflow-hidden">
-          <div className={`px-6 py-2 grid grid-cols-[1fr_auto_1fr] items-center gap-4 ${passed ? "bg-green-200" : "bg-red-200"}`}>
+          <div className={`px-6 py-4 grid grid-cols-[1fr_auto_1fr] items-center gap-4 border-b ${passed ? "bg-teal-50/70 border-teal-200" : "bg-rose-50/70 border-rose-200"}`}>
             <div />
 
             <div className="text-center">
@@ -1122,9 +1122,9 @@ export default function DistinctExamResultsPage() {
             border
             backdrop-blur-xl
             bg-gradient-to-r
-            from-purple-500/10
-            via-pink-500/10
-            to-cyan-500/10
+            from-[#142B4A]/5
+            via-teal-500/5
+            to-[#0D9488]/10
             shadow-lg
             transition-all duration-500
           "
@@ -1149,7 +1149,7 @@ export default function DistinctExamResultsPage() {
 
       {/* STICKY ACTION BAR */}
       <div
-        className="fixed bottom-0 bg-green-100 border-t border-slate-200 px-4 py-3 z-20 transition-all duration-300 ease-in-out"
+        className="fixed bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 z-20 transition-all duration-300 ease-in-out"
         style={{ left: leftWidth, right: rightWidth }}
       >
         <div className="max-w-4xl mx-auto flex gap-3">
@@ -1159,13 +1159,13 @@ export default function DistinctExamResultsPage() {
                 `/dashboards/rn-nursing/vista/assessment/exams/distinct/overview?level=subject${exam.subjectGuidId ? `&identifier=${exam.subjectGuidId}` : ""}`
               )
             }
-            className="flex-1 py-2 my-0 rounded-xl border border-indigo-300 bg-yellow-300 hover:bg-blue-200 text-slate-600 text-lg font-semibold flex items-center justify-center gap-2 transition"
+            className="flex-1 py-2 my-0 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-lg font-semibold flex items-center justify-center gap-2 transition"
           >
             <ArrowLeft size={16} /> Choose a Different Exam
           </button>
           <button
             onClick={() => { setModePopupTarget(null); setShowModePopup(true); }}
-            className="flex-1 py-2 my-0 rounded-xl border bg-green-200 hover:bg-indigo-300 text-black text-lg font-bold flex items-center justify-center gap-2 transition"
+            className="flex-1 py-2 my-0 rounded-xl bg-[#142B4A] hover:bg-[#0D9488] text-white text-lg font-bold flex items-center justify-center gap-2 transition"
           >
             <RotateCcw size={16} /> Retake This Exam
           </button>
@@ -1203,7 +1203,7 @@ export default function DistinctExamResultsPage() {
               aria-label="Close"
               className="
                 absolute -top-5 right-4 flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700
-                bg-pink-200 text-black shadow-sm backdrop-blur-md transition-all duration-300 ease-out
+                bg-white text-slate-700 shadow-md transition-all duration-200
                 hover:scale-110 hover:border-red-500 hover:bg-black hover:text-red-600 hover:shadow-lg
                 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500
               "
@@ -1237,9 +1237,9 @@ export default function DistinctExamResultsPage() {
                     flex flex-col items-center justify-center gap-1
                     transition-all duration-200
                     hover:scale-105
-                    bg-gradient-to-r from-purple-100 to-green-50
-                    hover:bg-indigo-600
-                    hover:text-green-700
+                    bg-slate-50 border-slate-200 hover:border-[#0D9488]
+                    hover:bg-[#142B4A]
+                    hover:text-white
                     group
                   "
                 >
@@ -1251,7 +1251,7 @@ export default function DistinctExamResultsPage() {
 
             <button
               onClick={() => { setShowModePopup(false); setModePopupTarget(null); }}
-              className="w-full py-2 rounded-xl border text-xs font-bold bg-gradient-to-r from-purple-200 to-green-200 text-black hover:opacity-80 transition-all"
+              className="w-full py-2 rounded-xl border text-xs font-bold bg-slate-100 text-slate-700 border-slate-200 hover:opacity-80 transition-all"
             >
               Cancel &amp; Close
             </button>
