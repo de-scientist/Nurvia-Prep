@@ -793,7 +793,7 @@ export default function ExamsProgressAbsolutePage() {
 
         {/* QUOTE */}
         <div className="w-full flex justify-center items-center py-4">
-          <div className="max-w-5xl w-full text-center px-6 py-4 rounded-2xl border backdrop-blur-xl bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10 shadow-lg">
+          <div className="max-w-5xl w-full text-center px-6 py-4 rounded-2xl border backdrop-blur-xl bg-gradient-to-r from-[#142B4A]/5 via-teal-500/5 to-[#0D9488]/10 shadow-lg">
             <div className="flex flex-col md:flex-row justify-center items-center gap-2 text-sm">
               <span className="font-bold tracking-wide text-[var(--text-color)]">{randomQuote.quoteTitle}</span>
               <span className="opacity-70 text-[var(--text-color)]">— {randomQuote.quoteDescription}</span>
@@ -804,13 +804,13 @@ export default function ExamsProgressAbsolutePage() {
 
       {/* STICKY ACTION BAR */}
       <div
-        className="fixed bottom-0 bg-green-100 border-t border-slate-200 px-4 py-3 z-20 transition-all duration-300 ease-in-out"
+        className="fixed bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 z-20 transition-all duration-300 ease-in-out"
         style={{ left: leftWidth, right: rightWidth }}
       >
         <div className="max-w-4xl mx-auto flex gap-3">
           <button
             onClick={() => router.push(ABSOLUTE_REPORTS_ROUTE)}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-yellow-700 via-blue-800 to-yellow-700 hover:from-indigo-700 hover:to-purple-700 text-white text-md font-bold flex items-center justify-center gap-2 transition"
+            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#142B4A] to-[#0D9488] hover:from-[#0F2036] hover:to-[#0F766E] text-white text-md font-bold flex items-center justify-center gap-2 transition"
           >
             View All My Exam Reports <ArrowRight size={16} />
           </button>
@@ -848,7 +848,7 @@ export default function ExamsProgressAbsolutePage() {
               aria-label="Close"
               className="
                 absolute -top-5 right-4 flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700
-                bg-pink-200 text-black shadow-sm backdrop-blur-md transition-all duration-300 ease-out
+                bg-white text-slate-700 shadow-md transition-all duration-200
                 hover:scale-110 hover:border-red-500 hover:bg-black hover:text-red-600 hover:shadow-lg
                 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500
               "
@@ -882,9 +882,9 @@ export default function ExamsProgressAbsolutePage() {
                     flex flex-col items-center justify-center gap-1
                     transition-all duration-200
                     hover:scale-105
-                    bg-gradient-to-r from-purple-100 to-green-50
-                    hover:bg-indigo-600
-                    hover:text-green-700
+                    bg-slate-50 border-slate-200 hover:border-[#0D9488]
+                    hover:bg-[#142B4A]
+                    hover:text-white
                     group
                   "
                 >
@@ -896,7 +896,7 @@ export default function ExamsProgressAbsolutePage() {
 
             <button
               onClick={() => { setShowModePopup(false); setModePopupTarget(null); }}
-              className="w-full py-2 rounded-xl border text-xs font-bold bg-gradient-to-r from-purple-200 to-green-200 text-black hover:opacity-80 transition-all"
+              className="w-full py-2 rounded-xl border text-xs font-bold bg-slate-100 text-slate-700 border-slate-200 hover:opacity-80 transition-all"
             >
               Cancel &amp; Close
             </button>
