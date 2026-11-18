@@ -689,9 +689,9 @@ export default function CreateDiyExamPage() {
                                             key={p.guidId}
                                             type="button"
                                             onClick={() => toggleProgram(p.guidId)}
-                                            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${on
-                                                ? "border-indigo-600 bg-indigo-600 text-white"
-                                                : "border-slate-300 text-slate-700 hover:bg-slate-100"
+                                            className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${on
+                                                ? "border-[#142B4A] bg-[#142B4A] text-white"
+                                                : "border-slate-300 text-slate-700 hover:border-[#0D9488] hover:text-[#0D9488]"
                                                 }`}
                                         >
                                             {p.name}
@@ -1071,7 +1071,7 @@ export default function CreateDiyExamPage() {
                                 type="button"
                                 onClick={handleSubmit}
                                 disabled={!canSubmit}
-                                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#142B4A] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#0D9488] disabled:cursor-not-allowed disabled:opacity-40"
                             >
                                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                                 {submitting ? "Creating . . ." : `Create Exam (${totalQuestions} Qs)`}
