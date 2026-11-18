@@ -27,7 +27,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
             : "translate(0, -50%) translateX(8px)",
       }}
     >
-      <div className="px-3 py-1 text-sm text-white bg-gray-900 rounded shadow-lg whitespace-nowrap">
+      <div className="px-3 py-1.5 text-xs font-semibold text-white bg-[#142B4A] border border-slate-700 rounded-lg shadow-lg whitespace-nowrap">
         {children}
       </div>
     </div>
