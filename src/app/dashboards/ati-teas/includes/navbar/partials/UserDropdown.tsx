@@ -53,29 +53,28 @@ function InfoRow({
     <div
       className="
         group flex items-center justify-between
-        text-xs py-1.5 px-2
+        text-xs py-1.5 px-2.5
         rounded-lg
         transition-all duration-200
-        hover:bg-white
+        hover:bg-slate-100 dark:hover:bg-slate-800/70
       "
     >
-      <span className="text-black font-semibold">{label}</span>
+      <span className="text-slate-600 dark:text-slate-400 font-semibold">{label}</span>
 
       {typeof status === "boolean" ? (
         status ? (
-          <span className="font-medium text-emerald-600">Yes</span>
+          <span className="font-semibold text-[#0D9488]">Yes</span>
         ) : (
           <a
             href={actionHref}
             className="
               inline-flex items-center gap-1
               text-[10px] font-semibold
-              text-rose-600
+              text-amber-700 dark:text-amber-300
               px-2 py-0.5 rounded-full
-              border border-rose-300/50
-              bg-rose-50
-              hover:bg-rose-100
-              hover:border-rose-400
+              border border-amber-300/60 dark:border-amber-700
+              bg-amber-50 dark:bg-amber-950/50
+              hover:bg-amber-100 dark:hover:bg-amber-900/60
               transition
             "
           >
@@ -83,7 +82,7 @@ function InfoRow({
           </a>
         )
       ) : (
-        <span className="font-medium text-gray-800 truncate max-w-[170px]">
+        <span className="font-medium text-slate-900 dark:text-slate-100 truncate max-w-[170px]">
           {value ?? "—"}
         </span>
       )}
@@ -167,7 +166,7 @@ export default function UserDropdown() {
   };
 
   if (loading) {
-    return <div className="text-sm font-bold text-red-800">Loading . . . ⚓</div>;
+    return <div className="text-xs font-semibold text-slate-500">Loading...</div>;
   }
 
   // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -188,18 +187,14 @@ export default function UserDropdown() {
         <button
           onClick={() => setIsOpen(v => !v)}
           className="
-            group relative flex items-center gap-2 px-5 py-2.5
-            rounded-full text-sm font-semibold
-            text-indigo-700
-            bg-white/70 backdrop-blur
-            border border-indigo-200
-            shadow-sm
-            hover:shadow-lg
-            hover:border-indigo-400
-            transition-all
+            group relative flex items-center gap-2 px-4 py-2
+            rounded-xl text-sm font-semibold
+            text-white
+            bg-[#142B4A] hover:bg-[#0D9488]
+            shadow-xs
+            transition-colors
           "
         >
-          <span className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-400/20 via-purple-400/20 to-cyan-400/20 opacity-0 group-hover:opacity-100 transition" />
           <FiLogIn className="relative" />
           <span className="relative">Login / Register</span>
           <FiChevronDown className="relative ml-1 text-xs" />
@@ -209,26 +204,24 @@ export default function UserDropdown() {
           isOpen={isOpen}
           onClose={() => setIsOpen(false)}
           className="
-            absolute right-0 mt-3 w-[260px]
-            rounded-2xl border
-            bg-gradient-to-br from-green-100 via-purple-100 to-cyan-100
-            shadow-theme-lg z-50
+            absolute right-0 mt-3 w-[250px]
+            rounded-2xl border border-slate-200 dark:border-slate-800
+            bg-white dark:bg-[#111C2E]
+            shadow-xl z-50
           "
         >
-          <div className="px-1 py-1 space-y-1">
+          <div className="px-1.5 py-1.5 space-y-1">
             <DropdownItem>
               <Link
                 href={`/dashboards/${TARGET_DASHBOARD}/auth/login`}
                 className="
-                  group flex items-center gap-2
+                  group flex items-center gap-2.5
                   rounded-xl px-3 py-2
                   transition-all duration-200
-                  hover:bg-gradient-to-r hover:from-indigo-500/10 hover:via-purple-500/10 hover:to-cyan-500/10
-                  hover:shadow-md
-                  hover:ring-1 hover:ring-indigo-300
+                  hover:bg-slate-100 dark:hover:bg-slate-800
                 "
               >
-                <FiLogIn className="text-indigo-600 transition-transform duration-200 group-hover:translate-x-0.5" />
+                <FiLogIn className="text-[#0D9488] transition-transform duration-200 group-hover:translate-x-0.5" />
                 <span className="font-medium">Login</span>
               </Link>
             </DropdownItem>
@@ -237,35 +230,31 @@ export default function UserDropdown() {
               <Link
                 href={`/dashboards/${TARGET_DASHBOARD}/auth/register`}
                 className="
-                group flex items-center gap-2
+                group flex items-center gap-2.5
                 rounded-xl px-3 py-2
                 transition-all duration-200
-                hover:bg-gradient-to-r hover:from-emerald-500/10 hover:via-teal-500/10 hover:to-cyan-500/10
-                hover:shadow-md
-                hover:ring-1 hover:ring-emerald-300
+                hover:bg-slate-100 dark:hover:bg-slate-800
               "
               >
-                <FiUserPlus className="text-emerald-600 transition-transform duration-200 group-hover:translate-x-0.5" />
+                <FiUserPlus className="text-[#0D9488] transition-transform duration-200 group-hover:translate-x-0.5" />
                 <span className="font-medium">Create account</span>
               </Link>
             </DropdownItem>
 
 
-            <div className="my-2 h-px bg-gradient-to-r from-transparent via-indigo-200 to-transparent" />
+            <div className="my-1.5 h-px bg-slate-200 dark:bg-slate-800" />
 
             <DropdownItem>
               <Link
                 href={`/dashboards/${TARGET_DASHBOARD}/vista/pages/support`}
                 className="
-                group flex items-center gap-2
+                group flex items-center gap-2.5
                 rounded-xl px-3 py-2
                 transition-all duration-200
-                hover:bg-gradient-to-r hover:from-indigo-400/10 hover:to-indigo-500/10
-                hover:shadow-sm
-                hover:ring-1 hover:ring-indigo-500
+                hover:bg-slate-100 dark:hover:bg-slate-800
               "
               >
-                <FiHelpCircle className="text-indigo-500 transition-transform duration-200 group-hover:rotate-6" />
+                <FiHelpCircle className="text-slate-500 group-hover:text-[#0D9488] transition-colors" />
                 <span className="font-medium">Help Center</span>
               </Link>
             </DropdownItem>
@@ -275,15 +264,13 @@ export default function UserDropdown() {
               <Link
                 href={`/dashboards/${TARGET_DASHBOARD}/vista/pages/contact-us`}
                 className="
-                  group flex items-center gap-2
+                  group flex items-center gap-2.5
                   rounded-xl px-3 py-2
                   transition-all duration-200
-                  hover:bg-gradient-to-r hover:from-purple-400/10 hover:to-fuchsia-500/10
-                  hover:shadow-sm
-                  hover:ring-1 hover:ring-purple-500
+                  hover:bg-slate-100 dark:hover:bg-slate-800
                 "
               >
-                <FiMail className="text-purple-500 transition-transform duration-200 group-hover:-translate-y-0.5" />
+                <FiMail className="text-slate-500 group-hover:text-[#0D9488] transition-colors" />
                 <span className="font-medium">Contact Support</span>
               </Link>
             </DropdownItem>
@@ -334,21 +321,18 @@ export default function UserDropdown() {
         onClick={() => setIsOpen(v => !v)}
         className="
           group flex items-center gap-2
-          rounded-full px-1 py-1
-          transition-all duration-300
-          hover:bg-white/40
-          hover:shadow-lg
-          hover:ring-1 hover:ring-emerald-300/40
+          rounded-xl px-2 py-1
+          border border-transparent hover:border-slate-200 dark:hover:border-slate-700
+          transition-all duration-200
+          hover:bg-slate-100/70 dark:hover:bg-slate-800/50
         "
       >
         <span
           className="
-            hidden sm:flex h-10 w-10 rounded-full overflow-hidden
+            hidden sm:flex h-9 w-9 rounded-full overflow-hidden
             items-center justify-center
-            bg-gradient-to-br from-emerald-200 via-indigo-200 to-cyan-200
-            transition-all duration-300
-            group-hover:scale-[1.05]
-            group-hover:shadow-md
+            bg-[#142B4A] text-white
+            transition-all duration-200
           "
         >
           {avatarSrc ? (
@@ -361,20 +345,19 @@ export default function UserDropdown() {
               onError={() => setAvatarBroken(true)}
             />
           ) : (
-            <span className="font-medium text-gray-700">
+            <span className="text-sm font-bold text-white">
               {userInitial}
-              {/* {user.userName.charAt(0).toUpperCase()} */}
             </span>
           )}
         </span>
 
         {/* Phone: bordered, max 10 chars */}
-        <span className="sm:hidden text-md font-semibold whitespace-nowrap rounded-md border border-gray-400 px-1 py-1 transition-colors group-hover:text-emerald-700">
+        <span className="sm:hidden text-xs font-semibold whitespace-nowrap rounded-lg border border-slate-300 dark:border-slate-700 px-2 py-1.5 transition-colors group-hover:text-[#0D9488]">
           {userName.length > 10 ? userName.slice(0, 10) + "…" : userName}
         </span>
 
         {/* sm and up: full name, unchanged */}
-        <span className="hidden sm:inline text-sm font-medium transition-colors group-hover:text-emerald-700">
+        <span className="hidden sm:inline text-sm font-semibold transition-colors group-hover:text-[#0D9488]">
           {user.userName}
         </span>
 
@@ -384,13 +367,13 @@ export default function UserDropdown() {
       <Dropdown
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-        className="absolute right-0 mt-4 w-[340px] max-w-[calc(100vw-1rem)] rounded-2xl border
-                  bg-gradient-to-br from-emerald-50 via-indigo-50 to-cyan-50
-          shadow-theme-lg z-50"
+        className="absolute right-0 mt-3 w-[340px] max-w-[calc(100vw-1rem)] rounded-2xl border border-slate-200 dark:border-slate-800
+                  bg-white dark:bg-[#111C2E]
+                  shadow-2xl z-50"
       >
         {/* Header */}
-        <div className="px-6 py-4 text-center border-b">
-          <div className="mx-auto mb-2 h-14 w-14 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+        <div className="px-6 py-4 text-center border-b border-slate-100 dark:border-slate-800">
+          <div className="mx-auto mb-2.5 h-14 w-14 rounded-full overflow-hidden bg-[#142B4A] text-white flex items-center justify-center shadow-sm">
             {avatarSrc ? (
               <Image
                 src={avatarSrc}
@@ -401,17 +384,17 @@ export default function UserDropdown() {
                 onError={() => setAvatarBroken(true)}
               />
             ) : (
-              <span className="text-xl font-semibold text-gray-600">
+              <span className="text-xl font-bold text-white">
                 {userInitial}
-                {/* {user.userName.charAt(0).toUpperCase()} */}
               </span>
             )}
           </div>
 
-          <div className="font-semibold text-gray-900">{user.userName}</div>
-          <div className="text-xs text-gray-500 truncate">{user.email}</div>
+          <div className="font-bold text-slate-900 dark:text-slate-100">{user.userName}</div>
+          <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email}</div>
 
-          <div className="mt-2 text-xs font-medium text-emerald-600">
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 px-2.5 py-0.5 text-[11px] font-semibold text-[#0D9488] dark:text-[#2DD4BF]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#0D9488]" />
             {access?.isActive ? "Active Account" : "Inactive Account"}
           </div>
         </div>
@@ -421,32 +404,18 @@ export default function UserDropdown() {
           onClick={toggleInfo}
           className="
             group w-full
-            flex flex-col items-center justify-center
-            px-6 py-3
-            text-xs font-semibold tracking-wide
-            text-gray-900
-            transition-all duration-300
-            hover:bg-gradient-to-r
-            hover:from-emerald-200
-            hover:via-indigo-200
-            hover:to-cyan-200
+            flex items-center justify-between
+            px-6 py-2.5
+            text-xs font-semibold
+            text-slate-700 dark:text-slate-300
+            border-b border-slate-100 dark:border-slate-800
+            transition-colors
+            hover:bg-slate-50 dark:hover:bg-slate-800/50
           "
         >
-          <span className="flex items-center gap-2">
-            <span>Account Information</span>
-            <span className="text-[10px] text-blue-600 group-hover:text-gray-900">
-              [ Click to {infoOpen ? "Collapse" : "Expand"} ]
-            </span>
-          </span>
-
-          <span
-            className="
-              mt-1
-              transition-transform duration-300
-              group-hover:scale-110
-              animate-pulse
-            "
-          >
+          <span>Account Information</span>
+          <span className="flex items-center gap-1 text-[11px] text-[#0D9488]">
+            <span>{infoOpen ? "Hide" : "Show"}</span>
             {infoOpen ? <FiChevronUp /> : <FiChevronDown />}
           </span>
         </button>
@@ -455,10 +424,9 @@ export default function UserDropdown() {
         {infoOpen && (
           <div
             className="
-            px-6 pb-4 space-y-1
-            rounded-xl
-            transition-all duration-300
-            hover:bg-green-200
+            px-4 py-3 space-y-0.5
+            bg-slate-50/60 dark:bg-slate-900/40
+            border-b border-slate-100 dark:border-slate-800
           "
           >
             <InfoRow label="Role" value={role} />
@@ -492,7 +460,7 @@ export default function UserDropdown() {
 
         {/* Actions */}
         <div
-          className="border-t px-4 py-1 space-y-1"
+          className="px-3 py-2 space-y-1"
           onClick={(e) => {
             if ((e.target as HTMLElement).closest("a")) {
               if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
@@ -505,14 +473,12 @@ export default function UserDropdown() {
             <Link
               href={`/dashboards/${TARGET_PROGRAM}/auth/account/show`}
               className="
-              group flex items-center gap-2 rounded-xl px-3 py-2
+              group flex items-center gap-2.5 rounded-xl px-3 py-2
               transition-all duration-200
-              hover:bg-gradient-to-r hover:from-indigo-500/10 hover:to-cyan-500/10
-              hover:ring-1 hover:ring-indigo-300/40
             "
             >
-              <FiUser className="text-indigo-600 group-hover:translate-x-0.5 transition" />
-              My profile Account
+              <FiUser className="text-[#0D9488] group-hover:translate-x-0.5 transition" />
+              My Profile Account
             </Link>
           </DropdownItem>
 
@@ -520,13 +486,11 @@ export default function UserDropdown() {
             <Link
               href={`/dashboards/${TARGET_PROGRAM}/auth/account/support`}
               className="
-                group flex items-center gap-2 rounded-xl px-3 py-2
+                group flex items-center gap-2.5 rounded-xl px-3 py-2
                 transition-all duration-200
-                hover:bg-gradient-to-r hover:from-emerald-500/10 hover:to-teal-500/10
-                hover:ring-1 hover:ring-emerald-300/40
               "
             >
-              <FiSettings className="text-emerald-600 group-hover:rotate-6 transition" />
+              <FiSettings className="text-[#0D9488] group-hover:rotate-6 transition" />
               Support / Help
             </Link>
           </DropdownItem>
@@ -535,19 +499,17 @@ export default function UserDropdown() {
             <Link
               href={`/dashboards/${TARGET_PROGRAM}/auth/account/security/profile`}
               className="
-                group flex items-center gap-2 rounded-xl px-3 py-2
+                group flex items-center gap-2.5 rounded-xl px-3 py-2
                 transition-all duration-200
-                hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-fuchsia-500/10
-                hover:ring-1 hover:ring-purple-300/40
               "
             >
-              <FiShield className="text-purple-600 group-hover:-translate-y-0.5 transition" />
+              <FiShield className="text-[#142B4A] dark:text-[#2DD4BF] group-hover:-translate-y-0.5 transition" />
               Account Security
             </Link>
           </DropdownItem>
 
           {/* Logout Actions */}
-          <div className="relative space-y-2">
+          <div className="relative pt-2 space-y-2 border-t border-slate-100 dark:border-slate-800">
 
             {/* PRIMARY: Distinct Logout */}
             <div className="flex items-center gap-2">
@@ -569,13 +531,13 @@ export default function UserDropdown() {
                       typeof response?.message === "string" &&
                         response.message.trim() !== ""
                         ? response.message
-                        : "You’ve Been Signed Out Successfully ⚓"
+                        : "You’ve Been Signed Out Successfully"
                     );
 
                     window.location.href = `${redirectTo}?msg=${msg}`;
                   } catch {
                     // 🚨 absolute final fallback — nothing can block logout navigation
-                    const msg = encodeURIComponent("You’ve Been Signed Out Successfully ⚓");
+                    const msg = encodeURIComponent("You’ve Been Signed Out Successfully");
                     window.location.href = `${DEFAULT_LOGOUT_REDIRECT}?msg=${msg}`;
                   }
                 }}
@@ -584,14 +546,14 @@ export default function UserDropdown() {
                 className="
                   flex-1
                   flex items-center justify-center gap-2
-                  px-4 py-2.5
+                  px-4 py-2
                   rounded-xl
-                  text-sm font-semibold
-                  text-rose-900
-                  border border-blue-300
-                  bg-gradient-to-r from-rose-100 to-red-100
-                  hover:from-yellow-500 hover:to-green-100
-                  hover:border-rose-900
+                  text-xs font-semibold
+                  text-rose-700 dark:text-rose-300
+                  border border-rose-200 dark:border-rose-800/70
+                  bg-rose-50 dark:bg-rose-950/40
+                  hover:bg-rose-100 dark:hover:bg-rose-900/50
+                  transition-colors
                 "
               >
                 <FiLogIn className="h-4 w-4" />
@@ -603,9 +565,10 @@ export default function UserDropdown() {
                 onClick={() => setLogoutOptionsOpen((v) => !v)}
                 className="
                   p-2 rounded-xl
-                  border border-gray-300
-                  bg-white
-                  hover:bg-gray-100
+                  border border-slate-200 dark:border-slate-700
+                  bg-slate-50 dark:bg-slate-800
+                  text-slate-700 dark:text-slate-300
+                  hover:bg-slate-100 dark:hover:bg-slate-700
                   transition
                 "
                 title="Advanced logout options"
@@ -621,9 +584,9 @@ export default function UserDropdown() {
                   absolute right-0 mt-1
                   w-full
                   rounded-xl
-                  border
-                  bg-white
-                  shadow-lg
+                  border border-slate-200 dark:border-slate-800
+                  bg-white dark:bg-[#111C2E]
+                  shadow-xl
                   animate-fade-in
                   z-50
                 "
@@ -646,13 +609,13 @@ export default function UserDropdown() {
                         typeof response?.message === "string" &&
                           response.message.trim() !== ""
                           ? response.message
-                          : "You’ve Been Signed Out Successfully ⚓"
+                          : "You’ve Been Signed Out Successfully"
                       );
 
                       window.location.href = `${redirectTo}?msg=${msg}`;
                     } catch {
                       // 🚨 absolute final fallback — nothing can block logout navigation
-                      const msg = encodeURIComponent("You’ve Been Signed Out Successfully ⚓");
+                      const msg = encodeURIComponent("You’ve Been Signed Out Successfully");
                       window.location.href = `${DEFAULT_LOGOUT_REDIRECT}?msg=${msg}`;
                     }
                   }}
@@ -662,24 +625,24 @@ export default function UserDropdown() {
                     flex items-start gap-3
                     px-4 py-3
                     text-left
-                    rounded-xl
-                    hover:bg-rose-50
+                    rounded-t-xl
+                    hover:bg-rose-50 dark:hover:bg-rose-950/30
                     transition
                   "
                 >
                   <FiShield className="text-rose-600 mt-0.5" />
                   <div>
-                    <div className="text-sm font-bold text-rose-800">
+                    <div className="text-xs font-bold text-rose-700 dark:text-rose-300">
                       Log out of all Devices
                     </div>
-                    <div className="text-xs text-gray-500 text-center">
-                      Sign out from all Active Sessions ⚓
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Sign out from all active sessions
                     </div>
                   </div>
                 </button>
 
                 {/* DELETE MY ACCOUNT */}
-                <div className="border-t border-gray-100 bg-red-50/50 rounded-b-xl">
+                <div className="border-t border-slate-100 dark:border-slate-800 bg-rose-50/40 dark:bg-rose-950/20 rounded-b-xl">
                   <button
                     type="button"
                     onClick={() => setShowDeleteConfirm((v) => !v)}
@@ -688,25 +651,25 @@ export default function UserDropdown() {
                     flex items-start gap-3
                     px-4 py-3
                     text-left
-                    hover:bg-red-100/70
+                    hover:bg-rose-100/60 dark:hover:bg-rose-950/40
                     transition
                   "
                   >
-                    <FiTrash2 className="text-red-600 mt-0.5 shrink-0" />
+                    <FiTrash2 className="text-rose-600 mt-0.5 shrink-0" />
                     <div>
-                      <div className="text-sm font-bold text-red-700">
+                      <div className="text-xs font-bold text-rose-700 dark:text-rose-300">
                         Delete my account
                       </div>
-                      <div className="text-xs text-gray-500">
-                        Deactivate and delete account ⚓
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Deactivate and delete account
                       </div>
                     </div>
                   </button>
 
                   {showDeleteConfirm && (
-                    <div className="p-3 mx-3 mb-3 bg-red-100 border border-red-300 rounded-xl space-y-2">
-                      <div className="flex items-start gap-2 text-xs font-semibold text-red-900">
-                        <FiAlertTriangle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
+                    <div className="p-3 mx-3 mb-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-xl space-y-2">
+                      <div className="flex items-start gap-2 text-xs font-semibold text-rose-900 dark:text-rose-200">
+                        <FiAlertTriangle className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
                         <span>
                           Are you sure you want to delete your account? This will deactivate your access.
                         </span>
@@ -719,11 +682,11 @@ export default function UserDropdown() {
                         maxLength={300}
                         rows={2}
                         placeholder="Reason for leaving (optional)"
-                        className="w-full resize-none rounded-lg border border-red-300 bg-white px-2 py-1.5 text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-red-500"
+                        className="w-full resize-none rounded-lg border border-rose-200 dark:border-rose-800 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-rose-500"
                       />
 
                       {deleteError && (
-                        <p className="text-[11px] text-red-700">{deleteError}</p>
+                        <p className="text-[11px] text-rose-700 dark:text-rose-300">{deleteError}</p>
                       )}
 
                       <div className="flex items-center gap-2 pt-1">
@@ -731,7 +694,7 @@ export default function UserDropdown() {
                           type="button"
                           onClick={handleDeleteAccount}
                           disabled={isDeleting}
-                          className="flex-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow-sm transition disabled:opacity-50"
+                          className="flex-1 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg shadow-xs transition disabled:opacity-50"
                         >
                           {isDeleting ? "Deleting..." : "Yes, Delete Account"}
                         </button>
@@ -743,7 +706,7 @@ export default function UserDropdown() {
                             setDeleteError(null);
                           }}
                           disabled={isDeleting}
-                          className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded-lg transition"
+                          className="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-medium rounded-lg transition"
                         >
                           Cancel
                         </button>

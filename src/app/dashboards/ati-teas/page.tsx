@@ -128,25 +128,25 @@ function ProgramCoursesRow({
           <Link
             key={courseIdentifier}
             href={`/dashboards/${dashboardSlug}/vista/learning/subjects/distinct/overview?identifier=${courseIdentifier}`}
-            className="group shrink-0 snap-start w-full md:w-52 overflow-hidden rounded-xl border border-[var(--text-color)]/20 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 p-3 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] hover:border-cyan-400/60 hover:from-cyan-500/20 hover:to-blue-500/20 hover:shadow-[0_8px_25px_-8px_rgba(34,211,238,0.6)]"
+            className="group shrink-0 snap-start w-full md:w-56 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-4 shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:border-[#0D9488] hover:shadow-md"
           >
-            <h3 className="font-bold text-md text-[var(--text-color)] truncate group-hover:text-cyan-400">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-[#0D9488] transition-colors">
               {course.name}
             </h3>
 
-            <p className="text-[8px] opacity-60 mt-0.5 text-[var(--text-color)] line-clamp-2 leading-relaxed">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
               {funcTruncateHelper(course.description, 60)}
             </p>
 
             <div className="flex items-center justify-between my-3">
-              <span className="text-[9px] uppercase font-bold opacity-50 tracking-wide text-[var(--text-color)]">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-[#0D9488]">
                 {course.subjectsCount ?? 0} Subjects
               </span>
             </div>
 
-            <span className="flex w-full items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-[var(--text-color)]/10 border border-[var(--text-color)]/20 text-[10px] font-bold uppercase text-[var(--text-color)] opacity-70 group-hover:opacity-100 group-hover:bg-cyan-500/20 group-hover:border-cyan-400/50 transition-all">
+            <span className="flex w-full items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#142B4A] text-[11px] font-semibold text-white group-hover:bg-[#0D9488] transition-colors">
               Continue Studying
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </span>
           </Link>
         );
@@ -205,11 +205,11 @@ function RnNursingCourseScroller({
         </div>
 
         <div className="flex gap-1.5 shrink-0">
-          <button type="button" onClick={() => move(-1)} aria-label="Previous courses" className="w-8 h-8 flex items-center justify-center text-black rounded-lg border border-blue-200 bg-green-100 hover:bg-yellow-500 hover:text-black transition-all">
+          <button type="button" onClick={() => move(-1)} aria-label="Previous courses" className="w-8 h-8 flex items-center justify-center text-slate-700 dark:text-slate-200 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-[#0D9488] hover:text-[#0D9488] transition-all">
             <ChevronLeft className="w-4 h-4" />
           </button>
 
-          <button type="button" onClick={() => move(1)} aria-label="Next courses" className="w-8 h-8 flex items-center justify-center text-black rounded-lg border border-blue-200 bg-green-100 hover:bg-yellow-500 hover:text-black transition-all">
+          <button type="button" onClick={() => move(1)} aria-label="Next courses" className="w-8 h-8 flex items-center justify-center text-slate-700 dark:text-slate-200 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-[#0D9488] hover:text-[#0D9488] transition-all">
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -329,7 +329,7 @@ function CircularGauge({
             style={{ top: panelPos.top, left: panelPos.left, width: 288 }}
             className="fixed z-[100] rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden"
           >
-            <div className="px-4 py-3 bg-gradient-to-r from-indigo-800 to-yellow-800 text-center text-white">
+            <div className="px-4 py-3 bg-gradient-to-r from-[#142B4A] to-[#0D9488] text-center text-white">
               <p className="text-[10px] font-bold uppercase tracking-wide opacity-80">Aggregate : Grade Point Average [ GPA ]</p>
               <p className="text-2xl font-black">{clamped}%</p>
             </div>
@@ -396,95 +396,74 @@ function MySubscriptionBanner({
   const isFullyVerified = isActive && isPaid;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-emerald-500 bg-gradient-to-br from-emerald-700 via-black to-teal-700 backdrop-blur-md px-4 py-3 shadow-[0_0_24px_-6px_rgba(16,185,129,0.5)]">
-      {/* subtle glow ring */}
-      <div className="pointer-events-none absolute -inset-px rounded-2xl ring-1 ring-emerald-300/30" />
+    <div className="relative overflow-hidden rounded-2xl border border-teal-400/30 bg-gradient-to-br from-[#0F2036] via-[#142B4A] to-[#0D9488] backdrop-blur-md px-4 py-3.5 shadow-md">
+      <div className="pointer-events-none absolute -inset-px rounded-2xl ring-1 ring-teal-300/20" />
 
-      <div className="flex items-center gap-3">
-        {/* Big trust tick */}
+      <div className="flex items-center gap-3.5">
+        {/* Status badge icon */}
         <div className="relative shrink-0">
           <div
-            className={`flex items-center justify-center w-22 h-22 rounded-full ring-2 ${isActive ? "bg-green-800 ring-red-300" : "ring-blue-100"
+            className={`flex items-center justify-center w-14 h-14 rounded-2xl ring-1 ${isActive
+              ? "bg-teal-500/20 ring-teal-300/40"
+              : "bg-rose-500/20 ring-rose-300/40"
               }`}
           >
-            <div
-              className={`flex items-center justify-center w-20 h-20 rounded-full shadow-lg ${isActive
-                ? "bg-gradient-to-br from-emerald-400 via-indigo-400 to-cyan-500"
-                : "bg-gradient-to-br from-yellow-500 via-blue-500 to-red-600"
-                }`}
-            >
-              {isActive ? (
-                <CheckCircle2 className="w-18 h-18 text-white" strokeWidth={1.5} />
-              ) : (
-                <XCircle className="w-18 h-18 text-red-500" strokeWidth={1.5} />
-              )}
-            </div>
+            {isActive ? (
+              <CheckCircle2 className="w-8 h-8 text-[#2DD4BF]" strokeWidth={2} />
+            ) : (
+              <XCircle className="w-8 h-8 text-rose-400" strokeWidth={2} />
+            )}
           </div>
 
           {isFullyVerified && (
-            <span className="absolute -top-1 -right-1 flex h- w-3.5">
-              {/* Soft pulsing glow */}
-              <span
-                className="
-                  absolute inset-0 rounded-full
-                  bg-emerald-400
-                  animate-ping
-                "
-              />
-
-              {/* Pulsing verification dot */}
-              <span
-                className="
-                  relative inline-flex h-3.5 w-3.5 rounded-full
-                  ring-2 ring-white
-                  bg-black
-                  shadow-[0_0_8px_rgba(52,211,153,0.8)]
-                  animate-pulse
-                  transition-colors
-                "
-              />
+            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+              <span className="absolute inset-0 rounded-full bg-teal-400 animate-ping" />
+              <span className="relative inline-flex h-3.5 w-3.5 rounded-full ring-2 ring-[#142B4A] bg-teal-400" />
             </span>
           )}
         </div>
 
         <div className="min-w-0">
-          <p className="text-sm md:text-base font-normal text-white leading-tight">
-            You&apos;ve Got{" "}
-            <span className="font-black">{activeCount}</span>{" "}
-            Active Subscription{activeCount === 1 ? "" : "s"} ✔️
+          <p className="text-xs md:text-sm font-semibold text-white leading-tight">
+            <span className="font-bold text-[#2DD4BF]">{activeCount}</span>{" "}
+            Active Subscription{activeCount === 1 ? "" : "s"}
           </p>
 
-          <p className="text-[11px] md:text-xs font-semibold text-emerald-200 truncate text-center">
+          <p className="text-xs font-bold text-teal-100 truncate mt-0.5">
             {pkg.name}
           </p>
 
           <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
             <span
-              className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${isActive ? "bg-emerald-400 text-yellow-950" : "bg-red-500 text-black"
+              className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${isActive
+                ? "bg-teal-400/20 text-teal-100 border border-teal-300/30"
+                : "bg-rose-500/20 text-rose-200 border border-rose-400/30"
                 }`}
             >
               {isActive ? (
-                <CheckCircle2 className="w-2.5 h-2.5" strokeWidth={3} />
+                <CheckCircle2 className="w-2.5 h-2.5" strokeWidth={2.5} />
               ) : (
-                <XCircle className="w-2.5 h-2.5" strokeWidth={3} />
+                <XCircle className="w-2.5 h-2.5" strokeWidth={2.5} />
               )}
-              Validation : {sub.subscriptionStatus ?? "—"}
+              Status: {sub.subscriptionStatus ?? "—"}
             </span>
             <span
-              className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${isPaid ? "bg-emerald-400 text-blue-950" : "bg-red-500 text-black"
+              className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${isPaid
+                ? "bg-teal-400/20 text-teal-100 border border-teal-300/30"
+                : "bg-rose-500/20 text-rose-200 border border-rose-400/30"
                 }`}
             >
               {isPaid ? (
-                <CheckCircle2 className="w-2.5 h-2.5" strokeWidth={3} />
+                <CheckCircle2 className="w-2.5 h-2.5" strokeWidth={2.5} />
               ) : (
-                <XCircle className="w-2.5 h-2.5" strokeWidth={3} />
+                <XCircle className="w-2.5 h-2.5" strokeWidth={2.5} />
               )}
-              Paid : {sub.subscriptionHasPaid ?? "—"}
+              Paid: {sub.subscriptionHasPaid ?? "—"}
             </span>
           </div>
 
-          <p className="text-[10px] md:text-[11px] text-white/80 mt-1.5">
-            Full Access From <strong className="text-white">{formatShortDate(sub.validFrom)}</strong> to {" "}
+          <p className="text-[10px] text-slate-200/80 mt-1.5">
+            Access: <strong className="text-white">{formatShortDate(sub.validFrom)}</strong> –{" "}
             <strong className="text-white">{formatShortDate(sub.validUntil)}</strong>
           </p>
         </div>
@@ -778,9 +757,9 @@ export default function AtiTeasHomePage() {
 
         {/* ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */}
         {/* Hero / Greeting — compact */}
-        <div className="relative overflow-hidden rounded-2xl border border-[var(--text-color)] bg-gradient-to-br from-[#112b51] via-[#164c78] to-blue-500 backdrop-blur-xl px-5 py-4 md:px-7 md:py-5">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-1">
-            <div className="flex items-center gap-3 min-w-0">
+        <div className="relative overflow-hidden rounded-2xl border border-slate-200/20 bg-gradient-to-br from-[#142B4A] via-[#0F2036] to-[#0D9488] px-5 py-5 md:px-7 md:py-6 shadow-md">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
 
               <CircularGauge
                 score={overallAverageScore}
@@ -798,13 +777,13 @@ export default function AtiTeasHomePage() {
                   <div className="flex items-center gap-2 min-w-0">
                     <h1 className="text-lg md:text-2xl font-bold text-white truncate">
                       {greeting}
-                      {!isUserLoading && firstName ? `, ${firstName}` : ""} !
+                      {!isUserLoading && firstName ? `, ${firstName}` : ""}!
                     </h1>
                   </div>
 
                   {/* Right: Time + Flag */}
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-sm md:text-lg font-semibold text-white">
+                    <span className="text-xs md:text-sm font-semibold text-teal-100 bg-white/10 px-2.5 py-1 rounded-full">
                       {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </span>
 
@@ -816,46 +795,46 @@ export default function AtiTeasHomePage() {
                         width={28}
                         height={20}
                         unoptimized
-                        className="w-6 h-4 md:w-7 md:h-5 rounded-sm shadow-sm object-cover shrink-0"
+                        className="w-6 h-4 md:w-7 md:h-5 rounded-xs shadow-xs object-cover shrink-0"
                       />
                     )}
                   </div>
 
                 </div>
 
-                <p className="text-xs md:text-sm opacity-70 text-white truncate">
-                  {APP_TITLE} {TARGET_NAME} Dashboard — let&apos;s Keep the Momentum Going. ⚓
+                <p className="text-xs md:text-sm text-slate-200/85 truncate mt-0.5">
+                  {APP_TITLE} {TARGET_NAME} Dashboard — Clinical Preparation &amp; Analytics
                 </p>
 
                 {performanceInsight ? (
                   <div
-                    className={`hidden md:flex mt-2 max-w-xl items-start gap-2 rounded-lg border px-3 py-1.5 text-[11px] md:text-xs ${performanceInsight.trend === "up"
-                      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600"
+                    className={`hidden md:flex mt-2.5 max-w-xl items-start gap-2 rounded-xl border px-3.5 py-2 text-[11px] md:text-xs ${performanceInsight.trend === "up"
+                      ? "border-teal-300/30 bg-teal-500/15 text-teal-50"
                       : performanceInsight.trend === "down"
-                        ? "border-amber-200 bg-amber-500 text-amber-600"
-                        : "border-white  bg-white text-white "
+                        ? "border-amber-300/30 bg-amber-500/15 text-amber-50"
+                        : "border-white/20 bg-white/10 text-slate-100"
                       }`}
                   >
-                    {performanceInsight.trend === "up" && <TrendingUp className="w-3.5 h-3.5 mt-0.5 shrink-0" />}
-                    {performanceInsight.trend === "down" && <TrendingDown className="w-3.5 h-3.5 mt-0.5 shrink-0" />}
-                    {performanceInsight.trend === "steady" && <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0" />}
+                    {performanceInsight.trend === "up" && <TrendingUp className="w-3.5 h-3.5 mt-0.5 shrink-0 text-[#2DD4BF]" />}
+                    {performanceInsight.trend === "down" && <TrendingDown className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-300" />}
+                    {performanceInsight.trend === "steady" && <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0 text-[#2DD4BF]" />}
                     <p>
-                      <span className="font-semibold">{performanceInsight.headline}</span>{" "}
-                      <span className="opacity-80">{performanceInsight.detail}</span>
+                      <span className="font-semibold">{performanceInsight.headline}:</span>{" "}
+                      <span className="opacity-90">{performanceInsight.detail}</span>
                     </p>
                   </div>
                 ) : (
-                  <div className="hidden md:flex mt-2 max-w-xl items-center justify-between gap-2 rounded-lg border border-indigo-200 bg-indigo-300 px-3 py-1.5 text-[11px] md:text-xs text-black">
-                    <span>No exams taken yet — take a free test to see where you stand!</span>
-                    <Link href={`/pages/exams/${TARGET_PANEL}`} className="font-semibold underline shrink-0">
-                      Take a Free Test
+                  <div className="hidden md:flex mt-2.5 max-w-xl items-center justify-between gap-2 rounded-xl border border-white/20 bg-white/10 px-3.5 py-2 text-[11px] md:text-xs text-white">
+                    <span>No exams taken yet — take a free diagnostic test to establish your baseline.</span>
+                    <Link href={`/pages/exams/${TARGET_PANEL}`} className="font-semibold text-[#2DD4BF] hover:underline shrink-0">
+                      Take a Free Test →
                     </Link>
                   </div>
                 )}
 
-                <div className="hidden md:block mt-2 max-w-xl rounded-lg border border-[var(--text-color)] bg-blue-100 px-3 py-1.5 text-[11px] md:text-xs text-black">
-                  <span className="font-semibold">{randomQuote.quoteTitle}</span>{" "}
-                  <span className="opacity-70">— {randomQuote.quoteDescription}</span>
+                <div className="hidden md:block mt-2 max-w-xl rounded-xl border border-white/15 bg-slate-900/30 px-3.5 py-2 text-[11px] md:text-xs text-slate-100">
+                  <span className="font-semibold text-white">{randomQuote.quoteTitle}</span>{" "}
+                  <span className="opacity-80">— {randomQuote.quoteDescription}</span>
                 </div>
 
               </div>
@@ -863,10 +842,9 @@ export default function AtiTeasHomePage() {
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 shrink-0 w-full lg:w-auto">
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-3 shrink-0 w-full lg:w-auto">
+              <div className="flex flex-col gap-2.5 shrink-0 w-full lg:w-auto">
 
-                {/* Active Subscription - below buttons */}
+                {/* Active Subscription */}
                 {myActiveSubscription ? (
                   <MySubscriptionBanner
                     pkg={myActiveSubscription.pkg}
@@ -876,11 +854,11 @@ export default function AtiTeasHomePage() {
                 ) : (
                   <Link
                     href={`/dashboards/${TARGET_PANEL}/vista/subscriptions/items`}
-                    className="group inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm bg-gradient-to-r from-amber-800 via-orange-800 to-yellow-800 text-white shadow-lg  hover:shadow-xl hover:scale-105 transition-all duration-300"
+                    className="group inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs md:text-sm bg-amber-500/20 border border-amber-300/40 text-amber-100 hover:bg-amber-500/30 transition-all duration-200"
                   >
-                    <CreditCard className="w-4 h-4" />
-                    No Active Plan
-                    <ArrowRight className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200" />
+                    <CreditCard className="w-4 h-4 text-amber-300" />
+                    No Active Plan — View Options
+                    <ArrowRight className="w-3.5 h-3.5 opacity-80 group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                 )}
 
@@ -888,23 +866,17 @@ export default function AtiTeasHomePage() {
                 <button
                   type="button"
                   onClick={toggleLeftSidebar}
-                  className="group relative md:hidden w-full overflow-hidden inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-indigo-700 via-indigo-500 to-indigo-700 shadow-lg shadow-indigo-500/30 active:scale-95 transition-all duration-300 hover:shadow-indigo-500/50 hover:-translate-y-0.5"
+                  className="group relative md:hidden w-full overflow-hidden inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-white bg-[#0D9488] hover:bg-[#0F766E] shadow-sm transition-all"
                 >
-                  {/* Shiny sweep */}
-                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12" />
-
-                  {/* Soft glow */}
-                  <span className="absolute inset-0 rounded-xl ring-1 ring-white/20" />
-
-                  <span className="relative">Get Started</span>
-                  <ArrowRight className="relative w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                  <span className="relative">Open Study Menu</span>
+                  <ArrowRight className="relative w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                 </button>
 
                 {/* Buttons: hidden on phones */}
-                <div className="hidden md:flex flex-wrap items-center gap-3">
+                <div className="hidden md:flex flex-wrap items-center gap-2.5">
                   <Link
                     href={`/dashboards/${TARGET_PANEL}/vista/subscriptions/items`}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-green-100 font-semibold text-xs md:text-sm bg-gradient-to-r from-indigo-700 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs md:text-sm bg-[#0D9488] hover:bg-[#0F766E] text-white shadow-sm transition-colors"
                   >
                     <CreditCard className="w-4 h-4" />
                     View Subscription Packages
@@ -912,7 +884,7 @@ export default function AtiTeasHomePage() {
 
                   <Link
                     href={`/dashboards/${TARGET_PANEL}/vista/subscriptions/packages`}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs md:text-sm border border-indigo-200 bg-indigo-200 text-[var(--text-color)] backdrop-blur-sm hover:bg-indigo-500 hover:text-white hover:border-indigo-500 hover:shadow-lg hover:scale-105 transition-all duration-300"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs md:text-sm border border-white/25 bg-white/10 text-white hover:bg-white/20 transition-colors"
                   >
                     <BookMarked className="w-4 h-4" />
                     My Subscriptions
@@ -972,35 +944,35 @@ export default function AtiTeasHomePage() {
             <button
               type="button"
               onClick={() => setAuthModalStep("login")}
-              className="group relative overflow-hidden rounded-xl border border-[var(--text-color)]/20 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 px-4 py-3 flex items-center justify-between hover:border-[var(--text-color)]/50 transition-all duration-200 text-left"
+              className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] px-4 py-3.5 flex items-center justify-between hover:border-[#0D9488] shadow-xs transition-all duration-200 text-left"
             >
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                  <LogIn className="w-4 h-4 text-blue-500" />
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#142B4A]/10 dark:bg-teal-500/15 flex items-center justify-center">
+                  <LogIn className="w-4 h-4 text-[#142B4A] dark:text-[#2DD4BF]" />
                 </div>
                 <div>
-                  <p className="font-bold text-md text-[var(--text-color)]">Log In Now</p>
-                  <p className="text-[10px] opacity-60 text-[var(--text-color)]">You have an Account ! Access your account ?</p>
+                  <p className="font-bold text-sm text-slate-900 dark:text-slate-100">Log In Now</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Already have an account? Sign in to sync progress.</p>
                 </div>
               </div>
-              <ArrowRight className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 text-[var(--text-color)]" />
+              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#0D9488] group-hover:translate-x-0.5 transition-all duration-200" />
             </button>
 
             <button
               type="button"
               onClick={() => setAuthModalStep("register")}
-              className="group relative overflow-hidden rounded-xl border border-[var(--text-color)]/20 bg-gradient-to-br from-pink-500/10 to-purple-500/10 px-4 py-3 flex items-center justify-between hover:border-[var(--text-color)]/50 transition-all duration-200 text-left"
+              className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] px-4 py-3.5 flex items-center justify-between hover:border-[#0D9488] shadow-xs transition-all duration-200 text-left"
             >
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-pink-500/20 flex items-center justify-center">
-                  <UserPlus className="w-4 h-4 text-pink-500" />
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#0D9488]/10 flex items-center justify-center">
+                  <UserPlus className="w-4 h-4 text-[#0D9488]" />
                 </div>
                 <div>
-                  <p className="font-bold text-md text-[var(--text-color)]">Register Now</p>
-                  <p className="text-[10px] opacity-60 text-[var(--text-color)]">Do not have an Account ! Create a new account ?</p>
+                  <p className="font-bold text-sm text-slate-900 dark:text-slate-100">Register Now</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">New to {APP_TITLE}? Create your learner account.</p>
                 </div>
               </div>
-              <ArrowRight className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 text-[var(--text-color)]" />
+              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#0D9488] group-hover:translate-x-0.5 transition-all duration-200" />
             </button>
           </div>
         )}
@@ -1018,34 +990,34 @@ export default function AtiTeasHomePage() {
         <div className="grid grid-cols-1 md:grid-cols-1 gap-3 items-stretch">
 
           {/* Reports & Progress */}
-          <div className="h-full flex flex-col rounded-2xl border border-[var(--text-color)] bg-[var(--content-bg)] p-4">
+          <div className="h-full flex flex-col rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-5 shadow-xs">
             <div className="flex items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-[var(--text-color)] opacity-70" />
-                <h2 className="text-sm md:text-base font-bold text-[var(--text-color)]">
+                <AlertCircle className="w-4 h-4 text-[#0D9488]" />
+                <h2 className="text-sm md:text-base font-bold text-slate-900 dark:text-slate-100">
                   Reports &amp; Progress
                 </h2>
               </div>
               <Link
                 href={REPORTS_ROUTE}
-                className="text-md font-semibold opacity-60 hover:opacity-100 flex items-center gap-1 text-[var(--text-color)] transition-opacity shrink-0"
+                className="text-xs font-semibold text-[#0D9488] hover:underline flex items-center gap-1 shrink-0"
               >
-                View All Reports <ArrowRight className="w-3 h-3" />
+                View All Reports <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
 
-            <div className="flex-1 grid grid-cols-3 gap-2">
-              <div className="flex flex-col items-center justify-center rounded-lg border border-[var(--text-color)]/10 py-3">
-                <span className="text-lg font-black text-[var(--text-color)]">{totalExamsDone}</span>
-                <span className="text-[9px] font-semibold uppercase opacity-60 text-[var(--text-color)] text-center">Exams Done</span>
+            <div className="flex-1 grid grid-cols-3 gap-3">
+              <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 py-3.5">
+                <span className="text-xl font-black text-[#142B4A] dark:text-white">{totalExamsDone}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-center mt-0.5">Exams Done</span>
               </div>
-              <div className="flex flex-col items-center justify-center rounded-lg border border-[var(--text-color)]/10 py-3">
-                <span className="text-lg font-black text-[var(--text-color)]">{totalSubjectsDone}</span>
-                <span className="text-[9px] font-semibold uppercase opacity-60 text-[var(--text-color)] text-center">Subjects Covered</span>
+              <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 py-3.5">
+                <span className="text-xl font-black text-[#0D9488]">{totalSubjectsDone}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-center mt-0.5">Subjects Covered</span>
               </div>
-              <div className="flex flex-col items-center justify-center rounded-lg border border-[var(--text-color)]/10 py-3">
-                <span className="text-lg font-black text-[var(--text-color)]">{pendingOrIncompleteExams.length}</span>
-                <span className="text-[9px] font-semibold uppercase opacity-60 text-[var(--text-color)] text-center">Incomplete</span>
+              <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 py-3.5">
+                <span className="text-xl font-black text-amber-600 dark:text-amber-400">{pendingOrIncompleteExams.length}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-center mt-0.5">Incomplete</span>
               </div>
             </div>
 
@@ -1055,15 +1027,15 @@ export default function AtiTeasHomePage() {
                   <Link
                     key={exam.guidId ?? exam.id}
                     href={`/web/${TARGET_PANEL}/vista/exam/generic?mode=Exam&identifier=${exam.guidId ?? exam.id}`}
-                    className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-[var(--text-color)]/10 hover:border-[var(--text-color)]/40 hover:bg-[var(--text-color)]/5 transition-all duration-200"
+                    className="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-[#0D9488] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200"
                   >
-                    <span className="text-xs font-semibold text-[var(--text-color)] truncate">
+                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
                       {exam.title}
                     </span>
                     <span
-                      className={`shrink-0 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${status === "InProgress"
-                        ? "bg-emerald-500/20 text-emerald-500"
-                        : "bg-amber-500/20 text-amber-500"
+                      className={`shrink-0 text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-full ${status === "InProgress"
+                        ? "bg-teal-500/15 text-[#0D9488] dark:text-[#2DD4BF]"
+                        : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                         }`}
                     >
                       {status === "InProgress" ? "In Progress" : "Pending"}
@@ -1079,27 +1051,12 @@ export default function AtiTeasHomePage() {
         {/* ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */}
         {/* Dynamic Vista Quote */}
         <div className="w-full flex justify-center items-center py-1">
-          <div
-            className="
-              max-w-5xl w-full
-              text-center
-              px-5 py-3
-              rounded-xl
-              border
-              backdrop-blur-xl
-              bg-gradient-to-r
-              from-purple-500/10
-              via-pink-500/10
-              to-cyan-500/10
-              shadow-md
-              transition-all duration-500
-            "
-          >
+          <div className="max-w-5xl w-full text-center px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] shadow-xs">
             <div className="flex flex-col md:flex-row justify-center items-center gap-2 text-xs md:text-sm">
-              <span className="font-bold tracking-wide text-[var(--text-color)]">
+              <span className="font-bold tracking-wide text-[#142B4A] dark:text-[#2DD4BF]">
                 {randomQuote.quoteTitle}
               </span>
-              <span className="opacity-70 text-[var(--text-color)]">
+              <span className="text-slate-600 dark:text-slate-400">
                 — {randomQuote.quoteDescription}
               </span>
             </div>
