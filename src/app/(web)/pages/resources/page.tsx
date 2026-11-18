@@ -150,49 +150,63 @@ export default function DashboardsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-green-100 to-pink-300 pt-8 pb-10 px-4 md:px-10">
-            <h1 className="text-4xl font-bold text-center text-gray-800 mb-3">
-                📚 Explore All Resources.
-            </h1>
+        <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1220] py-12 px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-7xl">
+                <div className="text-center mb-10">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3.5 py-1 text-xs font-semibold text-[#0D9488] dark:text-teal-300 mb-3">
+                        NURVIA Resource Hub
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white">
+                        Explore All Resources
+                    </h1>
+                    <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                        Select an exam track or study resource below to continue your preparation.
+                    </p>
+                </div>
 
-            <div className="border-2 border-gray-300 rounded-2xl p-6 shadow-inner bg-white">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {dashboardCards.map((card, index) => {
-                        const isLastOpened = lastOpenedRoute === card.route
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 bg-white dark:bg-[#111C2E] shadow-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
+                        {dashboardCards.map((card, index) => {
+                            const isLastOpened = lastOpenedRoute === card.route
 
-                        return (
-                            <div
-                                key={index}
-                                onClick={() => handleCardClick(card.route)}
-                                className={`relative cursor-pointer bg-gradient-to-br from-indigo-200 via-gray-50 to-pink-100 rounded-xl shadow hover:shadow-xl transition-all duration-300 p-5 border hover:border-green-500 ${isLastOpened ? 'ring-2 ring-purple-400 bg-purple-50' : ''
+                            return (
+                                <div
+                                    key={index}
+                                    onClick={() => handleCardClick(card.route)}
+                                    className={`relative cursor-pointer rounded-2xl border p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                                        isLastOpened
+                                            ? 'border-[#0D9488] ring-2 ring-[#0D9488]/30 bg-teal-50/40 dark:bg-teal-950/20'
+                                            : 'border-slate-200 dark:border-slate-800 bg-[#F8FAFC] dark:bg-[#0B1220] hover:border-[#0D9488]/50'
                                     }`}
-                            >
-                                {card.badge && (
-                                    <span
-                                        className={`absolute top-3 right-3 text-black font-bold text-xs px-2 py-1 rounded-full shadow-sm flex items-center ${card.badge.color
-                                            } ${isLastOpened ? 'opacity-50' : ''}`}
-                                    >
-                                        {card.badge.icon}
-                                        {card.badge.label}
-                                    </span>
-                                )}
+                                >
+                                    {card.badge && (
+                                        <span
+                                            className={`absolute top-3 right-3 text-white font-semibold text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full flex items-center ${
+                                                card.badge.color
+                                            } ${isLastOpened ? 'opacity-75' : ''}`}
+                                        >
+                                            {card.badge.icon}
+                                            {card.badge.label}
+                                        </span>
+                                    )}
 
-                                {isLastOpened && (
-                                    <span className="animate-pulse absolute top-3 left-3 font-bold bg-purple-300 border text-black text-xs px-3 py-1 rounded-full shadow-md">
-                                        Last Opened
-                                    </span>
-                                )}
+                                    {isLastOpened && (
+                                        <span className="absolute top-3 left-3 font-semibold bg-[#0D9488] text-white text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full">
+                                            Last Opened
+                                        </span>
+                                    )}
 
-                                <div className="mb-4 flex justify-center">{card.icon}</div>
+                                    <div className="mb-4 mt-2 flex justify-center">{card.icon}</div>
 
-                                <h2 className="text-lg font-semibold text-gray-800 text-center mb-2">
-                                    {card.label}
-                                </h2>
+                                    <h2 className="text-base font-bold text-[#0F172A] dark:text-white text-center mb-1.5">
+                                        {card.label}
+                                    </h2>
 
-                                <p className="text-sm text-gray-600 text-center">{card.description}</p>
-                            </div>
-                        )
-                    })}
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 text-center leading-relaxed">{card.description}</p>
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
             </div>
         </div>
