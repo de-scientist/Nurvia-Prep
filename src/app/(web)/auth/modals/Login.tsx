@@ -147,64 +147,61 @@ export default function LoginModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-2 md:px-3 py-2 overflow-y-auto"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-xs px-4 py-4 overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-2 md:p-4"
+        className="relative w-full max-w-md bg-white dark:bg-[#111C2E] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 md:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
           aria-label="Close"
-          className="
-            absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700
-            bg-pink-200 text-black shadow-sm backdrop-blur-md transition-all duration-300 ease-out
-            hover:scale-110 hover:border-red-500 hover:bg-black hover:text-red-600 hover:shadow-lg
-            active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500
-          "
+          className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-[#F8FAFC] dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition hover:border-[#0D9488] hover:text-[#0D9488]"
         >
-          <FiX className="h-7 w-7 stroke-[3.5]" />
+          <FiX className="h-5 w-5" />
         </button>
 
-        <div className="text-center mb-4">
-          <div className="flex items-center justify-center gap-2">
-            <h1 className="text-xl md:text-2xl font-extrabold text-blue-800">{APP_NAME}</h1>
-            <FiCheckCircle className="text-green-500 text-lg" title="Verified" />
+        <div className="text-center mb-5">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3 py-0.5 text-[11px] font-semibold text-[#0D9488] dark:text-teal-300 mb-2">
+            NURVIA Learner Access
           </div>
-          <p className="text-xs text-gray-600">Log in to continue . . . </p>
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-xl md:text-2xl font-extrabold text-[#142B4A] dark:text-white">{APP_NAME}</h1>
+            <FiCheckCircle className="text-[#0D9488] text-lg" title="Verified" />
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Sign in to continue</p>
         </div>
 
         <button
           type="button"
-          className="w-full flex items-center justify-center gap-2 bg-white/90 border border-gray-300 px-4 py-2.5 rounded-lg hover:bg-white transition text-gray-700 font-semibold text-sm"
+          className="w-full flex items-center justify-center gap-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition text-slate-700 dark:text-slate-200 font-semibold text-sm"
           onClick={() => handleSocialClick('google')}
         >
           <FcGoogle className="text-xl" />
-          Continue with Google (Gmail)
+          Continue with Google
         </button>
 
-        <div className="text-center text-xs text-gray-400 my-2">or sign in with email</div>
+        <div className="text-center text-xs text-slate-400 my-3">or sign in with email</div>
 
         {error && (
-          <div className="mb-3 relative bg-yellow-100 border border-red-200 text-red-800 px-4 py-3 rounded-xl shadow-sm text-sm flex items-center gap-3">
-            <span className="text-red-600 shrink-0">⚓</span>
+          <div role="alert" className="mb-3 relative bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 px-4 py-3 rounded-xl text-sm flex items-center gap-3">
             <span className="flex-1 leading-tight">{error}</span>
-            <button type="button" onClick={() => setError("")} className="text-red-800 hover:text-red-700">✕</button>
+            <button type="button" onClick={() => setError("")} className="opacity-70 hover:opacity-100">✕</button>
           </div>
         )}
 
         {success && (
-          <div className="mb-3 relative bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl shadow-sm text-sm flex items-center gap-3">
-            <FiCheckCircle className="text-green-600 shrink-0" />
+          <div role="status" className="mb-3 relative bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 px-4 py-3 rounded-xl text-sm flex items-center gap-3">
+            <FiCheckCircle className="text-emerald-600 shrink-0" />
             <span className="flex-1 leading-tight">{success}</span>
-            <button type="button" onClick={() => setSuccess("")} className="text-green-800 hover:text-green-700">✕</button>
+            <button type="button" onClick={() => setSuccess("")} className="opacity-70 hover:opacity-100">✕</button>
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-4 p-1">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Enter your Email</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Email Address</label>
             <input
               type="email"
               name="email"
@@ -212,12 +209,12 @@ export default function LoginModal({
               required
               value={form.email}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-pink-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
             />
           </div>
 
           <div className={`relative ${loginMethod !== "password" ? "hidden" : ""}`}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Enter Your Password</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -227,31 +224,31 @@ export default function LoginModal({
                 value={form.password}
                 onChange={handleChange}
                 maxLength={32}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 pr-10 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700">
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-3 right-3 text-slate-400 hover:text-slate-600">
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-            <input type="checkbox" name="remember" checked={form.remember} onChange={handleChange} className="accent-blue-600" />
+          <label className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer">
+            <input type="checkbox" name="remember" checked={form.remember} onChange={handleChange} className="accent-[#0D9488]" />
             Remember me
           </label>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full bg-[#142B4A] hover:bg-[#1E3A5F] text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Logging in . . . ⚓" : "Submit and Login"}
+            {isLoading ? "Signing in…" : "Sign In"}
           </button>
 
           <div className="flex flex-row gap-3 pt-2">
             <Link
               href="/auth/recovery/password"
-              className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 text-sm font-semibold py-2 px-3 rounded-lg hover:bg-indigo-50 transition"
+              className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
               onClick={onClose}
             >
               Forgot Password?
@@ -259,7 +256,7 @@ export default function LoginModal({
             <button
               type="button"
               onClick={onSwitchToRegister}
-              className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 text-sm font-semibold py-2 px-3 rounded-lg hover:bg-indigo-50 transition"
+              className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
             >
               Register Instead?
             </button>

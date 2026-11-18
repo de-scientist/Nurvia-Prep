@@ -211,16 +211,16 @@ export default function AuthModal({
     e.preventDefault();
 
     if (!regForm.agree) {
-      alert("You must agree to the terms to continue.");
+      setRegError("You must agree to the terms to continue.");
       return;
     }
     if (regForm.password !== regForm.confirmPassword) {
-      alert("Passwords do not match!");
+      setRegError("Passwords do not match!");
       return;
     }
 
     if (!Object.values(passwordRequirements).every(Boolean)) {
-      alert("Password does not meet all requirements. Please check the criteria.");
+      setRegError("Password does not meet all requirements. Please check the criteria.");
       return;
     }
 
@@ -267,46 +267,44 @@ export default function AuthModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-2 py-3 overflow-y-auto"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-xs px-4 py-4 overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl p-3 md:p-5 my-auto"
+        className="relative w-full max-w-lg bg-white dark:bg-[#111C2E] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 md:p-8 my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close */}
         <button
           onClick={onClose}
           aria-label="Close"
-          className="
-            absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700
-            bg-pink-200 text-black shadow-sm backdrop-blur-md transition-all duration-300 ease-out
-            hover:scale-110 hover:border-red-500 hover:bg-black hover:text-red-600 hover:shadow-lg
-            active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500
-          "
+          className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-[#F8FAFC] dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition hover:border-[#0D9488] hover:text-[#0D9488]"
         >
-          <FiX className="h-7 w-7 stroke-[3.5]" />
+          <FiX className="h-5 w-5" />
         </button>
 
         {/* Header */}
-        <div className="text-center mb-4 pt-1">
-          <div className="flex items-center justify-center gap-2">
-            <h1 className="text-xl md:text-2xl font-extrabold text-blue-800">{APP_NAME}</h1>
-            <FiCheckCircle className="text-green-500 text-lg" title="Verified" />
+        <div className="text-center mb-5 pt-1">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3 py-0.5 text-[11px] font-semibold text-[#0D9488] dark:text-teal-300 mb-2">
+            NURVIA Learner Access
           </div>
-          <p className="text-xs text-gray-600">
-            {isLogin ? "Log in to continue . . ." : "Create your Account . . ."}
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-xl md:text-2xl font-extrabold text-[#142B4A] dark:text-white">{APP_NAME}</h1>
+            <FiCheckCircle className="text-[#0D9488] text-lg" title="Verified" />
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {isLogin ? "Sign in to continue to your programme" : "Create your learner account"}
           </p>
         </div>
 
         {/* Composite tab switch */}
         <div
           role="tablist"
-          className="relative mx-auto mb-4 grid grid-cols-2 w-full max-w-xs rounded-full bg-gray-100 border border-gray-300 p-1"
+          className="relative mx-auto mb-5 grid grid-cols-2 w-full max-w-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1"
         >
           <span
             aria-hidden
-            className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full bg-blue-600 shadow-md transition-transform duration-300 ease-out"
+            className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-lg bg-[#142B4A] shadow-xs transition-transform duration-300 ease-out"
             style={{ transform: isLogin ? "translateX(0)" : "translateX(100%)" }}
           />
           <button
@@ -314,8 +312,9 @@ export default function AuthModal({
             role="tab"
             aria-selected={isLogin}
             onClick={() => switchTab("login")}
-            className={`relative z-10 py-2 text-sm font-bold rounded-full transition-colors duration-300 ${isLogin ? "text-white" : "text-gray-600 hover:text-gray-900"
-              }`}
+            className={`relative z-10 py-2 text-xs font-semibold rounded-lg transition-colors duration-300 ${
+              isLogin ? "text-white" : "text-slate-600 dark:text-slate-300 hover:text-[#0F172A] dark:hover:text-white"
+            }`}
           >
             Login
           </button>
@@ -324,8 +323,9 @@ export default function AuthModal({
             role="tab"
             aria-selected={!isLogin}
             onClick={() => switchTab("register")}
-            className={`relative z-10 py-2 text-sm font-bold rounded-full transition-colors duration-300 ${!isLogin ? "text-white" : "text-gray-600 hover:text-gray-900"
-              }`}
+            className={`relative z-10 py-2 text-xs font-semibold rounded-lg transition-colors duration-300 ${
+              !isLogin ? "text-white" : "text-slate-600 dark:text-slate-300 hover:text-[#0F172A] dark:hover:text-white"
+            }`}
           >
             Register
           </button>
@@ -334,15 +334,19 @@ export default function AuthModal({
         {/* Google */}
         <button
           type="button"
-          className="w-full flex items-center justify-center gap-2 bg-white/90 border border-gray-300 px-4 py-2.5 rounded-lg hover:bg-white transition text-gray-700 font-semibold text-sm"
+          className="w-full flex items-center justify-center gap-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition text-slate-700 dark:text-slate-200 font-semibold text-sm"
           onClick={() => handleSocialClick("google")}
         >
           <FcGoogle className="text-xl" />
-          Continue with Google (Gmail)
+          Continue with Google
         </button>
 
-        <div className="text-center text-xs text-gray-400 my-3">
-          {isLogin ? "or sign in with email" : "or sign up with email"}
+        <div className="relative my-4 flex items-center justify-center">
+          <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+          <span className="bg-white dark:bg-[#111C2E] px-3 text-xs text-slate-400 whitespace-nowrap">
+            {isLogin ? "or sign in with email" : "or sign up with email"}
+          </span>
+          <div className="w-full border-t border-slate-200 dark:border-slate-800" />
         </div>
 
         {/* Animated panel */}
@@ -350,24 +354,23 @@ export default function AuthModal({
           {isLogin ? (
             <>
               {loginError && (
-                <div className="mb-3 relative bg-yellow-100 border border-red-200 text-red-800 px-4 py-3 rounded-xl shadow-sm text-sm flex items-center gap-3">
-                  <span className="text-red-600 shrink-0">⚓</span>
+                <div role="alert" className="mb-3 relative bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 px-4 py-3 rounded-xl text-sm flex items-center gap-3">
                   <span className="flex-1 leading-tight">{loginError}</span>
-                  <button type="button" onClick={() => setLoginError("")} className="text-red-800 hover:text-red-700">✕</button>
+                  <button type="button" onClick={() => setLoginError("")} className="opacity-70 hover:opacity-100">✕</button>
                 </div>
               )}
 
               {loginSuccess && (
-                <div className="mb-3 relative bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl shadow-sm text-sm flex items-center gap-3">
-                  <FiCheckCircle className="text-green-600 shrink-0" />
+                <div role="status" className="mb-3 relative bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 px-4 py-3 rounded-xl text-sm flex items-center gap-3">
+                  <FiCheckCircle className="text-emerald-600 shrink-0" />
                   <span className="flex-1 leading-tight">{loginSuccess}</span>
-                  <button type="button" onClick={() => setLoginSuccess("")} className="text-green-800 hover:text-green-700">✕</button>
+                  <button type="button" onClick={() => setLoginSuccess("")} className="opacity-70 hover:opacity-100">✕</button>
                 </div>
               )}
 
-              <form onSubmit={handleLogin} className="space-y-4 p-1">
+              <form onSubmit={handleLogin} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Enter your Email</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Email Address</label>
                   <input
                     type="email"
                     name="email"
@@ -375,12 +378,12 @@ export default function AuthModal({
                     required
                     value={loginForm.email}
                     onChange={handleLoginChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-pink-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Enter Your Password</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Password</label>
                   <div className="relative">
                     <input
                       type={showLoginPassword ? "text" : "password"}
@@ -390,25 +393,25 @@ export default function AuthModal({
                       value={loginForm.password}
                       onChange={handleLoginChange}
                       maxLength={32}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 pr-10 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
                     />
                     <button
                       type="button"
                       onClick={() => setShowLoginPassword(!showLoginPassword)}
-                      className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700"
+                      className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
                     >
                       {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
                     </button>
                   </div>
                 </div>
 
-                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer">
                   <input
                     type="checkbox"
                     name="remember"
                     checked={loginForm.remember}
                     onChange={handleLoginChange}
-                    className="accent-blue-600"
+                    className="accent-[#0D9488]"
                   />
                   Remember me
                 </label>
@@ -416,15 +419,15 @@ export default function AuthModal({
                 <button
                   type="submit"
                   disabled={loginLoading}
-                  className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full bg-[#142B4A] hover:bg-[#1E3A5F] text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  {loginLoading ? "Logging in . . . ⚓" : "Submit and Login"}
+                  {loginLoading ? "Signing in…" : "Sign In"}
                 </button>
 
                 <div className="flex flex-row gap-3 pt-2">
                   <Link
                     href="/auth/recovery/password"
-                    className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 text-sm font-semibold py-2 px-3 rounded-lg hover:bg-indigo-50 transition"
+                    className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
                     onClick={onClose}
                   >
                     Forgot Password?
@@ -432,7 +435,7 @@ export default function AuthModal({
                   <button
                     type="button"
                     onClick={() => switchTab("register")}
-                    className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 text-sm font-semibold py-2 px-3 rounded-lg hover:bg-indigo-50 transition"
+                    className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
                   >
                     Register Instead?
                   </button>
@@ -442,14 +445,14 @@ export default function AuthModal({
           ) : (
             <>
               {regError && (
-                <p className="mb-3 text-sm text-red-700 text-center font-medium bg-red-50 border border-red-200 rounded-lg py-2 px-3">
+                <p role="alert" className="mb-3 text-sm text-rose-800 dark:text-rose-200 text-center font-medium bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl py-2.5 px-3">
                   {regError}
                 </p>
               )}
 
-              <form onSubmit={handleRegister} className="space-y-4 p-1">
+              <form onSubmit={handleRegister} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Enter Username</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Username</label>
                   <input
                     type="text"
                     name="username"
@@ -457,25 +460,25 @@ export default function AuthModal({
                     required
                     value={regForm.username}
                     onChange={handleRegChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-md text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Enter Email</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Email Address</label>
                   <input
                     type="email"
                     name="email"
                     required
                     value={regForm.email}
                     onChange={handleRegChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-md text-cyan-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Enter Phone
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                    Phone Number
                   </label>
                   <PhoneInput
                     international
@@ -483,20 +486,20 @@ export default function AuthModal({
                     value={regForm.phone}
                     onChange={handlePhoneChange}
                     name="phone"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all [&_.PhoneInputCountrySelect]:text-black [&_.PhoneInputCountrySelect]:bg-white [&_.PhoneInputCountrySelect_option]:text-black [&_.PhoneInputCountrySelect_option]:bg-white [&_.PhoneInputInput]:text-black [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:border-0 [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:ring-0 [&_.PhoneInputInput]:shadow-none"
+                    className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 focus-within:ring-2 focus-within:ring-[#0D9488]/30 focus-within:border-[#0D9488] transition-all [&_.PhoneInputInput]:text-[#0F172A] dark:[&_.PhoneInputInput]:text-white [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:border-0 [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:ring-0 [&_.PhoneInputInput]:shadow-none"
                   />
                 </div>
 
                 <div className="space-y-3">
                   <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="block text-sm font-medium text-gray-700">Enter Password</label>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Password</label>
                       <button
                         type="button"
                         onClick={generatePassword}
-                        className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"
+                        className="text-xs font-semibold bg-[#0D9488]/10 text-[#0D9488] px-2.5 py-0.5 rounded-lg hover:bg-[#0D9488]/20"
                       >
-                        Generate
+                        Auto-Generate
                       </button>
                     </div>
                     <div className="relative">
@@ -508,12 +511,12 @@ export default function AuthModal({
                         value={regForm.password}
                         maxLength={24}
                         onChange={handleRegChange}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-md text-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                        className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] pr-10"
                       />
                       <button
                         type="button"
                         onClick={() => setShowRegPassword(!showRegPassword)}
-                        className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700"
+                        className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
                       >
                         {showRegPassword ? <FaEyeSlash /> : <FaEye />}
                       </button>
@@ -521,16 +524,16 @@ export default function AuthModal({
 
                     {regForm.password && (
                       <ul className="mt-2 text-xs space-y-1">
-                        <li className={passwordRequirements.length ? "text-green-500" : "text-gray-500"}>
+                        <li className={passwordRequirements.length ? "text-[#0D9488] font-medium" : "text-slate-500"}>
                           {passwordRequirements.length ? "✓" : "•"} At Least 6 Characters
                         </li>
-                        <li className={passwordRequirements.uppercase ? "text-green-500" : "text-gray-500"}>
+                        <li className={passwordRequirements.uppercase ? "text-[#0D9488] font-medium" : "text-slate-500"}>
                           {passwordRequirements.uppercase ? "✓" : "•"} One Uppercase Letter
                         </li>
-                        <li className={passwordRequirements.number ? "text-green-500" : "text-gray-500"}>
+                        <li className={passwordRequirements.number ? "text-[#0D9488] font-medium" : "text-slate-500"}>
                           {passwordRequirements.number ? "✓" : "•"} One Number
                         </li>
-                        <li className={passwordRequirements.specialChar ? "text-green-500" : "text-gray-500"}>
+                        <li className={passwordRequirements.specialChar ? "text-[#0D9488] font-medium" : "text-slate-500"}>
                           {passwordRequirements.specialChar ? "✓" : "•"} One Special Character
                         </li>
                       </ul>
@@ -539,7 +542,7 @@ export default function AuthModal({
 
                   {passwordRequirements.length && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Confirm Password</label>
                       <div className="relative">
                         <input
                           type={showConfirmPassword ? "text" : "password"}
@@ -549,21 +552,22 @@ export default function AuthModal({
                           value={regForm.confirmPassword}
                           onChange={handleRegChange}
                           maxLength={24}
-                          className={`w-full border ${regForm.password && regForm.confirmPassword && regForm.password !== regForm.confirmPassword
-                            ? "border-red-300"
-                            : "border-gray-300"
-                            } rounded-lg px-3 py-2 text-md text-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10`}
+                          className={`w-full border ${
+                            regForm.password && regForm.confirmPassword && regForm.password !== regForm.confirmPassword
+                              ? "border-rose-400"
+                              : "border-slate-300 dark:border-slate-700"
+                          } bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] pr-10`}
                         />
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700"
+                          className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
                         >
                           {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                         </button>
                       </div>
                       {regForm.password && regForm.confirmPassword && regForm.password !== regForm.confirmPassword && (
-                        <p className="mt-1 text-xs text-red-500">Passwords do not match</p>
+                        <p className="mt-1 text-xs text-rose-500">Passwords do not match</p>
                       )}
                     </div>
                   )}
@@ -575,13 +579,13 @@ export default function AuthModal({
                     name="agree"
                     checked={regForm.agree}
                     onChange={handleRegChange}
-                    className="mt-1 accent-blue-600"
+                    className="mt-1 accent-[#0D9488]"
                   />
-                  <label className="text-sm text-gray-600">
+                  <label className="text-xs text-slate-600 dark:text-slate-300">
                     I agree to the{" "}
                     <Link
-                      href="/pages/terms"
-                      className="text-blue-600 underline hover:text-blue-800"
+                      href="/pages/terms-of-service"
+                      className="text-[#0D9488] font-semibold underline hover:text-[#0F766E]"
                       onClick={onClose}
                     >
                       Terms and Conditions
@@ -592,18 +596,18 @@ export default function AuthModal({
                 <button
                   type="submit"
                   disabled={regLoading}
-                  className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-indigo-600 font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full bg-[#142B4A] hover:bg-[#1E3A5F] text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  {regLoading ? "Registering . . . ⚓" : "Submit and Register"}
+                  {regLoading ? "Creating Account…" : "Create Account"}
                 </button>
 
                 <div className="flex flex-row gap-3 pt-2">
                   <Link
                     href="/auth/support"
-                    className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 text-sm font-semibold py-2 px-3 rounded-lg hover:bg-indigo-50 transition"
+                    className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
                     onClick={onClose}
                   >
-                    Having Issues?
+                    Need Support?
                   </Link>
                   <button
                     type="button"
@@ -611,7 +615,7 @@ export default function AuthModal({
                       setLoginForm((prev) => ({ ...prev, email: regForm.email || prev.email }));
                       switchTab("login");
                     }}
-                    className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 text-sm font-semibold py-2 px-3 rounded-lg hover:bg-indigo-50 transition"
+                    className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
                   >
                     Login Instead?
                   </button>
@@ -621,7 +625,6 @@ export default function AuthModal({
           )}
         </div>
       </div>
-
     </div>
   );
 }

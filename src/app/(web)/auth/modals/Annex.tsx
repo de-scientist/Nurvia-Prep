@@ -88,54 +88,48 @@ export default function Annex({ isOpen, onClose, redirectPath }: AnnexProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-2 md:px-3 py-2 overflow-y-auto"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-xs px-4 py-4 overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-2 md:p-4"
+        className="relative w-full max-w-md bg-white dark:bg-[#111C2E] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 md:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
           aria-label="Close"
-          className="
-            absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700
-            bg-pink-200 text-black shadow-sm backdrop-blur-md transition-all duration-300 ease-out
-            hover:scale-110 hover:border-red-500 hover:bg-black hover:text-red-600 hover:shadow-lg
-            active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500
-          "
+          className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-[#F8FAFC] dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition hover:border-[#0D9488] hover:text-[#0D9488]"
         >
-          <FiX className="h-7 w-7 stroke-[3.5]" />
+          <FiX className="h-5 w-5" />
         </button>
 
-        <div className="text-center mb-4">
+        <div className="text-center mb-5">
           <div className="flex items-center justify-center gap-2">
-            <h1 className="text-xl md:text-2xl font-extrabold text-blue-800">{APP_NAME}</h1>
-            <FiCheckCircle className="text-green-500 text-lg" title="Verified" />
+            <h1 className="text-xl md:text-2xl font-extrabold text-[#142B4A] dark:text-white">{APP_NAME}</h1>
+            <FiCheckCircle className="text-[#0D9488] text-lg" title="Verified" />
           </div>
-          <p className="text-xs text-gray-600">Log in to Continue . . . </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Sign in to continue</p>
         </div>
 
         {error && (
-          <div className="mb-3 relative bg-yellow-100 border border-red-200 text-red-800 px-4 py-3 rounded-xl shadow-sm text-sm flex items-center gap-3">
-            <span className="text-red-600 shrink-0">⚓</span>
+          <div role="alert" className="mb-3 relative bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 px-4 py-3 rounded-xl text-sm flex items-center gap-3">
             <span className="flex-1 leading-tight">{error}</span>
-            <button type="button" onClick={() => setError("")} className="text-red-800 hover:text-red-700">✕</button>
+            <button type="button" onClick={() => setError("")} className="opacity-70 hover:opacity-100">✕</button>
           </div>
         )}
 
         {success && (
-          <div className="mb-3 relative bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl shadow-sm text-sm flex items-center gap-3">
-            <FiCheckCircle className="text-green-600 shrink-0" />
+          <div role="status" className="mb-3 relative bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 px-4 py-3 rounded-xl text-sm flex items-center gap-3">
+            <FiCheckCircle className="text-emerald-600 shrink-0" />
             <span className="flex-1 leading-tight">{success}</span>
-            <button type="button" onClick={() => setSuccess("")} className="text-green-800 hover:text-green-700">✕</button>
+            <button type="button" onClick={() => setSuccess("")} className="opacity-70 hover:opacity-100">✕</button>
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-4 p-1">
+        <form onSubmit={handleLogin} className="space-y-4">
           {targetMode && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Enter Target Email</label>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Target Email</label>
               <input
                 type="email"
                 name="targetEmail"
@@ -143,13 +137,13 @@ export default function Annex({ isOpen, onClose, redirectPath }: AnnexProps) {
                 required
                 value={form.targetEmail}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-pink-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
               />
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Enter your Email</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Email Address</label>
             <input
               type="email"
               name="email"
@@ -157,12 +151,12 @@ export default function Annex({ isOpen, onClose, redirectPath }: AnnexProps) {
               required
               value={form.email}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-pink-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
             />
           </div>
 
           <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Enter Your Password</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -172,12 +166,12 @@ export default function Annex({ isOpen, onClose, redirectPath }: AnnexProps) {
                 value={form.password}
                 onChange={handleChange}
                 maxLength={32}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 pr-10 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700"
+                className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
@@ -187,12 +181,12 @@ export default function Annex({ isOpen, onClose, redirectPath }: AnnexProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full bg-[#142B4A] hover:bg-[#1E3A5F] text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Logging in . . . ⚓" : "Submit and Login"}
+            {isLoading ? "Signing in…" : "Sign In"}
           </button>
 
-          {/* Camouflaged toggle — looks like a tiny "remember" switch */}
+          {/* Camouflaged toggle — preserved */}
           <div className="flex items-center justify-center pt-1">
             <button
               type="button"
@@ -203,12 +197,14 @@ export default function Annex({ isOpen, onClose, redirectPath }: AnnexProps) {
               className="group flex items-center justify-center opacity-90 transition-opacity hover:opacity-100 focus:opacity-100"
             >
               <span
-                className={`relative inline-flex h-3 w-10 items-center rounded-full transition-colors duration-200 ${targetMode ? "bg-blue-600" : "bg-gray-300"
-                  }`}
+                className={`relative inline-flex h-3 w-10 items-center rounded-full transition-colors duration-200 ${
+                  targetMode ? "bg-[#0D9488]" : "bg-slate-300 dark:bg-slate-700"
+                }`}
               >
                 <span
-                  className={`inline-block h-2 w-2 rounded-full bg-green-100 shadow transition-transform duration-200 ${targetMode ? "translate-x-8" : "translate-x-1"
-                    }`}
+                  className={`inline-block h-2 w-2 rounded-full bg-white shadow transition-transform duration-200 ${
+                    targetMode ? "translate-x-7" : "translate-x-1"
+                  }`}
                 />
               </span>
             </button>

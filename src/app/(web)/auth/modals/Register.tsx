@@ -126,17 +126,17 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
     e.preventDefault();
 
     if (!form.agree) {
-      alert("You must agree to the terms to continue.");
+      setError("You must agree to the terms to continue.");
       return;
     }
     if (form.loginMethod !== "pin" && form.password !== form.confirmPassword) {
-      alert("Passwords do not match!");
+      setError("Passwords do not match!");
       return;
     }
 
     const isPasswordStrong = Object.values(passwordRequirements).every(Boolean);
     if (form.loginMethod !== "pin" && !isPasswordStrong) {
-      alert("Password does not meet all requirements. Please check the criteria.");
+      setError("Password does not meet all requirements. Please check the criteria.");
       return;
     }
 
@@ -181,54 +181,52 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-2 py-3 overflow-y-auto"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-xs px-4 py-4 overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl p-2 md:p-4"
+        className="relative w-full max-w-lg bg-white dark:bg-[#111C2E] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 md:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
           aria-label="Close"
-          className="
-            absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700
-            bg-pink-200 text-black shadow-sm backdrop-blur-md transition-all duration-300 ease-out
-            hover:scale-110 hover:border-red-500 hover:bg-black hover:text-red-600 hover:shadow-lg
-            active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500
-          "
+          className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-[#F8FAFC] dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition hover:border-[#0D9488] hover:text-[#0D9488]"
         >
-          <FiX className="h-7 w-7 stroke-[3.5]" />
+          <FiX className="h-5 w-5" />
         </button>
 
-        <div className="text-center mb-4">
-          <div className="flex items-center justify-center gap-2">
-            <h1 className="text-xl md:text-2xl font-extrabold text-blue-800">{APP_NAME}</h1>
-            <FiCheckCircle className="text-green-500 text-lg" title="Verified" />
+        <div className="text-center mb-5">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3 py-0.5 text-[11px] font-semibold text-[#0D9488] dark:text-teal-300 mb-2">
+            NURVIA Learner Enrollment
           </div>
-          <p className="text-xs text-gray-600">Create your Account . . . </p>
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-xl md:text-2xl font-extrabold text-[#142B4A] dark:text-white">{APP_NAME}</h1>
+            <FiCheckCircle className="text-[#0D9488] text-lg" title="Verified" />
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Create your learner account</p>
         </div>
 
         <button
           type="button"
-          className="w-full flex items-center justify-center gap-2 bg-white/90 border border-gray-300 px-4 py-2.5 rounded-lg hover:bg-white transition text-gray-700 font-semibold text-sm"
+          className="w-full flex items-center justify-center gap-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition text-slate-700 dark:text-slate-200 font-semibold text-sm"
           onClick={() => handleSocialClick('google')}
         >
           <FcGoogle className="text-xl" />
-          Continue with Google (Gmail)
+          Continue with Google
         </button>
 
-        <div className="text-center text-xs text-gray-400 my-4">or sign up with email</div>
+        <div className="text-center text-xs text-slate-400 my-4">or sign up with email</div>
 
         {error && (
-          <p className="mb-3 text-sm text-red-700 text-center font-medium bg-red-50 border border-red-200 rounded-lg py-2 px-3">
+          <p role="alert" className="mb-3 text-sm text-rose-800 dark:text-rose-200 text-center font-medium bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl py-2.5 px-3">
             {error}
           </p>
         )}
 
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Enter Username</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Username</label>
             <input
               type="text"
               name="username"
@@ -236,25 +234,25 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               required
               value={form.username}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-md text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Enter Email</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Email Address</label>
             <input
               type="email"
               name="email"
               required
               value={form.email}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-md text-cyan-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Enter Phone
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+              Phone Number
             </label>
             <PhoneInput
               international
@@ -262,33 +260,17 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               value={form.phone}
               onChange={handlePhoneChange}
               name="phone"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all [&_.PhoneInputCountrySelect]:text-black [&_.PhoneInputCountrySelect]:bg-white [&_.PhoneInputCountrySelect_option]:text-black [&_.PhoneInputCountrySelect_option]:bg-white [&_.PhoneInputInput]:text-black [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:border-0 [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:ring-0 [&_.PhoneInputInput]:shadow-none"
+              className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 focus-within:ring-2 focus-within:ring-[#0D9488]/30 focus-within:border-[#0D9488] transition-all [&_.PhoneInputInput]:text-[#0F172A] dark:[&_.PhoneInputInput]:text-white [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:border-0 [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:ring-0 [&_.PhoneInputInput]:shadow-none"
             />
-            <style jsx global>{`
-              .PhoneInputInput {
-                width: 100%;
-                font-size: 1rem;
-                padding: 0rem 0;
-                color: #1f2937;
-                background-color: transparent;
-                border: none;
-                outline: none;
-                box-shadow: none;
-              }
-              .PhoneInputInput:focus {
-                outline: none;
-                box-shadow: none;
-              }
-            `}</style>
           </div>
 
           {(form.loginMethod === "password" || form.loginMethod === "both") && (
             <div className="space-y-3">
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-gray-700">Enter Password</label>
-                  <button type="button" onClick={generatePassword} className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200">
-                    Generate
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Password</label>
+                  <button type="button" onClick={generatePassword} className="text-xs font-semibold bg-[#0D9488]/10 text-[#0D9488] px-2.5 py-0.5 rounded-lg hover:bg-[#0D9488]/20">
+                    Auto-Generate
                   </button>
                 </div>
                 <div className="relative">
@@ -299,26 +281,26 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                     value={form.password}
                     maxLength={24}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-md text-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                    className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] pr-10"
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700">
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-3 right-3 text-slate-400 hover:text-slate-600">
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
 
                 {form.password && (
                   <ul className="mt-2 text-xs space-y-1">
-                    <li className={passwordRequirements.length ? "text-green-500" : "text-gray-500"}>
-                      {passwordRequirements.length ? "✓" : "•"} At Least 8 Characters
+                    <li className={passwordRequirements.length ? "text-[#0D9488] font-medium" : "text-slate-500"}>
+                      {passwordRequirements.length ? "✓" : "•"} At Least 6 Characters
                     </li>
-                    <li className={passwordRequirements.uppercase ? "text-green-500" : "text-gray-500"}>
+                    <li className={passwordRequirements.uppercase ? "text-[#0D9488] font-medium" : "text-slate-500"}>
                       {passwordRequirements.uppercase ? "✓" : "•"} One Uppercase Letter (Optional)
                     </li>
-                    <li className={passwordRequirements.number ? "text-green-500" : "text-gray-500"}>
+                    <li className={passwordRequirements.number ? "text-[#0D9488] font-medium" : "text-slate-500"}>
                       {passwordRequirements.number ? "✓" : "•"} One Number (Optional)
                     </li>
-                    <li className={passwordRequirements.specialChar ? "text-green-500" : "text-gray-500"}>
-                      {passwordRequirements.specialChar ? "✓" : "•"} One special character (optional)
+                    <li className={passwordRequirements.specialChar ? "text-[#0D9488] font-medium" : "text-slate-500"}>
+                      {passwordRequirements.specialChar ? "✓" : "•"} One Special Character (Optional)
                     </li>
                   </ul>
                 )}
@@ -326,7 +308,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
 
               {passwordRequirements.length && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Confirm Password</label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
@@ -335,17 +317,18 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                       value={form.confirmPassword}
                       onChange={handleChange}
                       maxLength={24}
-                      className={`w-full border ${form.password && form.confirmPassword && form.password !== form.confirmPassword
-                        ? "border-red-300"
-                        : "border-gray-300"
-                        } rounded-lg px-3 py-2 text-md text-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10`}
+                      className={`w-full border ${
+                        form.password && form.confirmPassword && form.password !== form.confirmPassword
+                          ? "border-rose-400"
+                          : "border-slate-300 dark:border-slate-700"
+                      } bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] pr-10`}
                     />
-                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700">
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute top-3 right-3 text-slate-400 hover:text-slate-600">
                       {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                     </button>
                   </div>
                   {form.password && form.confirmPassword && form.password !== form.confirmPassword && (
-                    <p className="mt-1 text-xs text-red-500">Passwords do not match</p>
+                    <p className="mt-1 text-xs text-rose-500">Passwords do not match</p>
                   )}
                 </div>
               )}
@@ -353,10 +336,10 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
           )}
 
           <div className="flex items-start gap-2">
-            <input type="checkbox" name="agree" checked={form.agree} onChange={handleChange} className="mt-1 accent-blue-600" />
-            <label className="text-sm text-gray-600">
+            <input type="checkbox" name="agree" checked={form.agree} onChange={handleChange} className="mt-1 accent-[#0D9488]" />
+            <label className="text-xs text-slate-600 dark:text-slate-300">
               I agree to the{" "}
-              <Link href="/pages/terms" className="text-blue-600 underline hover:text-blue-800" onClick={onClose}>
+              <Link href="/pages/terms-of-service" className="text-[#0D9488] font-semibold underline hover:text-[#0F766E]" onClick={onClose}>
                 Terms and Conditions
               </Link>
             </label>
@@ -365,23 +348,23 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-indigo-600 font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full bg-[#142B4A] hover:bg-[#1E3A5F] text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Registering . . . ⚓" : "Submit and Register"}
+            {isLoading ? "Creating Account…" : "Create Account"}
           </button>
 
           <div className="flex flex-row gap-3 pt-2">
             <Link
               href="/auth/support"
-              className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 text-sm font-semibold py-2 px-3 rounded-lg hover:bg-indigo-50 transition"
+              className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
               onClick={onClose}
             >
-              Having Issues?
+              Need Support?
             </Link>
             <button
               type="button"
               onClick={() => onSwitchToLogin(form.email, "")}
-              className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 text-sm font-semibold py-2 px-3 rounded-lg hover:bg-indigo-50 transition"
+              className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
             >
               Login Instead?
             </button>
