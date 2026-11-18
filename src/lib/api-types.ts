@@ -68,7 +68,7 @@ export type ExhibitType =
   | 'ProviderOrders'
   | 'RadiologyReport';
 
-export type ExamDeliveryMode = 'Review' | 'Exam' | 'Tutor' | 'All';
+export type ExamDeliveryMode = 'Review' | 'Exam' | 'Tutor' | 'All' | 'Both';
 
 export type ReviewReleasePolicy = 'Immediate' | 'ManualRelease';
 
@@ -229,6 +229,7 @@ export interface AuthUserDto {
   role: string;
   dashboardName?: string;
   avatarUrl?: string;
+  emailVerified?: boolean;
 }
 
 export interface ActiveExamOptionDto {

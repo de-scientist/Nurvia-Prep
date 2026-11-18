@@ -200,7 +200,7 @@ export function StudySetDetails({ examId, isPublic = false }: StudySetDetailsPro
                 <Button className="w-full">Launch Exam Mode</Button>
               </Link>
             ) : (
-              <Button disabled className="w-full" title="Exam mode is disabled for this study set.">
+              <Button disabled className="w-full" title="Exam mode isn't currently enabled for this exam.">
                 Exam Mode Unavailable
               </Button>
             )}
@@ -216,7 +216,7 @@ export function StudySetDetails({ examId, isPublic = false }: StudySetDetailsPro
                 variant="outline"
                 disabled
                 className="w-full"
-                title="Review mode is disabled for this study set."
+                title="Review mode isn't currently enabled for this exam."
               >
                 Review Mode Unavailable
               </Button>
@@ -233,12 +233,17 @@ export function StudySetDetails({ examId, isPublic = false }: StudySetDetailsPro
                 variant="outline"
                 disabled
                 className="w-full"
-                title="Tutor mode is disabled for this study set."
+                title="Tutor mode isn't currently enabled for this exam."
               >
                 Tutor Mode Unavailable
               </Button>
             )}
           </div>
+          {(!canExam || !canReview || !canTutor) && (
+            <p className="text-[11px] text-foreground-muted">
+              Available modes are governed by the published exam configuration.
+            </p>
+          )}
         </div>
 
         {detail.instructions && (

@@ -6,8 +6,17 @@ import { Bookmark, BookmarkCheck, Copy, ExternalLink, MoreVertical } from "lucid
 import { Button } from "@/components/ui/button";
 import type { ExamDeliveryMode, ExamLayoutPolicy, StudySetCardDto } from "@/lib/api-types";
 
-export function isModeEnabled(modeAllowed: ExamDeliveryMode, target: "Exam" | "Review" | "Tutor"): boolean {
-  return modeAllowed === "All" || modeAllowed === target;
+export function isModeEnabled(
+  modeAllowed: ExamDeliveryMode | string | undefined | null,
+  target: "Exam" | "Review" | "Tutor"
+): boolean {
+  if (!modeAllowed) return false;
+  const normalized = String(modeAllowed).trim().toLowerCase();
+  if (normalized === "all") return true;
+  if (normalized === "both") {
+    return target === "Exam" || target === "Review";
+  }
+  return normalized === target.toLowerCase();
 }
 
 export function buildStudySessionHref(
@@ -50,7 +59,7 @@ export function StudySetCardActions({
         <Button
           type="button"
           disabled
-          title="Exam mode is not enabled for this study set."
+          title="Exam mode isn't currently enabled for this exam."
           className="w-full"
         >
           Exam (Unavailable)
@@ -70,7 +79,7 @@ export function StudySetCardActions({
             variant="outline"
             size="sm"
             disabled
-            title="Review mode is not enabled for this study set."
+            title="Review mode isn't currently enabled for this exam."
             className="w-full"
           >
             Review
@@ -89,7 +98,7 @@ export function StudySetCardActions({
             variant="outline"
             size="sm"
             disabled
-            title="Tutor mode is not enabled for this study set."
+            title="Tutor mode isn't currently enabled for this exam."
             className="w-full"
           >
             Tutor
@@ -97,11 +106,15 @@ export function StudySetCardActions({
         )}
       </div>
 
-      {(!canExam || !canReview || !canTutor) && (
+      {!canExam && !canReview && !canTutor ? (
+        <p className="text-[11px] text-foreground-muted">
+          This examination is being prepared for release. Modes are governed by the published configuration.
+        </p>
+      ) : (!canExam || !canReview || !canTutor) ? (
         <p className="text-[11px] text-foreground-muted">
           Available modes are governed by the published exam configuration.
         </p>
-      )}
+      ) : null}
     </div>
   );
 }
