@@ -10,7 +10,6 @@ export default function DashboardPreloader({
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Wait for hydration + layout paint
     const id = requestAnimationFrame(() => {
       setReady(true);
     });
@@ -20,9 +19,14 @@ export default function DashboardPreloader({
 
   if (!ready) {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white dark:bg-gray-900">
-        {/* Simple loader */}
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-gray-900 dark:border-gray-600 dark:border-t-white" />
+      <div
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-3 bg-white dark:bg-[#0B1220]"
+        aria-live="polite"
+      >
+        <div className="h-9 w-9 animate-spin rounded-full border-3 border-slate-200 border-t-[#0D9488] dark:border-slate-800 dark:border-t-[#2DD4BF]" />
+        <span className="text-xs font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400">
+          Loading Nurvia-Prep Workspace…
+        </span>
       </div>
     );
   }
