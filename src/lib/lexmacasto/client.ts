@@ -473,6 +473,15 @@ export function sanitizeAuthUser(rawUser: LexmaCastoAuthUserRaw | undefined | nu
       ? rawUser.profile.profilePicture
       : undefined;
 
+  const emailVerified =
+    typeof rawUser.emailVerified === 'boolean'
+      ? rawUser.emailVerified
+      : typeof rawUser.isEmailVerified === 'boolean'
+        ? rawUser.isEmailVerified
+        : typeof rawUser.email_verified === 'boolean'
+          ? rawUser.email_verified
+          : Boolean(rawUser.email_verified_at || rawUser.emailVerifiedAt);
+
   return {
     id,
     name,
@@ -480,6 +489,7 @@ export function sanitizeAuthUser(rawUser: LexmaCastoAuthUserRaw | undefined | nu
     role,
     dashboardName: typeof rawUser.dashboardName === 'string' ? rawUser.dashboardName : undefined,
     avatarUrl: sanitizeAvatarUrl(rawUser.avatarUrl ?? profilePicture ?? rawUser.profilePicture),
+    emailVerified,
   };
 }
 

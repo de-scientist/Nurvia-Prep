@@ -4,6 +4,9 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  AlertCircle,
+  ArrowLeftRight,
+  CheckCircle2,
   ChevronDown,
   LayoutDashboard,
   LogOut,
@@ -14,6 +17,7 @@ import {
 
 import { useAuth } from "@/components/auth/auth-provider";
 import { UserAvatar } from "@/components/shared/avatar/UserAvatar";
+import { feedback } from "@/lib/feedback/feedback-context";
 
 interface UserAccountMenuProps {
   avatarUrl: string | null;
@@ -27,6 +31,8 @@ export function UserAccountMenu({ avatarUrl }: UserAccountMenuProps) {
   const [open, setOpen] = React.useState(false);
   const [signingOut, setSigningOut] = React.useState(false);
   const [signOutError, setSignOutError] = React.useState<string | null>(null);
+  const [resendingEmail, setResendingEmail] = React.useState(false);
+  const [emailSent, setEmailSent] = React.useState(false);
   const menuId = React.useId();
 
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -120,6 +126,34 @@ export function UserAccountMenu({ avatarUrl }: UserAccountMenuProps) {
     setSignOutError(null);
   };
 
+  const handleResendVerification = async () => {
+    if (resendingEmail || emailSent) return;
+    setResendingEmail(true);
+
+    try {
+      const res = await fetch("/api/auth/support/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user?.email, action: "resend-verification" }),
+      });
+
+      if (res.ok) {
+        setEmailSent(true);
+        feedback.success(
+          `Verification email dispatched to ${user?.email || "your inbox"}. Please check your messages.`,
+          "Verification Email Sent"
+        );
+      } else {
+        const data = await res.json().catch(() => ({}));
+        feedback.fromHttp(res.status, data.message || data.error);
+      }
+    } catch {
+      feedback.error("Unable to send verification email. Please try again later.");
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
   const handleSignOut = async () => {
     if (signingOut) return;
 
@@ -187,24 +221,77 @@ export function UserAccountMenu({ avatarUrl }: UserAccountMenuProps) {
           id={menuId}
           role="menu"
           aria-label="Account options"
-          className="absolute right-0 z-50 mt-3 w-[min(19rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-xl"
+          className="absolute right-0 z-[100] mt-3 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-2xl"
         >
           <div className="border-b border-border bg-muted/40 p-4">
-            <div className="flex min-w-0 items-center gap-3">
+            <div className="flex min-w-0 items-start gap-3">
               <UserAvatar name={user?.name} avatarUrl={avatarUrl} size="lg" />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">
                   {user?.name || "Account"}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {user?.email}
                 </p>
-                <span className="mt-1 inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                  {user?.role}
-                </span>
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                    {user?.role || "Learner"}
+                  </span>
+                  {user?.emailVerified ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      <CheckCircle2 size={10} /> Verified
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                      <AlertCircle size={10} /> Unverified
+                    </span>
+                  )}
+                </div>
+                {!user?.emailVerified && (
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resendingEmail || emailSent}
+                    className="mt-1.5 text-[11px] font-medium text-brand-teal hover:underline disabled:opacity-50 transition-opacity block text-left"
+                  >
+                    {resendingEmail
+                      ? "Sending..."
+                      : emailSent
+                      ? "✓ Verification link sent"
+                      : "Resend verification email"}
+                  </button>
+                )}
               </div>
             </div>
           </div>
+
+          {isSuperadmin && (
+            <div className="p-2 border-b border-border bg-primary/5">
+              {pathname?.startsWith("/admin") ? (
+                <Link
+                  role="menuitem"
+                  href="/learner"
+                  onClick={closeMenu}
+                  onKeyDown={handleMenuItemKeyDown}
+                  className="flex w-full items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+                >
+                  <ArrowLeftRight size={14} />
+                  Switch to Learner Dashboard
+                </Link>
+              ) : (
+                <Link
+                  role="menuitem"
+                  href="/admin"
+                  onClick={closeMenu}
+                  onKeyDown={handleMenuItemKeyDown}
+                  className="flex w-full items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+                >
+                  <ArrowLeftRight size={14} />
+                  Switch to Superadmin Console
+                </Link>
+              )}
+            </div>
+          )}
 
           <div className="space-y-1 p-2">
             {canUseLearnerAccount && (

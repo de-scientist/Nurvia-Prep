@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/routes";
 import { useAuth } from "@/components/auth/auth-provider";
 import { SeekModal } from "@/components/common/modals/seek/SeekModal";
+import { UserAccountMenu } from "@/components/layout/user-account-menu";
+import { UserAvatar } from "@/components/shared/avatar/UserAvatar";
 
 interface PublicNavItem {
   name: string;
@@ -166,16 +168,9 @@ export function PublicShell({ children }: PublicShellProps) {
             </button>
             <ThemeToggle />
             {status === "authenticated" && user ? (
-              <>
-                <Link href={user.role === "Learner" ? "/learner" : "/admin"}>
-                  <Button variant="outline" size="sm" className="hidden sm:inline-flex text-xs h-9">
-                    {user.role === "Learner" ? "My Account" : "Workspace"}
-                  </Button>
-                </Link>
-                <Button type="button" variant="ghost" size="sm" className="hidden sm:inline-flex text-xs h-9" onClick={handleSignOut}>
-                  Sign Out
-                </Button>
-              </>
+              <div className="hidden sm:flex items-center">
+                <UserAccountMenu avatarUrl={user.avatarUrl ?? null} />
+              </div>
             ) : (
               <>
                 <Link href={ROUTES.signIn}>
@@ -270,14 +265,37 @@ export function PublicShell({ children }: PublicShellProps) {
             {/* Mobile Footer Links */}
             <div className="pt-6 border-t border-border space-y-3">
               {status === "authenticated" && user ? (
-                <>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-2.5 rounded-lg bg-surface-muted border border-border">
+                    <UserAvatar name={user.name} avatarUrl={user.avatarUrl ?? null} size="md" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate">{user.name || "Account"}</p>
+                      <p className="text-xs text-foreground-secondary truncate">{user.email}</p>
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                          {user.role}
+                        </span>
+                        {user.emailVerified ? (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">
+                            Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-amber-600 dark:text-amber-400">
+                            Unverified
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                   <Link href={user.role === "Learner" ? "/learner" : "/admin"} onClick={() => setMobileMenuOpen(false)}>
                     <Button className="w-full text-xs">
-                      {user.role === "Learner" ? "My Account" : "Workspace"}
+                      {user.role === "Learner" ? "Learner Dashboard" : "Workspace"}
                     </Button>
                   </Link>
-                  <Button type="button" variant="outline" className="w-full text-xs" onClick={handleSignOut}>Sign Out</Button>
-                </>
+                  <Button type="button" variant="outline" className="w-full text-xs" onClick={handleSignOut}>
+                    Sign Out
+                  </Button>
+                </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   <Link href={ROUTES.signIn} onClick={() => setMobileMenuOpen(false)}>
