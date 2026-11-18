@@ -76,16 +76,8 @@ const timeAgo = (iso: string) => {
 // CARD COLORS — soft, stable per-card palette (picked from the item's guidId)
 // ─────────────────────────────────────────────────────────────────────────────
 const CARD_TONES = [
-    { bg: "bg-rose-50", border: "border-rose-200", hover: "hover:border-rose-400", trail: "text-rose-700", chev: "text-rose-300" },
-    { bg: "bg-sky-50", border: "border-sky-200", hover: "hover:border-sky-400", trail: "text-sky-700", chev: "text-sky-300" },
-    { bg: "bg-emerald-50", border: "border-emerald-200", hover: "hover:border-emerald-400", trail: "text-emerald-700", chev: "text-emerald-300" },
-    { bg: "bg-amber-50", border: "border-amber-200", hover: "hover:border-amber-400", trail: "text-amber-700", chev: "text-amber-300" },
-    { bg: "bg-violet-50", border: "border-violet-200", hover: "hover:border-violet-400", trail: "text-violet-700", chev: "text-violet-300" },
-    { bg: "bg-teal-50", border: "border-teal-200", hover: "hover:border-teal-400", trail: "text-teal-700", chev: "text-teal-300" },
-    { bg: "bg-fuchsia-50", border: "border-fuchsia-200", hover: "hover:border-fuchsia-400", trail: "text-fuchsia-700", chev: "text-fuchsia-300" },
-    { bg: "bg-orange-50", border: "border-orange-200", hover: "hover:border-orange-400", trail: "text-orange-700", chev: "text-orange-300" },
-    { bg: "bg-cyan-50", border: "border-cyan-200", hover: "hover:border-cyan-400", trail: "text-cyan-700", chev: "text-cyan-300" },
-    { bg: "bg-lime-50", border: "border-lime-200", hover: "hover:border-lime-400", trail: "text-lime-700", chev: "text-lime-300" },
+    { bg: "bg-white dark:bg-slate-900", border: "border-slate-200 dark:border-slate-800", hover: "hover:border-[#0D9488]/60", trail: "text-[#0D9488]", chev: "text-slate-400" },
+    { bg: "bg-slate-50/80 dark:bg-slate-900", border: "border-slate-200 dark:border-slate-800", hover: "hover:border-[#0D9488]/60", trail: "text-[#142B4A] dark:text-teal-300", chev: "text-slate-400" },
 ] as const;
 
 const toneFor = (key: string) => {
@@ -217,7 +209,7 @@ function ResultCard({ item, scope, onNavigate }: { item: SeekItem; scope: SeekSc
                             onChange={(e) => setMode(e.target.value)}
                             onClick={(e) => e.stopPropagation()}
                             aria-label="Exam mode"
-                            className="hidden rounded-md border border-slate-300 bg-white px-1.5 py-0.5 text-xs font-semibold text-slate-700 outline-none focus:border-indigo-500 md:block"
+                            className="hidden rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-none focus:border-[#0D9488] md:block"
                         >
                             {EXAM_MODES.map((m) => (
                                 <option key={m} value={m}>{m}</option>
@@ -231,7 +223,7 @@ function ResultCard({ item, scope, onNavigate }: { item: SeekItem; scope: SeekSc
                         <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); go(); }}
-                            className="inline-flex items-center gap-1 rounded-md border border-indigo-600 bg-indigo-600 px-2 py-0.5 text-xs font-semibold text-white hover:bg-indigo-700"
+                            className="inline-flex items-center gap-1 rounded-md border border-[#0D9488] bg-[#0D9488] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#0F766E] transition-colors"
                         >
                             <ExternalLink className="h-3 w-3" /> Open
                         </button>
@@ -239,14 +231,14 @@ function ResultCard({ item, scope, onNavigate }: { item: SeekItem; scope: SeekSc
                     <button
                         type="button"
                         onClick={share}
-                        className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-xs font-semibold text-slate-700 hover:bg-indigo-50"
+                        className="inline-flex items-center gap-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-[#0D9488]/50 transition-colors"
                     >
                         <Share2 className="h-3 w-3" /> Share
                     </button>
                     <button
                         type="button"
                         onClick={copy}
-                        className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-xs font-semibold text-slate-700 hover:bg-indigo-50"
+                        className="inline-flex items-center gap-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-[#0D9488]/50 transition-colors"
                     >
                         {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
                         {copied ? "Copied" : "Copy"}
@@ -492,19 +484,19 @@ export default function SeekModal({ open, onClose }: { open: boolean; onClose: (
         <div className="fixed inset-0 z-[9999]" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
-            <div className="relative mx-auto mt-16 flex max-h-[calc(100vh-6rem)] w-[min(56rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 shadow-2xl">
+            <div className="relative mx-auto mt-16 flex max-h-[calc(100vh-6rem)] w-[min(56rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1220] text-slate-900 dark:text-slate-100 shadow-2xl">
                 {/* Header */}
-                <div className="border-b border-slate-200 bg-gradient-to-r from-fuchsia-100 via-lime-100 to-blue-100 p-4">
+                <div className="border-b border-slate-200 dark:border-slate-800 bg-[#F8FAFC] dark:bg-[#111C2E] p-4">
                     <div className="flex items-center gap-2">
-                        <div className="flex flex-1 items-center rounded-xl border border-slate-300 bg-white px-3 py-2 focus-within:border-indigo-500">
-                            <Search className="mr-2 h-4 w-4 shrink-0 text-slate-400" />
+                        <div className="flex flex-1 items-center rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 focus-within:border-[#0D9488] focus-within:ring-2 focus-within:ring-[#0D9488]/20">
+                            <Search className="mr-2.5 h-4 w-4 shrink-0 text-[#0D9488]" />
                             <input
                                 ref={inputRef}
                                 value={query}
                                 onChange={(e) => changeQuery(e.target.value)}
                                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); submitNow(); } }}
-                                placeholder="Type & Search . . . 🏌️‍♂️"
-                                className="w-full bg-transparent text-sm outline-none"
+                                placeholder="Search exams, nursing subjects, courses, or clinical questions..."
+                                className="w-full bg-transparent text-sm outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                             />
                             {query && (
                                 <button type="button" onClick={() => changeQuery("")} aria-label="Clear">
@@ -516,7 +508,7 @@ export default function SeekModal({ open, onClose }: { open: boolean; onClose: (
                             type="button"
                             onClick={() => changeQuery("")}
                             title="Search history"
-                            className="rounded-xl border border-slate-300 bg-white p-2.5 text-slate-600 hover:bg-slate-100"
+                            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                         >
                             <History className="h-4 w-4" />
                         </button>
@@ -524,7 +516,7 @@ export default function SeekModal({ open, onClose }: { open: boolean; onClose: (
                             type="button"
                             onClick={onClose}
                             aria-label="Close"
-                            className="rounded-xl border border-slate-300 bg-white p-2.5 text-slate-600 hover:bg-red-100"
+                            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2.5 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40 transition-colors"
                         >
                             <X className="h-4 w-4" />
                         </button>
@@ -575,7 +567,7 @@ export default function SeekModal({ open, onClose }: { open: boolean; onClose: (
                                     type="button"
                                     onClick={() => changeMode(m)}
                                     className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${mode === m
-                                        ? "border-indigo-600 bg-indigo-600 text-white"
+                                        ? "border-[#142B4A] bg-[#142B4A] text-white"
                                         : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
                                         }`}
                                 >
@@ -593,7 +585,7 @@ export default function SeekModal({ open, onClose }: { open: boolean; onClose: (
                                     type="button"
                                     onClick={() => changeScope(g.scope)}
                                     className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${scope === g.scope
-                                        ? "border-indigo-600 bg-indigo-100 text-indigo-900"
+                                        ? "border-[#0D9488] bg-[#0D9488]/10 text-[#0D9488]"
                                         : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
                                         }`}
                                 >
