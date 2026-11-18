@@ -429,9 +429,9 @@ export default function DiscreteSubscriptionPackagesPage() {
                 <div
                   key={toastType.id}
                   className={`
-                    px-5 py-2 rounded-xl shadow-2xl text-black font-semibold
+                    px-5 py-2 rounded-xl shadow-2xl text-white font-semibold
                     transition-all duration-300 flex items-center justify-between gap-3
-                    bg-gradient-to-r ${toastType.type === "success" ? "from-green-300 via-pink-300 to-indigo-300 " : ""
+                    bg-gradient-to-r ${toastType.type === "success" ? "from-[#142B4A] to-[#0D9488] " : ""
                     } ${toastType.type === "error" ? "from-red-500 to-red-700" : ""} ${toastType.type === "info" ? "from-blue-500 to-blue-700" : ""
                     }
                   `}
@@ -439,7 +439,7 @@ export default function DiscreteSubscriptionPackagesPage() {
                   <span>{toastType.message}</span>
                   <button
                     onClick={() => removeStaticToast(toastType.id)}
-                    className="ml-3 px-2 py-1 text-sm font-bold bg-yellow-300 border border-cyan-500 text-black rounded-lg hover:bg-gray-200 transition"
+                    className="ml-3 px-2 py-1 text-sm font-bold bg-white/15 border border-white/25 text-white rounded-lg hover:bg-white/25 transition"
                   >
                     ✕
                   </button>
@@ -453,9 +453,9 @@ export default function DiscreteSubscriptionPackagesPage() {
                 <div
                   key={toastType.id}
                   className={`
-                    px-5 py-2 rounded-xl shadow-2xl text-black font-semibold
+                    px-5 py-2 rounded-xl shadow-2xl text-white font-semibold
                     transition-all duration-300 flex items-center justify-between gap-3
-                    bg-gradient-to-r ${toastType.type === "success" ? "from-green-300 via-pink-300 to-indigo-300 " : ""
+                    bg-gradient-to-r ${toastType.type === "success" ? "from-[#142B4A] to-[#0D9488] " : ""
                     } ${toastType.type === "error" ? "from-red-500 to-red-700" : ""} ${toastType.type === "info" ? "from-blue-500 to-blue-700" : ""
                     }
                   `}
@@ -463,7 +463,7 @@ export default function DiscreteSubscriptionPackagesPage() {
                   <span>{toastType.message}</span>
                   <button
                     onClick={() => removeStaticToast(toastType.id)}
-                    className="ml-3 px-2 py-1 text-sm font-bold bg-yellow-300 border border-cyan-500 text-black rounded-lg hover:bg-gray-200 transition"
+                    className="ml-3 px-2 py-1 text-sm font-bold bg-white/15 border border-white/25 text-white rounded-lg hover:bg-white/25 transition"
                   >
                     ✕
                   </button>
@@ -655,7 +655,7 @@ export default function DiscreteSubscriptionPackagesPage() {
                     key={p}
                     onClick={() => setCurrentPage(p)}
                     className={`px-3 py-2 rounded-md border text-sm ${p === currentPage
-                      ? "bg-blue-400 border-red-500 text-white"
+                      ? "bg-[#142B4A] border-[#142B4A] text-white"
                       : "bg-white border-gray-300 text-gray-700 hover:bg-gray-100"
                       }`}
                   >
@@ -687,9 +687,9 @@ export default function DiscreteSubscriptionPackagesPage() {
               border
               backdrop-blur-xl
               bg-gradient-to-r
-              from-purple-500/10
-              via-pink-500/10
-              to-cyan-500/10
+              from-[#142B4A]/5
+              via-teal-500/5
+              to-[#0D9488]/10
               shadow-lg
               transition-all duration-500
             "

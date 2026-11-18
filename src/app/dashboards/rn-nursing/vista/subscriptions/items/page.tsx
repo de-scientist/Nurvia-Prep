@@ -40,7 +40,7 @@ export default function SubscriptionItemsPage() {
         </Link>
 
         {/* Current user header */}
-        <div className="rounded-2xl border border-[var(--text-color)]/15 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-cyan-500/10 backdrop-blur-xl px-5 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="rounded-2xl border border-[var(--text-color)]/15 bg-gradient-to-br from-[#142B4A]/5 via-teal-500/5 to-[#0D9488]/10 backdrop-blur-xl px-5 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div>
               <h1 className="text-lg font-bold text-[var(--text-color)] flex items-center gap-2">
