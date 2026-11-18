@@ -11,28 +11,28 @@ type Tone = "blue" | "amber" | "emerald" | "violet";
 
 const TONES: Record<Tone, { pill: string; icon: string; btn: string; ring: string }> = {
   blue: {
-    pill: "border-blue-200 bg-blue-50 text-blue-700",
-    icon: "bg-blue-100 text-blue-600",
-    btn: "bg-blue-600 hover:bg-blue-700 shadow-blue-600/30",
-    ring: "ring-blue-200",
+    pill: "border-[#0D9488]/30 bg-[#0D9488]/10 text-[#0D9488]",
+    icon: "bg-[#142B4A]/10 text-[#142B4A]",
+    btn: "bg-[#142B4A] hover:bg-[#0F2036] shadow-slate-900/20",
+    ring: "ring-[#0D9488]/20",
   },
   amber: {
-    pill: "border-amber-200 bg-amber-50 text-amber-700",
-    icon: "bg-amber-100 text-amber-600",
-    btn: "bg-amber-600 hover:bg-amber-700 shadow-amber-600/30",
+    pill: "border-amber-200 bg-amber-50 text-amber-800",
+    icon: "bg-amber-100 text-amber-700",
+    btn: "bg-[#0D9488] hover:bg-[#0F766E] shadow-teal-700/20",
     ring: "ring-amber-200",
   },
   emerald: {
     pill: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    icon: "bg-emerald-100 text-emerald-600",
-    btn: "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30",
-    ring: "ring-emerald-200",
+    icon: "bg-[#0D9488]/10 text-[#0D9488]",
+    btn: "bg-[#0D9488] hover:bg-[#0F766E] shadow-teal-700/20",
+    ring: "ring-[#0D9488]/20",
   },
   violet: {
-    pill: "border-violet-200 bg-violet-50 text-violet-700",
-    icon: "bg-violet-100 text-violet-600",
-    btn: "bg-violet-600 hover:bg-violet-700 shadow-violet-600/30",
-    ring: "ring-violet-200",
+    pill: "border-[#142B4A]/20 bg-[#142B4A]/5 text-[#142B4A]",
+    icon: "bg-[#142B4A]/10 text-[#142B4A]",
+    btn: "bg-[#142B4A] hover:bg-[#0F2036] shadow-slate-900/20",
+    ring: "ring-slate-200",
   },
 };
 
