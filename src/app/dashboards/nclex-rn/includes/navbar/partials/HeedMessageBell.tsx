@@ -17,11 +17,11 @@ const HeedMessageBell: React.FC = () => {
       href="/pages/heed/relative"
       aria-label={unreadCount > 0 ? `${unreadCount} new messages` : "Messages"}
       title={unreadCount > 0 ? `${unreadCount} new message${unreadCount === 1 ? "" : "s"}` : "Messages"}
-      className="relative flex items-center justify-center w-9 h-9 lg:w-10 lg:h-10 border border-gray-300 dark:border-gray-800 rounded-lg hover:bg-[var(--text-color)]/10 transition"
+      className="relative flex items-center justify-center w-9 h-9 lg:w-10 lg:h-10 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
     >
-      <Bell className="w-5 h-5" strokeWidth={2.5} />
+      <Bell className="w-4.5 h-4.5" strokeWidth={2.2} />
       {unreadCount > 0 && (
-        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-900 text-white text-[10px] font-bold flex items-center justify-center">
+        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#0D9488] text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
           {unreadCount > 99 ? "99+" : unreadCount}
         </span>
       )}

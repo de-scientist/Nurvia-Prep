@@ -332,7 +332,7 @@ function CircularGauge({
             style={{ top: panelPos.top, left: panelPos.left, width: 288 }}
             className="fixed z-[100] rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden"
           >
-            <div className="px-4 py-3 bg-gradient-to-r from-indigo-800 to-yellow-800 text-center text-white">
+            <div className="px-4 py-3 bg-gradient-to-r from-[#142B4A] to-[#0D9488] text-center text-white">
               <p className="text-[10px] font-bold uppercase tracking-wide opacity-80">Aggregate : Grade Point Average [ GPA ]</p>
               <p className="text-2xl font-black">{clamped}%</p>
             </div>
@@ -399,95 +399,74 @@ function MySubscriptionBanner({
   const isFullyVerified = isActive && isPaid;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-emerald-500 bg-gradient-to-br from-emerald-700 via-black to-teal-700 backdrop-blur-md px-4 py-3 shadow-[0_0_24px_-6px_rgba(16,185,129,0.5)]">
-      {/* subtle glow ring */}
-      <div className="pointer-events-none absolute -inset-px rounded-2xl ring-1 ring-emerald-300/30" />
+    <div className="relative overflow-hidden rounded-2xl border border-teal-400/30 bg-gradient-to-br from-[#0F2036] via-[#142B4A] to-[#0D9488] backdrop-blur-md px-4 py-3.5 shadow-md">
+      <div className="pointer-events-none absolute -inset-px rounded-2xl ring-1 ring-teal-300/20" />
 
-      <div className="flex items-center gap-3">
-        {/* Big trust tick */}
+      <div className="flex items-center gap-3.5">
+        {/* Status badge icon */}
         <div className="relative shrink-0">
           <div
-            className={`flex items-center justify-center w-22 h-22 rounded-full ring-2 ${isActive ? "bg-green-800 ring-red-300" : "ring-blue-100"
+            className={`flex items-center justify-center w-14 h-14 rounded-2xl ring-1 ${isActive
+              ? "bg-teal-500/20 ring-teal-300/40"
+              : "bg-rose-500/20 ring-rose-300/40"
               }`}
           >
-            <div
-              className={`flex items-center justify-center w-20 h-20 rounded-full shadow-lg ${isActive
-                ? "bg-gradient-to-br from-emerald-400 via-indigo-400 to-cyan-500"
-                : "bg-gradient-to-br from-yellow-500 via-blue-500 to-red-600"
-                }`}
-            >
-              {isActive ? (
-                <CheckCircle2 className="w-18 h-18 text-white" strokeWidth={1.5} />
-              ) : (
-                <XCircle className="w-18 h-18 text-red-500" strokeWidth={1.5} />
-              )}
-            </div>
+            {isActive ? (
+              <CheckCircle2 className="w-8 h-8 text-[#2DD4BF]" strokeWidth={2} />
+            ) : (
+              <XCircle className="w-8 h-8 text-rose-400" strokeWidth={2} />
+            )}
           </div>
 
           {isFullyVerified && (
-            <span className="absolute -top-1 -right-1 flex h- w-3.5">
-              {/* Soft pulsing glow */}
-              <span
-                className="
-                  absolute inset-0 rounded-full
-                  bg-emerald-400
-                  animate-ping
-                "
-              />
-
-              {/* Pulsing verification dot */}
-              <span
-                className="
-                  relative inline-flex h-3.5 w-3.5 rounded-full
-                  ring-2 ring-white
-                  bg-black
-                  shadow-[0_0_8px_rgba(52,211,153,0.8)]
-                  animate-pulse
-                  transition-colors
-                "
-              />
+            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+              <span className="absolute inset-0 rounded-full bg-teal-400 animate-ping" />
+              <span className="relative inline-flex h-3.5 w-3.5 rounded-full ring-2 ring-[#142B4A] bg-teal-400" />
             </span>
           )}
         </div>
 
         <div className="min-w-0">
-          <p className="text-sm md:text-base font-normal text-white leading-tight">
-            You&apos;ve Got{" "}
-            <span className="font-black">{activeCount}</span>{" "}
-            Active Subscription{activeCount === 1 ? "" : "s"} ✔️
+          <p className="text-xs md:text-sm font-semibold text-white leading-tight">
+            <span className="font-bold text-[#2DD4BF]">{activeCount}</span>{" "}
+            Active Subscription{activeCount === 1 ? "" : "s"}
           </p>
 
-          <p className="text-[11px] md:text-xs font-semibold text-emerald-200 truncate text-center">
+          <p className="text-xs font-bold text-teal-100 truncate mt-0.5">
             {pkg.name}
           </p>
 
           <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
             <span
-              className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${isActive ? "bg-emerald-400 text-yellow-950" : "bg-red-500 text-black"
+              className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${isActive
+                ? "bg-teal-400/20 text-teal-100 border border-teal-300/30"
+                : "bg-rose-500/20 text-rose-200 border border-rose-400/30"
                 }`}
             >
               {isActive ? (
-                <CheckCircle2 className="w-2.5 h-2.5" strokeWidth={3} />
+                <CheckCircle2 className="w-2.5 h-2.5" strokeWidth={2.5} />
               ) : (
-                <XCircle className="w-2.5 h-2.5" strokeWidth={3} />
+                <XCircle className="w-2.5 h-2.5" strokeWidth={2.5} />
               )}
-              Validation : {sub.subscriptionStatus ?? "—"}
+              Status: {sub.subscriptionStatus ?? "—"}
             </span>
             <span
-              className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${isPaid ? "bg-emerald-400 text-blue-950" : "bg-red-500 text-black"
+              className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${isPaid
+                ? "bg-teal-400/20 text-teal-100 border border-teal-300/30"
+                : "bg-rose-500/20 text-rose-200 border border-rose-400/30"
                 }`}
             >
               {isPaid ? (
-                <CheckCircle2 className="w-2.5 h-2.5" strokeWidth={3} />
+                <CheckCircle2 className="w-2.5 h-2.5" strokeWidth={2.5} />
               ) : (
-                <XCircle className="w-2.5 h-2.5" strokeWidth={3} />
+                <XCircle className="w-2.5 h-2.5" strokeWidth={2.5} />
               )}
-              Paid : {sub.subscriptionHasPaid ?? "—"}
+              Paid: {sub.subscriptionHasPaid ?? "—"}
             </span>
           </div>
 
-          <p className="text-[10px] md:text-[11px] text-white/80 mt-1.5">
-            Full Access From <strong className="text-white">{formatShortDate(sub.validFrom)}</strong> to {" "}
+          <p className="text-[10px] text-slate-200/80 mt-1.5">
+            Access: <strong className="text-white">{formatShortDate(sub.validFrom)}</strong> –{" "}
             <strong className="text-white">{formatShortDate(sub.validUntil)}</strong>
           </p>
         </div>
@@ -502,13 +481,27 @@ type CourseNode = { guid: string; name: string; description: string; subjects: n
 
 const COURSE_EMOJIS = ["❤️", "👶", "💊", "🧠", "🩺", "🦴", "🫀", "🧬"];
 const COURSE_TINTS = [
-  "bg-pink-100 border-pink-400",
-  "bg-emerald-100 border-emerald-400",
-  "bg-sky-100 border-sky-400",
-  "bg-orange-100 border-orange-400",
+  "bg-white dark:bg-[#111C2E] border-slate-200 dark:border-slate-800 hover:border-[#0D9488]",
+  "bg-white dark:bg-[#111C2E] border-slate-200 dark:border-slate-800 hover:border-[#0D9488]",
+  "bg-white dark:bg-[#111C2E] border-slate-200 dark:border-slate-800 hover:border-[#0D9488]",
+  "bg-white dark:bg-[#111C2E] border-slate-200 dark:border-slate-800 hover:border-[#0D9488]",
 ];
-const COURSE_BTNS = ["bg-pink-400", "bg-emerald-400", "bg-sky-400", "bg-orange-400"];
-const PILL_TINTS = ["bg-green-600", "bg-amber-900", "bg-violet-900", "bg-indigo-700", "bg-teal-600", "bg-rose-900", "bg-violet-600", "bg-orange-900"];
+const COURSE_BTNS = [
+  "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700",
+  "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700",
+  "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700",
+  "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700",
+];
+const PILL_TINTS = [
+  "bg-[#0D9488] hover:bg-[#0F766E]",
+  "bg-[#142B4A] hover:bg-[#1E3A5F]",
+  "bg-teal-700 hover:bg-teal-600",
+  "bg-slate-700 hover:bg-slate-600",
+  "bg-[#0D9488] hover:bg-[#0F766E]",
+  "bg-[#142B4A] hover:bg-[#1E3A5F]",
+  "bg-teal-700 hover:bg-teal-600",
+  "bg-slate-700 hover:bg-slate-600",
+];
 
 function CoursesCollector({
   programGuid,
@@ -850,9 +843,9 @@ export default function AtiTeasHomePage() {
 
         {/* ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */}
         {/* Hero / Greeting — compact */}
-        <div className="relative overflow-hidden rounded-2xl border border-[var(--text-color)] bg-gradient-to-br from-[#112b51] via-[#164c78] to-blue-500 backdrop-blur-xl px-5 py-4 md:px-7 md:py-5">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-1">
-            <div className="flex items-center gap-3 min-w-0">
+        <div className="relative overflow-hidden rounded-2xl border border-slate-200/20 bg-gradient-to-br from-[#142B4A] via-[#0F2036] to-[#0D9488] px-5 py-5 md:px-7 md:py-6 shadow-md">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
 
               <CircularGauge
                 score={overallAverageScore}
@@ -870,13 +863,13 @@ export default function AtiTeasHomePage() {
                   <div className="flex items-center gap-2 min-w-0">
                     <h1 className="text-lg md:text-2xl font-bold text-white truncate">
                       {greeting}
-                      {!isUserLoading && firstName ? `, ${firstName}` : ""} !
+                      {!isUserLoading && firstName ? `, ${firstName}` : ""}!
                     </h1>
                   </div>
 
                   {/* Right: Time + Flag */}
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-sm md:text-lg font-semibold text-white">
+                    <span className="text-xs md:text-sm font-semibold text-teal-100 bg-white/10 px-2.5 py-1 rounded-full">
                       {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </span>
 
@@ -888,46 +881,46 @@ export default function AtiTeasHomePage() {
                         width={28}
                         height={20}
                         unoptimized
-                        className="w-6 h-4 md:w-7 md:h-5 rounded-sm shadow-sm object-cover shrink-0"
+                        className="w-6 h-4 md:w-7 md:h-5 rounded-xs shadow-xs object-cover shrink-0"
                       />
                     )}
                   </div>
 
                 </div>
 
-                <p className="text-xs md:text-sm opacity-70 text-white truncate">
-                  {APP_TITLE} {TARGET_NAME} Dashboard — let&apos;s Keep the Momentum Going. ⚓
+                <p className="text-xs md:text-sm text-slate-200/85 truncate mt-0.5">
+                  {APP_TITLE} {TARGET_NAME} Dashboard — Clinical Preparation &amp; Analytics
                 </p>
 
                 {performanceInsight ? (
                   <div
-                    className={`hidden md:flex mt-2 max-w-xl items-start gap-2 rounded-lg border px-3 py-1.5 text-[11px] md:text-xs ${performanceInsight.trend === "up"
-                      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600"
+                    className={`hidden md:flex mt-2.5 max-w-xl items-start gap-2 rounded-xl border px-3.5 py-2 text-[11px] md:text-xs ${performanceInsight.trend === "up"
+                      ? "border-teal-300/30 bg-teal-500/15 text-teal-50"
                       : performanceInsight.trend === "down"
-                        ? "border-amber-200 bg-amber-500 text-amber-600"
-                        : "border-white  bg-white text-white "
+                        ? "border-amber-300/30 bg-amber-500/15 text-amber-50"
+                        : "border-white/20 bg-white/10 text-slate-100"
                       }`}
                   >
-                    {performanceInsight.trend === "up" && <TrendingUp className="w-3.5 h-3.5 mt-0.5 shrink-0" />}
-                    {performanceInsight.trend === "down" && <TrendingDown className="w-3.5 h-3.5 mt-0.5 shrink-0" />}
-                    {performanceInsight.trend === "steady" && <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0" />}
+                    {performanceInsight.trend === "up" && <TrendingUp className="w-3.5 h-3.5 mt-0.5 shrink-0 text-[#2DD4BF]" />}
+                    {performanceInsight.trend === "down" && <TrendingDown className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-300" />}
+                    {performanceInsight.trend === "steady" && <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0 text-[#2DD4BF]" />}
                     <p>
-                      <span className="font-semibold">{performanceInsight.headline}</span>{" "}
-                      <span className="opacity-80">{performanceInsight.detail}</span>
+                      <span className="font-semibold">{performanceInsight.headline}:</span>{" "}
+                      <span className="opacity-90">{performanceInsight.detail}</span>
                     </p>
                   </div>
                 ) : (
-                  <div className="hidden md:flex mt-2 max-w-xl items-center justify-between gap-2 rounded-lg border border-indigo-200 bg-indigo-300 px-3 py-1.5 text-[11px] md:text-xs text-black">
-                    <span>No exams taken yet — take a free test to see where you stand!</span>
-                    <Link href={`/pages/exams/${TARGET_PANEL}`} className="font-semibold underline shrink-0">
-                      Take a Free Test
+                  <div className="hidden md:flex mt-2.5 max-w-xl items-center justify-between gap-2 rounded-xl border border-white/20 bg-white/10 px-3.5 py-2 text-[11px] md:text-xs text-white">
+                    <span>No exams taken yet — take a free diagnostic test to establish your baseline.</span>
+                    <Link href={`/pages/exams/${TARGET_PANEL}`} className="font-semibold text-[#2DD4BF] hover:underline shrink-0">
+                      Take a Free Test →
                     </Link>
                   </div>
                 )}
 
-                <div className="hidden md:block mt-2 max-w-xl rounded-lg border border-[var(--text-color)] bg-blue-100 px-3 py-1.5 text-[11px] md:text-xs text-black">
-                  <span className="font-semibold">{randomQuote.quoteTitle}</span>{" "}
-                  <span className="opacity-70">— {randomQuote.quoteDescription}</span>
+                <div className="hidden md:block mt-2 max-w-xl rounded-xl border border-white/15 bg-slate-900/30 px-3.5 py-2 text-[11px] md:text-xs text-slate-100">
+                  <span className="font-semibold text-white">{randomQuote.quoteTitle}</span>{" "}
+                  <span className="opacity-80">— {randomQuote.quoteDescription}</span>
                 </div>
 
               </div>
@@ -935,10 +928,9 @@ export default function AtiTeasHomePage() {
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 shrink-0 w-full lg:w-auto">
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-3 shrink-0 w-full lg:w-auto">
+              <div className="flex flex-col gap-2.5 shrink-0 w-full lg:w-auto">
 
-                {/* Active Subscription - below buttons */}
+                {/* Active Subscription */}
                 {myActiveSubscription ? (
                   <MySubscriptionBanner
                     pkg={myActiveSubscription.pkg}
@@ -948,11 +940,11 @@ export default function AtiTeasHomePage() {
                 ) : (
                   <Link
                     href={`/dashboards/${TARGET_PANEL}/vista/subscriptions/items`}
-                    className="group inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm bg-gradient-to-r from-amber-800 via-orange-800 to-yellow-800 text-white shadow-lg  hover:shadow-xl hover:scale-105 transition-all duration-300"
+                    className="group inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs md:text-sm bg-amber-500/20 border border-amber-300/40 text-amber-100 hover:bg-amber-500/30 transition-all duration-200"
                   >
-                    <CreditCard className="w-4 h-4" />
-                    No Active Plan
-                    <ArrowRight className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200" />
+                    <CreditCard className="w-4 h-4 text-amber-300" />
+                    No Active Plan — View Options
+                    <ArrowRight className="w-3.5 h-3.5 opacity-80 group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                 )}
 
@@ -960,23 +952,17 @@ export default function AtiTeasHomePage() {
                 <button
                   type="button"
                   onClick={toggleLeftSidebar}
-                  className="group relative md:hidden w-full overflow-hidden inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-indigo-700 via-indigo-500 to-indigo-700 shadow-lg shadow-indigo-500/30 active:scale-95 transition-all duration-300 hover:shadow-indigo-500/50 hover:-translate-y-0.5"
+                  className="group relative md:hidden w-full overflow-hidden inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-white bg-[#0D9488] hover:bg-[#0F766E] shadow-sm transition-all"
                 >
-                  {/* Shiny sweep */}
-                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12" />
-
-                  {/* Soft glow */}
-                  <span className="absolute inset-0 rounded-xl ring-1 ring-white/20" />
-
-                  <span className="relative">Get Started</span>
-                  <ArrowRight className="relative w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                  <span className="relative">Open Study Menu</span>
+                  <ArrowRight className="relative w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                 </button>
 
                 {/* Buttons: hidden on phones */}
-                <div className="hidden md:flex flex-wrap items-center gap-3">
+                <div className="hidden md:flex flex-wrap items-center gap-2.5">
                   <Link
                     href={`/dashboards/${TARGET_PANEL}/vista/subscriptions/items`}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-green-100 font-semibold text-xs md:text-sm bg-gradient-to-r from-indigo-700 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs md:text-sm bg-[#0D9488] hover:bg-[#0F766E] text-white shadow-sm transition-colors"
                   >
                     <CreditCard className="w-4 h-4" />
                     View Subscription Packages
@@ -984,7 +970,7 @@ export default function AtiTeasHomePage() {
 
                   <Link
                     href={`/dashboards/${TARGET_PANEL}/vista/subscriptions/packages`}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs md:text-sm border border-indigo-200 bg-indigo-200 text-[var(--text-color)] backdrop-blur-sm hover:bg-indigo-500 hover:text-white hover:border-indigo-500 hover:shadow-lg hover:scale-105 transition-all duration-300"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs md:text-sm border border-white/25 bg-white/10 text-white hover:bg-white/20 transition-colors"
                   >
                     <BookMarked className="w-4 h-4" />
                     My Subscriptions
@@ -1044,35 +1030,35 @@ export default function AtiTeasHomePage() {
             <button
               type="button"
               onClick={() => setAuthModalStep("login")}
-              className="group relative overflow-hidden rounded-xl border border-[var(--text-color)]/20 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 px-4 py-3 flex items-center justify-between hover:border-[var(--text-color)]/50 transition-all duration-200 text-left"
+              className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] px-4 py-3.5 flex items-center justify-between hover:border-[#0D9488] shadow-xs transition-all duration-200 text-left"
             >
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                  <LogIn className="w-4 h-4 text-blue-500" />
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#142B4A]/10 dark:bg-teal-500/15 flex items-center justify-center">
+                  <LogIn className="w-4 h-4 text-[#142B4A] dark:text-[#2DD4BF]" />
                 </div>
                 <div>
-                  <p className="font-bold text-md text-[var(--text-color)]">Log In Now</p>
-                  <p className="text-[10px] opacity-60 text-[var(--text-color)]">You have an Account ! Access your account ?</p>
+                  <p className="font-bold text-sm text-slate-900 dark:text-slate-100">Log In Now</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Already have an account? Sign in to sync progress.</p>
                 </div>
               </div>
-              <ArrowRight className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 text-[var(--text-color)]" />
+              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#0D9488] group-hover:translate-x-0.5 transition-all duration-200" />
             </button>
 
             <button
               type="button"
               onClick={() => setAuthModalStep("register")}
-              className="group relative overflow-hidden rounded-xl border border-[var(--text-color)]/20 bg-gradient-to-br from-pink-500/10 to-purple-500/10 px-4 py-3 flex items-center justify-between hover:border-[var(--text-color)]/50 transition-all duration-200 text-left"
+              className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] px-4 py-3.5 flex items-center justify-between hover:border-[#0D9488] shadow-xs transition-all duration-200 text-left"
             >
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-pink-500/20 flex items-center justify-center">
-                  <UserPlus className="w-4 h-4 text-pink-500" />
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#0D9488]/10 flex items-center justify-center">
+                  <UserPlus className="w-4 h-4 text-[#0D9488]" />
                 </div>
                 <div>
-                  <p className="font-bold text-md text-[var(--text-color)]">Register Now</p>
-                  <p className="text-[10px] opacity-60 text-[var(--text-color)]">Do not have an Account ! Create a new account ?</p>
+                  <p className="font-bold text-sm text-slate-900 dark:text-slate-100">Register Now</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">New to {APP_TITLE}? Create your learner account.</p>
                 </div>
               </div>
-              <ArrowRight className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 text-[var(--text-color)]" />
+              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#0D9488] group-hover:translate-x-0.5 transition-all duration-200" />
             </button>
           </div>
         )}
@@ -1086,45 +1072,45 @@ export default function AtiTeasHomePage() {
           <button
             type="button"
             onClick={() => setCatOpen(true)}
-            className="relative rounded-2xl border border-violet-600 bg-white p-3 text-left text-slate-900 shadow hover:-translate-y-0.5 transition"
+            className="relative rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-4 text-left text-slate-900 dark:text-slate-100 shadow-xs hover:border-[#0D9488] hover:-translate-y-0.5 transition"
           >
-            <span className="absolute right-2 top-2 rounded-full bg-violet-700 px-2 text-[10px] font-extrabold text-white">Soon</span>
+            <span className="absolute right-3 top-3 rounded-full bg-[#142B4A] px-2.5 py-0.5 text-[10px] font-bold text-white">Soon</span>
             <span className="text-2xl">🎯</span>
-            <h6 className="mt-1 text-sm font-extrabold">CAT Exam</h6>
-            <p className="text-[11px] text-slate-500">Simulate real NCLEX testing.</p>
-            <span className="mt-2 block rounded-lg bg-violet-300 py-1.5 text-center text-xs font-extrabold">Learn More</span>
+            <h6 className="mt-1.5 text-sm font-bold">CAT Exam</h6>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Simulate real NCLEX testing.</p>
+            <span className="mt-2.5 block rounded-xl bg-slate-100 dark:bg-slate-800 py-1.5 text-center text-xs font-semibold text-[#142B4A] dark:text-slate-200">Learn More</span>
           </button>
 
           <button
             type="button"
             onClick={() => openDiy(null)}
-            className="rounded-2xl border border-violet-600 bg-white p-3 text-left text-slate-900 shadow hover:-translate-y-0.5 transition"
+            className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-4 text-left text-slate-900 dark:text-slate-100 shadow-xs hover:border-[#0D9488] hover:-translate-y-0.5 transition"
           >
             <span className="text-2xl">📝</span>
-            <h6 className="mt-1 text-sm font-extrabold">Custom Test</h6>
-            <p className="text-[11px] text-slate-500">Create your own practice test.</p>
-            <span className="mt-2 block rounded-lg bg-sky-300 py-1.5 text-center text-xs font-extrabold">Create Custom Test</span>
+            <h6 className="mt-1.5 text-sm font-bold">Custom Test</h6>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Create your own practice test.</p>
+            <span className="mt-2.5 block rounded-xl bg-[#0D9488] py-1.5 text-center text-xs font-semibold text-white">Create Custom Test</span>
           </button>
 
           <button
             type="button"
             onClick={() => setWeakOpen(true)}
-            className="rounded-2xl border border-violet-600 bg-white p-3 text-left text-slate-900 shadow hover:-translate-y-0.5 transition"
+            className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-4 text-left text-slate-900 dark:text-slate-100 shadow-xs hover:border-[#0D9488] hover:-translate-y-0.5 transition"
           >
             <span className="text-2xl">⚠️</span>
-            <h6 className="mt-1 text-sm font-extrabold">Review Weak Areas</h6>
-            <p className="text-[11px] text-slate-500">Focus on topics needing work.</p>
-            <span className="mt-2 block rounded-lg bg-orange-300 py-1.5 text-center text-xs font-extrabold">Review Now</span>
+            <h6 className="mt-1.5 text-sm font-bold">Review Weak Areas</h6>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Focus on topics needing work.</p>
+            <span className="mt-2.5 block rounded-xl bg-amber-500/15 py-1.5 text-center text-xs font-semibold text-amber-700 dark:text-amber-300">Review Now</span>
           </button>
 
           <Link
             href={`/dashboards/${TARGET_PANEL}/vista/subscriptions/items`}
-            className="rounded-2xl border border-violet-600 bg-white p-3 text-left text-slate-900 shadow hover:-translate-y-0.5 transition"
+            className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-4 text-left text-slate-900 dark:text-slate-100 shadow-xs hover:border-[#0D9488] hover:-translate-y-0.5 transition"
           >
             <span className="text-2xl">📚</span>
-            <h6 className="mt-1 text-sm font-extrabold">Study Plan</h6>
-            <p className="text-[11px] text-slate-500">Personalized plan to reach your goal.</p>
-            <span className="mt-2 block rounded-lg bg-emerald-300 py-1.5 text-center text-xs font-extrabold">View Plans ?!</span>
+            <h6 className="mt-1.5 text-sm font-bold">Study Plan</h6>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Personalized plan to reach your goal.</p>
+            <span className="mt-2.5 block rounded-xl bg-[#142B4A] py-1.5 text-center text-xs font-semibold text-white">View Plans</span>
           </Link>
         </section>
 
@@ -1132,7 +1118,7 @@ export default function AtiTeasHomePage() {
         <section>
           <div className="mb-2.5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-[var(--text-color)] opacity-70" />
+              <GraduationCap className="w-4 h-4 text-[#0D9488]" />
               <h2 className="text-base md:text-lg font-bold text-[var(--text-color)]">Your {TARGET_NAME} Courses</h2>
             </div>
             <span className="text-xs font-semibold text-[var(--text-color)] opacity-60">{allCourses.length} courses</span>
@@ -1143,30 +1129,30 @@ export default function AtiTeasHomePage() {
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {allCourses.map((c, i) => (
-                <div key={c.guid} className={`flex flex-col rounded-2xl border p-3 text-slate-900 shadow ${COURSE_TINTS[i % 4]}`}>
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-lg shadow">
+                <div key={c.guid} className={`flex flex-col rounded-2xl border p-4 text-slate-900 dark:text-slate-100 shadow-xs transition-all ${COURSE_TINTS[i % 4]}`}>
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-lg">
                       {COURSE_EMOJIS[i % COURSE_EMOJIS.length]}
                     </div>
                     <div className="min-w-0">
-                      <h6 className="truncate text-sm font-extrabold">{c.name}</h6>
-                      <small className="text-[10px] text-slate-500">{c.subjects} Subjects</small>
+                      <h6 className="truncate text-sm font-bold">{c.name}</h6>
+                      <small className="text-[10px] font-semibold uppercase tracking-wider text-[#0D9488]">{c.subjects} Subjects</small>
                     </div>
                   </div>
 
-                  <p className="my-2 line-clamp-2 text-[11px] text-slate-600">{funcTruncateHelper(c.description, 90)}</p>
+                  <p className="my-2.5 line-clamp-2 text-[11px] text-slate-500 dark:text-slate-400">{funcTruncateHelper(c.description, 90)}</p>
 
                   <div className="mt-auto flex gap-2">
                     <Link
                       href={`/dashboards/${TARGET_PANEL}/vista/learning/subjects/distinct/overview?identifier=${c.guid}`}
-                      className={`flex-1 rounded-lg py-1.5 text-center text-[11px] font-extrabold ${COURSE_BTNS[i % 4]}`}
+                      className={`flex-1 rounded-xl py-2 text-center text-[11px] font-semibold transition-colors ${COURSE_BTNS[i % 4]}`}
                     >
                       Continue Studying
                     </Link>
                     <button
                       type="button"
                       onClick={() => openDiy(c.guid)}
-                      className="flex-1 rounded-lg bg-gradient-to-r from-blue-700 to-violet-700 py-1.5 text-[11px] font-extrabold text-white"
+                      className="flex-1 rounded-xl bg-[#142B4A] hover:bg-[#0D9488] py-2 text-[11px] font-semibold text-white transition-colors"
                     >
                       Custom Test
                     </button>
@@ -1179,18 +1165,18 @@ export default function AtiTeasHomePage() {
 
         {/* Focus Areas + Achievements */}
         <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow">
-            <h6 className="text-sm font-extrabold">
-              Focus Areas <span className="block text-[11px] font-medium text-slate-500">Prioritize These Topics</span>
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-5 text-slate-900 dark:text-slate-100 shadow-xs">
+            <h6 className="text-sm font-bold">
+              Focus Areas <span className="block text-[11px] font-medium text-slate-500 dark:text-slate-400">Prioritize These Topics</span>
             </h6>
             {subjectBreakdown.length === 0 ? (
-              <p className="py-4 text-center text-xs text-slate-500">Take exams to see your focus areas.</p>
+              <p className="py-4 text-center text-xs text-slate-500 dark:text-slate-400">Take exams to see your focus areas.</p>
             ) : (
               [...subjectBreakdown].reverse().slice(0, 3).map((s) => (
                 <div key={s.name} className="my-2.5 grid grid-cols-[1fr_80px_36px] items-center gap-2">
-                  <p className="truncate text-xs font-bold">{s.name}</p>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
-                    <div className="h-full rounded-full bg-gradient-to-r from-pink-500 to-amber-500" style={{ width: `${s.score}%` }} />
+                  <p className="truncate text-xs font-semibold">{s.name}</p>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                    <div className="h-full rounded-full bg-gradient-to-r from-[#142B4A] to-[#0D9488]" style={{ width: `${s.score}%` }} />
                   </div>
                   <strong className="text-right text-xs">{s.score}%</strong>
                 </div>
@@ -1198,8 +1184,8 @@ export default function AtiTeasHomePage() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow">
-            <h6 className="mb-2 text-sm font-extrabold">Recent Achievements</h6>
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-5 text-slate-900 dark:text-slate-100 shadow-xs">
+            <h6 className="mb-2.5 text-sm font-bold">Recent Achievements</h6>
             <div className="grid grid-cols-4 gap-2 text-center">
               {[
                 ["🎯", `${allResults.length} Attempts`],
@@ -1207,9 +1193,9 @@ export default function AtiTeasHomePage() {
                 ["📖", `${totalSubjectsDone} Subjects`],
                 ["⭐", `${overallAverageScore}% GPA`],
               ].map(([icon, label]) => (
-                <div key={label} className="rounded-xl bg-slate-50 py-2.5 text-xl">
+                <div key={label} className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 py-2.5 text-xl">
                   {icon}
-                  <span className="mt-1 block text-[9.5px] font-extrabold leading-tight">{label}</span>
+                  <span className="mt-1 block text-[10px] font-bold leading-tight text-slate-700 dark:text-slate-300">{label}</span>
                 </div>
               ))}
             </div>
@@ -1221,34 +1207,34 @@ export default function AtiTeasHomePage() {
         <div className="grid grid-cols-1 md:grid-cols-1 gap-3 items-stretch">
 
           {/* Reports & Progress */}
-          <div className="h-full flex flex-col rounded-2xl border border-[var(--text-color)] bg-[var(--content-bg)] p-4">
+          <div className="h-full flex flex-col rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-5 shadow-xs">
             <div className="flex items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-[var(--text-color)] opacity-70" />
-                <h2 className="text-sm md:text-base font-bold text-[var(--text-color)]">
+                <AlertCircle className="w-4 h-4 text-[#0D9488]" />
+                <h2 className="text-sm md:text-base font-bold text-slate-900 dark:text-slate-100">
                   Reports &amp; Progress
                 </h2>
               </div>
               <Link
                 href={REPORTS_ROUTE}
-                className="text-md font-semibold opacity-60 hover:opacity-100 flex items-center gap-1 text-[var(--text-color)] transition-opacity shrink-0"
+                className="text-xs font-semibold text-[#0D9488] hover:underline flex items-center gap-1 shrink-0"
               >
-                View All Reports <ArrowRight className="w-3 h-3" />
+                View All Reports <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
 
-            <div className="flex-1 grid grid-cols-3 gap-2">
-              <div className="flex flex-col items-center justify-center rounded-lg border border-[var(--text-color)]/10 py-3">
-                <span className="text-lg font-black text-[var(--text-color)]">{totalExamsDone}</span>
-                <span className="text-[9px] font-semibold uppercase opacity-60 text-[var(--text-color)] text-center">Exams Done</span>
+            <div className="flex-1 grid grid-cols-3 gap-3">
+              <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 py-3.5">
+                <span className="text-xl font-black text-[#142B4A] dark:text-white">{totalExamsDone}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-center mt-0.5">Exams Done</span>
               </div>
-              <div className="flex flex-col items-center justify-center rounded-lg border border-[var(--text-color)]/10 py-3">
-                <span className="text-lg font-black text-[var(--text-color)]">{totalSubjectsDone}</span>
-                <span className="text-[9px] font-semibold uppercase opacity-60 text-[var(--text-color)] text-center">Subjects Covered</span>
+              <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 py-3.5">
+                <span className="text-xl font-black text-[#0D9488]">{totalSubjectsDone}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-center mt-0.5">Subjects Covered</span>
               </div>
-              <div className="flex flex-col items-center justify-center rounded-lg border border-[var(--text-color)]/10 py-3">
-                <span className="text-lg font-black text-[var(--text-color)]">{pendingOrIncompleteExams.length}</span>
-                <span className="text-[9px] font-semibold uppercase opacity-60 text-[var(--text-color)] text-center">Incomplete</span>
+              <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 py-3.5">
+                <span className="text-xl font-black text-amber-600 dark:text-amber-400">{pendingOrIncompleteExams.length}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-center mt-0.5">Incomplete</span>
               </div>
             </div>
 
@@ -1258,15 +1244,15 @@ export default function AtiTeasHomePage() {
                   <Link
                     key={exam.guidId ?? exam.id}
                     href={`/web/${TARGET_PANEL}/vista/exam/generic?mode=Exam&identifier=${exam.guidId ?? exam.id}`}
-                    className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-[var(--text-color)]/10 hover:border-[var(--text-color)]/40 hover:bg-[var(--text-color)]/5 transition-all duration-200"
+                    className="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-[#0D9488] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200"
                   >
-                    <span className="text-xs font-semibold text-[var(--text-color)] truncate">
+                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
                       {exam.title}
                     </span>
                     <span
-                      className={`shrink-0 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${status === "InProgress"
-                        ? "bg-emerald-500/20 text-emerald-500"
-                        : "bg-amber-500/20 text-amber-500"
+                      className={`shrink-0 text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-full ${status === "InProgress"
+                        ? "bg-teal-500/15 text-[#0D9488] dark:text-[#2DD4BF]"
+                        : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                         }`}
                     >
                       {status === "InProgress" ? "In Progress" : "Pending"}
@@ -1281,22 +1267,22 @@ export default function AtiTeasHomePage() {
 
         {/* ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */}
         {/* Hero Selection Header */}
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 px-5 py-4 text-white shadow">
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0F2036] via-[#142B4A] to-[#0D9488] px-5 py-5 text-white shadow-md">
           <div className="mb-3 flex flex-wrap items-center gap-3">
-            <div className="flex-1 text-center text-base font-black">
-              <GraduationCap className="mr-1 inline h-4 w-4 text-violet-300" />
-              {TARGET_BADGE} — <span className="text-violet-300">Study By Course</span>
+            <div className="flex-1 text-center text-base font-bold">
+              <GraduationCap className="mr-1.5 inline h-4.5 w-4.5 text-[#2DD4BF]" />
+              {TARGET_BADGE} — <span className="text-[#2DD4BF]">Study By Course</span>
             </div>
             <button
               type="button"
               onClick={() => openDiy(null)}
-              className="shrink-0 rounded-full bg-gradient-to-r from-violet-700 to-blue-700 px-4 py-1.5 text-xs font-extrabold shadow"
+              className="shrink-0 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] border border-teal-300/30 px-4 py-1.5 text-xs font-semibold shadow-xs transition-colors"
             >
               + Create Custom Test
             </button>
           </div>
 
-          <p className="mb-3 text-center text-[11px] opacity-60">
+          <p className="mb-3 text-center text-[11px] text-slate-200/80">
             Select a course to filter its subjects below.
           </p>
 
@@ -1313,18 +1299,18 @@ export default function AtiTeasHomePage() {
                   onClick={() => setActiveCourseGuid(isActive ? null : c.guid)}
                   aria-pressed={isActive}
                   title={`${c.subjects} subjects`}
-                  className={`rounded-full px-3.5 py-1.5 text-xs font-bold text-white transition hover:-translate-y-0.5 hover:brightness-110 ${PILL_TINTS[i % PILL_TINTS.length]} ${isActive ? "ring-2 ring-white ring-offset-2 ring-offset-indigo-950" : activeCourseGuid ? "opacity-50" : ""}`}
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-semibold text-white transition hover:-translate-y-0.5 ${PILL_TINTS[i % PILL_TINTS.length]} ${isActive ? "ring-2 ring-white ring-offset-2 ring-offset-[#142B4A]" : activeCourseGuid ? "opacity-55" : ""}`}
                 >
-                  🔖 {c.name} <span className="text-[10px] opacity-60">({c.subjects})</span>
+                  🔖 {c.name} <span className="text-[10px] opacity-75">({c.subjects})</span>
                 </button>
               );
             })}
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-5 border-t border-white/10 pt-3 text-xs font-bold text-white/70">
-            <span><strong className="text-violet-300">{allCourses.length}</strong> Courses</span>
-            <span><strong className="text-violet-300">{totalCourseSubjects}</strong> Subjects</span>
-            <span><strong className="text-violet-300">{totalExamsDone}</strong> Exams Done</span>
+          <div className="mt-3.5 flex flex-wrap items-center justify-center gap-5 border-t border-white/15 pt-3 text-xs font-semibold text-white/80">
+            <span><strong className="text-[#2DD4BF]">{allCourses.length}</strong> Courses</span>
+            <span><strong className="text-[#2DD4BF]">{totalCourseSubjects}</strong> Subjects</span>
+            <span><strong className="text-[#2DD4BF]">{totalExamsDone}</strong> Exams Done</span>
           </div>
         </section>
 
@@ -1340,27 +1326,12 @@ export default function AtiTeasHomePage() {
         {/* Dynamic Vista Quote */}
 
         <div className="w-full flex justify-center items-center py-1">
-          <div
-            className="
-              max-w-5xl w-full
-              text-center
-              px-5 py-3
-              rounded-xl
-              border
-              backdrop-blur-xl
-              bg-gradient-to-r
-              from-purple-500/10
-              via-pink-500/10
-              to-cyan-500/10
-              shadow-md
-              transition-all duration-500
-            "
-          >
+          <div className="max-w-5xl w-full text-center px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] shadow-xs">
             <div className="flex flex-col md:flex-row justify-center items-center gap-2 text-xs md:text-sm">
-              <span className="font-bold tracking-wide text-[var(--text-color)]">
+              <span className="font-bold tracking-wide text-[#142B4A] dark:text-[#2DD4BF]">
                 {randomQuote.quoteTitle}
               </span>
-              <span className="opacity-70 text-[var(--text-color)]">
+              <span className="text-slate-600 dark:text-slate-400">
                 — {randomQuote.quoteDescription}
               </span>
             </div>
@@ -1380,38 +1351,38 @@ export default function AtiTeasHomePage() {
       />
 
       {weakOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/55 p-4" onClick={() => setWeakOpen(false)}>
-          <div className="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-5 text-slate-900 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-3 flex items-center justify-between">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4" onClick={() => setWeakOpen(false)}>
+          <div className="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-6 text-slate-900 dark:text-slate-100 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4 flex items-center justify-between">
               <div>
-                <div className="text-base font-black text-red-700">⚠️ Your Weak Subjects</div>
-                <div className="text-[11px] text-slate-500">Focus practice here to boost your score</div>
+                <div className="text-base font-bold text-[#142B4A] dark:text-white">⚠️ Your Weak Subjects</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">Focus practice here to boost your score</div>
               </div>
-              <button type="button" onClick={() => setWeakOpen(false)} className="text-2xl leading-none text-slate-500">×</button>
+              <button type="button" onClick={() => setWeakOpen(false)} className="text-2xl leading-none text-slate-500 hover:text-slate-900 dark:hover:text-white">×</button>
             </div>
 
             {subjectBreakdown.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="mb-3 text-sm font-semibold">No weak areas found yet</p>
+                <p className="mb-3 text-sm font-semibold text-slate-600 dark:text-slate-300">No weak areas found yet</p>
                 <button
                   type="button"
                   onClick={() => { setWeakOpen(false); openDiy(null); }}
-                  className="rounded-xl bg-gradient-to-r from-blue-700 to-violet-700 px-5 py-2 text-xs font-extrabold text-white"
+                  className="rounded-xl bg-[#142B4A] hover:bg-[#0D9488] px-5 py-2.5 text-xs font-semibold text-white transition-colors"
                 >
                   Create a Practice Test
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 {[...subjectBreakdown].reverse().slice(0, 6).map((s) => (
-                  <div key={s.name} className="rounded-xl border border-red-200 bg-red-50 p-3">
-                    <div className="truncate text-xs font-extrabold">{s.name}</div>
-                    <div className="mb-1 flex justify-between text-[10px] text-slate-500">
+                  <div key={s.name} className="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/30 p-3.5">
+                    <div className="truncate text-xs font-bold">{s.name}</div>
+                    <div className="mb-1.5 flex justify-between text-[10px] text-slate-500 dark:text-slate-400">
                       <span>{s.attempts} attempt{s.attempts === 1 ? "" : "s"}</span>
-                      <span className="font-bold text-red-700">{s.score}%</span>
+                      <span className="font-bold text-amber-700 dark:text-amber-300">{s.score}%</span>
                     </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-red-100">
-                      <div className="h-full rounded-full bg-gradient-to-r from-red-400 to-red-600" style={{ width: `${s.score}%` }} />
+                    <div className="h-1.5 overflow-hidden rounded-full bg-amber-100 dark:bg-amber-900/50">
+                      <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-rose-500" style={{ width: `${s.score}%` }} />
                     </div>
                   </div>
                 ))}
@@ -1422,25 +1393,25 @@ export default function AtiTeasHomePage() {
       )}
 
       {catOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/55 p-4" onClick={() => setCatOpen(false)}>
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 text-center text-slate-900 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-violet-100 text-3xl">🎯</div>
-            <h5 className="mb-1 text-lg font-black">CAT Exam — Coming Soon</h5>
-            <p className="mb-4 text-xs leading-relaxed text-slate-500">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4" onClick={() => setCatOpen(false)}>
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-6 text-center text-slate-900 dark:text-slate-100 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0D9488]/10 text-2xl">🎯</div>
+            <h5 className="mb-1.5 text-lg font-bold text-[#142B4A] dark:text-white">CAT Exam — Coming Soon</h5>
+            <p className="mb-5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               Computerized Adaptive Testing is being built to simulate your real NCLEX experience, adapting difficulty to your performance.
             </p>
-            <div className="flex gap-2">
+            <div className="flex gap-2.5">
               <button
                 type="button"
                 onClick={() => { setCatOpen(false); openDiy(null); }}
-                className="flex-1 rounded-xl bg-gradient-to-r from-blue-700 to-violet-700 py-2 text-xs font-extrabold text-white"
+                className="flex-1 rounded-xl bg-[#142B4A] hover:bg-[#0D9488] py-2.5 text-xs font-semibold text-white transition-colors"
               >
                 Create Custom Test
               </button>
               <button
                 type="button"
                 onClick={() => setCatOpen(false)}
-                className="flex-1 rounded-xl bg-slate-100 py-2 text-xs font-extrabold text-slate-700"
+                className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
               >
                 Continue Studying
               </button>
