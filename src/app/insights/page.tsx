@@ -376,7 +376,7 @@ export default function InsightsPage() {
 
                   {item.story && (
                     <p className="mt-3 text-sm text-slate-700 leading-relaxed italic">
-                      "{item.story}"
+                      &ldquo;{item.story}&rdquo;
                     </p>
                   )}
 

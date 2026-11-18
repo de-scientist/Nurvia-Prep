@@ -223,7 +223,7 @@ function SearchContent() {
         {!loading && query.trim() && results.length > 0 && (
           <div className="space-y-4">
             <div className="text-xs font-medium text-slate-500">
-              Found {totalCount} result{totalCount === 1 ? "" : "s"} for "{query}"
+              Found {totalCount} result{totalCount === 1 ? "" : "s"} for &ldquo;{query}&rdquo;
             </div>
 
             {results.map((item) => (
@@ -292,7 +292,7 @@ function SearchContent() {
             <SlidersHorizontal className="mx-auto h-10 w-10 text-slate-400" />
             <h3 className="mt-3 text-lg font-bold text-slate-800">No matching results found</h3>
             <p className="mt-1 text-xs text-slate-500 max-w-md mx-auto">
-              We couldn't find anything matching "{query}". Try checking your spelling, switching filter categories, or exploring our suggested topics.
+              We couldn&apos;t find anything matching &ldquo;{query}&rdquo;. Try checking your spelling, switching filter categories, or exploring our suggested topics.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
               {SUGGESTED_QUERIES.slice(0, 5).map((item) => (

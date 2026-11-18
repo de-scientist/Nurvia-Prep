@@ -87,13 +87,13 @@ export default function LearnerDashboardPage() {
                   </span>
                 </div>
                 <p className="text-xs text-foreground-secondary">
-                  Solve today's clinical judgment case question and maintain your daily streak.
+                  Solve today&apos;s clinical judgment case question and maintain your daily streak.
                 </p>
               </div>
             </div>
             <Link href="/qotd">
               <Button size="sm" className="bg-[#0A5C66] text-white hover:bg-[#084c55] font-semibold text-xs">
-                Solve Today's Question →
+                Solve Today&apos;s Question →
               </Button>
             </Link>
           </div>

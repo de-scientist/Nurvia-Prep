@@ -495,7 +495,7 @@ export default function NewPostPage() {
                   <span>Tip for Faster Replies</span>
                 </div>
                 <p className="mt-2 text-xs text-teal-800 leading-relaxed">
-                  Posts with clear titles and specific clinical contexts (e.g. <em>"Pediatric dehydration vs fluid overload"</em>) receive answers 3x faster than vague inquiries.
+                  Posts with clear titles and specific clinical contexts (e.g. <em>&ldquo;Pediatric dehydration vs fluid overload&rdquo;</em>) receive answers 3x faster than vague inquiries.
                 </p>
               </Card>
             </div>

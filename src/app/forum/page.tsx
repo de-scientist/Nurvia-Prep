@@ -30,7 +30,7 @@ import {
   Filter,
 } from "lucide-react";
 
-export default function ForumPage() {
+function ForumContent() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams?.get("category") || undefined;
   const initialPostId = searchParams?.get("postId") || undefined;
@@ -429,5 +429,19 @@ export default function ForumPage() {
         </section>
       </div>
     </PublicShell>
+  );
+}
+
+export default function ForumPage() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-teal-600 border-r-transparent" />
+        </div>
+      }
+    >
+      <ForumContent />
+    </React.Suspense>
   );
 }
