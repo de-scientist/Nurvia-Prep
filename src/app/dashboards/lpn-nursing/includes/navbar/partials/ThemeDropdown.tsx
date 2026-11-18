@@ -93,116 +93,94 @@ const ThemeDropdown: React.FC = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 px-3 py-2 text-gray-700 dark:text-[var(--text-color)] hover:bg-[var(--navbar-bg)] dark:hover:bg-[var(--navbar-bg)] rounded-lg transition"
+        className="flex items-center gap-1.5 px-3 py-2 text-slate-700 dark:text-[var(--text-color)] border border-slate-200 dark:border-slate-700 hover:border-[#0D9488] hover:text-[#0D9488] rounded-xl transition"
       >
         {activeMode === "dark" ? (
-          <Moon className="w-5 h-5" />
+          <Moon className="w-4.5 h-4.5" />
         ) : activeMode === "light" ? (
-          <Sun className="w-5 h-5" />
+          <Sun className="w-4.5 h-4.5" />
         ) : activeMode === "default" ? (
-          <Palette className="w-5 h-5 text-blue-500" />
+          <Palette className="w-4.5 h-4.5 text-[#0D9488]" />
         ) : (
-          <Palette className="w-5 h-5" />
+          <Palette className="w-4.5 h-4.5" />
         )}
-        <ChevronDown className="w-4 h-4" />
+        <ChevronDown className="w-3.5 h-3.5 opacity-70" />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700 select-none">
+        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#111C2E] rounded-xl shadow-xl py-1.5 z-50 border border-slate-200 dark:border-slate-800 select-none">
           {["default", "light", "dark", "custom"].map((mode) => (
             <button
               key={mode}
               onClick={() => handleThemeChange(mode as "default" | "light" | "dark" | "custom")}
-              className={`flex items-center px-4 py-2 text-sm w-full text-left ${mode === activeMode
-                ? "bg-blue-100 dark:bg-green-200 text-blue-800 dark:text-blue-900 hover:bg-amber-600"
-                : "text-gray-700 dark:text-gray-200 hover:text-black hover:bg-gray-100 dark:hover:bg-gray-300"
+              className={`flex items-center px-4 py-2 text-sm font-medium w-full text-left transition-colors ${mode === activeMode
+                ? "bg-[#0D9488]/10 text-[#0D9488] font-semibold"
+                : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
             >
-              {mode === "light" && <Sun className="w-4 h-4 mr-2" />}
-              {mode === "dark" && <Moon className="w-4 h-4 mr-2" />}
-              {mode === "custom" && <Palette className="w-4 h-4 mr-2" />}
-              {mode === "default" && <Palette className="w-4 h-4 mr-2 text-blue-500" />}
+              {mode === "light" && <Sun className="w-4 h-4 mr-2.5" />}
+              {mode === "dark" && <Moon className="w-4 h-4 mr-2.5" />}
+              {mode === "custom" && <Palette className="w-4 h-4 mr-2.5" />}
+              {mode === "default" && <Palette className="w-4 h-4 mr-2.5 text-[#0D9488]" />}
               {mode[0].toUpperCase() + mode.slice(1)}
-              {mode === activeMode && <Check className="w-4 h-4 ml-auto" />}
+              {mode === activeMode && <Check className="w-4 h-4 ml-auto text-[#0D9488]" />}
             </button>
           ))}
         </div>
       )}
 
       {showColorPicker && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 select-none">
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-slate-900/50 backdrop-blur-xs select-none p-4">
           <div
             className="
-            bg-gray-300
-            dark:bg-gradient-to-br from-green-400 via-amber-200/90 to-yellow-400/90
-            p-3
-            rounded-xl
+            relative
+            bg-white dark:bg-[#111C2E]
+            p-5
+            rounded-2xl
             shadow-2xl
-            w-[300px]
-            backdrop-blur-lg
-
-            border-2
-            border-black
-            text-center
+            w-[320px]
+            border border-slate-200 dark:border-slate-800
+            text-slate-900 dark:text-slate-100
           "
           >
 
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-md font-semibold text-center w-full tracking-wide">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-sm font-bold tracking-tight">
                 Custom Theme Palette
               </h2>
 
               <button
                 onClick={() => setShowColorPicker(false)}
                 className="
-                  group
-                  absolute right-3 top-3
                   p-1.5
-                  rounded-full
-                  border
-                  border-cyan-400
-                  bg-yellow-200
-                  backdrop-blur-md
-                  shadow-[0_0_10px_rgba(34,211,238,0.35)]
-                  transition-all
-                  duration-300
-                  hover:border-cyan-300
-                  hover:shadow-[0_0_16px_rgba(34,211,238,0.7)]
-                  hover:scale-110
-                  active:scale-95
+                  rounded-lg
+                  border border-slate-200 dark:border-slate-700
+                  text-slate-500 hover:text-slate-900 dark:hover:text-white
+                  hover:bg-slate-100 dark:hover:bg-slate-800
+                  transition
                 "
                 aria-label="Close color picker"
               >
-                <X
-                  className="
-                    w-5 h-5
-                    text-indigo-600
-                    transition
-                    duration-300
-                    group-hover:text-red-700
-                    group-hover:rotate-90
-                  "
-                />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="mb-2">
-              <label className="block text-xs font-medium mb-1 opacity-80">
-                Select Target Component
+            <div className="mb-3 text-left">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                Select Target Surface
               </label>
               <select
                 value={currentColorTarget}
                 onChange={(e) => setCurrentColorTarget(e.target.value as keyof CustomColors)}
                 className="
                   w-full
-                  p-1.5
-                  text-s
-                  border-2
-                rounded-lg
-                  bg-yellow-300
-                  text-black
-                  border-black
-                  focus:ring-2 focus:ring-cyan-400
+                  px-3 py-2
+                  text-xs font-medium
+                  border border-slate-200 dark:border-slate-700
+                  rounded-xl
+                  bg-slate-50 dark:bg-slate-900
+                  text-slate-900 dark:text-slate-100
+                  focus:outline-none focus:ring-2 focus:ring-[#0D9488]
                 "
               >
                 <option value="navbar">Navigation Bar</option>
@@ -212,22 +190,19 @@ const ThemeDropdown: React.FC = () => {
                 <option value="footer">Footer Section</option>
                 <option value="text">Text Color</option>
               </select>
-
-
             </div>
-            <hr className="my-3 border-gray-200 dark:border-gray-700" />
 
-            <div className="mb-2 flex justify-center">
+            <div className="mb-3 flex justify-center">
               <HexColorPicker
                 color={(customColors ?? DEFAULT_THEME_COLORS)[currentColorTarget]}
                 onChange={handleColorChange}
-                className="w-full h-40 rounded-lg"
+                className="w-full h-40 rounded-xl"
               />
             </div>
 
-            <div className="flex items-center justify-center gap-2 mb-3">
+            <div className="flex items-center justify-center gap-2 mb-4">
               <div
-                className="w-6 h-6 rounded border border-white/40"
+                className="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 shrink-0"
                 style={{ backgroundColor: (customColors ?? DEFAULT_THEME_COLORS)[currentColorTarget] }}
               />
               <input
@@ -236,65 +211,53 @@ const ThemeDropdown: React.FC = () => {
                 onChange={(e) => handleColorChange(e.target.value)}
                 className="
                   flex-1
-                  p-1.5
-                  text-xs
-                  border
-                  rounded-lg
-                  bg-white/80
-                  text-black
-                  border-gray-300
-                  focus:ring-2 focus:ring-cyan-400
+                  px-3 py-1.5
+                  text-xs font-mono
+                  border border-slate-200 dark:border-slate-700
+                  rounded-xl
+                  bg-slate-50 dark:bg-slate-900
+                  text-slate-900 dark:text-slate-100
+                  focus:outline-none focus:ring-2 focus:ring-[#0D9488]
                 "
               />
             </div>
 
-            <button
-              onClick={() => setShowColorPicker(false)}
-              className="
-                w-full
-                py-1.5
-                text-xs
-                font-semibold
-                rounded-lg
-                border
-                border-cyan-400
-                bg-gradient-to-r from-cyan-200 to-blue-00
-                text-black
-                shadow-[0_0_12px_rgba(34,211,238,0.4)]
-                transition-all
-                duration-300
-                hover:shadow-[0_0_20px_rgba(34,211,238,0.8)]
-                hover:scale-[1.02]
-                active:scale-95
-              "
-            >
-              Apply &amp; Close 🏌️‍♂️
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={() => setShowColorPicker(false)}
+                className="
+                  w-full
+                  py-2
+                  text-xs
+                  font-semibold
+                  rounded-xl
+                  bg-[#142B4A] hover:bg-[#0D9488]
+                  text-white
+                  shadow-xs
+                  transition-colors
+                "
+              >
+                Apply &amp; Close
+              </button>
 
-            <hr className="my-3 border-gray-200 dark:border-gray-700" />
-
-            <button
-              onClick={handleResetCustomColors}
-              className="
-               w-full
-                py-1.5
-                text-xs
-                font-semibold
-                rounded-lg
-                border
-                border-cyan-400
-                bg-gradient-to-r from-cyan-200 to-blue-00
-                text-black
-                shadow-[0_0_12px_rgba(34,211,238,0.4)]
-                transition-all
-                duration-300
-                hover:shadow-[0_0_20px_rgba(34,211,238,0.8)]
-                hover:scale-[1.02]
-                active:scale-95
-            "
-            >
-              Reset Custom Theme to Default
-            </button>
+              <button
+                onClick={handleResetCustomColors}
+                className="
+                  w-full
+                  py-2
+                  text-xs
+                  font-semibold
+                  rounded-xl
+                  border border-slate-200 dark:border-slate-700
+                  bg-slate-50 dark:bg-slate-800/60
+                  text-slate-700 dark:text-slate-300
+                  hover:bg-slate-100 dark:hover:bg-slate-800
+                  transition-colors
+                "
+              >
+                Reset to NURVIA Default
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -9,10 +9,10 @@ import { APP_NAME } from "@/lib/config/config";
 import Annex from "@/app/(web)/auth/modals/Annex";
 
 const FOOTER_LINKS = [
-  { href: "/privacy", label: "Privacy Policy" },
-  { href: "/terms", label: "Terms of Service" },
-  { href: "/contact", label: "Contact Us" },
-  { href: "/docs", label: "Documentation" },
+  { href: "/pages/privacy-policy", label: "Privacy Policy" },
+  { href: "/pages/terms-of-service", label: "Terms of Service" },
+  { href: "/pages/contact-us", label: "Contact Us" },
+  { href: "/pages/documentation", label: "Documentation" },
 ];
 
 export default function Footer() {
@@ -37,11 +37,11 @@ export default function Footer() {
   const leftWidth = getSidebarWidth(leftSidebar);
   const rightWidth = getSidebarWidth(rightSidebar);
 
-  const hoverColor = isLightFooter ? "hover:text-blue-600" : "hover:text-blue-400";
+  const hoverColor = isLightFooter ? "hover:text-[#0D9488]" : "hover:text-[#2DD4BF]";
 
   return (
     <footer
-      className="transition-all duration-300 ease-in-out border-t border-black/10 text-sm"
+      className="transition-all duration-300 ease-in-out border-t border-slate-200 dark:border-slate-800 text-sm"
       style={{
         marginLeft: leftWidth,
         marginRight: rightWidth,
@@ -53,17 +53,17 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-5">
         <div className="flex flex-col items-center gap-3 md:flex-row md:justify-between">
           <span className="text-center opacity-70 md:text-left">
-            &copy; {new Date().getFullYear()} Qlex Nursing. All rights reserved.
+            &copy; {new Date().getFullYear()} {APP_NAME} (NURVIA). All rights reserved.
           </span>
 
           <button
             type="button"
             onClick={() => setAnnexOpen(true)}
-            className="flex items-center gap-2 text-xs opacity-70 transition hover:text-red-700 hover:opacity-100"
+            className="flex items-center gap-2 text-xs opacity-75 transition hover:text-[#0D9488] hover:opacity-100"
           >
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#0D9488] opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#0D9488]" />
             </span>
             Powered By {APP_NAME} Team
           </button>
