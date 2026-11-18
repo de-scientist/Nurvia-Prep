@@ -109,38 +109,33 @@ export default function TwoFactorAuthPage() {
 
    if (!user) {
     return (
-      <main className="min-h-[70vh] flex items-center justify-center px-4 py-10 bg-amber-50">
-        <div className="w-full max-w-md rounded-3xl border border-[var(--text-color)]/15 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-cyan-500/10 backdrop-blur-xl shadow-xl px-6 py-8 text-center">
+      <main className="min-h-[70vh] flex items-center justify-center px-4 py-10 bg-slate-50 dark:bg-[#0B1220]">
+        <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] shadow-xl px-6 py-8 text-center">
 
           {/* Icon */}
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/20">
-            <FiLock className="h-7 w-7 text-indigo-500" />
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0D9488]/10 border border-[#0D9488]/20">
+            <FiLock className="h-6 w-6 text-[#0D9488]" />
           </div>
 
           {/* Heading */}
-          <h2 className="text-xl font-bold text-[var(--text-color)]">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
             Sign In Required
           </h2>
 
           {/* Message */}
-          <p className="mt-2 text-sm leading-relaxed opacity-70 text-[var(--text-color)]">
+          <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
             You must be logged in to access your security settings.
-            Please sign in to update your password or PIN.
+            Please sign in to manage Two-Factor Authentication.
           </p>
 
           {/* Button */}
           <Link
-          href={`/dashboards/${CURRENT_PANEL}/auth/login`}
-            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 hover:shadow-xl"
+            href={`/dashboards/${CURRENT_PANEL}/auth/login`}
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-[#142B4A] hover:bg-[#0D9488] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors"
           >
             <FiLogIn className="h-4 w-4" />
             Log In to Continue
           </Link>
-
-          {/* Small hint */}
-          <p className="mt-4 text-[11px] opacity-50 text-[var(--text-color)]">
-            Password and PIN settings are available only to signed-in users.
-          </p>
         </div>
       </main>
     );
@@ -160,44 +155,44 @@ export default function TwoFactorAuthPage() {
       <div className="p-3 md:p-4 space-y-5 w-full max-w-5xl mx-auto">
         <Link
           href={`/dashboards/${CURRENT_PANEL}/auth/account/security/profile`}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold hover:opacity-100 text-[var(--text-color)] transition-opacity"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-[#0D9488] transition-colors"
         >
           <FiArrowLeft className="w-3.5 h-3.5" />
           Back to My Security Profile
         </Link>
 
         {/* Current user info */}
-        <div className="rounded-2xl border text-center border-[var(--text-color)]/15 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-cyan-500/10 backdrop-blur-xl px-5 py-5 flex items-center justify-center">
+        <div className="rounded-2xl border border-slate-200/20 bg-gradient-to-br from-[#142B4A] via-[#0F2036] to-[#0D9488] px-6 py-5 flex items-center justify-center text-white shadow-md">
           <div className="text-center">
-            <h1 className="text-lg font-bold text-[var(--text-color)] flex items-center justify-center gap-2">
-              <FiSmartphone className="w-4 h-4 text-indigo-500" />
+            <h1 className="text-lg font-bold flex items-center justify-center gap-2">
+              <FiSmartphone className="w-4 h-4 text-[#2DD4BF]" />
               Two-Factor Authentication
             </h1>
 
-            <p className="text-lg text-[var(--text-color)]">
-              {user.userName} ── {user.email}
+            <p className="text-sm text-slate-200/85 mt-0.5">
+              {user.userName} · {user.email}
             </p>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-[var(--text-color)]/15 bg-[var(--content-bg)] p-4 md:p-5 space-y-3">
-          <InfoRow label="Your Two Factor Authentication Status : " value={user.twoFactorEnabled ? "Enabled" : "Disabled"} />
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-5 space-y-2 shadow-xs">
+          <InfoRow label="Two-Factor Authentication Status" value={user.twoFactorEnabled ? "Enabled" : "Disabled"} />
           <InfoRow
-            label="Your Backup Codes"
+            label="Backup Codes"
             value={`${user.backupCodes?.filter((b) => !b.isUsed).length ?? 0} of ${user.backupCodes?.length ?? 0} unused`}
           />
         </div>
 
 
         {message && (
-          <p className={`text-xs text-center font-semibold ${message.ok ? "text-emerald-600" : "text-rose-600"}`}>
+          <p className={`text-xs text-center font-semibold ${message.ok ? "text-[#0D9488]" : "text-rose-600"}`}>
             {message.text}
           </p>
         )}
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {user.twoFactorEnabled ? (
-          <div className="rounded-2xl border border-[var(--text-color)]/15 bg-[var(--content-bg)] p-4 md:p-5 space-y-3 flex flex-col items-center text-center">
-            <p className="text-xs text-[var(--text-color)] opacity-70">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-5 space-y-3 flex flex-col items-center text-center shadow-xs">
+            <p className="text-xs text-slate-600 dark:text-slate-400">
               Two-factor authentication is currently protecting your account.
               Disabling it will remove this extra layer of security.
             </p>
@@ -205,32 +200,32 @@ export default function TwoFactorAuthPage() {
             <button
               onClick={handleDisable}
               disabled={busy}
-              className="px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-rose-800 to-red-800 text-white shadow-md hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
+              className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-colors disabled:opacity-50"
             >
               {busy ? "Disabling…" : "Disable 2FA"}
             </button>
           </div>
         ) : (
-          <div className="rounded-2xl border border-[var(--text-color)] text-center bg-[var(--content-bg)] p-4 md:p-5 space-y-4 flex flex-col items-center">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 text-center bg-white dark:bg-[#111C2E] p-5 space-y-4 flex flex-col items-center shadow-xs">
             {step === "idle" && (
               <>
-                <p className="text-xs text-[var(--text-color)] opacity-70">
+                <p className="text-xs text-slate-600 dark:text-slate-400">
                   Add an extra layer of security by requiring a verification code
                   from your authenticator app at login.
                 </p>
 
                 <button
                   onClick={handleStartSetup}
-                  className="px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md hover:scale-105 transition-transform"
+                  className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-[#142B4A] hover:bg-[#0D9488] text-white shadow-sm transition-colors"
                 >
-                  Click to Set Up 2FA
+                  Set Up 2FA
                 </button>
               </>
             )}
 
             {step === "setup" && (
               <>
-                <p className="text-xs text-[var(--text-color)] opacity-70">
+                <p className="text-xs text-slate-600 dark:text-slate-400">
                   Scan this into your authenticator app (Google Authenticator,
                   Authy, etc.), or enter the code manually.
                 </p>
@@ -246,22 +241,22 @@ export default function TwoFactorAuthPage() {
                     alt="2FA QR Code"
                     width={144}
                     height={144}
-                    className="block mx-auto rounded-xl border border-[var(--text-color)]/20"
+                    className="block mx-auto rounded-xl border border-slate-200 dark:border-slate-700"
                   />
                 ) : (
-                  <div className="w-36 h-36 mx-auto rounded-xl border border-[var(--text-color)]/20 bg-[var(--text-color)]/5 flex items-center justify-center text-[10px] opacity-50 text-[var(--text-color)]">
+                  <div className="w-36 h-36 mx-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-[10px] text-slate-500">
                     QR Code Unavailable
                   </div>
                 )}
 
                 <div className="flex items-center justify-center gap-2">
-                  <code className="px-3 py-1.5 rounded-lg bg-[var(--text-color)]/10 text-xs font-mono text-[var(--text-color)]">
+                  <code className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-mono text-slate-800 dark:text-slate-200">
                     {secret}
                   </code>
 
                   <button
                     onClick={() => navigator.clipboard.writeText(secret)}
-                    className="p-1.5 rounded-lg hover:bg-[var(--text-color)]/10 text-[var(--text-color)] opacity-60 hover:opacity-100 transition"
+                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-[#0D9488] transition"
                     title="Copy secret"
                   >
                     <FiCopy className="w-3.5 h-3.5" />
@@ -270,7 +265,7 @@ export default function TwoFactorAuthPage() {
 
                 <button
                   onClick={() => setStep("confirm")}
-                  className="px-5 py-2 rounded-xl font-semibold text-xs bg-indigo-500 text-white hover:scale-105 transition-transform"
+                  className="px-5 py-2.5 rounded-xl font-semibold text-xs bg-[#142B4A] hover:bg-[#0D9488] text-white transition-colors"
                 >
                   I&apos;ve Added It — Continue
                 </button>
@@ -279,7 +274,7 @@ export default function TwoFactorAuthPage() {
 
             {step === "confirm" && (
               <>
-                <p className="text-md text-[var(--text-color)] opacity-70">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   Enter the 6-digit code from your authenticator app to confirm setup.
                 </p>
 
@@ -294,17 +289,17 @@ export default function TwoFactorAuthPage() {
                     setCode(pasted.slice(0, 88));
                   }}
                   placeholder="········"
-                  className="w-200 text-center tracking-[0.5em] rounded-lg border border-[var(--text-color)]/20 bg-[var(--content-bg)] px-3 py-2 text-lg font-mono text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-indigo-400/50"
+                  className="w-full max-w-xs text-center tracking-[0.5em] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-lg font-mono text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20"
                 />
 
                 <div className="flex items-center justify-center gap-2">
                   <button
                     onClick={handleConfirm}
                     disabled={busy || code.length < 4}
-                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-[#142B4A] hover:bg-[#0D9488] text-white shadow-sm transition-colors disabled:opacity-50"
                   >
                     <FiCheckCircle className="w-4 h-4" />
-                    {busy ? "Confirming…" : "Submit,  Confirm & Enable"}
+                    {busy ? "Confirming…" : "Submit, Confirm & Enable"}
                   </button>
                 </div>
               </>
