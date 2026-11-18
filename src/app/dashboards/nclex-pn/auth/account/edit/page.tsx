@@ -48,7 +48,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-[10px] uppercase font-bold opacity-50 tracking-wide text-[var(--text-color)]">
+      <span className="text-[11px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">
         {label}
       </span>
       <input
@@ -56,7 +56,7 @@ function Field({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-lg border border-[var(--text-color)]/20 bg-[var(--content-bg)] px-3 py-2 text-sm text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-indigo-400/50"
+        className="mt-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20 transition"
       />
     </label>
   );
@@ -75,7 +75,7 @@ function TextAreaField({
 }) {
   return (
     <label className="block">
-      <span className="text-[10px] uppercase font-bold opacity-50 tracking-wide text-[var(--text-color)]">
+      <span className="text-[11px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">
         {label}
       </span>
       <textarea
@@ -83,7 +83,7 @@ function TextAreaField({
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
         rows={4}
-        className="mt-1 w-full rounded-lg border border-[var(--text-color)]/20 bg-[var(--content-bg)] px-3 py-2 text-sm text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-indigo-400/50 resize-none"
+        className="mt-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20 resize-none transition"
       />
     </label>
   );
@@ -154,7 +154,7 @@ export default function ProfileEditPage() {
         </p>
         <Link
           href={`/dashboards/${CURRENT_PANEL}/auth/login`}
-          className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg hover:scale-105 transition-transform"
+          className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-[#142B4A] hover:bg-[#0D9488] text-white shadow-sm transition-colors"
         >
           Log In
         </Link>
@@ -173,13 +173,13 @@ export default function ProfileEditPage() {
         color: "var(--content-text)",
       }}
     >
-      <div className="p-3 md:p-4 space-y-5 w-full max-w-7xl mx-auto">
+      <div className="p-3 md:p-6 space-y-5 w-full max-w-5xl mx-auto">
 
         {/* ─────────────────────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between">
           <Link
             href={`/dashboards/${CURRENT_PANEL}/auth/account/show`}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold opacity-60 hover:opacity-100 text-[var(--text-color)] transition-opacity"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-[#0D9488] transition-colors"
           >
             <FiArrowLeft className="w-3.5 h-3.5" />
             Back to Profile
@@ -187,28 +187,29 @@ export default function ProfileEditPage() {
         </div>
 
         {/* ─────────────────────────────────────────────────────────────────────── */}
-        <div className="rounded-2xl border border-[var(--text-color)]/15 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 backdrop-blur-xl px-5 py-6 flex flex-col sm:flex-row items-center gap-5">
-          <div className="h-20 w-20 rounded-full overflow-hidden bg-gradient-to-br from-emerald-200 via-indigo-200 to-cyan-200 flex items-center justify-center shrink-0">
+        <div className="rounded-2xl border border-slate-200/20 bg-gradient-to-br from-[#142B4A] via-[#0F2036] to-[#0D9488] px-6 py-6 flex flex-col sm:flex-row items-center gap-5 text-white shadow-md">
+          <div className="h-16 w-16 rounded-2xl bg-white/15 border border-white/25 flex items-center justify-center shrink-0 text-2xl font-bold">
+            {user.userName?.[0]?.toUpperCase() ?? "U"}
           </div>
           <div className="text-center sm:text-left">
-            <h1 className="text-lg md:text-xl font-bold text-[var(--text-color)]">Edit Profile</h1>
-            <p className="text-xs opacity-60 text-[var(--text-color)]">
+            <h1 className="text-lg md:text-xl font-bold">Edit Profile</h1>
+            <p className="text-xs text-slate-200/85">
               {user.userName} · {user.email}
             </p>
-            <p className="text-[10px] opacity-50 text-[var(--text-color)] mt-1">
-              Profile picture is pulled automatically from Gravatar based on your email — upload support isn&apos;t wired up yet.
+            <p className="text-[11px] text-teal-100/80 mt-1">
+              Profile avatar is synced automatically from Gravatar based on your primary email address.
             </p>
           </div>
         </div>
 
         {/* ─────────────────────────────────────────────────────────────────────── */}
-        <div className="rounded-2xl border border-[var(--text-color)]/15 bg-[var(--content-bg)] p-4 md:p-5 space-y-4">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-5 md:p-6 space-y-4 shadow-xs">
           <div className="flex items-center gap-2 mb-1">
-            <FiUser className="w-4 h-4 text-[var(--text-color)] opacity-70" />
-            <h2 className="text-sm font-bold text-[var(--text-color)]">Personal Details</h2>
+            <FiUser className="w-4 h-4 text-[#0D9488]" />
+            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Personal Details</h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Gender" value={form.gender} onChange={updateField("gender")} placeholder="e.g. Female" />
             <Field label="Date of Birth" type="date" value={form.dateOfBirth} onChange={updateField("dateOfBirth")} />
             <Field label="Ethnicity" value={form.ethnicity} onChange={updateField("ethnicity")} />
@@ -218,8 +219,8 @@ export default function ProfileEditPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-[var(--text-color)]/15 bg-[var(--content-bg)] p-4 md:p-5 space-y-4">
-          <h2 className="text-sm font-bold text-[var(--text-color)]">About You</h2>
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-5 md:p-6 space-y-4 shadow-xs">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">About You</h2>
           <Field label="Website" value={form.website} onChange={updateField("website")} placeholder="https://" />
           <TextAreaField label="Bio" value={form.bio} onChange={updateField("bio")} placeholder="A short line about yourself" />
           <TextAreaField label="About" value={form.about} onChange={updateField("about")} placeholder="More detail about your background" />
@@ -228,14 +229,14 @@ export default function ProfileEditPage() {
         {/* ─────────────────────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between gap-3">
           {saveMessage && (
-            <p className={`text-xs font-semibold ${saveMessage.ok ? "text-emerald-600" : "text-rose-600"}`}>
+            <p className={`text-xs font-semibold ${saveMessage.ok ? "text-[#0D9488]" : "text-rose-600"}`}>
               {saveMessage.text}
             </p>
           )}
           <button
             onClick={handleSave}
             disabled={saving}
-            className="ml-auto inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
+            className="ml-auto inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm bg-[#142B4A] hover:bg-[#0D9488] text-white shadow-sm transition-colors disabled:opacity-50"
           >
             <FiSave className="w-4 h-4" />
             {saving ? "Saving…" : "Save Changes"}
