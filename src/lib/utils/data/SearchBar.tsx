@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent } from "react";
+import { Search, X } from "lucide-react";
 
 interface SearchBarProps {
   value: string;
@@ -25,9 +26,8 @@ export default function SearchBar({
 
   return (
     <div className="relative w-full max-w-7xl">
-      {/* Search Icon */}
-      <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none opacity-60 ">
-        🔍
+      <span className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-slate-400">
+        <Search className="w-4 h-4" />
       </span>
 
       <input
@@ -36,25 +36,17 @@ export default function SearchBar({
         onChange={handleChange}
         disabled={disabled}
         placeholder={placeholder}
-        className={`
-          w-full pl-9 pr-9 py-2
-          text-sm rounded-md
-          border outline-none
-          transition
-          focus:ring-2 focus:ring-offset-1
-          disabled:opacity-50 disabled:cursor-not-allowed
-          bg-[var(--content-bg)] text-[var(--text-color)]
-        `}
+        className="w-full pl-10 pr-9 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 outline-none transition bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 shadow-2xs focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20 disabled:opacity-50 disabled:cursor-not-allowed"
       />
 
-      {/* Clear button (X) */}
       {value && !disabled && (
         <button
           type="button"
           onClick={clearInput}
-          className="absolute inset-y-0 right-2 flex items-center justify-center px-2 text-gray-500 hover:text-gray-700"
+          aria-label="Clear search"
+          className="absolute inset-y-0 right-2.5 flex items-center justify-center px-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
         >
-          ✖
+          <X className="w-4 h-4" />
         </button>
       )}
     </div>
