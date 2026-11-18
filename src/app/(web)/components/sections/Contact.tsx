@@ -146,19 +146,21 @@ export default function Contact({
     return (
         <section
             id={id}
-            className={`py-3 px-4 ${className}`}
-            style={{ background: 'linear-gradient(135deg, #e1f6e7, #d6e4ff, #f0ebfb)' }}
+            className={`py-14 px-4 sm:px-6 bg-[#F8FAFC] dark:bg-[#111C2E]/60 border-t border-slate-200 dark:border-slate-800 ${className}`}
         >
             <div className="mx-auto max-w-5xl">
-                <div className="text-center mb-6">
-                    <h2 className="text-3xl md:text-4xl font-bold text-blue-800">{heading}</h2>
-                    <p className="text-sm text-gray-600 mt-2">{subheading}</p>
+                <div className="text-center mb-8 space-y-2">
+                    <span className="text-xs font-bold uppercase tracking-widest text-[#0D9488]">
+                        ACADEMIC &amp; TECHNICAL SUPPORT
+                    </span>
+                    <h2 className="font-brand text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white">{heading}</h2>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">{subheading}</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
 
                     {/* LEFT: image (hidden on phones, same height as the form) */}
-                    <div className="hidden md:block relative w-full h-full rounded-2xl overflow-hidden shadow-xl">
+                    <div className="hidden md:block relative w-full h-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
                         <Image
                             src="/components/sections/support.png"
                             alt="Customer support"
@@ -170,15 +172,15 @@ export default function Contact({
                     </div>
 
                     {/* RIGHT: form */}
-                    <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 w-full">
+                    <div className="bg-white dark:bg-[#0B1220] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 md:p-8 w-full">
                         {error && (
-                            <div className="relative mb-4 px-4 py-3 rounded-xl text-sm flex items-center gap-3 bg-red-100 border border-red-200 text-red-800">
+                            <div role="alert" className="relative mb-4 px-4 py-3 rounded-xl text-sm flex items-center gap-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200">
                                 <span>⚠️</span>
                                 <span className="flex-1 leading-tight">{error}</span>
                                 <button
                                     type="button"
                                     onClick={() => setError('')}
-                                    className="font-bold hover:text-gray-700"
+                                    className="font-bold hover:text-rose-900"
                                     aria-label="Dismiss error"
                                 >
                                     ✕
@@ -190,14 +192,14 @@ export default function Contact({
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 {/* Email */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
                                         Enter your Email
                                         {userLoading && (
-                                            <span className="ml-2 text-xs text-gray-400">(checking session . . .)</span>
+                                            <span className="ml-2 text-xs text-slate-400">(checking session . . .)</span>
                                         )}
                                     </label>
                                     <div className="relative">
-                                        <FiMail className="absolute top-3 left-3 text-gray-400" />
+                                        <FiMail className="absolute top-3 left-3 text-slate-400" />
                                         <input
                                             type="email"
                                             name="email"
@@ -206,7 +208,7 @@ export default function Contact({
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             placeholder="you@example.com"
-                                            className={`w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${user ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'text-cyan-800'
+                                            className={`w-full border border-slate-300 dark:border-slate-700 rounded-lg pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488] ${user ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100'
                                                 }`}
                                         />
                                     </div>
@@ -214,10 +216,10 @@ export default function Contact({
 
                                 {/* Phone */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
                                         Enter your Phone{' '}
                                         {phone && phone.length > 6 && !phoneValid && (
-                                            <span className="text-red-500 text-xs">(Invalid phone number)</span>
+                                            <span className="text-rose-600 text-xs">(Invalid phone number)</span>
                                         )}
                                     </label>
                                     <PhoneInput
@@ -227,17 +229,17 @@ export default function Contact({
                                         onChange={handlePhoneChange}
                                         name="phone"
                                         disabled={!!user && !!phone}
-                                        className={`w-full border border-gray-300 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all ${user && phone ? 'bg-gray-100 cursor-not-allowed' : ''
+                                        className={`w-full border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-900 focus-within:ring-2 focus-within:ring-[#0D9488] transition-all ${user && phone ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed' : ''
                                             }`}
-                                        countrySelectProps={{ className: 'text-blue-600 text-sm' }}
+                                        countrySelectProps={{ className: 'text-slate-800 dark:text-slate-200 text-sm' }}
                                     />
 
                                     <style jsx global>{`
                     .PhoneInputInput {
                       width: 100%;
-                      font-size: 1rem;
+                      font-size: 0.875rem;
                       padding: 0;
-                      color: #1f2937;
+                      color: #0F172A;
                       background-color: transparent;
                       border: none;
                       outline: none;
@@ -252,13 +254,13 @@ export default function Contact({
 
                                 {/* Category */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
                                         What&apos;s this About ?
                                     </label>
                                     <select
                                         value={category}
                                         onChange={(e) => setCategory(e.target.value as IssueCategory)}
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0D9488]"
                                     >
                                         {options.map((o) => (
                                             <option key={o.value} value={o.value}>
@@ -270,7 +272,7 @@ export default function Contact({
 
                                 {/* Message */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
                                         Kindly Describe your issue
                                     </label>
                                     <textarea
@@ -279,34 +281,34 @@ export default function Contact({
                                         value={message}
                                         onChange={(e) => setMessage(e.target.value)}
                                         placeholder="Tell us what happened, what you expected, and any error messages you saw . . ."
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                        className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0D9488] resize-none"
                                     />
-                                    <p className="text-xs text-gray-400 mt-1">{message.length} characters</p>
+                                    <p className="text-xs text-slate-400 mt-1">{message.length} characters</p>
                                 </div>
 
                                 <button
                                     type="submit"
                                     disabled={isLoading || userLoading}
-                                    className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+                                    className="w-full bg-[#142B4A] hover:bg-[#0F2036] dark:bg-[#0D9488] dark:hover:bg-[#0F766E] text-white py-2.5 rounded-lg font-semibold text-sm transition disabled:opacity-70 disabled:cursor-not-allowed"
                                 >
                                     {isLoading
-                                        ? 'Submitting . . . ⚓'
+                                        ? 'Submitting…'
                                         : userLoading
-                                            ? 'Checking Your Session . . . ⚓'
-                                            : 'Submit The Issue'}
+                                            ? 'Checking Your Session…'
+                                            : 'Submit Message'}
                                 </button>
                             </form>
                         ) : (
-                            <div className="text-center space-y-3 py-4">
-                                <FiCheckCircle className="text-green-500 text-4xl mx-auto" />
-                                <h3 className="text-lg font-semibold text-gray-800">Thanks for Reaching Out ⚓</h3>
-                                <p className="text-sm text-gray-600">
-                                    We&apos;ve logged your issue and will follow up at {email} or by phone ASAP.
+                            <div className="text-center space-y-3 py-6">
+                                <FiCheckCircle className="text-[#059669] text-4xl mx-auto" />
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Thanks for Reaching Out</h3>
+                                <p className="text-sm text-slate-600 dark:text-slate-300">
+                                    We&apos;ve logged your inquiry and will follow up at {email} or by phone shortly.
                                 </p>
                                 <button
                                     type="button"
                                     onClick={resetForm}
-                                    className="mt-2 text-sm font-bold border rounded-md p-3 text-blue-600 hover:bg-indigo-200"
+                                    className="mt-2 text-xs font-semibold border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-[#0D9488] hover:bg-slate-50 dark:hover:bg-slate-800"
                                 >
                                     Send Another Message
                                 </button>
