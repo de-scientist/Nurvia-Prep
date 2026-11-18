@@ -104,7 +104,7 @@ export default function ContactUsPage() {
 
         {/* ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */}
         {/* Hero */}
-        <div className="relative overflow-hidden rounded-2xl border border-[var(--text-color)]/20 bg-gradient-to-br from-indigo-500 via-blue-800 to-pink-800 px-5 py-5 md:px-8 md:py-6">
+        <div className="relative overflow-hidden rounded-2xl border border-[var(--text-color)]/20 bg-gradient-to-br from-[#142B4A] via-[#0F2036] to-[#0D9488] px-5 py-5 md:px-8 md:py-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 text-center sm:text-left">
             <div className="inline-flex items-center justify-center w-11 h-11 shrink-0 rounded-xl bg-white/15 backdrop-blur-sm mx-auto sm:mx-0">
               <MessageCircle className="w-5 h-5 text-white" />
@@ -290,7 +290,7 @@ export default function ContactUsPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting || userLoading}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs md:text-sm bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md hover:scale-105 transition-transform duration-200 disabled:opacity-60 disabled:hover:scale-100"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs md:text-sm bg-gradient-to-r from-[#142B4A] to-[#0D9488] text-white shadow-md hover:scale-105 transition-transform duration-200 disabled:opacity-60 disabled:hover:scale-100"
                   >
                     <Send className="w-3.5 h-3.5" />
                     {isSubmitting ? "Sending…" : userLoading ? "Checking Your Session…" : "Submit and Send Message"}
