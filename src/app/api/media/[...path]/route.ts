@@ -1,31 +1,103 @@
-// This API route serves media files from the backend. It takes a dynamic path parameter and fetches the corresponding file from the backend, returning it with appropriate headers for caching and content type.
-import { NextRequest } from "next/server";
-import { getBackendBaseUrl } from "@/lib/api/api/api";
-import { getSiteHeaders } from "@/lib/config/siteHeaders";
+import { NextRequest, NextResponse } from 'next/server';
+import { resolveBackendBaseUrl, resolveApplicationIdentity } from '@/lib/api-config';
+import { buildSiteHeaders } from '@/lib/lexmacasto/headers';
+import { extractSiteMetadataFromRequestHeaders } from '@/lib/lexmacasto/client';
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const backend = getBackendBaseUrl();
+const ALLOWED_MEDIA_PREFIXES = new Set([
+  'storage',
+  'media',
+  'uploads',
+  'images',
+  'audio',
+  'video',
+]);
 
-  const { path } = await params;
-  const filePath = path.join("/");
+const SAFE_CONTENT_TYPE_PREFIXES = ['image/', 'audio/', 'video/', 'application/pdf'];
 
-  const url = `${backend}/${filePath}`;
+function validateMediaSegments(segments: string[]): string | null {
+  if (!Array.isArray(segments) || segments.length < 2) return null;
 
-  const res = await fetch(url, {
-    headers: { ...(await getSiteHeaders()) },
-  });
-
-  if (!res.ok) {
-    return new Response("Image not found", { status: 404 });
+  const cleaned: string[] = [];
+  for (const seg of segments) {
+    if (!seg || /%2e|%2f|%5c|%25|\\\\|\\|[\r\n\0]/i.test(seg)) {
+      return null;
+    }
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(seg);
+    } catch {
+      return null;
+    }
+    if (
+      !decoded ||
+      decoded === '.' ||
+      decoded === '..' ||
+      decoded.includes('..') ||
+      decoded.includes('/') ||
+      decoded.includes('\\') ||
+      /[\r\n\0]/.test(decoded)
+    ) {
+      return null;
+    }
+    cleaned.push(decoded);
   }
 
-  return new Response(res.body, {
+  if (!ALLOWED_MEDIA_PREFIXES.has(cleaned[0].toLowerCase())) {
+    return null;
+  }
+
+  return cleaned.join('/');
+}
+
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await context.params;
+  const safePath = validateMediaSegments(path);
+  if (!safePath) {
+    return NextResponse.json(
+      { success: false, message: 'Invalid or disallowed media path.' },
+      { status: 400 }
+    );
+  }
+
+  const baseUrl = resolveBackendBaseUrl(process.env, {
+    requireHttps: process.env.NODE_ENV === 'production',
+  });
+  const identity = resolveApplicationIdentity(process.env);
+  const siteMeta = extractSiteMetadataFromRequestHeaders(
+    request.headers,
+    `/api/media/${safePath}`
+  );
+
+  const upstream = await fetch(`${baseUrl}/${safePath}`, {
+    method: 'GET',
+    headers: buildSiteHeaders(identity, siteMeta),
+  });
+
+  if (!upstream.ok || !upstream.body) {
+    return NextResponse.json(
+      { success: false, message: 'Media asset not found.' },
+      { status: upstream.status === 404 ? 404 : 502 }
+    );
+  }
+
+  const rawType = (upstream.headers.get('content-type') || 'application/octet-stream').toLowerCase();
+  const isSafeType = SAFE_CONTENT_TYPE_PREFIXES.some((p) => rawType.startsWith(p));
+  if (!isSafeType) {
+    return NextResponse.json(
+      { success: false, message: 'Unsupported media content type.' },
+      { status: 415 }
+    );
+  }
+
+  return new NextResponse(upstream.body, {
+    status: 200,
     headers: {
-      "Content-Type": res.headers.get("content-type") || "image/jpeg",
-      "Cache-Control": "public, max-age=31536000, immutable",
+      'Content-Type': rawType,
+      'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': 'public, max-age=86400',
     },
   });
 }

@@ -1,74 +1,92 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getBackendBaseUrl } from "@/lib/api/api/api";
-import { getSiteHeaders } from "@/lib/config/siteHeaders";
+import { NextRequest, NextResponse } from 'next/server';
+import { LEXMACASTO_AUTH_ENDPOINTS, type LexmaCastoLogoutPayload } from '@/lib/lexmacasto/contracts';
+import { extractSiteMetadataFromRequestHeaders, lexmaCastoRequest } from '@/lib/lexmacasto/client';
+import {
+  clearServerCastoSession,
+  getServerCastoSession,
+  getServerDashboardHint,
+  validateSameOriginRequest,
+} from '@/lib/lexmacasto/session';
 
-export interface LogoutResponse {
-  success?: boolean;
-  message?: string;
-  destroyedSessions?: number;
-  redirect_to?: string;
-  error?: string;
-}
+const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' };
 
-export async function POST(req: NextRequest) {
-  try {
-    const backendBaseUrl = getBackendBaseUrl();
-    const { fetchType, targetDashboard } = await req.json();
-
-    // 🔹 Use a Map for DRY route mapping
-    const logoutRouteMap = new Map<string, string>([
-      ["distinct", "/api/castoline/auth/logout/sessions/distinct"],
-      ["relative", "/api/castoline/auth/logout/sessions/relative"],
-    ]);
-
-    const logoutPath = logoutRouteMap.get(fetchType);
-
-    if (!logoutPath) {
-      return NextResponse.json(
-        { error: `Invalid fetchType: ${fetchType}` },
-        { status: 400 }
-      );
-    }
-
-    const backendUrl = `${backendBaseUrl}${logoutPath}`;
-
-    console.log("🚪 Making POST request to:", backendUrl);
-
-    const backendResponse = await fetch(backendUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(await getSiteHeaders()),
-        cookie: req.headers.get("cookie") ?? "",
-        "x-casto-line": req.headers.get("x-casto-line") ?? "",
-        "x-casto-badge": req.headers.get("x-casto-badge") ?? "",
-      },
-      body: JSON.stringify({ target_dashboard: targetDashboard }),
-    });
-
-    const responseBody: LogoutResponse =
-      await backendResponse.json().catch(() => ({
-        error: "Failed to parse backend Response 💎",
-      }));
-
-    console.log("Backend response body:", responseBody);
-
-    return NextResponse.json(responseBody, {
-      status: backendResponse.status,
-    });
-  } catch (err: unknown) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Logout Failed ⚓" },
-      { status: 500 }
-    );
+export async function POST(request: NextRequest) {
+  const csrf = validateSameOriginRequest(request);
+  if (!csrf.ok) {
+    return NextResponse.json({ success: false, message: csrf.reason }, { status: 403, headers: NO_STORE_HEADERS });
   }
+
+  let body: Record<string, unknown> = {};
+  try {
+    const text = await request.text();
+    if (text) {
+      body = JSON.parse(text) as Record<string, unknown>;
+    }
+  } catch {
+    return NextResponse.json({ success: false, message: 'Invalid JSON request body.' }, { status: 400 });
+  }
+
+  const scope = body.scope === 'relative' ? 'relative' : 'distinct';
+  const endpoint =
+    scope === 'relative'
+      ? LEXMACASTO_AUTH_ENDPOINTS.LOGOUT_RELATIVE
+      : LEXMACASTO_AUTH_ENDPOINTS.LOGOUT_DISTINCT;
+
+  const session = await getServerCastoSession();
+  const dashboardHint = await getServerDashboardHint();
+  const targetDashboard =
+    (typeof body.target_dashboard === 'string' && body.target_dashboard.trim()) ||
+    dashboardHint ||
+    'learner';
+
+  if (!session) {
+    const response = NextResponse.json(
+      {
+        success: true,
+        message: 'Signed out locally.',
+        data: 'Signed out locally.',
+      },
+      { headers: NO_STORE_HEADERS }
+    );
+    clearServerCastoSession(response);
+    return response;
+  }
+
+  const siteMeta = extractSiteMetadataFromRequestHeaders(request.headers, '/api/auth/logout');
+  const payload: LexmaCastoLogoutPayload = {
+    target_dashboard: targetDashboard,
+  };
+
+  const result = await lexmaCastoRequest(endpoint, {
+    method: 'POST',
+    body: payload,
+    session,
+    siteMeta,
+  });
+
+  if (!result.ok) {
+    // Always clear local HttpOnly cookies so the browser cannot reuse them,
+    // but do NOT disguise a failed backend revocation as a successful logout.
+    const response = NextResponse.json(
+      {
+        success: false,
+        message: result.message || 'Backend session revocation failed.',
+        errorCode: result.errorCode,
+      },
+      { status: result.status >= 400 ? result.status : 502, headers: NO_STORE_HEADERS }
+    );
+    clearServerCastoSession(response);
+    return response;
+  }
+
+  const response = NextResponse.json(
+    {
+      success: true,
+      message: result.message || 'Signed out.',
+      data: 'Signed out.',
+    },
+    { headers: NO_STORE_HEADERS }
+  );
+  clearServerCastoSession(response);
+  return response;
 }
-
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
-
-
-
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-// The End By : B.L.S.M.C ;  The Winds Chase Us ⚓
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

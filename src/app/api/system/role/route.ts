@@ -1,3 +1,4 @@
+import { getNurviaCastoSessionHeaders } from "@/lib/lexmacasto/qlexSessionBridge";
 // frontend\src\app\api\system\role\route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getBackendBaseUrl } from "@/lib/api/api/api";
@@ -46,6 +47,7 @@ async function forwardToBackend(
     const headers: HeadersInit = {
       "Content-Type": "application/json",
       ...(await getSiteHeaders()),
+      ...(await getNurviaCastoSessionHeaders()),
     };
 
     const castoLine = req.headers.get("x-casto-line");

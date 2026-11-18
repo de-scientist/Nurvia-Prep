@@ -1,3 +1,5 @@
+import { getNurviaCastoSessionHeaders } from "@/lib/lexmacasto/qlexSessionBridge";
+import { getTemporaryChallenge } from "@/lib/auth/temporaryChallenge";
 // src/app/api/auth/social/onetap/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getBackendBaseUrl } from "@/lib/api/api/api";
@@ -45,13 +47,16 @@ export async function POST(req: NextRequest) {
       headers: {
         "Content-Type": "application/json",
         ...(await getSiteHeaders()),
+        ...(await getNurviaCastoSessionHeaders()),
       },
       body: JSON.stringify({
         idToken: body.credential,
         context: body.context ?? "login",
         role: body.role ?? "Learner",
         dashboardName: body.dashboardName ?? "web",
-        challenge: body.challenge ?? "learner.login.skew8lancasto",
+        challenge:
+          body.challenge ??
+          getTemporaryChallenge(body.context === "register" ? "register" : "standard_login"),
         fingerprint: body.fingerprint,
         ipAddress: body.ipAddress,
       }),

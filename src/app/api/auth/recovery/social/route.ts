@@ -1,3 +1,4 @@
+import { getNurviaCastoSessionHeaders } from "@/lib/lexmacasto/qlexSessionBridge";
 import { NextRequest, NextResponse } from "next/server";
 import { getBackendBaseUrl } from "@/lib/api/api/api"; // helper function to get backend URL
 import { getSiteHeaders } from "@/lib/config/siteHeaders";
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
       headers: {
         "Content-Type": "application/json",
         ...(await getSiteHeaders()),
+        ...(await getNurviaCastoSessionHeaders()),
       },
       body: JSON.stringify(body),
     });

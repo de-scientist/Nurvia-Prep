@@ -1,3 +1,4 @@
+import { getNurviaCastoSessionHeaders } from "@/lib/lexmacasto/qlexSessionBridge";
 import { NextResponse } from "next/server";
 import { getBackendBaseUrl } from "@/lib/api/api/api";
 import { getSiteHeaders } from "@/lib/config/siteHeaders";
@@ -20,6 +21,7 @@ export async function GET(request: Request) {
       method: "GET",
       headers: {
         ...(await getSiteHeaders()),
+        ...(await getNurviaCastoSessionHeaders()),
         ...(castoLine ? { "x-casto-line": castoLine } : {}),
         ...(castoBadge ? { "x-casto-badge": castoBadge } : {}),
       },
