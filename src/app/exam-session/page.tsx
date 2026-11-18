@@ -20,10 +20,17 @@ import {
   Rows3,
   CheckCircle2,
   Lightbulb,
+  XCircle,
+  MinusCircle,
+  FileText,
+  Activity,
+  FlaskConical,
+  RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { nurviaApi } from "@/lib/api-client";
 import { TutorModePanel } from "@/components/exam/TutorModePanel";
+import { ExamLoadingScreen } from "@/components/exam/ExamLoadingScreen";
 import {
   StartAttemptResultDto,
   SubmittedExamResultDto,
@@ -32,6 +39,7 @@ import {
   TutorEvaluateResponseDto,
 } from "@/lib/api-types";
 import { QuestionRendererRegistry, RendererQuestion } from "@/components/exam/renderers";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 import { useAuth } from "@/components/auth/auth-provider";
 
 type DeliveryMode = "Review" | "Exam" | "Tutor";type LayoutPolicy = "AllInOneOnly" | "SequentialOnly" | "Both" | null;
@@ -85,6 +93,8 @@ function ExamSessionContent() {
   const [deliveryMode, setDeliveryMode] = React.useState<DeliveryMode>(modeParam === "Tutor" ? "Tutor" : modeParam === "Preview" ? "Review" : modeParam || "Exam");
   const [autosaveStatus, setAutosaveStatus] = React.useState<"saving" | "saved" | "idle" | "error">("idle");
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [loadingStage, setLoadingStage] = React.useState<number>(1);
+  const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
 
   // Layout state — persisted on the attempt server-side so resume keeps the choice.
   const [layout, setLayout] = React.useState<ExamLayout>(layoutParam || "Sequential");
@@ -461,15 +471,15 @@ function ExamSessionContent() {
     }
   };
 
-  // 4. Submit Examination Handler
+  // 4. Submit Examination Handler (Automatic Transition into Review Mode)
   const handleSubmitExam = async () => {
-    setIsSubmitModalOpen(false);
+    if (isSubmitting) return;
     setSubmissionError(null);
     if (!attemptId) {
       setSubmissionError("There is no persisted exam attempt to submit.");
       return;
     }
-    setIsLoading(true);
+    setIsSubmitting(true);
 
     try {
       // Reconcile every debounced-but-unsaved response before submitting so the
@@ -482,15 +492,24 @@ function ExamSessionContent() {
       if (!response.success || !response.data) {
         setSubmissionError(response.message || "The exam could not be submitted. Your attempt has not been marked complete.");
       } else {
-        setSubmittedResult(response.data);
+        setIsSubmitModalOpen(false);
         setIsSubmitted(true);
-        setDeliveryMode("Review");
-        router.replace(`/learner/attempts/${encodeURIComponent(attemptId)}`);
+        setSubmittedResult(response.data);
+
+        // Automatic review transition ONLY if published configuration permits Review and review resource is ready
+        if (response.data.reviewReleased) {
+          hydrateFromReview(response.data);
+          setDeliveryMode("Review");
+          setCurrentIndex(0);
+          // Canonical URL updated to review mode without disrupting state
+          const canonicalUrl = `/exam-session?attemptId=${encodeURIComponent(attemptId)}&mode=Review`;
+          window.history.replaceState(null, "", canonicalUrl);
+        }
       }
     } catch (error) {
       setSubmissionError(error instanceof Error ? error.message : "The exam could not be submitted.");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -499,8 +518,15 @@ function ExamSessionContent() {
   const currentAnswer = currentQ ? answers[currentQ.id] : null;
 
   const answeredCount = Object.keys(answers).length;
-  const unansweredCount = questions.length - answeredCount;
+  const unansweredCount = Math.max(0, questions.length - answeredCount);
   const flaggedCount = Object.values(flags).filter(Boolean).length;
+
+  const correctCount = isSubmitted && submittedResult
+    ? submittedResult.correctQuestions
+    : questions.filter((q) => q.options.some((o) => o.wasSelected && o.isCorrect)).length;
+  const incorrectCount = isSubmitted && submittedResult
+    ? Math.max(0, submittedResult.totalQuestions - correctCount - (questions.length - answeredCount))
+    : questions.filter((q) => answers[q.id] && !q.options.some((o) => o.wasSelected && o.isCorrect)).length;
 
   // Tutor progressive learning: reveal correctness + rationale once the learner
   // submits their answer for evaluation in TutorModePanel.
@@ -517,20 +543,34 @@ function ExamSessionContent() {
 
   if (status !== "authenticated" ||
       (user?.role !== "Learner" && user?.role !== "Superadmin")) {
-    return <main className="flex min-h-screen items-center justify-center px-6 text-sm text-foreground-secondary" aria-live="polite">Checking your learner access…</main>;
+    return (
+      <ExamLoadingScreen
+        title={examTitle}
+        currentStage={2}
+        mode={deliveryMode}
+      />
+    );
   }
 
   if (isLoading) {
-    return <main className="flex min-h-screen items-center justify-center px-6 text-sm text-foreground-secondary" aria-live="polite">Loading your saved examination…</main>;
+    return (
+      <ExamLoadingScreen
+        title={examTitle}
+        currentStage={loadingStage}
+        totalQuestions={questions.length || null}
+        mode={deliveryMode}
+      />
+    );
   }
 
   if (loadError && !attemptId && !questions.length) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 px-6 text-center">
-        <h1 className="font-brand text-2xl font-bold text-foreground">No exam session available</h1>
-        <p role="alert" className="text-sm text-foreground-secondary">{loadError}</p>
-        <Link href="/learner/library"><Button>Choose a published exam</Button></Link>
-      </main>
+      <ExamLoadingScreen
+        title={examTitle}
+        error={loadError}
+        onRetry={() => window.location.reload()}
+        mode={deliveryMode}
+      />
     );
   }
 
@@ -548,13 +588,36 @@ function ExamSessionContent() {
               {!isSequential && ` of ${questions.length}`}
             </span>
             <div className="flex items-center gap-2">
+              {showReview && (
+                (() => {
+                  const rq = submittedResult?.reviewQuestions?.find((item) => item.questionId === q.id);
+                  const isCorrect = rq ? rq.isCorrect : q.options.some((o) => o.wasSelected && o.isCorrect);
+                  const isUnans = !answers[q.id] && !rq?.learnerResponse;
+                  if (isUnans) {
+                    return (
+                      <Badge variant="outline" className="text-foreground-muted text-[10px] gap-1">
+                        <MinusCircle className="w-3 h-3" /> Unanswered
+                      </Badge>
+                    );
+                  }
+                  return isCorrect ? (
+                    <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold gap-1">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Correct
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400 text-[10px] font-bold gap-1">
+                      <XCircle className="w-3 h-3 text-rose-500" /> Incorrect
+                    </Badge>
+                  );
+                })()
+              )}
               {q.cognitiveSkill && (
                 <Badge variant="outline" className="text-[10px]">
                   <Sparkles className="w-3 h-3 mr-1 text-brand-teal" />
                   {String(q.cognitiveSkill)}
                 </Badge>
               )}
-              {isSequential && flags[q.id] && (
+              {isSequential && flags[q.id] && !showReview && (
                 <Badge variant="destructive" className="text-[10px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30">
                   <Bookmark className="w-3 h-3 mr-1 fill-amber-500" /> Flagged
                 </Badge>
@@ -562,9 +625,31 @@ function ExamSessionContent() {
             </div>
           </div>
 
-          <h2 className="font-brand text-base sm:text-lg font-bold text-foreground leading-relaxed">
-            {q.stem}
-          </h2>
+          <RichQuestionContent
+            content={q.stem}
+            as="h2"
+            className="font-brand text-base sm:text-lg font-bold text-foreground leading-relaxed"
+          />
+
+          {/* Electronic Health Record (EHR) Clinical Exhibits (when attached) */}
+          {q.exhibits && q.exhibits.length > 0 && q.questionType !== 9 && q.questionType !== "CaseStudy" && (
+            <div className="rounded-xl border border-border bg-surface-muted overflow-hidden text-xs">
+              <div className="bg-surface border-b border-border px-3 py-2 flex items-center gap-1.5 font-bold text-foreground">
+                <ClipboardList className="w-3.5 h-3.5 text-brand-teal" />
+                <span>EHR Clinical Exhibits ({q.exhibits.length})</span>
+              </div>
+              <div className="p-3 space-y-2">
+                {q.exhibits.map((exh, eIdx) => (
+                  <div key={exh.id || eIdx} className="rounded-lg border border-border/70 bg-surface p-2.5 space-y-1">
+                    <p className="font-semibold text-foreground flex items-center gap-1 text-[11px]">
+                      <FileText className="w-3 h-3 text-brand-teal" /> {exh.title}
+                    </p>
+                    <RichQuestionContent content={exh.content} className="text-foreground-secondary leading-relaxed text-[11px]" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Modular Renderer Registry */}
@@ -797,35 +882,59 @@ function ExamSessionContent() {
             )}
 
             {/* Question Stepper Navigation Footer */}
-            <div className="flex items-center justify-between pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentIndex === 0}
-                onClick={async () => {
-                  if (currentQ) await flushPendingAutosave(currentQ.id);
-                  setCurrentIndex((prev) => Math.max(0, prev - 1));
-                }}
-                className="text-xs gap-1"
-              >
-                <ChevronLeft className="w-4 h-4" /> Previous Item
-              </Button>
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/60">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentIndex === 0}
+                  onClick={async () => {
+                    if (currentQ) await flushPendingAutosave(currentQ.id);
+                    setCurrentIndex((prev) => Math.max(0, prev - 1));
+                  }}
+                  className="text-xs gap-1"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Previous Item
+                </Button>
 
-              <span className="text-xs font-medium text-foreground-muted">
-                Question {currentIndex + 1} of {questions.length}
-              </span>
+                <Button
+                  size="sm"
+                  disabled={currentIndex === questions.length - 1}
+                  onClick={async () => {
+                    if (currentQ) await flushPendingAutosave(currentQ.id);
+                    setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1));
+                  }}
+                  className="text-xs gap-1 bg-brand-navy hover:bg-brand-navyDeep text-white dark:bg-brand-teal"
+                >
+                  Next Item <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
 
-              <Button
-                size="sm"
-                disabled={currentIndex === questions.length - 1}
-                onClick={async () => {
-                  if (currentQ) await flushPendingAutosave(currentQ.id);
-                  setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1));
-                }}
-                className="text-xs gap-1 bg-brand-navy hover:bg-brand-navyDeep text-white dark:bg-brand-teal"
-              >
-                Next Item <ChevronRight className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                {deliveryMode === "Review" && attemptId && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDeliveryMode("Tutor")}
+                    className="text-xs gap-1.5 border-brand-teal/40 text-brand-teal hover:bg-brand-teal/10"
+                  >
+                    <Lightbulb className="w-3.5 h-3.5 text-amber-500" /> Switch to Guided Tutor Mode
+                  </Button>
+                )}
+                {deliveryMode === "Tutor" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDeliveryMode("Review")}
+                    className="text-xs gap-1.5 border-brand-teal/40 text-brand-teal hover:bg-brand-teal/10"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 text-brand-teal" /> Return to Review Mode
+                  </Button>
+                )}
+                <span className="text-xs font-medium text-foreground-muted hidden sm:inline-block">
+                  Question {currentIndex + 1} of {questions.length}
+                </span>
+              </div>
             </div>
           </>
         ) : (
@@ -869,20 +978,38 @@ function ExamSessionContent() {
               </button>
             </div>
 
-            <div className="flex items-center gap-4 text-xs">
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-brand-teal/20 border border-brand-teal" />
-                <span>Answered ({answeredCount})</span>
-              </span>
-              <span className="flex-1 flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-surface-muted border border-border" />
-                <span>Unanswered ({unansweredCount})</span>
-              </span>
-              <span className="flex items-center gap-1.5 text-amber-600">
-                <Bookmark className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                <span>Flagged ({flaggedCount})</span>
-              </span>
-            </div>
+            {/* Legend */}
+            {isSubmitted || deliveryMode === "Review" ? (
+              <div className="flex flex-wrap items-center gap-3 text-xs">
+                <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-semibold">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>Correct ({correctCount})</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-rose-700 dark:text-rose-400 font-semibold">
+                  <XCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                  <span>Incorrect ({incorrectCount})</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-foreground-muted">
+                  <MinusCircle className="w-3.5 h-3.5 text-foreground-muted" />
+                  <span>Unanswered ({unansweredCount})</span>
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4 text-xs">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-brand-teal/20 border border-brand-teal" />
+                  <span>Answered ({answeredCount})</span>
+                </span>
+                <span className="flex-1 flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded bg-surface-muted border border-border" />
+                  <span>Unanswered ({unansweredCount})</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-amber-600">
+                  <Bookmark className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                  <span>Flagged ({flaggedCount})</span>
+                </span>
+              </div>
+            )}
 
             {/* Questions Grid */}
             <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-72 overflow-y-auto p-1">
@@ -890,6 +1017,29 @@ function ExamSessionContent() {
                 const isAns = Boolean(answers[q.id]);
                 const isFlg = Boolean(flags[q.id]);
                 const isCurr = layout === "Sequential" && idx === currentIndex;
+                const isReviewMode = isSubmitted || deliveryMode === "Review";
+
+                const rq = submittedResult?.reviewQuestions?.find((item) => item.questionId === q.id);
+                const isCorrect = rq ? rq.isCorrect : q.options.some((o) => o.wasSelected && o.isCorrect);
+                const isUnans = isReviewMode ? (!answers[q.id] && !rq?.learnerResponse) : !isAns;
+
+                let btnStyle = "bg-surface-muted border-border text-foreground-secondary hover:bg-surface";
+                if (isReviewMode) {
+                  if (isUnans) {
+                    btnStyle = "bg-surface-muted border-border text-foreground-muted";
+                  } else if (isCorrect) {
+                    btnStyle = "bg-emerald-500/15 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-bold";
+                  } else {
+                    btnStyle = "bg-rose-500/15 border-rose-500 text-rose-800 dark:text-rose-300 font-bold";
+                  }
+                } else {
+                  if (isAns) {
+                    btnStyle = "bg-brand-teal/15 border-brand-teal text-brand-teal";
+                  }
+                  if (isFlg) {
+                    btnStyle = cn(btnStyle, "border-amber-500 text-amber-700 dark:text-amber-400");
+                  }
+                }
 
                 return (
                   <button
@@ -904,16 +1054,20 @@ function ExamSessionContent() {
                       }
                     }}
                     className={cn(
-                      "h-10 rounded-lg text-xs font-bold transition-all relative flex items-center justify-center border",
-                      isAns
-                        ? "bg-brand-teal/15 border-brand-teal text-brand-teal"
-                        : "bg-surface-muted border-border text-foreground-secondary hover:bg-surface",
-                      isCurr && "ring-2 ring-foreground",
-                      isFlg && "border-amber-500 text-amber-700 dark:text-amber-400"
+                      "h-10 rounded-lg text-xs font-bold transition-all relative flex items-center justify-center border gap-0.5",
+                      btnStyle,
+                      isCurr && "ring-2 ring-foreground"
                     )}
                   >
-                    {idx + 1}
-                    {isFlg && (
+                    <span>{idx + 1}</span>
+                    {isReviewMode && !isUnans && (
+                      isCorrect ? (
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      ) : (
+                        <XCircle className="w-3 h-3 text-rose-500 shrink-0" />
+                      )
+                    )}
+                    {!isReviewMode && isFlg && (
                       <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-500" />
                     )}
                   </button>
@@ -975,11 +1129,25 @@ function ExamSessionContent() {
               </p>
             )}
 
+            {submissionError && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-semibold">Submission could not be completed</p>
+                  <p>{submissionError}</p>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center justify-end gap-3 pt-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setIsSubmitModalOpen(false)}
+                disabled={isSubmitting}
+                onClick={() => {
+                  setSubmissionError(null);
+                  setIsSubmitModalOpen(false);
+                }}
                 className="text-xs"
               >
                 Return to Exam
@@ -987,10 +1155,18 @@ function ExamSessionContent() {
               <Button
                 variant="primary"
                 size="sm"
+                disabled={isSubmitting}
                 onClick={handleSubmitExam}
-                className="text-xs"
+                className="text-xs flex items-center gap-1.5"
               >
-                Confirm & Submit
+                {isSubmitting ? (
+                  <>
+                    <RotateCcw className="w-3.5 h-3.5 animate-spin" />
+                    Submitting & Grading...
+                  </>
+                ) : (
+                  "Confirm & Submit"
+                )}
               </Button>
             </div>
           </div>

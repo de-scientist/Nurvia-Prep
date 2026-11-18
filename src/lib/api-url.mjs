@@ -42,7 +42,9 @@ export function buildApiUrl(endpoint) {
       endpoint.startsWith('/api/auth/recovery/') ||
       endpoint.startsWith('/api/subscriptions/') ||
       endpoint.startsWith('/api/strata/') ||
-      endpoint.startsWith('/api/lectures')
+      endpoint.startsWith('/api/lectures') ||
+      endpoint.startsWith('/api/attempts/') ||
+      endpoint.startsWith('/api/study-library/')
     ) {
       return endpoint;
     }

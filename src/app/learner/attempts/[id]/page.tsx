@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { nurviaApi } from "@/lib/api-client";
 import type { SubmittedExamResultDto } from "@/lib/api-types";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
+import { Sparkles, ArrowRight } from "lucide-react";
 
 function isUnanswered(response?: string) {
   return !response || ["null", '""', "[]", "{}"].includes(response.trim());
@@ -53,7 +55,14 @@ export default function AttemptResultPage() {
             <p className="text-xs font-bold uppercase tracking-wider text-brand-teal">Persisted exam result</p>
             <h1 className="font-brand text-2xl font-bold text-foreground sm:text-3xl">Result and review</h1>
           </div>
-          <Link href="/learner"><Button variant="outline">Back to dashboard</Button></Link>
+          <div className="flex items-center gap-2">
+            <Link href={`/exam-session?attemptId=${encodeURIComponent(attemptId)}&mode=Review`}>
+              <Button className="bg-brand-teal hover:bg-brand-tealDeep text-white gap-1.5">
+                <Sparkles className="w-4 h-4" /> Open Full Review Mode
+              </Button>
+            </Link>
+            <Link href="/learner"><Button variant="outline">Back to dashboard</Button></Link>
+          </div>
         </div>
 
         {loading && <p className="py-8 text-center text-sm text-foreground-secondary" aria-live="polite">Loading saved result…</p>}
@@ -150,23 +159,30 @@ export default function AttemptResultPage() {
                             : "Incorrect"}
                     </span>
                   </div>
-                  <p className="whitespace-pre-wrap text-sm font-medium leading-relaxed text-foreground">{question.stem}</p>
+                  <RichQuestionContent
+                    content={question.stem}
+                    className="text-sm font-medium leading-relaxed text-foreground"
+                  />
                   {question.options.length > 0 && (
                     <ul className="space-y-2">
                       {question.options.map((option) => (
                         <li key={option.id} className="rounded-lg border border-border p-3 text-sm text-foreground-secondary">
-                          <span className="font-medium text-foreground">{option.optionText}</span>
+                          <RichQuestionContent content={option.optionText} as="span" className="font-medium text-foreground" />
                           <span className="ml-2 text-xs">
                             {!reviewWithheld && option.isCorrect ? "Correct answer" : ""}
                             {option.wasSelected ? " · Your selection" : ""}
                           </span>
-                          {!reviewWithheld && option.specificRationale && <p className="mt-1 text-xs">{option.specificRationale}</p>}
+                          {!reviewWithheld && option.specificRationale && (
+                            <RichQuestionContent content={option.specificRationale} className="mt-1 text-xs" />
+                          )}
                         </li>
                       ))}
                     </ul>
                   )}
                   {!reviewWithheld && question.generalRationale && (
-                    <p className="border-t border-border pt-3 text-sm leading-relaxed text-foreground-secondary">{question.generalRationale}</p>
+                    <div className="border-t border-border pt-3 text-sm leading-relaxed text-foreground-secondary">
+                      <RichQuestionContent content={question.generalRationale} />
+                    </div>
                   )}
                 </Card>
               ))}
