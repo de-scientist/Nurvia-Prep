@@ -72,14 +72,14 @@ const SEGMENT_DASHBOARD_MAP: Record<string, string> = {
 
 const DIRECT_NAV_ITEMS = [
   { name: "Home", href: "/" },
-  { name: "ATI TEAS", href: "/pages/exams/ati-teas" },
-  { name: "HESI A2", href: "/pages/exams/hesi-a2" },
-  { name: "RN Nursing", href: "/pages/exams/rn-nursing" },
-  { name: "LPN Nursing", href: "/pages/exams/lpn-nursing" },
-  { name: "NCLEX-RN", href: "/pages/exams/nclex-rn" },
-  { name: "NCLEX-PN", href: "/pages/exams/nclex-pn" },
-  { name: "Study Notes", href: "/pages/notes" },
-  { name: "Resources", href: "/pages/resources" },
+  { name: "Exams", href: "/exams" },
+  { name: "Study", href: "/study" },
+  { name: "Care Plans", href: "/care-plans" },
+  { name: "Mark K.", href: "/mark-k" },
+  { name: "Community", href: "/community" },
+  { name: "FAQ", href: "/faq" },
+  { name: "NCLEX", href: "/nclex" },
+  { name: "TEAS", href: "/teas" },
 ];
 
 const MORE_LINKS = [
@@ -385,8 +385,19 @@ export default function Navbar() {
                       </div>
 
                       <div className="py-1.5">
+                        <Link
+                          href="/learner"
+                          onClick={() => setActiveDropdown(null)}
+                          className="flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold text-white bg-[#0D9488] hover:bg-[#0F766E] mb-2 mx-1 shadow-xs transition-colors"
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <LayoutDashboard className="w-3.5 h-3.5" />
+                            Common Dashboard
+                          </span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
                         <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                          Programme Dashboards
+                          Exam Workspaces &amp; Dashboards
                         </p>
                         <ul className="space-y-0.5 max-h-52 overflow-y-auto">
                           {programs.length > 0
