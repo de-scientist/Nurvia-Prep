@@ -270,21 +270,21 @@ export default function RecoverySocialPage() {
       {/* App Title / Branding */}
       <div className="flex flex-col items-center justify-center mb-3 text-center">
         <div className="flex items-center justify-center gap-2">
-          <span className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-500 drop-shadow-md">
+          <span className="text-2xl md:text-3xl font-bold text-slate-600 dark:text-slate-300">
             Switch to email on
           </span>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-blue-800 drop-shadow-md">
+          <h1 className="text-2xl md:text-3xl font-bold text-[#142B4A] dark:text-white">
             {APP_NAME}
           </h1>
-          <FiCheckCircle className="text-green-500 text-xl md:text-2xl drop-shadow-sm" title="Verified" />
+          <FiCheckCircle className="text-[#0D9488] text-xl md:text-2xl" title="Verified" />
         </div>
-        <p className="text-xs text-gray-600 mt-1">
-          Signed up with Google, Apple, or another provider? Set up a password or PIN here.
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          Signed up with Google or another provider? Set up a password or PIN here.
         </p>
       </div>
 
       {/* Card Container */}
-      <div className="max-w-5xl w-full bg-white rounded-2xl shadow-2xl grid grid-cols-1 md:grid-cols-2 overflow-hidden">
+      <div className="max-w-5xl w-full bg-white dark:bg-[#111C2E] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl grid grid-cols-1 md:grid-cols-2 overflow-hidden text-left">
 
         {/* LEFT SIDE: Photo */}
         <div className="hidden md:flex relative w-full h-full items-end justify-center overflow-hidden">
@@ -297,44 +297,39 @@ export default function RecoverySocialPage() {
             className="z-0"
           />
 
-          <div className="z-10 w-full p-8 bg-gradient-to-t from-black/70 via-black/40 to-transparent text-white text-center">
-            <h2 className="text-3xl font-extrabold drop-shadow-lg">New Device ?</h2>
-            <p className="text-sm mt-2 drop-shadow-md">
+          <div className="z-10 w-full p-8 bg-gradient-to-t from-[#142B4A]/95 via-[#142B4A]/60 to-transparent text-white text-center">
+            <h2 className="text-2xl font-bold">Direct Email Credentials</h2>
+            <p className="text-sm text-slate-200 mt-2">
               Verify the email you used with your social account to set up a direct login.
             </p>
           </div>
         </div>
 
         {/* RIGHT SIDE: Form */}
-        <div className="w-full p-8 space-y-6 border-l border-gray-200">
+        <div className="w-full p-6 md:p-8 space-y-5 border-l border-slate-200 dark:border-slate-800">
 
           {/* Step indicator */}
-          <div className="flex items-center justify-center gap-2 text-xs font-medium text-gray-500">
-            <span className={step === 'email' ? 'text-blue-600' : ''}>1. Email</span>
+          <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-400">
+            <span className={step === 'email' ? 'text-[#0D9488]' : ''}>1. Email</span>
             <span>→</span>
-            <span className={step === 'code' ? 'text-blue-600' : ''}>2. Verify</span>
+            <span className={step === 'code' ? 'text-[#0D9488]' : ''}>2. Verify</span>
             <span>→</span>
-            <span className={step === 'reset' || step === 'done' ? 'text-blue-600' : ''}>3. Set Credentials</span>
+            <span className={step === 'reset' || step === 'done' ? 'text-[#0D9488]' : ''}>3. Set Credentials</span>
           </div>
 
           {/* Explanatory Note */}
-          <p className="text-center text-sm text-red-800 max-w-md mx-auto">
-            Use this page only if you originally signed up with Google, Apple, FaFacebookF, GitHub, LinkedIn, or Microsoft, and now need a to shift and use direct Email + Password or Pin login
+          <p className="text-center text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+            Enter the email address associated with your social login, verify the code sent to your inbox, and configure a password, PIN, or both.
           </p>
-          <p className="text-center text-sm text-gray-500 max-w-md mx-auto">
-            For Instance on a new device where that provider isn&apos;t available. Enter the same email your social
-            account used, verify it, then set up a password, a PIN, or both.
-          </p>
-
-          <p className="text-blue-500 font-bold text-sm text-center"> Note Down Your New Password or Pin Credentials for next Login</p>
 
           {/* Alert Message */}
           {(error || success) && (
             <div className="flex justify-center">
               <div
-                className={`relative max-w-md w-full px-4 py-3 rounded-xl shadow-md text-sm flex items-center gap-3
-                ${error ? 'bg-red-100 border border-red-200 text-red-800' : ''}
-                ${success ? 'bg-green-100 border border-green-200 text-green-800' : ''}`}
+                role="alert"
+                className={`relative max-w-md w-full px-4 py-3 rounded-xl text-sm flex items-center gap-3
+                ${error ? 'bg-rose-50 border border-rose-200 text-rose-800' : ''}
+                ${success ? 'bg-teal-50 border border-teal-200 text-[#0D9488]' : ''}`}
               >
                 <span className="flex items-center justify-center leading-none">
                   {error ? '⚠️' : '✅'}
@@ -343,7 +338,7 @@ export default function RecoverySocialPage() {
                 <button
                   type="button"
                   onClick={() => { setError(''); setSuccess('') }}
-                  className={`absolute top-2 right-2 font-bold hover:text-gray-700 ${error ? 'text-red-800' : 'text-green-800'}`}
+                  className="absolute top-2 right-2 font-bold opacity-70 hover:opacity-100"
                 >
                   ✕
                 </button>
@@ -355,12 +350,12 @@ export default function RecoverySocialPage() {
           {step === 'email' && (
             <form onSubmit={handleRequestCode} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Enter the email you registered with via social login
-                  {userLoading && <span className="ml-2 text-xs text-gray-400">(checking session . . .)</span>}
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  Social Account Email
+                  {userLoading && <span className="ml-2 text-xs text-slate-400">(checking session...)</span>}
                 </label>
                 <div className="relative">
-                  <FiMail className="absolute top-3 left-3 text-gray-400" />
+                  <FiMail className="absolute top-3 left-3 text-slate-400" />
                   <input
                     type="email"
                     name="email"
@@ -368,7 +363,7 @@ export default function RecoverySocialPage() {
                     readOnly={!!user}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${user ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'text-cyan-800'
+                    className={`w-full border border-slate-300 dark:border-slate-700 rounded-xl pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20 ${user ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 cursor-not-allowed' : 'text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900'
                       }`}
                   />
                 </div>
@@ -377,9 +372,9 @@ export default function RecoverySocialPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full bg-[#142B4A] hover:bg-[#0D9488] text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Sending . . . ⚓' : 'Send Verification Code'}
+                {isLoading ? 'Sending...' : 'Send Verification Code'}
               </button>
             </form>
           )}
@@ -388,7 +383,7 @@ export default function RecoverySocialPage() {
           {step === 'code' && (
             <form onSubmit={handleVerifyCode} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
                   Enter the code sent to {email}
                 </label>
                 <input
@@ -403,26 +398,26 @@ export default function RecoverySocialPage() {
                     setCode(pasted.slice(0, 8))
                   }}
                   maxLength={8}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-center text-lg tracking-[0.5em] text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3 py-2.5 text-center text-lg font-mono tracking-[0.5em] text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20"
                 />
-                <p className="text-xs text-gray-500 mt-2">
-                  You can also click the link we sent to your email instead.
+                <p className="text-xs text-slate-500 mt-2">
+                  You can also click the verification link sent to your email.
                 </p>
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full bg-[#142B4A] hover:bg-[#0D9488] text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Verifying . . . ⚓' : 'Verify Code'}
+                {isLoading ? 'Verifying...' : 'Verify Code'}
               </button>
 
               <button
                 type="button"
                 onClick={handleResendCode}
                 disabled={resendCooldown > 0}
-                className="w-full text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400 disabled:cursor-not-allowed"
+                className="w-full text-xs font-semibold text-[#0D9488] hover:underline disabled:text-slate-400 disabled:cursor-not-allowed"
               >
                 {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend Code'}
               </button>
@@ -430,7 +425,7 @@ export default function RecoverySocialPage() {
               <button
                 type="button"
                 onClick={() => setStep('email')}
-                className="w-full flex items-center justify-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+                className="w-full flex items-center justify-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-800"
               >
                 <FiArrowLeft /> Use a different email
               </button>
@@ -443,18 +438,18 @@ export default function RecoverySocialPage() {
 
               {/* Method Selector */}
               <div className="mb-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2">
                   Choose Login Method
                 </label>
-                <div className="flex bg-gray-100 p-1 rounded-xl shadow-inner">
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                   {(['password', 'pin', 'both'] as CredentialMethod[]).map(method => (
                     <button
                       key={method}
                       type="button"
                       onClick={() => setCredentialMethod(method)}
-                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all ${credentialMethod === method
-                        ? 'bg-blue-600 text-white shadow'
-                        : 'text-gray-600 hover:bg-gray-200'
+                      className={`flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-all ${credentialMethod === method
+                        ? 'bg-[#142B4A] text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                         }`}
                     >
                       {method === 'password' && 'Password Only'}
@@ -469,12 +464,12 @@ export default function RecoverySocialPage() {
               {(credentialMethod === 'password' || credentialMethod === 'both') && (
                 <div className="space-y-3">
                   <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="block text-sm font-medium text-gray-700">Password</label>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Password</label>
                       <button
                         type="button"
                         onClick={generatePassword}
-                        className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"
+                        className="text-xs bg-teal-50 border border-teal-200 text-[#0D9488] font-semibold px-2.5 py-1 rounded-lg hover:bg-teal-100 transition-colors"
                       >
                         Generate
                       </button>
@@ -486,12 +481,12 @@ export default function RecoverySocialPage() {
                         maxLength={24}
                         value={password}
                         onChange={(e) => handlePasswordInput(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-md text-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                        className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20 pr-10"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700"
+                        className="absolute top-2.5 right-3 text-slate-500 hover:text-slate-700"
                       >
                         {showPassword ? <FaEyeSlash /> : <FaEye />}
                       </button>
@@ -499,16 +494,16 @@ export default function RecoverySocialPage() {
 
                     {password && (
                       <ul className="mt-2 text-xs space-y-1">
-                        <li className={passwordRequirements.length ? 'text-green-500' : 'text-gray-500'}>
+                        <li className={passwordRequirements.length ? 'text-[#0D9488] font-medium' : 'text-slate-500'}>
                           {passwordRequirements.length ? '✓' : '•'} At least 8 characters
                         </li>
-                        <li className={passwordRequirements.uppercase ? 'text-green-500' : 'text-gray-500'}>
+                        <li className={passwordRequirements.uppercase ? 'text-[#0D9488] font-medium' : 'text-slate-500'}>
                           {passwordRequirements.uppercase ? '✓' : '•'} One uppercase letter (optional)
                         </li>
-                        <li className={passwordRequirements.number ? 'text-green-500' : 'text-gray-500'}>
+                        <li className={passwordRequirements.number ? 'text-[#0D9488] font-medium' : 'text-slate-500'}>
                           {passwordRequirements.number ? '✓' : '•'} One number (optional)
                         </li>
-                        <li className={passwordRequirements.specialChar ? 'text-green-500' : 'text-gray-500'}>
+                        <li className={passwordRequirements.specialChar ? 'text-[#0D9488] font-medium' : 'text-slate-500'}>
                           {passwordRequirements.specialChar ? '✓' : '•'} One special character (optional)
                         </li>
                       </ul>
@@ -517,7 +512,7 @@ export default function RecoverySocialPage() {
 
                   {passwordRequirements.length && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Confirm Password</label>
                       <div className="relative">
                         <input
                           type={showConfirmPassword ? 'text' : 'password'}
@@ -526,20 +521,20 @@ export default function RecoverySocialPage() {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           className={`w-full border ${password && confirmPassword && password !== confirmPassword
-                            ? 'border-red-300'
-                            : 'border-gray-300'
-                            } rounded-lg px-3 py-2 text-md text-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10`}
+                            ? 'border-rose-300'
+                            : 'border-slate-300 dark:border-slate-700'
+                            } bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20 pr-10`}
                         />
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700"
+                          className="absolute top-2.5 right-3 text-slate-500 hover:text-slate-700"
                         >
                           {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                         </button>
                       </div>
                       {password && confirmPassword && password !== confirmPassword && (
-                        <p className="mt-1 text-xs text-red-500">Passwords do not match</p>
+                        <p className="mt-1 text-xs text-rose-500">Passwords do not match</p>
                       )}
                     </div>
                   )}
@@ -549,12 +544,12 @@ export default function RecoverySocialPage() {
               {/* PIN Fields */}
               {(credentialMethod === 'pin' || credentialMethod === 'both') && (
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="block text-sm font-medium text-gray-700">PIN (4–24 digits)</label>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">PIN (4–24 digits)</label>
                     <button
                       type="button"
                       onClick={() => generatePin(16)}
-                      className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"
+                      className="text-xs bg-teal-50 border border-teal-200 text-[#0D9488] font-semibold px-2.5 py-1 rounded-lg hover:bg-teal-100 transition-colors"
                     >
                       Generate
                     </button>
@@ -568,19 +563,19 @@ export default function RecoverySocialPage() {
                       inputMode="numeric"
                       value={pin}
                       onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-md text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                      className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20 pr-10"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPin(!showPin)}
-                      className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700"
+                      className="absolute top-2.5 right-3 text-slate-500 hover:text-slate-700"
                     >
                       {showPin ? <FaEyeSlash /> : <FaEye />}
                     </button>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Confirm PIN</label>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Confirm PIN</label>
                     <div className="relative">
                       <input
                         type={showConfirmPin ? 'text' : 'password'}
@@ -589,18 +584,18 @@ export default function RecoverySocialPage() {
                         inputMode="numeric"
                         value={pinConfirmation}
                         onChange={(e) => setPinConfirmation(e.target.value.replace(/\D/g, ''))}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-md text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                        className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20 pr-10"
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPin(!showConfirmPin)}
-                        className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700"
+                        className="absolute top-2.5 right-3 text-slate-500 hover:text-gray-700"
                       >
                         {showConfirmPin ? <FaEyeSlash /> : <FaEye />}
                       </button>
                     </div>
                     {pin && pinConfirmation && pin !== pinConfirmation && (
-                      <p className="mt-1 text-xs text-red-500">PINs do not match</p>
+                      <p className="mt-1 text-xs text-rose-500">PINs do not match</p>
                     )}
                   </div>
                 </div>
@@ -609,35 +604,35 @@ export default function RecoverySocialPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full bg-[#142B4A] hover:bg-[#0D9488] text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Saving . . . ⚓' : 'Create Credentials'}
+                {isLoading ? 'Saving...' : 'Create Credentials'}
               </button>
             </form>
           )}
 
           {/* STEP 4: Done */}
           {step === 'done' && (
-            <div className="text-center space-y-3">
-              <FiCheckCircle className="text-green-500 text-4xl mx-auto" />
-              <h3 className="text-lg font-semibold text-gray-800">You&apos;re all set ⚓</h3>
-              <p className="text-sm text-gray-600">You can now log in with email. Redirecting . . .</p>
+            <div className="text-center space-y-3 py-4">
+              <FiCheckCircle className="text-[#0D9488] text-4xl mx-auto" />
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Credentials Configured</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">You can now log in with email. Redirecting...</p>
             </div>
           )}
 
           {/* Links */}
-          <div className="mt-6 flex flex-row space-x-3 w-full">
+          <div className="mt-4 flex flex-row gap-3 w-full">
             <Link
               href={`/dashboards/${TARGET_PROGRAM}/auth/login`}
-              className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
+              className="flex-1 text-center bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition-colors"
             >
               Back to Login
             </Link>
             <Link
               href={`/dashboards/${TARGET_PROGRAM}/auth/account/support`}
-              className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
+              className="flex-1 text-center bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition-colors"
             >
-              Having Issues ?
+              Having Issues?
             </Link>
           </div>
         </div>
