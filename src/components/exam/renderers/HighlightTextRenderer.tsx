@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import type { QuestionRendererProps } from './types';
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 
 export const HighlightTextRenderer: React.FC<QuestionRendererProps> = ({
   question,
@@ -46,7 +47,7 @@ export const HighlightTextRenderer: React.FC<QuestionRendererProps> = ({
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
-              {opt.optionText}
+              <RichQuestionContent content={opt.optionText} />
             </button>
           );
         })}

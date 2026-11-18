@@ -4,6 +4,7 @@ import * as React from "react";
 import { QuestionRendererProps } from "./types";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, ArrowRight } from "lucide-react";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 
 export function MatchingRenderer({
   question,
@@ -55,7 +56,7 @@ export function MatchingRenderer({
                 <span className="w-6 h-6 rounded-md bg-brand-teal/10 text-brand-teal font-bold text-xs flex items-center justify-center shrink-0">
                   {idx + 1}
                 </span>
-                <span className="text-sm font-medium text-foreground">{p.optionText}</span>
+                <RichQuestionContent content={p.optionText} className="text-sm font-medium text-foreground" />
               </div>
 
               <div className="flex items-center gap-2">
@@ -85,7 +86,7 @@ export function MatchingRenderer({
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>Matching Solution & Clinical Analysis</span>
           </div>
-          <p className="pt-1 leading-relaxed">{question.generalRationale}</p>
+          <RichQuestionContent content={question.generalRationale} className="pt-1 leading-relaxed" />
         </div>
       )}
     </div>

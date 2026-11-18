@@ -5,6 +5,7 @@ import { QuestionRendererProps } from "./types";
 import { cn } from "@/lib/utils";
 import { FileText, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 
 export function ExtendedResponseRenderer({
   question,
@@ -60,7 +61,7 @@ export function ExtendedResponseRenderer({
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>Exemplary SBAR Clinical Response</span>
           </div>
-          <p className="pt-1 leading-relaxed">{question.generalRationale}</p>
+          <RichQuestionContent content={question.generalRationale} className="pt-1 leading-relaxed" />
         </div>
       )}
     </div>

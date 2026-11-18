@@ -5,6 +5,7 @@ import { QuestionRendererProps } from "./types";
 import { cn } from "@/lib/utils";
 import { CheckSquare, Square, CheckCircle2, XCircle, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 
 export function MultipleResponseRenderer({
   question,
@@ -81,7 +82,7 @@ export function MultipleResponseRenderer({
                     <Square className="w-5 h-5 text-foreground-muted" />
                   )}
                 </span>
-                <span className="flex-1 leading-relaxed">{opt.optionText}</span>
+                <RichQuestionContent content={opt.optionText} as="span" className="flex-1 leading-relaxed" />
                 {isReview && (
                   <span className="shrink-0 pt-0.5">
                     {opt.isCorrect ? (
@@ -96,7 +97,7 @@ export function MultipleResponseRenderer({
               {isReview && opt.specificRationale && (
                 <div className="text-xs text-foreground-secondary ml-8 p-2 rounded-lg bg-surface-muted border border-border/50">
                   <span className="font-semibold text-foreground">Rationale: </span>
-                  {opt.specificRationale}
+                  <RichQuestionContent content={opt.specificRationale} as="span" />
                 </div>
               )}
             </div>
@@ -109,7 +110,7 @@ export function MultipleResponseRenderer({
           <div className="font-bold text-brand-teal flex items-center gap-1.5">
             <span>Overall Clinical Rationale</span>
           </div>
-          <p className="text-foreground leading-relaxed">{question.generalRationale}</p>
+          <RichQuestionContent content={question.generalRationale} className="text-foreground leading-relaxed" />
         </div>
       )}
     </div>

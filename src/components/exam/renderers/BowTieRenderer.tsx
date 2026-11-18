@@ -5,6 +5,7 @@ import { QuestionRendererProps } from "./types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, AlertCircle } from "lucide-react";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 
 export function BowTieRenderer({
   question,
@@ -104,7 +105,7 @@ export function BowTieRenderer({
                       : "border-border bg-surface hover:bg-surface-muted text-foreground-secondary"
                   )}
                 >
-                  {opt.optionText}
+                  <RichQuestionContent content={opt.optionText} />
                 </button>
               );
             })}
@@ -136,7 +137,7 @@ export function BowTieRenderer({
                         : "border-border bg-surface hover:bg-surface-muted text-foreground-secondary"
                     )}
                   >
-                    {opt.optionText}
+                    <RichQuestionContent content={opt.optionText} />
                   </button>
                 );
               })}
@@ -171,7 +172,7 @@ export function BowTieRenderer({
                       : "border-border bg-surface hover:bg-surface-muted text-foreground-secondary"
                   )}
                 >
-                  {opt.optionText}
+                  <RichQuestionContent content={opt.optionText} />
                 </button>
               );
             })}
@@ -185,7 +186,7 @@ export function BowTieRenderer({
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>Bow-Tie Clinical Judgment Rationale</span>
           </div>
-          <p className="pt-1 leading-relaxed">{question.generalRationale}</p>
+          <RichQuestionContent content={question.generalRationale} className="pt-1 leading-relaxed" />
         </div>
       )}
     </div>

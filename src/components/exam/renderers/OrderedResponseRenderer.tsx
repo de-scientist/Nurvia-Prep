@@ -5,6 +5,7 @@ import { QuestionRendererProps, RendererOption } from "./types";
 import { cn } from "@/lib/utils";
 import { ArrowUp, ArrowDown, GripVertical, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 
 export function OrderedResponseRenderer({
   question,
@@ -57,9 +58,7 @@ export function OrderedResponseRenderer({
               {index + 1}
             </span>
 
-            <span className="flex-1 text-sm text-foreground leading-relaxed">
-              {item.optionText}
-            </span>
+            <RichQuestionContent content={item.optionText} className="flex-1 text-sm text-foreground leading-relaxed" />
 
             {!disabled && (
               <div className="flex items-center gap-1 shrink-0">
@@ -97,7 +96,7 @@ export function OrderedResponseRenderer({
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>Priority Sequence Rationale</span>
           </div>
-          <p className="pt-1 leading-relaxed">{question.generalRationale}</p>
+          <RichQuestionContent content={question.generalRationale} className="pt-1 leading-relaxed" />
         </div>
       )}
     </div>

@@ -5,6 +5,7 @@ import { QuestionRendererProps } from "./types";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 
 export function TabularResponseRenderer({
   question,
@@ -102,7 +103,7 @@ export function TabularResponseRenderer({
                   : "border-border bg-background hover:bg-surface-muted text-foreground-secondary"
               )}
             >
-              <span>{opt.optionText}</span>
+              <RichQuestionContent content={opt.optionText} />
               {isReview && opt.isCorrect && (
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 ml-2" />
               )}
@@ -117,7 +118,7 @@ export function TabularResponseRenderer({
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>Hemodynamic Trend Rationale</span>
           </div>
-          <p className="pt-1 leading-relaxed">{question.generalRationale}</p>
+          <RichQuestionContent content={question.generalRationale} className="pt-1 leading-relaxed" />
         </div>
       )}
     </div>

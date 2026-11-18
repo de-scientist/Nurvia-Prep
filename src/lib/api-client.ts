@@ -22,6 +22,7 @@
 import { classifyError, isRetryableError, ErrorType } from './utils/error-utils';
 import { parseApiResponse } from './api-response';
 import { buildApiUrl, DEDICATED_AUTH_ROUTES } from './api-url.mjs';
+import { extractQuestionOptions, cleanWordHtml } from './content/html-normalizer';
 
 function unprovisionedResponse<T>(featureName: string, context?: unknown): ApiResponse<T> {
   const detail =
@@ -623,24 +624,20 @@ export const nurviaApi = {
     const mappedQuestions: import('./api-types').ActiveExamQuestionDto[] = rawItems.map((q, idx) => ({
       id: String(q.guidId ?? q.id ?? `q-${idx + 1}`),
       orderIndex: idx + 1,
-      stem: String(q.metaQuestionText || q.questionText || `Question ${idx + 1}`),
+      stem: cleanWordHtml(String(q.metaQuestionText || q.questionText || `Question ${idx + 1}`)),
       questionType: (typeof q.type === 'string' && q.type ? q.type : 'SingleChoice') as import('./api-types').QuestionType,
       cognitiveSkill: 'Application' as import('./api-types').CognitiveSkill,
       clientNeedCategory: 'SafeAndEffectiveCareEnvironment' as import('./api-types').ClientNeedCategory,
-      options: Array.isArray(q.singleChoiceQuestion) && q.singleChoiceQuestion.length > 0
-        ? q.singleChoiceQuestion.map((opt: any, oIdx: number) => ({
-            id: String(opt.guidId ?? opt.id ?? `opt-${oIdx + 1}`),
-            optionIndex: oIdx + 1,
-            optionText: String(opt.optionText ?? opt.text ?? `Option ${oIdx + 1}`),
-            displayOrder: oIdx + 1,
+      options: extractQuestionOptions(q),
+      exhibits: Array.isArray(q.exhibits)
+        ? q.exhibits.map((ex: any, eIdx: number) => ({
+            id: String(ex.guidId ?? ex.id ?? `exh-${eIdx + 1}`),
+            type: (ex.type || 'NursesNotes') as import('./api-types').ExhibitType,
+            title: String(ex.title ?? ex.name ?? `Exhibit ${eIdx + 1}`),
+            content: String(ex.content ?? ex.description ?? ''),
+            displayOrder: eIdx + 1,
           }))
-        : [
-            { id: '1', optionIndex: 1, optionText: 'Option A', displayOrder: 1 },
-            { id: '2', optionIndex: 2, optionText: 'Option B', displayOrder: 2 },
-            { id: '3', optionIndex: 3, optionText: 'Option C', displayOrder: 3 },
-            { id: '4', optionIndex: 4, optionText: 'Option D', displayOrder: 4 },
-          ],
-      exhibits: [],
+        : [],
     }));
 
     const durationMinutes = studySet?.timeLimitMinutes ?? 60;
@@ -709,29 +706,32 @@ export const nurviaApi = {
         questions: questionsRes.data.items.map((q, idx) => ({
           questionId: String(q.guidId ?? q.id ?? `q-${idx + 1}`),
           orderIndex: idx + 1,
-          stem: String(q.metaQuestionText || q.questionText || `Question ${idx + 1}`),
+          stem: cleanWordHtml(String(q.metaQuestionText || q.questionText || `Question ${idx + 1}`)),
           questionType: (typeof q.type === 'string' ? q.type : 'SingleChoice') as import('./api-types').QuestionType,
           cognitiveSkill: 'Application' as import('./api-types').CognitiveSkill,
           clientNeedCategory: 'SafeAndEffectiveCareEnvironment' as import('./api-types').ClientNeedCategory,
-          generalRationale: String(q.explanation || q.hint || 'Correct answer adheres to standard clinical nursing protocols.'),
+          generalRationale: cleanWordHtml(String(q.explanation || q.hint || 'Correct answer adheres to standard clinical nursing protocols.')),
           learnerResponse: undefined,
           isCorrect: true,
           pointsAwarded: 1,
           maxPoints: 1,
-          options: Array.isArray(q.singleChoiceQuestion) && q.singleChoiceQuestion.length > 0
-            ? q.singleChoiceQuestion.map((opt: any, oIdx: number) => ({
-                id: String(opt.guidId ?? opt.id ?? `opt-${oIdx + 1}`),
-                optionIndex: oIdx + 1,
-                optionText: String(opt.optionText ?? opt.text ?? `Option ${oIdx + 1}`),
-                isCorrect: Boolean(opt.isCorrect ?? (oIdx === 0)),
-                specificRationale: String(opt.specificRationale ?? ''),
-                wasSelected: false,
+          options: extractQuestionOptions(q).map((opt) => ({
+            id: opt.id,
+            optionIndex: opt.optionIndex,
+            optionText: opt.optionText,
+            isCorrect: opt.isCorrect,
+            specificRationale: opt.specificRationale,
+            wasSelected: Boolean(opt.wasSelected),
+          })),
+          exhibits: Array.isArray(q.exhibits)
+            ? q.exhibits.map((ex: any, eIdx: number) => ({
+                id: String(ex.guidId ?? ex.id ?? `exh-${eIdx + 1}`),
+                type: (ex.type || 'NursesNotes') as import('./api-types').ExhibitType,
+                title: String(ex.title ?? ex.name ?? `Exhibit ${eIdx + 1}`),
+                content: String(ex.content ?? ex.description ?? ''),
+                displayOrder: eIdx + 1,
               }))
-            : [
-                { id: '1', optionIndex: 1, optionText: 'Option A', isCorrect: true, wasSelected: false },
-                { id: '2', optionIndex: 2, optionText: 'Option B', isCorrect: false, wasSelected: false },
-              ],
-          exhibits: [],
+            : [],
         })),
       },
     };

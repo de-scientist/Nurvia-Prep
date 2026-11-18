@@ -4,6 +4,7 @@ import * as React from "react";
 import { QuestionRendererProps } from "./types";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, XCircle, Check, X } from "lucide-react";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 
 export function TrueFalseRenderer({
   question,
@@ -79,7 +80,7 @@ export function TrueFalseRenderer({
             )}>
               {isTrue ? <Check className="w-6 h-6" /> : <X className="w-6 h-6" />}
             </div>
-            <span>{opt.optionText}</span>
+            <RichQuestionContent content={opt.optionText} as="span" />
             {isReview && opt.isCorrect && (
               <span className="text-xs font-sans text-emerald-600 font-semibold flex items-center gap-1 mt-1">
                 <CheckCircle2 className="w-4 h-4" /> Correct Answer

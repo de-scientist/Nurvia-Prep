@@ -5,6 +5,7 @@ import { QuestionRendererProps } from "./types";
 import { cn } from "@/lib/utils";
 import { ArrowLeftRight, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 
 export function DragAndDropRenderer({
   question,
@@ -67,8 +68,8 @@ export function DragAndDropRenderer({
                       : "border-border bg-background hover:bg-surface-muted text-foreground-secondary"
                   )}
                 >
-                  <span>{opt.optionText}</span>
-                  <span className="text-[10px] opacity-80">{inBucketA ? "Added" : "+ Add"}</span>
+                  <RichQuestionContent content={opt.optionText} />
+                  <span className="text-[10px] opacity-80 shrink-0 ml-2">{inBucketA ? "Added" : "+ Add"}</span>
                 </button>
               );
             })}
@@ -98,8 +99,8 @@ export function DragAndDropRenderer({
                       : "border-border bg-background hover:bg-surface-muted text-foreground-secondary"
                   )}
                 >
-                  <span>{opt.optionText}</span>
-                  <span className="text-[10px] opacity-80">{inBucketB ? "Added" : "+ Add"}</span>
+                  <RichQuestionContent content={opt.optionText} />
+                  <span className="text-[10px] opacity-80 shrink-0 ml-2">{inBucketB ? "Added" : "+ Add"}</span>
                 </button>
               );
             })}
@@ -113,7 +114,7 @@ export function DragAndDropRenderer({
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>Classification Rationale</span>
           </div>
-          <p className="pt-1 leading-relaxed">{question.generalRationale}</p>
+          <RichQuestionContent content={question.generalRationale} className="pt-1 leading-relaxed" />
         </div>
       )}
     </div>

@@ -4,6 +4,7 @@ import * as React from "react";
 import { QuestionRendererProps } from "./types";
 import { cn } from "@/lib/utils";
 import { CheckCircle2 } from "lucide-react";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 
 export function MatrixGridRenderer({
   question,
@@ -58,7 +59,9 @@ export function MatrixGridRenderer({
                 const selectedCol = selections[opt.id] || "";
                 return (
                   <tr key={opt.id} className="hover:bg-surface-muted/50 transition-colors">
-                    <td className="p-3 text-foreground font-medium">{opt.optionText}</td>
+                    <td className="p-3 text-foreground font-medium">
+                      <RichQuestionContent content={opt.optionText} />
+                    </td>
                     {columns.map((col) => {
                       const isChecked = selectedCol === col;
                       return (
@@ -88,7 +91,7 @@ export function MatrixGridRenderer({
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>Matrix Evaluation Rationale</span>
           </div>
-          <p className="pt-1 leading-relaxed">{question.generalRationale}</p>
+          <RichQuestionContent content={question.generalRationale} className="pt-1 leading-relaxed" />
         </div>
       )}
     </div>

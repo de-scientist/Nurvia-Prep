@@ -4,6 +4,7 @@ import * as React from "react";
 import { QuestionRendererProps } from "./types";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, XCircle } from "lucide-react";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 
 export function SingleChoiceRenderer({
   question,
@@ -65,7 +66,7 @@ export function SingleChoiceRenderer({
               <span className="w-6 h-6 rounded-full border border-border bg-surface text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
                 {String.fromCharCode(65 + idx)}
               </span>
-              <span className="flex-1 leading-relaxed">{opt.optionText}</span>
+              <RichQuestionContent content={opt.optionText} as="span" className="flex-1 leading-relaxed" />
               {isReview && (
                 <span className="shrink-0 pt-0.5">
                   {opt.isCorrect ? (
@@ -80,7 +81,7 @@ export function SingleChoiceRenderer({
             {isReview && opt.specificRationale && (
               <div className="text-xs text-foreground-secondary ml-10 p-2 rounded-lg bg-surface-muted border border-border/50">
                 <span className="font-semibold text-foreground">Rationale: </span>
-                {opt.specificRationale}
+                <RichQuestionContent content={opt.specificRationale} as="span" />
               </div>
             )}
           </div>
@@ -92,7 +93,7 @@ export function SingleChoiceRenderer({
           <div className="font-bold text-brand-teal flex items-center gap-1.5">
             <span>Overall Clinical Rationale</span>
           </div>
-          <p className="text-foreground leading-relaxed">{question.generalRationale}</p>
+          <RichQuestionContent content={question.generalRationale} className="text-foreground leading-relaxed" />
         </div>
       )}
     </div>

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { FileText, Activity, FlaskConical, ClipboardList, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SingleChoiceRenderer } from "./SingleChoiceRenderer";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 
 export function CaseStudyRenderer({
   question,
@@ -102,8 +103,8 @@ export function CaseStudyRenderer({
             </div>
 
             {/* Exhibit Body Content */}
-            <div className="p-4 text-xs font-mono leading-relaxed bg-background/50 min-h-[160px] whitespace-pre-line text-foreground-secondary">
-              {getTabContent()}
+            <div className="p-4 text-xs font-mono leading-relaxed bg-background/50 min-h-[160px] text-foreground-secondary">
+              <RichQuestionContent content={getTabContent()} />
             </div>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { CheckCircle2, Calculator, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 
 export function NumericCalculationRenderer({
   question,
@@ -75,7 +76,7 @@ export function NumericCalculationRenderer({
             </span>
           </div>
           {correctOption.specificRationale && (
-            <p className="text-foreground-secondary pt-1 leading-relaxed">{correctOption.specificRationale}</p>
+            <RichQuestionContent content={correctOption.specificRationale} className="text-foreground-secondary pt-1 leading-relaxed" />
           )}
         </div>
       )}

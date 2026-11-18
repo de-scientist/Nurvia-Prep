@@ -5,6 +5,7 @@ import { QuestionRendererProps } from "./types";
 import { cn } from "@/lib/utils";
 import { CheckCircle2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 
 export function ShortAnswerRenderer({
   question,
@@ -66,11 +67,11 @@ export function ShortAnswerRenderer({
             <CheckCircle2 className="w-4 h-4" />
             <span>Target Term:</span>
             <span className="font-mono text-sm text-foreground bg-surface px-2 py-0.5 rounded border border-border">
-              {correctOption.optionText}
+              <RichQuestionContent content={correctOption.optionText} />
             </span>
           </div>
           {correctOption.specificRationale && (
-            <p className="text-foreground-secondary mt-1">{correctOption.specificRationale}</p>
+            <RichQuestionContent content={correctOption.specificRationale} className="text-foreground-secondary mt-1" />
           )}
         </div>
       )}
