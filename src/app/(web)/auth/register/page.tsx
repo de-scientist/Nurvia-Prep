@@ -175,17 +175,17 @@ export default function RegisterPage() {
     e.preventDefault()
 
     if (!form.agree) {
-      alert('You must agree to the terms to continue.')
+      setError('You must agree to the terms to continue.')
       return
     }
 
     if (form.loginMethod !== "pin" && form.password !== form.confirmPassword) {
-      alert('Passwords do not match!')
+      setError('Passwords do not match!')
       return
     }
 
     if (form.loginMethod !== "pin" && !passwordRequirements.length) {
-      alert('Password must be at least 6 characters.')
+      setError('Password must be at least 6 characters.')
       return
     }
 
@@ -231,134 +231,119 @@ export default function RegisterPage() {
   // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col items-center justify-center bg-gradient-to-br from-blue-300 to-white px-4 py-8">
+    <div className="flex flex-col items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1220] px-4 py-12 min-h-[85vh]">
 
       {/* App Title / Branding */}
-      <div className="flex flex-col items-center justify-center mb-3 text-center">
+      <div className="flex flex-col items-center justify-center mb-6 text-center">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3.5 py-1 text-xs font-semibold text-[#0D9488] dark:text-teal-300 mb-2">
+          NURVIA Learner Enrollment
+        </div>
         <div className="flex items-center justify-center gap-2">
-          <span className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-500 drop-shadow-md">
+          <span className="text-2xl md:text-3xl font-extrabold text-slate-600 dark:text-slate-300">
             Welcome to
           </span>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-blue-800 drop-shadow-md">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-[#142B4A] dark:text-white">
             {APP_NAME}
           </h1>
           <FiCheckCircle
-            className="text-green-500 text-xl md:text-2xl drop-shadow-sm"
+            className="text-[#0D9488] text-xl md:text-2xl"
             title="Verified"
           />
         </div>
 
-        <p className="text-xs text-gray-600 mt-1">
-          Your trusted platform for streamlined access to all Nursing Resources .
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          Create your learner account for full access to nursing practice exams & rationales.
         </p>
       </div>
 
-      {/* Login Card Container */}
-      <div className="max-w-5xl w-full bg-white rounded-2xl shadow-2xl grid grid-cols-1 md:grid-cols-2 overflow-hidden">
+      {/* Register Card Container */}
+      <div className="max-w-5xl w-full bg-white dark:bg-[#111C2E] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg grid grid-cols-1 md:grid-cols-2 overflow-hidden">
 
         {/* LEFT SIDE: Full Image Background + Text at Bottom */}
-        <div className="hidden md:flex relative w-full h-full items-end justify-center overflow-hidden">
-          {/* Background Image */}
+        <div className="hidden md:flex relative w-full h-full items-end justify-center overflow-hidden bg-[#142B4A]">
           <Image
             src="/auth/loginImage.jpg"
             alt="Welcome"
             layout="fill"
             objectFit="cover"
             priority
-            className="z-0"
+            className="z-0 opacity-85"
           />
 
           {/* Top Social Login Buttons Overlay DESKTOP */}
-          <div className="absolute top-0 left-0 z-10 w-full p-4">
-            <div className="bg-black/30 backdrop-blur-md rounded-2xl p-4 shadow-lg">
-              <p className="text-center text-white text-xs font-semibold tracking-wide uppercase mb-3 drop-shadow-md">
-                Sign Up with
+          <div className="absolute top-0 left-0 z-10 w-full p-6">
+            <div className="bg-[#142B4A]/80 backdrop-blur-md border border-white/15 rounded-2xl p-4 shadow-lg">
+              <p className="text-center text-teal-200 text-[11px] font-semibold tracking-wider uppercase mb-3">
+                Quick Sign Up
               </p>
               <button
                 type="button"
-                className="w-full flex items-center justify-center gap-2 bg-white/90 border border-gray-300 px-4 py-2.5 rounded-lg hover:bg-white transition text-gray-700 font-semibold text-sm"
+                className="w-full flex items-center justify-center gap-2.5 bg-white border border-slate-200 px-4 py-2.5 rounded-xl hover:bg-slate-50 transition text-slate-800 font-semibold text-sm"
                 onClick={() => handleSocialClick('google')}
               >
                 <FcGoogle className="text-xl" />
-                Continue with Google (Gmail)
+                Continue with Google
               </button>
             </div>
           </div>
 
           {/* Bottom Text Overlay */}
-          <div className="z-10 w-full p-3 bg-gradient-to-t from-black/70 via-black/40 to-transparent text-white text-center">
+          <div className="z-10 w-full p-8 bg-gradient-to-t from-[#142B4A] via-[#142B4A]/70 to-transparent text-white text-left">
             {isAuthenticated ? (
               <>
-                <h2 className="text-3xl font-extrabold drop-shadow-lg">Welcome Back !</h2>
-                <p className="text-sm mt-2 drop-shadow-md">
+                <h2 className="text-2xl font-extrabold">Welcome Back!</h2>
+                <p className="text-sm text-slate-200 mt-1.5">
                   You&apos;re already signed in. Ready to dive into {APP_NAME}?
                 </p>
               </>
             ) : (
               <>
-                <h2 className="text-3xl font-extrabold drop-shadow-lg">Hello, there !</h2>
-                <p className="text-sm mt-2 drop-shadow-md">
-                  Sign in to continue exploring {APP_NAME}. Secure. Fast. Reliable.
+                <h2 className="text-2xl font-extrabold">Start Your Path Today</h2>
+                <p className="text-sm text-slate-200 mt-1.5">
+                  Join thousands of nursing learners preparing with {APP_NAME}.
                 </p>
               </>
             )}
           </div>
         </div>
 
-        <div className="w-full p-2 bg-gradient-to-b from-green-10 to-yellow-100 space-y-2 border-l border-gray-200">
+        <div className="w-full p-6 md:p-8 bg-white dark:bg-[#111C2E] space-y-4 border-l border-slate-200 dark:border-slate-800">
 
-          {/* Mobile-only Social Login Buttons (hidden on md+, shown inside photo panel instead) */}
+          {/* Mobile-only Social Login Buttons */}
           <div className="md:hidden">
             <button
               type="button"
-              className="w-full flex items-center justify-center gap-2 border border-gray-300 px-4 py-2.5 rounded-lg hover:bg-green-200 transition text-gray-700 font-semibold text-sm"
+              className="w-full flex items-center justify-center gap-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 rounded-xl hover:bg-slate-50 transition text-slate-700 dark:text-slate-200 font-semibold text-sm"
               onClick={() => handleSocialClick('google')}
             >
               <FcGoogle className="text-xl" />
-              Continue with Google (Gmail)
+              Continue with Google
             </button>
           </div>
 
-          <div className="text-center text-md">
-            <span className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-yellow-800 via-gray-300 to-green-600 bg-[length:200%_100%] [animation:shimmer_3s_linear_infinite]">
-              or sign up with email
-            </span>
+          <div className="text-center text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Create account with email
           </div>
-
-          <style>{`
-            @keyframes shimmer {
-              0% { background-position: 200% 0; }
-              100% { background-position: -200% 0; }
-            }
-          `}</style>
 
           {/* Alert Message */}
           {(error || success) && (
             <div className="flex justify-center">
               <div
-                className={`relative max-w-md w-full px-4 py-3 rounded-xl shadow-md text-sm flex items-center gap-3
-                ${error ? 'bg-red-100 border border-red-200 text-red-800' : ''}
-                ${success ? 'bg-green-100 border border-green-200 text-green-800' : ''}
-              `}
+                role="alert"
+                className={`relative max-w-md w-full px-4 py-3 rounded-xl text-sm flex items-center gap-3 ${
+                  error
+                    ? 'bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200'
+                    : 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                }`}
               >
-                {/* Emoji */}
-                <span className="flex items-center justify-center leading-none">
-                  {error ? '⚠️' : '✅'}
-                </span>
-
-                {/* Message Text */}
-                <span className="flex-1 leading-none">
-                  {error || success}
-                </span>
-
-                {/* Close Button */}
+                <span className="flex-1 leading-tight">{error || success}</span>
                 <button
                   type="button"
                   onClick={() => {
                     setError('')
                     setSuccess('')
                   }}
-                  className={`absolute top-2 right-2 font-bold hover:text-gray-700 ${error ? 'text-red-800' : 'text-green-800'}`}
+                  className="opacity-70 hover:opacity-100"
                 >
                   ✕
                 </button>
@@ -368,18 +353,18 @@ export default function RegisterPage() {
 
           {/* If authenticated, show dashboard button */}
           {isAuthenticated ? (
-            <div className="text-center">
+            <div className="text-center py-4">
               <button
                 onClick={() => router.push('/dashboards')}
-                className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 font-semibold transition"
+                className="w-full bg-[#0D9488] text-white py-3 rounded-xl hover:bg-[#0F766E] font-semibold text-sm transition"
               >
-                🚀 Dive in &amp; Continue
+                Continue to Learner Dashboard →
               </button>
             </div>
           ) : (
-            <form onSubmit={handleRegister} className="space-y-4 p-1 md:p-2">
+            <form onSubmit={handleRegister} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Enter Username</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Username</label>
                 <input
                   type="text"
                   name="username"
@@ -387,25 +372,25 @@ export default function RegisterPage() {
                   required
                   value={form.username}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-md text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Enter Your Email</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Email Address</label>
                 <input
                   type="email"
                   name="email"
                   required
                   value={form.email}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-md text-cyan-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Enter Phone
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  Phone Number
                 </label>
                 <PhoneInput
                   international
@@ -413,43 +398,25 @@ export default function RegisterPage() {
                   value={form.phone}
                   onChange={handlePhoneChange}
                   name="phone"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all [&_.PhoneInputCountrySelect]:text-black [&_.PhoneInputCountrySelect]:bg-white [&_.PhoneInputCountrySelect_option]:text-black [&_.PhoneInputCountrySelect_option]:bg-white [&_.PhoneInputInput]:text-black [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:border-0 [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:ring-0 [&_.PhoneInputInput]:shadow-none"
+                  className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 focus-within:ring-2 focus-within:ring-[#0D9488]/30 focus-within:border-[#0D9488] transition-all [&_.PhoneInputInput]:text-[#0F172A] dark:[&_.PhoneInputInput]:text-white [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:border-0 [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:ring-0 [&_.PhoneInputInput]:shadow-none"
                 />
-
-                <style jsx global>{`
-                .PhoneInputInput {
-                  width: 100%;
-                  font-size: 1rem; /* text-sm */
-                  padding: 0rem 0; /* py-2 */
-                  color: #1f2937; /* text-gray-900 */
-                  background-color: transparent;
-                  border: none;
-                  outline: none;
-                  box-shadow: none;
-                }
-
-                .PhoneInputInput:focus {
-                  outline: none;
-                  box-shadow: none;
-                }
-              `}</style>
               </div>
 
-              {/* 🔑 PASSWORD FIELDS (if allowed) */}
+              {/* PASSWORD FIELDS */}
               {(form.loginMethod === "password" || form.loginMethod === "both") && (
-                <div className="animate-fadeIn space-y-3">
+                <div className="space-y-3">
                   <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Enter Your Password
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                        Password
                       </label>
 
                       <button
                         type="button"
                         onClick={generatePassword}
-                        className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"
+                        className="text-xs font-semibold bg-[#0D9488]/10 text-[#0D9488] px-2.5 py-0.5 rounded-lg hover:bg-[#0D9488]/20"
                       >
-                        Generate
+                        Auto-Generate
                       </button>
                     </div>
 
@@ -457,17 +424,16 @@ export default function RegisterPage() {
                       <input
                         type={showPassword ? "text" : "password"}
                         name="password"
-                        required={showPinFields} //  Use explicit boolean
+                        required={showPinFields}
                         value={form.password}
                         maxLength={24}
                         onChange={handleChange}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-md 
-                     text-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                        className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] pr-10"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700"
+                        className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
                       >
                         {showPassword ? <FaEyeSlash /> : <FaEye />}
                       </button>
@@ -475,41 +441,20 @@ export default function RegisterPage() {
 
                     {/* Password Requirements */}
                     {form.password && (
-                      <div className="mt-2 text-xs text-gray-600 space-y-1">
+                      <div className="mt-2 text-xs text-slate-600 dark:text-slate-400 space-y-1">
                         <p className="font-medium">Password must contain:</p>
                         <ul className="space-y-1 mt-1">
-                          <li
-                            className={`${passwordRequirements.length
-                              ? "text-green-500"
-                              : "text-gray-500"
-                              }`}
-                          >
+                          <li className={passwordRequirements.length ? "text-[#0D9488] font-medium" : "text-slate-500"}>
                             {passwordRequirements.length ? "✓" : "•"} At Least 6 Characters
                           </li>
-                          <li
-                            className={`${passwordRequirements.uppercase
-                              ? "text-green-500"
-                              : "text-gray-500"
-                              }`}
-                          >
+                          <li className={passwordRequirements.uppercase ? "text-[#0D9488] font-medium" : "text-slate-500"}>
                             {passwordRequirements.uppercase ? "✓" : "•"} One Uppercase Letter (Optional)
                           </li>
-                          <li
-                            className={`${passwordRequirements.number
-                              ? "text-green-500"
-                              : "text-gray-500"
-                              }`}
-                          >
+                          <li className={passwordRequirements.number ? "text-[#0D9488] font-medium" : "text-slate-500"}>
                             {passwordRequirements.number ? "✓" : "•"} One Number (Optional)
                           </li>
-                          <li
-                            className={`${passwordRequirements.specialChar
-                              ? "text-green-500"
-                              : "text-gray-500"
-                              }`}
-                          >
-                            {passwordRequirements.specialChar ? "✓" : "•"} One special
-                            character (optional)
+                          <li className={passwordRequirements.specialChar ? "text-[#0D9488] font-medium" : "text-slate-500"}>
+                            {passwordRequirements.specialChar ? "✓" : "•"} One Special Character (Optional)
                           </li>
                         </ul>
                       </div>
@@ -517,49 +462,45 @@ export default function RegisterPage() {
                   </div>
 
                   {/* CONFIRM PASSWORD */}
-                  {passwordRequirements.length &&
-                    // passwordRequirements.uppercase &&
-                    // passwordRequirements.number &&
-                    // passwordRequirements.specialChar &&    // without special characters the confirm password shows up
-                    (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Confirm Password
-                        </label>
+                  {passwordRequirements.length && (
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                        Confirm Password
+                      </label>
 
-                        <div className="relative">
-                          <input
-                            type={showConfirmPassword ? "text" : "password"}
-                            name="confirmPassword"
-                            required={showPinFields} //  Use explicit boolean
-                            value={form.confirmPassword}
-                            onChange={handleChange}
-                            maxLength={24}
-                            className={`w-full border ${form.password &&
-                              form.confirmPassword &&
-                              form.password !== form.confirmPassword
-                              ? "border-red-300"
-                              : "border-gray-300"
-                              } rounded-lg px-3 py-2 text-md text-green-700 
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10`}
-                          />
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          name="confirmPassword"
+                          required={showPinFields}
+                          value={form.confirmPassword}
+                          onChange={handleChange}
+                          maxLength={24}
+                          className={`w-full border ${
+                            form.password &&
+                            form.confirmPassword &&
+                            form.password !== form.confirmPassword
+                              ? "border-rose-400"
+                              : "border-slate-300 dark:border-slate-700"
+                          } bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] pr-10`}
+                        />
 
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700"
-                          >
-                            {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                          </button>
-                        </div>
-
-                        {form.password &&
-                          form.confirmPassword &&
-                          form.password !== form.confirmPassword && (
-                            <p className="mt-1 text-xs text-red-500">Passwords do not match</p>
-                          )}
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
+                        >
+                          {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                        </button>
                       </div>
-                    )}
+
+                      {form.password &&
+                        form.confirmPassword &&
+                        form.password !== form.confirmPassword && (
+                          <p className="mt-1 text-xs text-rose-500">Passwords do not match</p>
+                        )}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -569,11 +510,11 @@ export default function RegisterPage() {
                   name="agree"
                   checked={form.agree}
                   onChange={handleChange}
-                  className="mt-1 accent-blue-600"
+                  className="mt-1 accent-[#0D9488]"
                 />
-                <label className="text-sm text-gray-600">
+                <label className="text-xs text-slate-600 dark:text-slate-300">
                   I agree to the{' '}
-                  <Link href="/pages/terms" className="text-blue-600 underline hover:text-blue-800">
+                  <Link href="/pages/terms-of-service" className="text-[#0D9488] font-semibold underline hover:text-[#0F766E]">
                     Terms and Conditions
                   </Link>
                 </label>
@@ -582,29 +523,24 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-indigo-600 font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full bg-[#142B4A] text-white py-3 rounded-xl hover:bg-[#1E3A5F] text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Registering . . . ⚓' : 'Submit and Register'}
+                {isLoading ? 'Creating Account…' : 'Create Account'}
               </button>
 
-              {/* Submit */}
-              {error && (
-                <p className="text-sm text-red-700 text-center font-medium">{error}</p>
-              )}
-
               {/* Links */}
-              <div className="mt-2 flex flex-row space-x-3 w-full">
+              <div className="pt-2 flex flex-row gap-3 w-full">
                 <Link
                   href="/auth/support"
-                  className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
+                  className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
                 >
-                  Having Issues ?
+                  Need Support?
                 </Link>
                 <Link
                   href="/auth/login"
-                  className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
+                  className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
                 >
-                  Login Instead ?
+                  Login Instead?
                 </Link>
               </div>
 
@@ -612,7 +548,6 @@ export default function RegisterPage() {
           )}
         </div>
       </div>
-
 
     </div>
   )
