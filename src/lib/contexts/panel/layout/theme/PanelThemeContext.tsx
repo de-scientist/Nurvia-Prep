@@ -21,14 +21,14 @@ export type CustomColors = {
   text: string; // Added text color
 };
 
-// Default Dashboard Colors
+// Default Dashboard Colors — Canonical NURVIA Design System
 export const DEFAULT_THEME_COLORS: CustomColors = {
-  navbar: "#c7fff2",
-  leftSidebar: "#cee4ff",
-  rightSidebar: "#e2dbff",
-  content: "#fffce6",
-  footer: "#ffecad",
-  text: "#000000",
+  navbar: "#FFFFFF",
+  leftSidebar: "#F8FAFC",
+  rightSidebar: "#F8FAFC",
+  content: "#FFFFFF",
+  footer: "#F8FAFC",
+  text: "#0F172A",
 };
 
 export const USER_CUSTOM_COLORS_KEY = "userCustomColors";
@@ -124,21 +124,21 @@ const effectiveTheme =
 
     // Define proper fallback light/dark colors for all components
     const lightColors: Record<keyof CustomColors, string> = {
-      navbar: "#ffffff",
-      leftSidebar: "#f8fafc",
-      rightSidebar: "#f1f5f9",
-      content: "#ffffff",
-      footer: "#f1f5f9",
-      text: "#000000",
+      navbar: "#FFFFFF",
+      leftSidebar: "#F8FAFC",
+      rightSidebar: "#F8FAFC",
+      content: "#FFFFFF",
+      footer: "#F8FAFC",
+      text: "#0F172A",
     };
 
     const darkColors: Record<keyof CustomColors, string> = {
-      navbar: "#1e293b",
-      leftSidebar: "#0f172a",
-      rightSidebar: "#1e293b",
-      content: "#1e293b",
-      footer: "#0f172a",
-      text: "#ffffff",
+      navbar: "#0F172A",
+      leftSidebar: "#0F172A",
+      rightSidebar: "#111C2E",
+      content: "#0B1220",
+      footer: "#0F172A",
+      text: "#F8FAFC",
     };
 
     // Apply component-specific background and text colors
@@ -164,17 +164,17 @@ const componentTheme =
     }
 
     
-    // Apply global text color
-    root.style.setProperty(
-  "--text-color",
-  theme.global === "custom"
-    ? effectiveColors.text
-    : theme.global === "default"
-      ? DEFAULT_THEME_COLORS.text
-      : theme.global === "dark"
-        ? "#ffffff"
-        : "#000000"
-);
+    // Apply global text color and content text color
+    const resolvedText =
+      theme.global === "custom"
+        ? effectiveColors.text
+        : theme.global === "default"
+          ? DEFAULT_THEME_COLORS.text
+          : theme.global === "dark"
+            ? "#F8FAFC"
+            : "#0F172A";
+    root.style.setProperty("--text-color", resolvedText);
+    root.style.setProperty("--content-text", resolvedText);
 
 
     // Save to localStorage
