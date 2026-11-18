@@ -80,16 +80,7 @@ const timeAgo = (iso: string) => {
 // CARD COLORS — soft, stable per-card palette (picked from the item's guidId)
 // ─────────────────────────────────────────────────────────────────────────────
 const CARD_TONES = [
-    { bg: "bg-rose-50", border: "border-rose-200", hover: "hover:border-rose-400", activeBg: "bg-rose-100", ring: "ring-rose-300", trail: "text-rose-700", chev: "text-rose-300" },
-    { bg: "bg-sky-50", border: "border-sky-200", hover: "hover:border-sky-400", activeBg: "bg-sky-100", ring: "ring-sky-300", trail: "text-sky-700", chev: "text-sky-300" },
-    { bg: "bg-emerald-50", border: "border-emerald-200", hover: "hover:border-emerald-400", activeBg: "bg-emerald-100", ring: "ring-emerald-300", trail: "text-emerald-700", chev: "text-emerald-300" },
-    { bg: "bg-amber-50", border: "border-amber-200", hover: "hover:border-amber-400", activeBg: "bg-amber-100", ring: "ring-amber-300", trail: "text-amber-700", chev: "text-amber-300" },
-    { bg: "bg-violet-50", border: "border-violet-200", hover: "hover:border-violet-400", activeBg: "bg-violet-100", ring: "ring-violet-300", trail: "text-violet-700", chev: "text-violet-300" },
-    { bg: "bg-teal-50", border: "border-teal-200", hover: "hover:border-teal-400", activeBg: "bg-teal-100", ring: "ring-teal-300", trail: "text-teal-700", chev: "text-teal-300" },
-    { bg: "bg-fuchsia-50", border: "border-fuchsia-200", hover: "hover:border-fuchsia-400", activeBg: "bg-fuchsia-100", ring: "ring-fuchsia-300", trail: "text-fuchsia-700", chev: "text-fuchsia-300" },
-    { bg: "bg-orange-50", border: "border-orange-200", hover: "hover:border-orange-400", activeBg: "bg-orange-100", ring: "ring-orange-300", trail: "text-orange-700", chev: "text-orange-300" },
-    { bg: "bg-cyan-50", border: "border-cyan-200", hover: "hover:border-cyan-400", activeBg: "bg-cyan-100", ring: "ring-cyan-300", trail: "text-cyan-700", chev: "text-cyan-300" },
-    { bg: "bg-lime-50", border: "border-lime-200", hover: "hover:border-lime-400", activeBg: "bg-lime-100", ring: "ring-lime-300", trail: "text-lime-700", chev: "text-lime-300" },
+    { bg: "bg-white dark:bg-[#111C2E]", border: "border-slate-200 dark:border-slate-800", hover: "hover:border-[#0D9488]/60", activeBg: "bg-teal-50/40 dark:bg-teal-950/20", ring: "ring-[#0D9488]/40", trail: "text-[#0D9488] dark:text-teal-300", chev: "text-slate-400" },
 ] as const;
 
 const toneFor = (key: string) => {
@@ -237,7 +228,7 @@ function ResultCard({ item, scope, active, onActivate }: { item: SeekItem; scope
                         <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); go(); }}
-                            className="inline-flex items-center gap-1 rounded-md border border-indigo-600 bg-indigo-600 px-2 py-0.5 text-xs font-semibold text-white hover:bg-indigo-700"
+                            className="inline-flex items-center gap-1 rounded-lg border border-[#142B4A] bg-[#142B4A] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#0D9488] hover:border-[#0D9488] transition-colors"
                         >
                             <ExternalLink className="h-3 w-3" /> Open
                         </button>
@@ -246,14 +237,14 @@ function ResultCard({ item, scope, active, onActivate }: { item: SeekItem; scope
                     <button
                         type="button"
                         onClick={share}
-                        className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-xs font-semibold text-slate-700 hover:bg-indigo-50"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-[#0D9488] transition-colors"
                     >
                         <Share2 className="h-3 w-3" /> Share
                     </button>
                     <button
                         type="button"
                         onClick={copy}
-                        className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-xs font-semibold text-slate-700 hover:bg-indigo-50"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-[#0D9488] transition-colors"
                     >
                         {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
                         {copied ? "Copied" : "Copy"}
