@@ -1,4 +1,4 @@
-// castoline/src/app/dashboards/admin/layout.tsx
+// src/app/dashboards/rn-nursing/layout.tsx
 
 import Navbar from "./includes/navbar/Navbar";
 import LeftSidebar from "./includes/sidebar/left/LeftSidebar";
@@ -24,7 +24,7 @@ export default function DashboardLayout({
 }) {
   return (
     <DashboardPreloader>
-      <div className="flex min-h-screen bg-white text-black dark:bg-gray-900 dark:text-white transition-colors duration-300">
+      <div className="flex min-h-screen bg-[#F8FAFC] text-[#0F172A] dark:bg-[#0B1220] dark:text-slate-100 transition-colors duration-300">
         {/* LEFT SIDEBAR */}
         <aside className="shrink-0">
           <LeftSidebar />
@@ -34,13 +34,13 @@ export default function DashboardLayout({
         <div className="flex flex-col flex-1 min-w-0">
           <Navbar />
 
-          <main className="flex-1 overflow-y-auto bg-white text-black dark:bg-blue-100 dark:text-white transition-colors duration-300">
+          <main className="flex-1 overflow-y-auto bg-[#F8FAFC] text-[#0F172A] dark:bg-[#0B1220] dark:text-slate-100 transition-colors duration-300">
             <div className="flex flex-col min-h-full">
               {children}
               <Footer />
             </div>
           </main>
-
+          
           <ScrollToTopButton />
         </div>
 
