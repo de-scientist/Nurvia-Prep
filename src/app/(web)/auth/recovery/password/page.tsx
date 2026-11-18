@@ -236,84 +236,86 @@ export default function RecoveryPasswordPage() {
   // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col items-center bg-gradient-to-br from-blue-300 to-white px-4 pt-8 pb-16 min-h-screen">
+    <div className="flex flex-col items-center bg-[#F8FAFC] dark:bg-[#0B1220] px-4 py-12 min-h-[85vh]">
 
       {/* App Title / Branding */}
-      <div className="flex flex-col items-center justify-center mb-3 text-center">
+      <div className="flex flex-col items-center justify-center mb-6 text-center">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3.5 py-1 text-xs font-semibold text-[#0D9488] dark:text-teal-300 mb-2">
+          NURVIA Account Security
+        </div>
         <div className="flex items-center justify-center gap-2">
-          <span className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-500 drop-shadow-md">
+          <span className="text-2xl md:text-3xl font-extrabold text-slate-600 dark:text-slate-300">
             Recover your
           </span>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-blue-800 drop-shadow-md">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-[#142B4A] dark:text-white">
             {APP_NAME}
           </h1>
-          <FiCheckCircle className="text-green-500 text-xl md:text-2xl drop-shadow-sm" title="Verified" />
+          <FiCheckCircle className="text-[#0D9488] text-xl md:text-2xl" title="Verified" />
         </div>
-        <p className="text-xs text-gray-600 mt-1">
-          Reset your password and have access to your account.
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          Reset your password and restore access to your learner account.
         </p>
       </div>
 
       {/* Card Container */}
-      <div className="max-w-5xl w-full bg-white rounded-2xl shadow-2xl grid grid-cols-1 md:grid-cols-2 overflow-hidden">
+      <div className="max-w-5xl w-full bg-white dark:bg-[#111C2E] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg grid grid-cols-1 md:grid-cols-2 overflow-hidden">
 
         {/* LEFT SIDE: Photo */}
-        <div className="hidden md:flex relative w-full h-full items-end justify-center overflow-hidden">
+        <div className="hidden md:flex relative w-full h-full items-end justify-center overflow-hidden bg-[#142B4A]">
           <Image
             src="/web/auth/recovery/password/passwordFoto.jpg"
             alt="Account Recovery"
             layout="fill"
             objectFit="cover"
             priority
-            className="z-0"
+            className="z-0 opacity-85"
           />
 
-          <div className="z-10 w-full p-8 bg-gradient-to-t from-black/70 via-black/40 to-transparent text-white text-center">
-            <h2 className="text-3xl font-extrabold drop-shadow-lg">Forgot Something ?</h2>
-            <p className="text-sm mt-2 drop-shadow-md">
-              No worries — we&apos;ll help you get back into {APP_NAME} safely.
+          <div className="z-10 w-full p-8 bg-gradient-to-t from-[#142B4A] via-[#142B4A]/70 to-transparent text-white text-left">
+            <h2 className="text-2xl font-extrabold">Password Recovery</h2>
+            <p className="text-sm text-slate-200 mt-1.5">
+              We&apos;ll help you verify your identity and get back into {APP_NAME} safely.
             </p>
           </div>
         </div>
 
         {/* RIGHT SIDE: Form */}
-        <div className="w-full p-8 space-y-6 border-l border-gray-200">
+        <div className="w-full p-8 space-y-5 border-l border-slate-200 dark:border-slate-800">
 
           {/* Step indicator */}
-          <div className="flex items-center justify-center gap-2 text-xs font-medium text-gray-500">
-            <span className={step === 'email' ? 'text-blue-600' : ''}>1. Email</span>
+          <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-400">
+            <span className={step === 'email' ? 'text-[#0D9488]' : ''}>1. Email</span>
             <span>→</span>
-            <span className={step === 'code' ? 'text-blue-600' : ''}>2. Verify</span>
+            <span className={step === 'code' ? 'text-[#0D9488]' : ''}>2. Verify</span>
             <span>→</span>
-            <span className={step === 'reset' || step === 'done' ? 'text-blue-600' : ''}>3. New Credentials</span>
+            <span className={step === 'reset' || step === 'done' ? 'text-[#0D9488]' : ''}>3. New Credentials</span>
           </div>
 
-          {/* Explanatory Note */}
-          <p className="text-center text-sm text-red-800 max-w-md mx-auto">
-            Use this page if you already have an Account with us to RECOVER the password you&apos;ve forgotten.
-          </p>
-          <p className="text-center text-sm text-gray-500 max-w-md mx-auto">
-            Enter the email of your account, confirm the code (or link) we will send to your Email Account, then enter a new password.
-          </p>
-
-          <p className="text-blue-500 font-bold text-sm text-center">  Note Down Your New Password for next Login</p>
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-[#F8FAFC] dark:bg-slate-900/60 p-3.5 text-xs text-slate-600 dark:text-slate-300 space-y-1.5">
+            <p className="font-semibold text-[#0F172A] dark:text-white">
+              Use this form if you already have an account and need to reset your forgotten password.
+            </p>
+            <p>
+              Enter your registered email, confirm the verification code sent to your inbox, and set your new password.
+            </p>
+          </div>
 
           {/* Alert Message */}
           {(error || success) && (
             <div className="flex justify-center">
               <div
-                className={`relative max-w-md w-full px-4 py-3 rounded-xl shadow-md text-sm flex items-center gap-3
-                ${error ? 'bg-red-100 border border-red-200 text-red-800' : ''}
-                ${success ? 'bg-green-100 border border-green-200 text-green-800' : ''}`}
+                role="alert"
+                className={`relative max-w-md w-full px-4 py-3 rounded-xl text-sm flex items-center gap-3 ${
+                  error
+                    ? 'bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200'
+                    : 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                }`}
               >
-                <span className="flex items-center justify-center leading-none">
-                  {error ? '⚠️' : '✅'}
-                </span>
                 <span className="flex-1 leading-tight">{error || success}</span>
                 <button
                   type="button"
                   onClick={() => { setError(''); setSuccess('') }}
-                  className={`absolute top-2 right-2 font-bold hover:text-gray-700 ${error ? 'text-red-800' : 'text-green-800'}`}
+                  className="opacity-70 hover:opacity-100"
                 >
                   ✕
                 </button>
@@ -325,12 +327,12 @@ export default function RecoveryPasswordPage() {
           {step === 'email' && (
             <form onSubmit={handleRequestCode} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Enter the email tied to your account
-                  {userLoading && <span className="ml-2 text-xs text-gray-400">(checking session . . .)</span>}
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  Account Email
+                  {userLoading && <span className="ml-2 text-xs text-slate-400 font-normal">(checking session…)</span>}
                 </label>
                 <div className="relative">
-                  <FiMail className="absolute top-3 left-3 text-gray-400" />
+                  <FiMail className="absolute top-3 left-3 text-slate-400" />
                   <input
                     type="email"
                     name="email"
@@ -338,8 +340,9 @@ export default function RecoveryPasswordPage() {
                     readOnly={!!user}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${user ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'text-cyan-800'
-                      }`}
+                    className={`w-full border border-slate-300 dark:border-slate-700 rounded-xl pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] ${
+                      user ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-white dark:bg-slate-900 text-[#0F172A] dark:text-white'
+                    }`}
                   />
                 </div>
               </div>
@@ -347,9 +350,9 @@ export default function RecoveryPasswordPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full bg-[#142B4A] hover:bg-[#1E3A5F] text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Sending . . . ⚓' : 'Send Recovery Code'}
+                {isLoading ? 'Sending…' : 'Send Recovery Code'}
               </button>
             </form>
           )}
@@ -358,8 +361,8 @@ export default function RecoveryPasswordPage() {
           {step === 'code' && (
             <form onSubmit={handleVerifyCode} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Enter the code sent to {email}
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  Verification code sent to {email}
                 </label>
                 <input
                   type="text"
@@ -373,26 +376,26 @@ export default function RecoveryPasswordPage() {
                     setCode(pasted.slice(0, 8))
                   }}
                   maxLength={8}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-center text-lg tracking-[0.5em] text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-center text-lg font-mono tracking-[0.5em] text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
                 />
-                <p className="text-xs text-gray-500 mt-2">
-                  You can also click the link we sent to your email instead.
+                <p className="text-xs text-slate-500 mt-2">
+                  You can also click the verification link sent to your email.
                 </p>
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full bg-[#142B4A] hover:bg-[#1E3A5F] text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Verifying . . . ⚓' : 'Verify Code'}
+                {isLoading ? 'Verifying…' : 'Verify Code'}
               </button>
 
               <button
                 type="button"
                 onClick={handleResendCode}
                 disabled={resendCooldown > 0}
-                className="w-full text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400 disabled:cursor-not-allowed"
+                className="w-full text-xs font-semibold text-[#0D9488] hover:text-[#0F766E] disabled:text-slate-400 disabled:cursor-not-allowed"
               >
                 {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend Code'}
               </button>
@@ -400,7 +403,7 @@ export default function RecoveryPasswordPage() {
               <button
                 type="button"
                 onClick={() => setStep('email')}
-                className="w-full flex items-center justify-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+                className="w-full flex items-center justify-center gap-1 text-xs text-slate-500 hover:text-slate-700"
               >
                 <FiArrowLeft /> Use a different email
               </button>
@@ -410,136 +413,132 @@ export default function RecoveryPasswordPage() {
           {/* STEP 3: New Credentials */}
           {step === 'reset' && (
             <form onSubmit={handleResetCredentials} className="space-y-4">
+              <div className="space-y-3">
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">New Password</label>
+                    <button
+                      type="button"
+                      onClick={generatePassword}
+                      className="text-xs font-semibold bg-[#0D9488]/10 text-[#0D9488] px-2.5 py-0.5 rounded-lg hover:bg-[#0D9488]/20"
+                    >
+                      Auto-Generate
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      maxLength={24}
+                      value={password}
+                      onChange={(e) => handlePasswordInput(e.target.value)}
+                      className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
 
-              {/* Password Fields */}
-              {true && (
-                <div className="space-y-3">
+                  {password && (
+                    <ul className="mt-2 text-xs space-y-1">
+                      <li className={passwordRequirements.length ? 'text-[#0D9488] font-medium' : 'text-slate-500'}>
+                        {passwordRequirements.length ? '✓' : '•'} At least 6 characters
+                      </li>
+                      <li className={passwordRequirements.uppercase ? 'text-[#0D9488] font-medium' : 'text-slate-500'}>
+                        {passwordRequirements.uppercase ? '✓' : '•'} One uppercase letter (optional)
+                      </li>
+                      <li className={passwordRequirements.number ? 'text-[#0D9488] font-medium' : 'text-slate-500'}>
+                        {passwordRequirements.number ? '✓' : '•'} One number (optional)
+                      </li>
+                      <li className={passwordRequirements.specialChar ? 'text-[#0D9488] font-medium' : 'text-slate-500'}>
+                        {passwordRequirements.specialChar ? '✓' : '•'} One special character (optional)
+                      </li>
+                    </ul>
+                  )}
+                </div>
+
+                {passwordRequirements.length && (
                   <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="block text-sm font-medium text-gray-700">New Password</label>
-                      <button
-                        type="button"
-                        onClick={generatePassword}
-                        className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"
-                      >
-                        Generate
-                      </button>
-                    </div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Confirm New Password</label>
                     <div className="relative">
                       <input
-                        type={showPassword ? 'text' : 'password'}
+                        type={showConfirmPassword ? 'text' : 'password'}
                         required
                         maxLength={24}
-                        value={password}
-                        onChange={(e) => handlePasswordInput(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-md text-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className={`w-full border ${
+                          password && confirmPassword && password !== confirmPassword
+                            ? 'border-rose-400'
+                            : 'border-slate-300 dark:border-slate-700'
+                        } bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] pr-10`}
                       />
                       <button
                         type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
                       >
-                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                       </button>
                     </div>
-
-                    {password && (
-                      <ul className="mt-2 text-xs space-y-1">
-                        <li className={passwordRequirements.length ? 'text-green-500' : 'text-gray-500'}>
-                          {passwordRequirements.length ? '✓' : '•'} At least 6 characters
-                        </li>
-                        <li className={passwordRequirements.uppercase ? 'text-green-500' : 'text-gray-500'}>
-                          {passwordRequirements.uppercase ? '✓' : '•'} One uppercase letter (optional)
-                        </li>
-                        <li className={passwordRequirements.number ? 'text-green-500' : 'text-gray-500'}>
-                          {passwordRequirements.number ? '✓' : '•'} One number (optional)
-                        </li>
-                        <li className={passwordRequirements.specialChar ? 'text-green-500' : 'text-gray-500'}>
-                          {passwordRequirements.specialChar ? '✓' : '•'} One special character (optional)
-                        </li>
-                      </ul>
+                    {password && confirmPassword && password !== confirmPassword && (
+                      <p className="mt-1 text-xs text-rose-500">Passwords do not match</p>
                     )}
                   </div>
-
-                  {passwordRequirements.length && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                      <div className="relative">
-                        <input
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          required
-                          maxLength={24}
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          className={`w-full border ${password && confirmPassword && password !== confirmPassword
-                            ? 'border-red-300'
-                            : 'border-gray-300'
-                            } rounded-lg px-3 py-2 text-md text-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10`}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700"
-                        >
-                          {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                        </button>
-                      </div>
-                      {password && confirmPassword && password !== confirmPassword && (
-                        <p className="mt-1 text-xs text-red-500">Passwords do not match</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+                )}
+              </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full bg-[#142B4A] hover:bg-[#1E3A5F] text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Saving . . . ⚓' : 'Save New Credentials'}
+                {isLoading ? 'Saving…' : 'Save New Credentials'}
               </button>
             </form>
           )}
 
           {/* STEP 4: Done */}
           {step === 'done' && (
-            <div className="text-center space-y-3">
-              <FiCheckCircle className="text-green-500 text-4xl mx-auto" />
-              <h3 className="text-lg font-semibold text-gray-800">All set ⚓</h3>
-              <p className="text-sm text-gray-600">Redirecting you to login . . .</p>
+            <div className="text-center space-y-3 py-4">
+              <FiCheckCircle className="text-[#0D9488] text-4xl mx-auto" />
+              <h3 className="text-lg font-bold text-[#0F172A] dark:text-white">Password Updated</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-300">Redirecting you to login…</p>
             </div>
           )}
 
           {/* Links */}
-          <div className="mt-6 flex flex-row space-x-3 w-full">
+          <div className="mt-6 flex flex-row gap-3 w-full">
             <Link
               href="/auth/login"
-              className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
+              className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
             >
               Back to Login
             </Link>
             <Link
               href="/auth/register"
-              className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
+              className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
             >
-              Register Now ?
+              Register Now?
             </Link>
           </div>
 
-          {/* Links */}
-          <div className="mt-6 flex flex-row space-x-3 w-full">
+          <div className="mt-3 flex flex-row gap-3 w-full">
             <Link
               href="/auth/update/password"
-              className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
+              className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
             >
               Change Password
             </Link>
             <Link
               href="/auth/support"
-              className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
+              className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
             >
-              Having Issues ?
+              Need Support?
             </Link>
           </div>
 
