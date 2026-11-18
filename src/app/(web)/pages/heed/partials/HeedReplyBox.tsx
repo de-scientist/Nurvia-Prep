@@ -137,7 +137,7 @@ export default function HeedReplyBox({
           onClick={handleSend}
           disabled={isSending || text.trim().length === 0}
           aria-label="Send"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-md transition hover:bg-blue-700 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#142B4A] text-white shadow-md transition hover:bg-[#0D9488] hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
         >
           <Send className={`h-4 w-4 ${isSending ? "animate-pulse" : ""}`} />
         </button>
