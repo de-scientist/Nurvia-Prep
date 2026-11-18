@@ -141,55 +141,54 @@ export default function VerifyEmailPage() {
         </Link>
 
         {/* Current user info */}
-        <div className="rounded-2xl border border-[var(--text-color)]/15 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-cyan-500/10 backdrop-blur-xl px-5 py-5 flex items-center gap-4">
-
+        <div className="rounded-2xl border border-slate-200/20 bg-gradient-to-br from-[#142B4A] via-[#0F2036] to-[#0D9488] px-6 py-5 flex items-center gap-4 text-white shadow-md">
           <div>
-            <h1 className="text-lg font-bold text-[var(--text-color)] flex items-center gap-2">
-              <FiMail className="w-4 h-4 text-indigo-500" />
+            <h1 className="text-lg font-bold flex items-center gap-2">
+              <FiMail className="w-4 h-4 text-[#2DD4BF]" />
               Verify Email
             </h1>
-            <p className="text-lg text-[var(--text-color)]">{user.userName} · {user.email}</p>
+            <p className="text-sm text-slate-200/85 mt-0.5">{user.userName} · {user.email}</p>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-[var(--text-color)]/15 bg-[var(--content-bg)] p-4 md:p-5 space-y-3">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-5 space-y-2 shadow-xs">
           <InfoRow label="Email on File" value={primaryEmail?.email ?? user.email} />
           <InfoRow label="Status" value={alreadyVerified ? "Verified" : "Not Verified"} />
         </div>
 
         {message && (
-          <p className={`text-md text-center font-semibold ${message.ok ? "text-emerald-600" : "text-rose-600"}`}>
+          <p className={`text-sm text-center font-semibold ${message.ok ? "text-[#0D9488]" : "text-rose-600"}`}>
             {message.text}
           </p>
         )}
 
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {alreadyVerified ? (
-          <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 md:p-5 flex flex-col items-center justify-center gap-3 text-center">
-            <FiCheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
-            <p className="text-xs text-[var(--text-color)] opacity-80">
+          <div className="rounded-2xl border border-teal-200 dark:border-teal-800/70 bg-teal-50/50 dark:bg-teal-950/30 p-5 flex flex-col items-center justify-center gap-2 text-center">
+            <FiCheckCircle className="w-6 h-6 text-[#0D9488] shrink-0" />
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               Your email address is already verified — no further action needed.
             </p>
           </div>
         ) : (
-          <div className="rounded-2xl border border-[var(--text-color)]/15 bg-[var(--content-bg)] p-4 md:p-5 space-y-4 flex flex-col items-center text-center">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-5 space-y-4 flex flex-col items-center text-center shadow-xs">
             {!codeSent ? (
               <>
-                <p className="text-xs text-[var(--text-color)] opacity-70">
+                <p className="text-xs text-slate-600 dark:text-slate-400">
                   We&apos;ll send a verification code to <strong>{user.email}</strong>.
                 </p>
 
                 <button
                   onClick={handleSendCode}
                   disabled={busy}
-                  className="px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
+                  className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-[#142B4A] hover:bg-[#0D9488] text-white shadow-sm transition-colors disabled:opacity-50"
                 >
                   {busy ? "Sending…" : "Send Verification Code"}
                 </button>
               </>
             ) : (
               <>
-                <p className="text-md text-[var(--text-color)] opacity-70">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   Enter the code sent to your email address.
                 </p>
 
@@ -204,14 +203,14 @@ export default function VerifyEmailPage() {
                     setCode(pasted.slice(0, 8))
                   }}
                   placeholder="········"
-                  className="w-90 text-center tracking-[0.5em] rounded-lg border border-[var(--text-color)] bg-[var(--content-bg)] px-3 py-2 text-lg font-mono text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-indigo-400/50"
+                  className="w-full max-w-xs text-center tracking-[0.5em] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-lg font-mono text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20"
                 />
 
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center justify-center gap-2.5">
                   <button
                     onClick={handleConfirm}
                     disabled={busy || code.length < 4}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-[#142B4A] hover:bg-[#0D9488] text-white shadow-sm transition-colors disabled:opacity-50"
                   >
                     <FiCheckCircle className="w-4 h-4" />
                     {busy ? "Verifying…" : "Submit & Confirm Code"}
@@ -219,8 +218,7 @@ export default function VerifyEmailPage() {
                   <button
                     onClick={handleSendCode}
                     disabled={busy || resendCooldown > 0}
-                    className="px-4 py-2.5 rounded-xl font-semibold text-xs text-[var(--text-color)] border p-2
-                    opacity-60 hover:opacity-100 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="px-4 py-2.5 rounded-xl font-semibold text-xs text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-[#0D9488] transition disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend Code"}
                   </button>

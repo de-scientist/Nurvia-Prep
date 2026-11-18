@@ -1,4 +1,4 @@
-// src/app/dashboards/hesi-a2/auth/account/security/page.tsx
+// src/app/dashboards/ati-teas/auth/account/security/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -28,10 +28,10 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--text-color)]/15 bg-[var(--content-bg)] p-4 md:p-5">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-5 shadow-xs">
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-[var(--text-color)] opacity-70">{icon}</span>
-        <h2 className="text-sm font-bold text-[var(--text-color)]">{title}</h2>
+        <span className="text-[#0D9488]">{icon}</span>
+        <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{title}</h2>
       </div>
       <div className="space-y-1">{children}</div>
     </div>
@@ -54,28 +54,28 @@ function StatusRow({
   neutral?: boolean;
 }) {
   const tone = neutral
-    ? "bg-gray-500/15 text-gray-500"
+    ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
     : ok
-      ? "bg-emerald-200 text-emerald-800"
-      : "bg-rose-200 text-rose-800";
+      ? "bg-teal-50 dark:bg-teal-950/50 text-[#0D9488] dark:text-[#2DD4BF] border border-teal-200 dark:border-teal-800/70"
+      : "bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/70";
 
   return (
-    <div className="flex items-center justify-between gap-3 text-xs py-2 px-1 rounded-lg hover:bg-[var(--text-color)]/5 transition-colors">
+    <div className="flex items-center justify-between gap-3 text-xs py-2 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
       <div className="min-w-0">
-        <p className="font-semibold text-[var(--text-color)]">{label}</p>
+        <p className="font-semibold text-slate-900 dark:text-slate-100">{label}</p>
         {description && (
-          <p className="text-[10px] opacity-50 text-[var(--text-color)] truncate">{description}</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{description}</p>
         )}
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${tone}`}>
+        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${tone}`}>
           {neutral ? label : ok ? "Enabled" : "Disabled"}
         </span>
         {!ok && !neutral && actionHref && (
           <Link
             href={actionHref}
-            className="text-[10px] font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-2"
+            className="text-[10px] font-semibold text-[#0D9488] hover:underline"
           >
             {actionLabel ?? "Fix"}
           </Link>
@@ -172,20 +172,20 @@ export default function AccountSecurityPage() {
 
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* Header + security score */}
-        <div className="rounded-2xl border border-[var(--text-color)]/15 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-cyan-500/10 backdrop-blur-xl px-5 py-6 flex flex-col sm:flex-row items-center gap-5">
+        <div className="rounded-2xl border border-slate-200/20 bg-gradient-to-br from-[#142B4A] via-[#0F2036] to-[#0D9488] px-6 py-6 flex flex-col sm:flex-row items-center gap-5 text-white shadow-md">
 
           <div className="flex-1 text-center sm:text-left">
-            <h1 className="text-lg md:text-xl font-bold text-[var(--text-color)] flex items-center justify-center sm:justify-start gap-2">
-              <FiShield className="w-5 h-5 text-indigo-500" />
+            <h1 className="text-lg md:text-xl font-bold flex items-center justify-center sm:justify-start gap-2">
+              <FiShield className="w-5 h-5 text-[#2DD4BF]" />
               Security &amp; Account
             </h1>
-            <p className="text-lg text-[var(--text-color)]">
+            <p className="text-sm text-slate-200/85 mt-0.5">
               {user.userName} · {user.email}
             </p>
 
             <Link
               href={`/dashboards/${CURRENT_PANEL}/auth/account/security/password`}
-              className="inline-flex items-center gap-1.5 px-3 py-2 mt-3 rounded-lg font-semibold text-[11px] bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md hover:scale-105 transition-transform whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-4 py-2 mt-3 rounded-xl font-semibold text-xs bg-[#0D9488] hover:bg-[#0F766E] text-white shadow-sm transition-colors whitespace-nowrap"
             >
               <FiLock className="w-3.5 h-3.5" />
               Update / Change My Password
@@ -195,17 +195,17 @@ export default function AccountSecurityPage() {
 
           <div className="flex flex-col items-center shrink-0">
             <div
-              className={`w-14 h-14 rounded-full border flex items-center justify-center text-sm font-bold ${scorePercent >= 75
-                  ? "bg-emerald-200 text-emerald-900"
+              className={`w-14 h-14 rounded-2xl border flex items-center justify-center text-sm font-bold ${scorePercent >= 75
+                  ? "bg-teal-400/20 border-teal-300/40 text-teal-100"
                   : scorePercent >= 50
-                    ? "bg-yellow-100 text-red-800"
-                    : "bg-rose-100 text-rose-800"
+                    ? "bg-amber-400/20 border-amber-300/40 text-amber-100"
+                    : "bg-rose-500/20 border-rose-400/40 text-rose-100"
                 }`}
             >
               {scorePercent}%
             </div>
 
-            <span className="text-lg uppercase font-bold text-[var(--text-color)] mt-1 tracking-wide">
+            <span className="text-[10px] uppercase font-bold text-teal-100 mt-1.5 tracking-wider">
               Security Score
             </span>
           </div>
@@ -219,14 +219,14 @@ export default function AccountSecurityPage() {
               label="Email Verified"
               description={primaryEmail?.email ?? user.email}
               ok={!!primaryEmail?.isVerified}
-              actionHref="/dashboards/hesi-a2/auth/account/verify/email"
+              actionHref={`/dashboards/${CURRENT_PANEL}/auth/account/verify/email`}
               actionLabel="Verify email"
             />
             <StatusRow
               label="Phone Verified"
               description={primaryPhone?.phoneNumber ?? user.phoneNumber ?? "No phone on file"}
               ok={!!primaryPhone?.isVerified}
-              actionHref="/dashboards/hesi-a2/auth/account/verify/phone"
+              actionHref={`/dashboards/${CURRENT_PANEL}/auth/account/verify/phone`}
               actionLabel="Verify phone"
             />
           </SectionCard>
@@ -236,7 +236,7 @@ export default function AccountSecurityPage() {
               label="2FA"
               description="Extra verification step at login"
               ok={user.twoFactorEnabled}
-              actionHref="/dashboards/hesi-a2/auth/account/security/2fa"
+              actionHref={`/dashboards/${CURRENT_PANEL}/auth/account/security/2fa`}
               actionLabel="Enable 2FA"
             />
             <InfoRow

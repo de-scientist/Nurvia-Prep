@@ -219,25 +219,25 @@ export default function WebLoginPage() {
       {/* App Title / Branding */}
       <div className="flex flex-col items-center justify-center mb-3 text-center">
         <div className="flex items-center justify-center gap-2">
-          <span className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-500 drop-shadow-md">
+          <span className="text-2xl md:text-3xl font-bold text-slate-600 dark:text-slate-300">
             Welcome to
           </span>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-blue-800 drop-shadow-md">
+          <h1 className="text-2xl md:text-3xl font-bold text-[#142B4A] dark:text-white">
             {APP_NAME}
           </h1>
           <FiCheckCircle
-            className="text-green-500 text-xl md:text-2xl drop-shadow-sm"
+            className="text-[#0D9488] text-xl md:text-2xl"
             title="Verified"
           />
         </div>
 
-        <p className="text-xs text-gray-600 mt-1">
-          Your trusted platform for streamlined access to all Nursing Resources .
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          Your clinical preparation platform for nursing licensure and admissions.
         </p>
       </div>
 
       {/* Login Card Container */}
-      <div className="max-w-5xl w-full bg-white rounded-2xl shadow-2xl grid grid-cols-1 md:grid-cols-2 overflow-hidden">
+      <div className="max-w-5xl w-full bg-white dark:bg-[#111C2E] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl grid grid-cols-1 md:grid-cols-2 overflow-hidden">
 
 
         {/* LEFT SIDE: Full Image Background + Text at Bottom */}
@@ -254,83 +254,69 @@ export default function WebLoginPage() {
 
           {/* Top Social Login Buttons Overlay DESKTOP */}
           <div className="absolute top-0 left-0 z-10 w-full p-4">
-            <div className="bg-black/30 backdrop-blur-md rounded-2xl p-4 shadow-lg">
-              <p className="text-center text-white text-xs font-semibold tracking-wide uppercase mb-3 drop-shadow-md">
+            <div className="bg-[#142B4A]/70 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/15">
+              <p className="text-center text-white text-xs font-semibold tracking-wider uppercase mb-3">
                 Sign in with
               </p>
               <button
                 type="button"
-                className="w-full flex items-center justify-center gap-2 bg-white/90 border border-gray-300 px-4 py-2.5 rounded-lg hover:bg-white transition text-gray-700 font-semibold text-sm"
+                className="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 px-4 py-2.5 rounded-xl hover:bg-slate-50 transition text-slate-800 font-semibold text-sm shadow-xs"
                 onClick={() => handleSocialClick('google')}
               >
                 <FcGoogle className="text-xl" />
-                Continue with Google (Gmail)
+                Continue with Google
               </button>
             </div>
           </div>
 
           {/* Bottom Text Overlay */}
-          <div className="z-10 w-full p-8 bg-gradient-to-t from-black/70 via-black/40 to-transparent text-white text-center">
+          <div className="z-10 w-full p-8 bg-gradient-to-t from-[#142B4A]/95 via-[#142B4A]/60 to-transparent text-white text-center">
             {isAuthenticated ? (
               <>
-                <h2 className="text-3xl font-extrabold drop-shadow-lg">Welcome Back !</h2>
-                <p className="text-sm mt-2 drop-shadow-md">
-                  You&apos;re already signed in. Ready to dive into {APP_NAME}?
+                <h2 className="text-2xl font-bold">Welcome Back!</h2>
+                <p className="text-sm text-slate-200 mt-2">
+                  You&apos;re already signed in. Ready to continue your {APP_NAME} preparation?
                 </p>
               </>
             ) : (
               <>
-                <h2 className="text-3xl font-extrabold drop-shadow-lg">Hello, there !</h2>
-                <p className="text-sm mt-2 drop-shadow-md">
-                  Sign in to continue exploring {APP_NAME}. Secure. Fast. Reliable.
+                <h2 className="text-2xl font-bold">Clinical Mastery Starts Here</h2>
+                <p className="text-sm text-slate-200 mt-2">
+                  Sign in to continue exploring {APP_NAME}. Secure, structured, and reliable.
                 </p>
               </>
             )}
           </div>
         </div>
 
-        <div className="w-full px-3 md:px-4 pb-3 space-y-2 border-l border-gray-200">
+        <div className="w-full p-6 md:p-8 space-y-4 border-l border-slate-200 dark:border-slate-800">
 
-          {/* Mobile-only Social Login Buttons (hidden on md+, shown inside photo panel instead) */}
+          {/* Mobile-only Social Login Buttons */}
           <div className="md:hidden">
             <button
               type="button"
-              className="w-full flex items-center justify-center gap-2 bg-white/90 border border-gray-300 px-4 py-2.5 rounded-lg hover:bg-white transition text-gray-700 font-semibold text-sm"
+              className="w-full flex items-center justify-center gap-2 bg-white border border-slate-300 px-4 py-2.5 rounded-xl hover:bg-slate-50 transition text-slate-700 font-semibold text-sm"
               onClick={() => handleSocialClick('google')}
             >
               <FcGoogle className="text-xl" />
-              Continue with Google (Gmail)
+              Continue with Google
             </button>
           </div>
 
-          <div className="text-center text-md">
-            <span className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-yellow-800 via-gray-300 to-green-600 bg-[length:200%_100%] [animation:shimmer_3s_linear_infinite]">
-              or continue with email
-            </span>
+          <div className="text-center text-xs uppercase tracking-wider font-semibold text-slate-400">
+            or continue with email
           </div>
-
-          <style>{`
-            @keyframes shimmer {
-              0% { background-position: 200% 0; }
-              100% { background-position: -200% 0; }
-            }
-          `}</style>
 
           {/* Error Message */}
           {error && (
-            <div className="flex justify-center mt-4">
-              <div className="relative max-w-md w-full bg-yellow-100 border border-red-200 text-red-800 px-4 py-3 rounded-xl shadow-md text-sm flex items-center gap-3">
-
-                <span className="text-red-600 text-base shrink-0">⚓</span>
-
-                <span className="flex-1 leading-tight">
-                  {error}
-                </span>
-
+            <div className="flex justify-center mt-2">
+              <div role="alert" className="relative max-w-md w-full bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-xl text-sm flex items-center gap-3">
+                <span className="text-rose-600 text-base shrink-0">⚠️</span>
+                <span className="flex-1 leading-tight">{error}</span>
                 <button
                   type="button"
                   onClick={() => setError("")}
-                  className="absolute top-2 right-2 text-red-800 hover:text-red-700"
+                  className="absolute top-2 right-2 text-rose-800 hover:text-rose-700"
                 >
                   ✕
                 </button>
@@ -340,19 +326,14 @@ export default function WebLoginPage() {
 
           {/* Success Message */}
           {success && (
-            <div className="flex justify-center mt-4">
-              <div className="relative max-w-md w-full bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl shadow-md text-sm flex items-center gap-3">
-
-                <FiCheckCircle className="text-green-600 text-base shrink-0" />
-
-                <span className="flex-1 leading-tight">
-                  {success}
-                </span>
-
+            <div className="flex justify-center mt-2">
+              <div role="status" className="relative max-w-md w-full bg-teal-50 border border-teal-200 text-[#0D9488] px-4 py-3 rounded-xl text-sm flex items-center gap-3">
+                <FiCheckCircle className="text-[#0D9488] text-base shrink-0" />
+                <span className="flex-1 leading-tight">{success}</span>
                 <button
                   type="button"
                   onClick={() => setSuccess("")}
-                  className="absolute top-2 right-2 text-green-800 hover:text-green-700"
+                  className="absolute top-2 right-2 text-[#0D9488] hover:opacity-80"
                 >
                   ✕
                 </button>
@@ -362,22 +343,21 @@ export default function WebLoginPage() {
 
           {/* If authenticated, show dashboard button */}
           {isAuthenticated ? (
-            <div className="text-center">
+            <div className="text-center py-4">
               <button
-                onClick={() => window.location.assign('/dashboards')}
-                className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 font-semibold transition"
+                onClick={() => window.location.assign(LANDING_PATH)}
+                className="w-full bg-[#142B4A] hover:bg-[#0D9488] text-white py-2.5 rounded-xl font-semibold transition-colors"
               >
-                🚀 Dive in &amp; Continue
+                Continue to Dashboard
               </button>
-              <p className="text-md text-gray-600 mt-3">
-                Your trusted platform for streamlined Nursing Resources  .
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
+                Your active nursing preparation session is ready.
               </p>
-
             </div>
           ) : (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Enter your Email</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Email Address</label>
                 <input
                   type="email"
                   name="email"
@@ -385,14 +365,14 @@ export default function WebLoginPage() {
                   required
                   value={form.email}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-pink-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20"
                 />
               </div>
 
               {/* PASSWORD FIELD — always in DOM, hidden when not active */}
               <div className={`mb-4 relative ${loginMethod !== "password" ? "hidden" : ""}`}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Enter Your Password
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  Password
                 </label>
                 <div className="relative">
                   <input
@@ -403,12 +383,12 @@ export default function WebLoginPage() {
                     value={form.password}
                     onChange={handleChange}
                     maxLength={32}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute top-2.5 right-3 text-gray-500 hover:text-gray-700"
+                    className="absolute top-2.5 right-3 text-slate-500 hover:text-slate-700"
                   >
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
@@ -416,14 +396,14 @@ export default function WebLoginPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer">
                   <input
                     type="checkbox"
                     id="remember"
                     name="remember"
                     checked={form.remember}
                     onChange={handleChange}
-                    className="accent-blue-600"
+                    className="accent-[#0D9488]"
                   />
                   Remember me
                 </label>
@@ -432,24 +412,24 @@ export default function WebLoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full bg-[#142B4A] hover:bg-[#0D9488] text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Logging in . . . ⚓' : 'Submit and Login'}
+                {isLoading ? 'Signing in...' : 'Sign In'}
               </button>
 
               {/* Links */}
-              <div className="mt-3 flex flex-row space-x-3 w-full">
+              <div className="mt-3 flex flex-row gap-3 w-full">
                 <Link
                   href={`/dashboards/${TARGET_PROGRAM}/auth/account/recovery/password`}
-                  className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 font-semibold py-2 px-1 rounded-lg hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
+                  className="flex-1 text-center bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-2 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition-colors"
                 >
-                  Forgot Password ?
+                  Forgot Password?
                 </Link>
                 <Link
                   href={`/dashboards/${TARGET_PROGRAM}/auth/register`}
-                  className="flex-1 text-center bg-white border border-indigo-600 text-indigo-600 font-semibold py-2 px-1 rounded-lg hover:bg-indigo-50 hover:scale-105 transition-all duration-300"
+                  className="flex-1 text-center bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-2 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition-colors"
                 >
-                  Register Instead ?
+                  Create Account
                 </Link>
               </div>
 

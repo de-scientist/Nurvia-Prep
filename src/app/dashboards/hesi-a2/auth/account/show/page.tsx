@@ -28,10 +28,10 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--text-color)]/15 bg-[var(--content-bg)] p-4 md:p-5">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-5 shadow-xs">
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-[var(--text-color)] opacity-70">{icon}</span>
-        <h2 className="text-sm font-bold text-[var(--text-color)]">{title}</h2>
+        <span className="text-[#0D9488]">{icon}</span>
+        <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{title}</h2>
       </div>
       <div className="space-y-1">{children}</div>
     </div>
@@ -48,20 +48,20 @@ function Row({
   badge?: { text: string; tone: "good" | "bad" | "neutral" };
 }) {
   const toneClasses = {
-    good: "bg-emerald-300 text-emerald-900",
-    bad: "bg-rose-300 text-rose-900",
-    neutral: "bg-gray-300 text-gray-900",
+    good: "bg-teal-50 dark:bg-teal-950/50 text-[#0D9488] dark:text-[#2DD4BF] border border-teal-200 dark:border-teal-800/70",
+    bad: "bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/70",
+    neutral: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300",
   };
 
   return (
-    <div className="flex items-center justify-between text-xs py-1.5 px-1 rounded-lg hover:bg-[var(--text-color)]/5 transition-colors">
-      <span className="opacity-60 text-[var(--text-color)]">{label}</span>
+    <div className="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+      <span className="text-slate-500 dark:text-slate-400">{label}</span>
       {badge ? (
-        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${toneClasses[badge.tone]}`}>
+        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${toneClasses[badge.tone]}`}>
           {badge.text}
         </span>
       ) : (
-        <span className="font-medium text-[var(--text-color)] truncate max-w-[60%] text-right">
+        <span className="font-medium text-slate-900 dark:text-slate-100 truncate max-w-[60%] text-right">
           {value ?? "—"}
         </span>
       )}
@@ -127,29 +127,29 @@ export default function ProfileShowPage() {
 
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* Header card */}
-        <div className="rounded-2xl border border-[var(--text-color)]/15 bg-gradient-to-br from-emerald-500/10 via-indigo-500/10 to-cyan-500/10 backdrop-blur-xl px-5 py-6 md:px-8 md:py-8 flex flex-col sm:flex-row items-center sm:items-start gap-5">
+        <div className="rounded-2xl border border-slate-200/20 bg-gradient-to-br from-[#142B4A] via-[#0F2036] to-[#0D9488] px-6 py-6 md:px-8 md:py-7 flex flex-col sm:flex-row items-center sm:items-start gap-5 text-white shadow-md">
 
           <div className="flex-1 text-center sm:text-left">
-            <h1 className="text-xl md:text-2xl font-bold text-[var(--text-color)]">{user.userName}</h1>
-            <p className="text-xs md:text-sm opacity-60 text-[var(--text-color)]">{user.email}</p>
+            <h1 className="text-xl md:text-2xl font-bold">{user.userName}</h1>
+            <p className="text-xs md:text-sm text-slate-200/85 mt-0.5">{user.email}</p>
 
-            <div className="mt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
-              <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${access?.isActive ? "bg-emerald-500/15 text-emerald-600" : "bg-rose-500/15 text-rose-600"}`}>
+            <div className="mt-3 flex flex-wrap gap-2 justify-center sm:justify-start">
+              <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${access?.isActive ? "bg-teal-400/20 text-teal-100 border border-teal-300/30" : "bg-rose-500/20 text-rose-200 border border-rose-400/30"}`}>
                 {access?.isActive ? "Active Account" : "Inactive Account"}
               </span>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-600">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/15 text-white border border-white/20">
                 {topRole}
               </span>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-500/15 text-gray-500">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/10 text-slate-200">
                 {user.userType}
               </span>
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col items-center sm:items-end gap-3">
+          <div className="flex-1 flex flex-col items-center sm:items-end gap-2.5">
             <Link
               href={`/dashboards/${CURRENT_PANEL}/auth/account/edit`}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-xs md:text-sm bg-gradient-to-r from-green-700 to-pink-800 text-white shadow-md hover:scale-105 transition-transform"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-xs md:text-sm bg-[#0D9488] hover:bg-[#0F766E] text-white shadow-sm transition-colors"
             >
               <FiEdit2 className="w-4 h-4" />
               Edit My Profile
@@ -157,7 +157,7 @@ export default function ProfileShowPage() {
 
             <Link
               href={`/dashboards/${CURRENT_PANEL}/auth/account/security/password`}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-xs md:text-sm bg-gradient-to-r from-indigo-500 to-purple-900 text-white shadow-md hover:scale-105 transition-transform"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-xs md:text-sm border border-white/25 bg-white/10 hover:bg-white/20 text-white transition-colors"
             >
               <FiLock className="w-4 h-4" />
               Update / Change My Password
