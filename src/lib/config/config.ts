@@ -15,7 +15,7 @@ export const APP_DEBUG = process.env.SKEW_LINE_APP_DEBUG === "true";
 export const APP_TIMEZONE = process.env.SKEW_LINE_APP_TIMEZONE || "UTC";
 export const APP_LOCALE = process.env.SKEW_LINE_APP_LOCALE || "en";
 export const APP_DOMAIN = process.env.SKEW_LINE_APP_DOMAIN || "http://localhost:3000";
-export const APP_KEY = process.env.SKEW_LINE_APP_KEY || "WEBSITE_1";
+export const APP_KEY = process.env.SKEW_LINE_APP_KEY || "NURVIA_APP_KEY";
 
 // -----------------------------------------------------------------------------
 // CONTACT & SOCIAL MEDIA

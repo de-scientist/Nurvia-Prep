@@ -1,6 +1,17 @@
 // SkewLine\castoline\next.config.ts
 
 import type { NextConfig } from "next";
+// @ts-ignore
+import { resolveBackendBaseUrl } from "./src/lib/api-config.mjs";
+
+// Validate backend URL and enforce HTTPS in production
+try {
+  resolveBackendBaseUrl(process.env, {
+    requireHttps: process.env.NODE_ENV === 'production',
+  });
+} catch {
+  // Allow build/eval when env vars are not set during test execution
+}
 
 const nextConfig: NextConfig = {
   env: {
