@@ -131,50 +131,54 @@ export default function ActiveSubscriptionCard({
   const cycle = humanizeMinutes(pkg.priceDuration || pkg.duration);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-emerald-500 bg-gradient-to-br from-emerald-700 via-black to-teal-700 p-5 md:p-6 shadow-[0_0_24px_-6px_rgba(16,185,129,0.5)] text-white">
-      <div className="pointer-events-none absolute -inset-px rounded-2xl ring-1 ring-emerald-300/30" />
+    <div className="relative overflow-hidden rounded-2xl border border-teal-400/30 bg-gradient-to-br from-[#0F2036] via-[#142B4A] to-[#0D9488] p-5 md:p-6 shadow-md text-white">
+      <div className="pointer-events-none absolute -inset-px rounded-2xl ring-1 ring-teal-300/20" />
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
         <div className="flex items-center gap-4 min-w-0">
           <div
-            className={`flex items-center justify-center w-16 h-16 rounded-full shrink-0 shadow-lg ${isActive
-              ? "bg-gradient-to-br from-emerald-400 via-indigo-400 to-cyan-500"
-              : "bg-gradient-to-br from-yellow-500 via-blue-500 to-red-600"
+            className={`flex items-center justify-center w-14 h-14 rounded-2xl shrink-0 ring-1 ${isActive
+              ? "bg-teal-500/20 ring-teal-300/40"
+              : "bg-rose-500/20 ring-rose-300/40"
               }`}
           >
             {isActive ? (
-              <CheckCircle2 className="w-10 h-10 text-white" strokeWidth={1.5} />
+              <CheckCircle2 className="w-8 h-8 text-[#2DD4BF]" strokeWidth={2} />
             ) : (
-              <XCircle className="w-10 h-10 text-white" strokeWidth={1.5} />
+              <XCircle className="w-8 h-8 text-rose-400" strokeWidth={2} />
             )}
           </div>
 
           <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-wide text-emerald-200">
-              You&apos;ve Got {activeCount} Active Subscription{activeCount === 1 ? "" : "s"} ✔️
+            <p className="text-xs font-bold uppercase tracking-wider text-[#2DD4BF]">
+              {activeCount} Active Subscription{activeCount === 1 ? "" : "s"}
             </p>
-            <h3 className="text-xl md:text-2xl font-black truncate">{pkg.name}</h3>
+            <h3 className="text-xl md:text-2xl font-bold truncate mt-0.5">{pkg.name}</h3>
             {pkg.description && (
-              <p className="text-xs text-white/70 line-clamp-2">{pkg.description}</p>
+              <p className="text-xs text-slate-200/80 line-clamp-2 mt-0.5">{pkg.description}</p>
             )}
             <div className="flex items-center gap-1.5 flex-wrap mt-2">
               <span
-                className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${isActive ? "bg-emerald-400 text-yellow-950" : "bg-red-500 text-black"
+                className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${isActive
+                  ? "bg-teal-400/20 text-teal-100 border border-teal-300/30"
+                  : "bg-rose-500/20 text-rose-200 border border-rose-400/30"
                   }`}
               >
-                {isActive ? <CheckCircle2 className="w-3 h-3" strokeWidth={3} /> : <XCircle className="w-3 h-3" strokeWidth={3} />}
-                Status : {sub.subscriptionStatus ?? "—"}
+                {isActive ? <CheckCircle2 className="w-3 h-3" strokeWidth={2.5} /> : <XCircle className="w-3 h-3" strokeWidth={2.5} />}
+                Status: {sub.subscriptionStatus ?? "—"}
               </span>
               <span
-                className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${isPaid ? "bg-emerald-400 text-blue-950" : "bg-red-500 text-black"
+                className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${isPaid
+                  ? "bg-teal-400/20 text-teal-100 border border-teal-300/30"
+                  : "bg-rose-500/20 text-rose-200 border border-rose-400/30"
                   }`}
               >
-                {isPaid ? <CheckCircle2 className="w-3 h-3" strokeWidth={3} /> : <XCircle className="w-3 h-3" strokeWidth={3} />}
-                Paid : {sub.subscriptionHasPaid ?? "—"}
+                {isPaid ? <CheckCircle2 className="w-3 h-3" strokeWidth={2.5} /> : <XCircle className="w-3 h-3" strokeWidth={2.5} />}
+                Paid: {sub.subscriptionHasPaid ?? "—"}
               </span>
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-white/15 text-white">
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-white/10 border border-white/15 text-white">
                 <Repeat className="w-3 h-3" />
-                Auto Renew : {isAutoRenew ? "Yes" : "No"}
+                Auto Renew: {isAutoRenew ? "Yes" : "No"}
               </span>
             </div>
           </div>
@@ -182,31 +186,28 @@ export default function ActiveSubscriptionCard({
 
         <Link
           href={`/dashboards/${dashboardName}`}
- 
-          className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl border-2 border-indigo-300 bg-gradient-to-r from-indigo-700 via-indigo-600 to-violet-700 px-7 py-3.5 text-sm font-extrabold uppercase tracking-wide text-white shadow-[0_0_0_3px_rgba(99,102,241,0.35),0_10px_30px_-8px_rgba(79,70,229,0.9)] ring-2 ring-indigo-400/60 ring-offset-2 ring-offset-black transition-all duration-500 ease-out hover:-translate-y-1 hover:scale-[1.04] hover:border-white hover:from-indigo-600 hover:via-violet-600 hover:to-indigo-600 hover:shadow-[0_0_0_4px_rgba(129,140,248,0.55),0_16px_40px_-6px_rgba(99,102,241,1)] hover:ring-indigo-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-300 active:translate-y-0 active:scale-95 shrink-0"
+          className="group relative inline-flex items-center justify-center gap-2 rounded-xl bg-[#0D9488] hover:bg-[#0F766E] border border-teal-300/30 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all shrink-0"
         >
-          <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/50 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full" />
-          <span className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-white/30" />
-          <span className="relative">Go to Dashboard</span>
-          <ArrowRight className="relative w-4 h-4 transition-transform duration-300 ease-out group-hover:translate-x-1.5" />
+          <span>Go to Dashboard</span>
+          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
         </Link>
       </div>
 
       <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-xl border border-white/15 bg-white/5 px-4 py-3">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-emerald-200">
+          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-teal-200">
             <CalendarDays className="w-3.5 h-3.5" /> Valid From
           </div>
           <p className="mt-1 text-sm font-bold">{formatShortDate(sub.validFrom)}</p>
         </div>
         <div className="rounded-xl border border-white/15 bg-white/5 px-4 py-3">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-emerald-200">
+          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-teal-200">
             <CalendarDays className="w-3.5 h-3.5" /> Valid Until
           </div>
           <p className="mt-1 text-sm font-bold">{formatShortDate(sub.validUntil)}</p>
         </div>
         <div className="rounded-xl border border-white/15 bg-white/5 px-4 py-3">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-emerald-200">
+          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-teal-200">
             <Wallet className="w-3.5 h-3.5" /> Cost
           </div>
           <p className="mt-1 text-sm font-bold">
