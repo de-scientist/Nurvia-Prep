@@ -1,19 +1,19 @@
-import Navbar from '@/app/(web)/includes/navbar';
-import Footer from '@/app/(web)/includes/footer';
-import type { Metadata } from 'next';
-import ScrollToTopButton from '@/components/common/ScrollToTopButton';
-import Whastapp from '@/app/(web)/includes/partials/Whastapp';
-import { APP_NAME } from '@/lib/config/config';
+import Navbar from "@/app/(web)/includes/navbar";
+import Footer from "@/app/(web)/includes/footer";
+import type { Metadata } from "next";
+import ScrollToTopButton from "@/components/common/ScrollToTopButton";
+import Whastapp from "@/app/(web)/includes/partials/Whastapp";
+import { APP_NAME } from "@/lib/config/config";
 import Tawkto from "@/app/(web)/includes/partials/Tawkto";
-import { SITE_URL, SITE_LINKS } from '@/lib/config/siteLinks';
+import { SITE_URL, SITE_LINKS } from "@/lib/config/siteLinks";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${APP_NAME} – NCLEX-RN/PN, TEAS 7, HESI A2 Exam Prep`,
+    default: `${APP_NAME} — NCLEX-RN/PN, ATI TEAS 7, HESI A2 & Nursing Exam Prep`,
     template: `%s | ${APP_NAME}`,
   },
-  description: `${APP_NAME} is a premier online platform for nursing exam preparation: NCLEX-RN/PN, TEAS 7, HESI A2, and RN and LPN Q-Banks.`,
+  description: `${APP_NAME} is the NURVIA clinical exam preparation platform for nursing learners: NCLEX-RN, NCLEX-PN, ATI TEAS 7, HESI A2, and RN & LPN Q-Banks.`,
   applicationName: APP_NAME,
   robots: { index: true, follow: true },
   openGraph: { siteName: APP_NAME, type: "website", url: SITE_URL, title: APP_NAME },
@@ -32,7 +32,7 @@ const siteJsonLd = [
     "@type": "Organization",
     name: APP_NAME,
     url: SITE_URL,
-    logo: `${SITE_URL}/logo.png`,
+    logo: `${SITE_URL}/brand/nurvia-logo-light.svg`,
   },
   {
     "@context": "https://schema.org",
@@ -48,14 +48,17 @@ const siteJsonLd = [
 
 export default function WebLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }} />
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
+      />
       <Navbar />
-      <main className="flex-grow mt-12 px-0 sm:px-0 lg:px-0">{children}</main>
+      <main className="flex-1 w-full">{children}</main>
       <Footer />
       <ScrollToTopButton />
       <Whastapp />
       <Tawkto />
-    </>
+    </div>
   );
 }
