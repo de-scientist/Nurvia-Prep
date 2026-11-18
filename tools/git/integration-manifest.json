@@ -1,0 +1,1598 @@
+﻿{
+    "manifestVersion":  "1.0",
+    "repository":  "C:/Users/gitau/Documents/Nurvia-Prep",
+    "targetBranch":  "main",
+    "units":  [
+                  {
+                      "id":  "config",
+                      "unit":  "Core Infrastructure",
+                      "message":  "feat(config): update application configuration and site headers",
+                      "body":  "Update centralized application configuration, environment-driven constants and site header metadata used across the platform.",
+                      "dependsOn":  [
+
+                                    ],
+                      "files":  [
+                                    "src/lib/config/config.ts",
+                                    "src/lib/config/siteHeaders.ts"
+                                ]
+                  },
+                  {
+                      "id":  "styles-web",
+                      "unit":  "Core Infrastructure",
+                      "message":  "feat(styles): update web global stylesheets",
+                      "body":  "Refresh application-level and web-level global Tailwind stylesheets.",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/app/globals.css",
+                                    "src/styles/web/globals.css"
+                                ]
+                  },
+                  {
+                      "id":  "styles-dashboard",
+                      "unit":  "Core Infrastructure",
+                      "message":  "feat(styles): update dashboard global stylesheets",
+                      "body":  "Refresh dashboard forms, tiptap editor and sidebar global stylesheets.",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/styles/dashboards/forms/global.css",
+                                    "src/styles/dashboards/editors/tiptap/global.css",
+                                    "src/styles/dashboards/sidebars/left/global.css",
+                                    "src/styles/dashboards/sidebars/right/global.css"
+                                ]
+                  },
+                  {
+                      "id":  "brand-assets",
+                      "unit":  "Static Assets",
+                      "message":  "feat(brand): add Nurvia logo component and brand assets",
+                      "body":  "Add the reusable NurviaLogo component together with brand SVGs, favicons, dark logo and hero imagery, and update the primary logo.",
+                      "dependsOn":  [
+
+                                    ],
+                      "files":  [
+                                    "src/components/common/NurviaLogo.tsx",
+                                    "public/brand/favicon.svg",
+                                    "public/brand/nurvia-logo-dark.svg",
+                                    "public/brand/nurvia-logo-light.svg",
+                                    "public/brand/nurvia-symbol-monochrome.svg",
+                                    "public/brand/nurvia-symbol.svg",
+                                    "public/favicons/favicon.png",
+                                    "public/logo/logo-dark.png",
+                                    "public/logo/logo.png",
+                                    "public/hero-image.jpeg"
+                                ]
+                  },
+                  {
+                      "id":  "theme-contexts",
+                      "unit":  "Core Infrastructure",
+                      "message":  "feat(theme): update panel and exam theme contexts",
+                      "body":  "Update PanelThemeContext and ExamThemeContext theme switching behaviour.",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/lib/contexts/panel/layout/theme/PanelThemeContext.tsx",
+                                    "src/lib/contexts/web/assessment/theme/ExamThemeContext.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "root-layout",
+                      "unit":  "Homepage",
+                      "message":  "feat(layout): update root application layout and metadata",
+                      "body":  "Update root layout fonts, metadata, favicon reference and provider wiring.",
+                      "dependsOn":  [
+                                        "styles-web",
+                                        "brand-assets",
+                                        "theme-contexts"
+                                    ],
+                      "files":  [
+                                    "src/app/layout.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "common-seo-scroll",
+                      "unit":  "Core Infrastructure",
+                      "message":  "feat(ui): update SEO header and scroll-to-top utilities",
+                      "body":  "Update SeoHeader metadata rendering and the ScrollToTopButton utility component.",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/components/common/SeoHeader.tsx",
+                                    "src/components/common/ScrollToTopButton.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "common-data-utils",
+                      "unit":  "Core Infrastructure",
+                      "message":  "feat(utils): update search bar and per-page select utilities",
+                      "body":  "Update shared SearchBar and PerPageSelect data utilities.",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/lib/utils/data/SearchBar.tsx",
+                                    "src/lib/utils/data/PerPageSelect.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "seek-modal",
+                      "unit":  "Navigation System",
+                      "message":  "feat(search): update seek search modal",
+                      "body":  "Update the global Seek search modal shared by web and dashboard navigation.",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/components/common/modals/seek/SeekModal.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "exam-calculator",
+                      "unit":  "Exam Preparation",
+                      "message":  "feat(exam-ui): update custom mini calculator",
+                      "body":  "Update the custom mini calculator used in live exam navigation bars.",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/components/panel/exam/tools/CustomMiniCalculator.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dashboard-dropdowns",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard-ui): update navbar dropdown components",
+                      "body":  "Update shared dashboard navbar Dropdown and DropdownItem components.",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/components/dashboards/includes/navbar/dropdowns/Dropdown.tsx",
+                                    "src/components/dashboards/includes/navbar/dropdowns/DropdownItem.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dashboard-tooltip",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard-ui): update sidebar tooltip component",
+                      "body":  "Update the shared dashboard sidebar Tooltip component.",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/components/dashboards/includes/sidebar/tooltips/SidebarTooltip.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dashboard-preloader",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard-ui): update dashboard preloader",
+                      "body":  "Update the shared DashboardPreloader element.",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/components/common/dashboards/elements/DashboardPreloader.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dashboard-access-modals",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard-ui): update access reminder modals",
+                      "body":  "Update the access reminder modals used by dashboard access guards.",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/components/common/dashboards/modals/AccessReminderModals.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "auth-landing-modals",
+                      "unit":  "Authentication System",
+                      "message":  "feat(auth): update authentication landing page and modals",
+                      "body":  "Update the composite login/register landing page and its auth modal suite (login, register, implementation and annex modals).",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/auth/page.tsx",
+                                    "src/app/(web)/auth/modals/auth.tsx",
+                                    "src/app/(web)/auth/modals/Login.tsx",
+                                    "src/app/(web)/auth/modals/Register.tsx",
+                                    "src/app/(web)/auth/modals/Impel.tsx",
+                                    "src/app/(web)/auth/modals/Annex.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "auth-login",
+                      "unit":  "Authentication System",
+                      "message":  "feat(auth): update login route",
+                      "body":  "Update the dedicated login route.",
+                      "dependsOn":  [
+                                        "auth-landing-modals"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/auth/login/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "auth-register",
+                      "unit":  "Authentication System",
+                      "message":  "feat(auth): update registration route",
+                      "body":  "Update the dedicated registration route.",
+                      "dependsOn":  [
+                                        "auth-landing-modals"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/auth/register/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "auth-logout-onetap",
+                      "unit":  "Authentication System",
+                      "message":  "feat(auth): update logout and one-tap sign-in routes",
+                      "body":  "Update logout and Google one-tap sign-in routes.",
+                      "dependsOn":  [
+                                        "auth-landing-modals"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/auth/logout/page.tsx",
+                                    "src/app/(web)/auth/onetap/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "auth-recovery-password",
+                      "unit":  "Authentication System",
+                      "message":  "feat(auth): update password recovery route",
+                      "body":  "Update the password recovery flow route.",
+                      "dependsOn":  [
+                                        "auth-landing-modals"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/auth/recovery/password/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "auth-recovery-social",
+                      "unit":  "Authentication System",
+                      "message":  "feat(auth): update social recovery and completion routes",
+                      "body":  "Update social account recovery and social sign-in completion routes.",
+                      "dependsOn":  [
+                                        "auth-landing-modals"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/auth/recovery/social/page.tsx",
+                                    "src/app/(web)/auth/social/complete/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "auth-security-update",
+                      "unit":  "Authentication System",
+                      "message":  "feat(auth): update two-factor and password security routes",
+                      "body":  "Update 2FA enrolment and password update routes.",
+                      "dependsOn":  [
+                                        "auth-landing-modals"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/auth/update/2fa/page.tsx",
+                                    "src/app/(web)/auth/update/password/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "auth-validate-support",
+                      "unit":  "Authentication System",
+                      "message":  "feat(auth): update validation and support routes",
+                      "body":  "Update the account validation client and authentication support route.",
+                      "dependsOn":  [
+                                        "auth-landing-modals"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/auth/validate/ValidateClient.tsx",
+                                    "src/app/(web)/auth/support/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "nav-footer",
+                      "unit":  "Navigation System",
+                      "message":  "feat(nav): update application footer",
+                      "body":  "Update the global web footer including its brand and annex modal integrations.",
+                      "dependsOn":  [
+                                        "brand-assets",
+                                        "auth-landing-modals",
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/includes/footer/index.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "nav-navbar",
+                      "unit":  "Navigation System",
+                      "message":  "feat(nav): update application navbar",
+                      "body":  "Update the sticky web navbar with announcement banner, direct links, account menu, mobile drawer and search integration.",
+                      "dependsOn":  [
+                                        "seek-modal",
+                                        "brand-assets",
+                                        "theme-contexts",
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/includes/navbar/index.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "web-layout",
+                      "unit":  "Navigation System",
+                      "message":  "feat(layout): update web layout shell",
+                      "body":  "Update the (web) route group layout wiring navbar, footer and scroll utilities.",
+                      "dependsOn":  [
+                                        "nav-navbar",
+                                        "nav-footer",
+                                        "common-seo-scroll"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/layout.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "home-contact-section",
+                      "unit":  "Homepage",
+                      "message":  "feat(home): update contact section",
+                      "body":  "Update the shared Contact section used by the homepage and exam landing pages.",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/components/sections/Contact.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "home-page",
+                      "unit":  "Homepage",
+                      "message":  "feat(home): update homepage",
+                      "body":  "Update the NURVIA homepage hero, practice spotlights, study sets and conversion sections.",
+                      "dependsOn":  [
+                                        "home-contact-section",
+                                        "auth-landing-modals",
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/home/home.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "explore-page",
+                      "unit":  "Study Resources",
+                      "message":  "feat(explore): update explore directory route",
+                      "body":  "Update the platform explore directory route.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/explore/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-about-us",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update about us page",
+                      "body":  "Update the about us content page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/(more)/about-us/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-blogs",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update blogs page",
+                      "body":  "Update the blogs listing page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/(more)/blogs/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-documentation",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update documentation page",
+                      "body":  "Update the how-we-help documentation page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/(more)/documentation/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-faqs",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update FAQs page",
+                      "body":  "Update the frequently asked questions page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/(more)/faqs/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-live-sessions",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update live sessions page",
+                      "body":  "Update the live sessions page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/(more)/live-sessions/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-mission",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update mission page",
+                      "body":  "Update the mission page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/(more)/mission/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-privacy-policy",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update privacy policy page",
+                      "body":  "Update the privacy policy page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/(more)/privacy-policy/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-reviews",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update reviews page",
+                      "body":  "Update the reviews and testimonials page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/(more)/reviews/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-social-groups",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update social groups page",
+                      "body":  "Update the social study groups page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/(more)/social-groups/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-team",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update team page",
+                      "body":  "Update the team page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/(more)/team/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-terms",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update terms of service page",
+                      "body":  "Update the terms of service page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/(more)/terms-of-service/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-values",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update values page",
+                      "body":  "Update the values page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/(more)/values/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-vission",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update vision page",
+                      "body":  "Update the vision page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/(more)/vission/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-actions",
+                      "unit":  "Specialized Features",
+                      "message":  "feat(pages): update study tracks hub page",
+                      "body":  "Update the study tracks actions hub page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/actions/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-contact-us",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update contact us page",
+                      "body":  "Update the contact us page.",
+                      "dependsOn":  [
+                                        "web-layout",
+                                        "home-contact-section"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/contact-us/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-create",
+                      "unit":  "Specialized Features",
+                      "message":  "feat(pages): update content creation page",
+                      "body":  "Update the content creation page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/create/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-entrance",
+                      "unit":  "Exam Preparation",
+                      "message":  "feat(pages): update exam entrance page",
+                      "body":  "Update the exam entrance page that routes learners into track dashboards.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/entrance/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-heed",
+                      "unit":  "Specialized Features",
+                      "message":  "feat(heed): update heed conversation pages",
+                      "body":  "Update current and relative heed pages together with the shared reply box partial.",
+                      "dependsOn":  [
+                                        "web-layout",
+                                        "common-data-utils"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/heed/current/page.tsx",
+                                    "src/app/(web)/pages/heed/relative/page.tsx",
+                                    "src/app/(web)/pages/heed/partials/HeedReplyBox.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-notes",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update study notes page",
+                      "body":  "Update the study notes page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/notes/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-resources",
+                      "unit":  "Study Resources",
+                      "message":  "feat(pages): update resources page",
+                      "body":  "Update the resource library page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/resources/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-seek",
+                      "unit":  "Specialized Features",
+                      "message":  "feat(pages): update advanced search page",
+                      "body":  "Update the advanced search (seek) page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/seek/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-shop",
+                      "unit":  "Additional Features",
+                      "message":  "feat(pages): update shop page",
+                      "body":  "Update the shop page.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/shop/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "page-subscription",
+                      "unit":  "Additional Features",
+                      "message":  "feat(subscription): update subscription package and item views",
+                      "body":  "Update the subscription package listing and subscription item component.",
+                      "dependsOn":  [
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/subscription/package/page.tsx",
+                                    "src/app/(web)/pages/subscription/item/SubscriptionItem.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "exam-ati-teas",
+                      "unit":  "Exam Preparation",
+                      "message":  "feat(exams): update ATI TEAS exam landing page",
+                      "body":  "Update the ATI TEAS 7 exam landing page.",
+                      "dependsOn":  [
+                                        "home-contact-section",
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/exams/ati-teas/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "exam-hesi-a2",
+                      "unit":  "Exam Preparation",
+                      "message":  "feat(exams): update HESI A2 exam landing page",
+                      "body":  "Update the HESI A2 exam landing page.",
+                      "dependsOn":  [
+                                        "home-contact-section",
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/exams/hesi-a2/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "exam-rn-nursing",
+                      "unit":  "Exam Preparation",
+                      "message":  "feat(exams): update RN nursing exam landing page",
+                      "body":  "Update the RN nursing exam landing page.",
+                      "dependsOn":  [
+                                        "home-contact-section",
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/exams/rn-nursing/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "exam-lpn-nursing",
+                      "unit":  "Exam Preparation",
+                      "message":  "feat(exams): update LPN nursing exam landing page",
+                      "body":  "Update the LPN nursing exam landing page.",
+                      "dependsOn":  [
+                                        "home-contact-section",
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/exams/lpn-nursing/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "exam-nclex-rn",
+                      "unit":  "Exam Preparation",
+                      "message":  "feat(exams): update NCLEX-RN exam landing page",
+                      "body":  "Update the NCLEX-RN exam landing page.",
+                      "dependsOn":  [
+                                        "home-contact-section",
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/exams/nclex-rn/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "exam-nclex-pn",
+                      "unit":  "Exam Preparation",
+                      "message":  "feat(exams): update NCLEX-PN exam landing page",
+                      "body":  "Update the NCLEX-PN exam landing page.",
+                      "dependsOn":  [
+                                        "home-contact-section",
+                                        "web-layout"
+                                    ],
+                      "files":  [
+                                    "src/app/(web)/pages/exams/nclex-pn/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dashboard-shell-ati-teas",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update ATI TEAS dashboard shell",
+                      "body":  "Update ATI TEAS dashboard layout, home route, navbar, footer and navbar partials.",
+                      "dependsOn":  [
+                                        "styles-dashboard",
+                                        "seek-modal",
+                                        "dashboard-dropdowns",
+                                        "common-seo-scroll"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/ati-teas/layout.tsx",
+                                    "src/app/dashboards/ati-teas/page.tsx",
+                                    "src/app/dashboards/ati-teas/includes/navbar/Navbar.tsx",
+                                    "src/app/dashboards/ati-teas/includes/navbar/partials/HeedMessageBell.tsx",
+                                    "src/app/dashboards/ati-teas/includes/navbar/partials/ThemeDropdown.tsx",
+                                    "src/app/dashboards/ati-teas/includes/navbar/partials/UserDropdown.tsx",
+                                    "src/app/dashboards/ati-teas/includes/footer/Footer.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dashboard-shell-hesi-a2",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update HESI A2 dashboard shell",
+                      "body":  "Update HESI A2 dashboard layout, home route, navbar, footer and navbar partials.",
+                      "dependsOn":  [
+                                        "styles-dashboard",
+                                        "seek-modal",
+                                        "dashboard-dropdowns",
+                                        "common-seo-scroll"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/hesi-a2/layout.tsx",
+                                    "src/app/dashboards/hesi-a2/page.tsx",
+                                    "src/app/dashboards/hesi-a2/includes/navbar/Navbar.tsx",
+                                    "src/app/dashboards/hesi-a2/includes/navbar/partials/HeedMessageBell.tsx",
+                                    "src/app/dashboards/hesi-a2/includes/navbar/partials/ThemeDropdown.tsx",
+                                    "src/app/dashboards/hesi-a2/includes/navbar/partials/UserDropdown.tsx",
+                                    "src/app/dashboards/hesi-a2/includes/footer/Footer.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dashboard-shell-rn-nursing",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update RN nursing dashboard shell",
+                      "body":  "Update RN nursing dashboard layout, home route, navbar, footer and navbar partials.",
+                      "dependsOn":  [
+                                        "styles-dashboard",
+                                        "seek-modal",
+                                        "dashboard-dropdowns",
+                                        "common-seo-scroll"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/rn-nursing/layout.tsx",
+                                    "src/app/dashboards/rn-nursing/page.tsx",
+                                    "src/app/dashboards/rn-nursing/includes/navbar/Navbar.tsx",
+                                    "src/app/dashboards/rn-nursing/includes/navbar/partials/HeedMessageBell.tsx",
+                                    "src/app/dashboards/rn-nursing/includes/navbar/partials/ThemeDropdown.tsx",
+                                    "src/app/dashboards/rn-nursing/includes/navbar/partials/UserDropdown.tsx",
+                                    "src/app/dashboards/rn-nursing/includes/footer/Footer.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dashboard-shell-lpn-nursing",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update LPN nursing dashboard shell",
+                      "body":  "Update LPN nursing dashboard layout, home route, navbar, footer and navbar partials.",
+                      "dependsOn":  [
+                                        "styles-dashboard",
+                                        "seek-modal",
+                                        "dashboard-dropdowns",
+                                        "common-seo-scroll"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/lpn-nursing/layout.tsx",
+                                    "src/app/dashboards/lpn-nursing/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/includes/navbar/Navbar.tsx",
+                                    "src/app/dashboards/lpn-nursing/includes/navbar/partials/HeedMessageBell.tsx",
+                                    "src/app/dashboards/lpn-nursing/includes/navbar/partials/ThemeDropdown.tsx",
+                                    "src/app/dashboards/lpn-nursing/includes/navbar/partials/UserDropdown.tsx",
+                                    "src/app/dashboards/lpn-nursing/includes/footer/Footer.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dashboard-shell-nclex-rn",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update NCLEX-RN dashboard shell",
+                      "body":  "Update NCLEX-RN dashboard layout, home route, navbar, footer and navbar partials.",
+                      "dependsOn":  [
+                                        "styles-dashboard",
+                                        "seek-modal",
+                                        "dashboard-dropdowns",
+                                        "common-seo-scroll"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/nclex-rn/layout.tsx",
+                                    "src/app/dashboards/nclex-rn/page.tsx",
+                                    "src/app/dashboards/nclex-rn/includes/navbar/Navbar.tsx",
+                                    "src/app/dashboards/nclex-rn/includes/navbar/partials/HeedMessageBell.tsx",
+                                    "src/app/dashboards/nclex-rn/includes/navbar/partials/ThemeDropdown.tsx",
+                                    "src/app/dashboards/nclex-rn/includes/navbar/partials/UserDropdown.tsx",
+                                    "src/app/dashboards/nclex-rn/includes/footer/Footer.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dashboard-shell-nclex-pn",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update NCLEX-PN dashboard shell",
+                      "body":  "Update NCLEX-PN dashboard layout, home route, navbar, footer and navbar partials.",
+                      "dependsOn":  [
+                                        "styles-dashboard",
+                                        "seek-modal",
+                                        "dashboard-dropdowns",
+                                        "common-seo-scroll"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/nclex-pn/layout.tsx",
+                                    "src/app/dashboards/nclex-pn/page.tsx",
+                                    "src/app/dashboards/nclex-pn/includes/navbar/Navbar.tsx",
+                                    "src/app/dashboards/nclex-pn/includes/navbar/partials/HeedMessageBell.tsx",
+                                    "src/app/dashboards/nclex-pn/includes/navbar/partials/ThemeDropdown.tsx",
+                                    "src/app/dashboards/nclex-pn/includes/navbar/partials/UserDropdown.tsx",
+                                    "src/app/dashboards/nclex-pn/includes/footer/Footer.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-auth-ati-teas",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(auth): update ati-teas dashboard sign-in and account routes",
+                      "body":  "Update ati-teas dashboard login, logout, registration and account settings routes.",
+                      "dependsOn":  [
+                                        "dashboard-shell-ati-teas"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/ati-teas/auth/account/edit/page.tsx",
+                                    "src/app/dashboards/ati-teas/auth/account/recovery/password/page.tsx",
+                                    "src/app/dashboards/ati-teas/auth/account/recovery/social/page.tsx",
+                                    "src/app/dashboards/ati-teas/auth/account/security/2fa/page.tsx",
+                                    "src/app/dashboards/ati-teas/auth/account/security/password/page.tsx",
+                                    "src/app/dashboards/ati-teas/auth/account/security/profile/page.tsx",
+                                    "src/app/dashboards/ati-teas/auth/account/show/page.tsx",
+                                    "src/app/dashboards/ati-teas/auth/account/support/page.tsx",
+                                    "src/app/dashboards/ati-teas/auth/account/verify/email/page.tsx",
+                                    "src/app/dashboards/ati-teas/auth/account/verify/phone/page.tsx",
+                                    "src/app/dashboards/ati-teas/auth/login/page.tsx",
+                                    "src/app/dashboards/ati-teas/auth/logout/page.tsx",
+                                    "src/app/dashboards/ati-teas/auth/register/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-assessment-ati-teas",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update ati-teas assessment views",
+                      "body":  "Update ati-teas dashboard assessment and exam report, progress and result views.",
+                      "dependsOn":  [
+                                        "dashboard-shell-ati-teas"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/ati-teas/vista/assessment/assessments/absolute/outline/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/assessment/assessments/absolute/overview/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/assessment/assessments/distinct/outline/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/assessment/assessments/distinct/overview/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/assessment/exams/absolute/outline/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/assessment/exams/absolute/overview/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/assessment/exams/distinct/outline/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/assessment/exams/distinct/overview/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/assessment/exams/progress/absolute/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/assessment/exams/reports/absolute/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/assessment/exams/reports/absolute/summary/Comparison.tsx",
+                                    "src/app/dashboards/ati-teas/vista/assessment/exams/reports/distinct/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/assessment/exams/reports/relative/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/assessment/exams/results/distinct/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-learning-ati-teas",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update ati-teas learning views",
+                      "body":  "Update ati-teas dashboard program, course and subject learning views.",
+                      "dependsOn":  [
+                                        "dashboard-shell-ati-teas"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/ati-teas/vista/learning/courses/absolute/outline/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/learning/courses/absolute/overview/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/learning/courses/distinct/outline/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/learning/courses/distinct/overview/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/learning/programs/absolute/outline/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/learning/programs/absolute/overview/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/learning/programs/distinct/outline/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/learning/programs/distinct/overview/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/learning/subjects/absolute/outline/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/learning/subjects/absolute/overview/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/learning/subjects/distinct/outline/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/learning/subjects/distinct/overview/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-content-ati-teas",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update ati-teas vista content pages",
+                      "body":  "Update ati-teas dashboard about, contact, support and terms pages.",
+                      "dependsOn":  [
+                                        "dashboard-shell-ati-teas"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/ati-teas/vista/pages/about-us/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/pages/contact-us/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/pages/support/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/pages/terms-of-service/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-subs-ati-teas",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(subscription): update ati-teas subscription management pages",
+                      "body":  "Update ati-teas dashboard subscription item and package management pages.",
+                      "dependsOn":  [
+                                        "dashboard-shell-ati-teas"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/ati-teas/vista/subscriptions/items/page.tsx",
+                                    "src/app/dashboards/ati-teas/vista/subscriptions/packages/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-auth-hesi-a2",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(auth): update hesi-a2 dashboard sign-in and account routes",
+                      "body":  "Update hesi-a2 dashboard login, logout, registration and account settings routes.",
+                      "dependsOn":  [
+                                        "dashboard-shell-hesi-a2"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/hesi-a2/auth/account/edit/page.tsx",
+                                    "src/app/dashboards/hesi-a2/auth/account/recovery/password/page.tsx",
+                                    "src/app/dashboards/hesi-a2/auth/account/recovery/social/page.tsx",
+                                    "src/app/dashboards/hesi-a2/auth/account/security/2fa/page.tsx",
+                                    "src/app/dashboards/hesi-a2/auth/account/security/password/page.tsx",
+                                    "src/app/dashboards/hesi-a2/auth/account/security/profile/page.tsx",
+                                    "src/app/dashboards/hesi-a2/auth/account/show/page.tsx",
+                                    "src/app/dashboards/hesi-a2/auth/account/support/page.tsx",
+                                    "src/app/dashboards/hesi-a2/auth/account/verify/email/page.tsx",
+                                    "src/app/dashboards/hesi-a2/auth/account/verify/phone/page.tsx",
+                                    "src/app/dashboards/hesi-a2/auth/login/page.tsx",
+                                    "src/app/dashboards/hesi-a2/auth/logout/page.tsx",
+                                    "src/app/dashboards/hesi-a2/auth/register/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-assessment-hesi-a2",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update hesi-a2 assessment views",
+                      "body":  "Update hesi-a2 dashboard assessment and exam report, progress and result views.",
+                      "dependsOn":  [
+                                        "dashboard-shell-hesi-a2"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/hesi-a2/vista/assessment/assessments/absolute/outline/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/assessment/assessments/absolute/overview/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/assessment/assessments/distinct/outline/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/assessment/assessments/distinct/overview/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/assessment/exams/absolute/outline/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/assessment/exams/absolute/overview/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/assessment/exams/distinct/outline/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/assessment/exams/distinct/overview/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/assessment/exams/progress/absolute/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/assessment/exams/reports/absolute/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/assessment/exams/reports/absolute/summary/Comparison.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/assessment/exams/reports/distinct/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/assessment/exams/reports/relative/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/assessment/exams/results/distinct/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-learning-hesi-a2",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update hesi-a2 learning views",
+                      "body":  "Update hesi-a2 dashboard program, course and subject learning views.",
+                      "dependsOn":  [
+                                        "dashboard-shell-hesi-a2"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/hesi-a2/vista/learning/courses/absolute/outline/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/learning/courses/absolute/overview/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/learning/courses/distinct/outline/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/learning/courses/distinct/overview/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/learning/programs/absolute/outline/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/learning/programs/absolute/overview/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/learning/programs/distinct/outline/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/learning/programs/distinct/overview/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/learning/subjects/absolute/outline/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/learning/subjects/absolute/overview/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/learning/subjects/distinct/outline/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/learning/subjects/distinct/overview/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-content-hesi-a2",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update hesi-a2 vista content pages",
+                      "body":  "Update hesi-a2 dashboard about, contact, support and terms pages.",
+                      "dependsOn":  [
+                                        "dashboard-shell-hesi-a2"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/hesi-a2/vista/pages/about-us/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/pages/contact-us/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/pages/support/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/pages/terms-of-service/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-subs-hesi-a2",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(subscription): update hesi-a2 subscription management pages",
+                      "body":  "Update hesi-a2 dashboard subscription item and package management pages.",
+                      "dependsOn":  [
+                                        "dashboard-shell-hesi-a2"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/hesi-a2/vista/subscriptions/items/page.tsx",
+                                    "src/app/dashboards/hesi-a2/vista/subscriptions/packages/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-auth-rn-nursing",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(auth): update rn-nursing dashboard sign-in and account routes",
+                      "body":  "Update rn-nursing dashboard login, logout, registration and account settings routes.",
+                      "dependsOn":  [
+                                        "dashboard-shell-rn-nursing"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/rn-nursing/auth/account/edit/page.tsx",
+                                    "src/app/dashboards/rn-nursing/auth/account/recovery/password/page.tsx",
+                                    "src/app/dashboards/rn-nursing/auth/account/recovery/social/page.tsx",
+                                    "src/app/dashboards/rn-nursing/auth/account/security/2fa/page.tsx",
+                                    "src/app/dashboards/rn-nursing/auth/account/security/password/page.tsx",
+                                    "src/app/dashboards/rn-nursing/auth/account/security/profile/page.tsx",
+                                    "src/app/dashboards/rn-nursing/auth/account/show/page.tsx",
+                                    "src/app/dashboards/rn-nursing/auth/account/support/page.tsx",
+                                    "src/app/dashboards/rn-nursing/auth/account/verify/email/page.tsx",
+                                    "src/app/dashboards/rn-nursing/auth/account/verify/phone/page.tsx",
+                                    "src/app/dashboards/rn-nursing/auth/login/page.tsx",
+                                    "src/app/dashboards/rn-nursing/auth/logout/page.tsx",
+                                    "src/app/dashboards/rn-nursing/auth/register/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-assessment-rn-nursing",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update rn-nursing assessment views",
+                      "body":  "Update rn-nursing dashboard assessment and exam report, progress and result views.",
+                      "dependsOn":  [
+                                        "dashboard-shell-rn-nursing"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/rn-nursing/vista/assessment/assessments/absolute/outline/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/assessment/assessments/absolute/overview/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/assessment/assessments/distinct/outline/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/assessment/assessments/distinct/overview/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/assessment/exams/absolute/outline/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/assessment/exams/absolute/overview/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/assessment/exams/distinct/outline/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/assessment/exams/distinct/overview/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/assessment/exams/progress/absolute/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/assessment/exams/reports/absolute/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/assessment/exams/reports/absolute/summary/Comparison.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/assessment/exams/reports/distinct/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/assessment/exams/reports/relative/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/assessment/exams/results/distinct/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-learning-rn-nursing",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update rn-nursing learning views",
+                      "body":  "Update rn-nursing dashboard program, course and subject learning views.",
+                      "dependsOn":  [
+                                        "dashboard-shell-rn-nursing"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/rn-nursing/vista/learning/courses/absolute/outline/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/learning/courses/absolute/overview/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/learning/courses/distinct/outline/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/learning/courses/distinct/overview/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/learning/programs/absolute/outline/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/learning/programs/absolute/overview/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/learning/programs/distinct/outline/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/learning/programs/distinct/overview/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/learning/subjects/absolute/outline/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/learning/subjects/absolute/overview/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/learning/subjects/distinct/outline/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/learning/subjects/distinct/overview/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-content-rn-nursing",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update rn-nursing vista content pages",
+                      "body":  "Update rn-nursing dashboard about, contact, support and terms pages.",
+                      "dependsOn":  [
+                                        "dashboard-shell-rn-nursing"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/rn-nursing/vista/pages/about-us/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/pages/contact-us/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/pages/support/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/pages/terms-of-service/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-subs-rn-nursing",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(subscription): update rn-nursing subscription management pages",
+                      "body":  "Update rn-nursing dashboard subscription item and package management pages.",
+                      "dependsOn":  [
+                                        "dashboard-shell-rn-nursing"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/rn-nursing/vista/subscriptions/items/page.tsx",
+                                    "src/app/dashboards/rn-nursing/vista/subscriptions/packages/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-auth-lpn-nursing",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(auth): update lpn-nursing dashboard sign-in and account routes",
+                      "body":  "Update lpn-nursing dashboard login, logout, registration and account settings routes.",
+                      "dependsOn":  [
+                                        "dashboard-shell-lpn-nursing"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/lpn-nursing/auth/account/edit/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/auth/account/recovery/password/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/auth/account/recovery/social/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/auth/account/security/2fa/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/auth/account/security/password/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/auth/account/security/profile/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/auth/account/show/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/auth/account/support/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/auth/account/verify/email/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/auth/account/verify/phone/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/auth/login/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/auth/logout/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/auth/register/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-assessment-lpn-nursing",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update lpn-nursing assessment views",
+                      "body":  "Update lpn-nursing dashboard assessment and exam report, progress and result views.",
+                      "dependsOn":  [
+                                        "dashboard-shell-lpn-nursing"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/lpn-nursing/vista/assessment/assessments/absolute/outline/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/assessment/assessments/absolute/overview/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/assessment/assessments/distinct/outline/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/assessment/assessments/distinct/overview/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/assessment/exams/absolute/outline/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/assessment/exams/absolute/overview/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/assessment/exams/distinct/outline/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/assessment/exams/distinct/overview/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/assessment/exams/progress/absolute/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/assessment/exams/reports/absolute/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/assessment/exams/reports/absolute/summary/Comparison.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/assessment/exams/reports/distinct/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/assessment/exams/reports/relative/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/assessment/exams/results/distinct/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-learning-lpn-nursing",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update lpn-nursing learning views",
+                      "body":  "Update lpn-nursing dashboard program, course and subject learning views.",
+                      "dependsOn":  [
+                                        "dashboard-shell-lpn-nursing"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/lpn-nursing/vista/learning/courses/absolute/outline/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/learning/courses/absolute/overview/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/learning/courses/distinct/outline/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/learning/courses/distinct/overview/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/learning/programs/absolute/outline/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/learning/programs/absolute/overview/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/learning/programs/distinct/outline/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/learning/programs/distinct/overview/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/learning/subjects/absolute/outline/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/learning/subjects/absolute/overview/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/learning/subjects/distinct/outline/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/learning/subjects/distinct/overview/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-content-lpn-nursing",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update lpn-nursing vista content pages",
+                      "body":  "Update lpn-nursing dashboard about, contact, support and terms pages.",
+                      "dependsOn":  [
+                                        "dashboard-shell-lpn-nursing"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/lpn-nursing/vista/pages/about-us/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/pages/contact-us/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/pages/support/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/pages/terms-of-service/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-subs-lpn-nursing",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(subscription): update lpn-nursing subscription management pages",
+                      "body":  "Update lpn-nursing dashboard subscription item and package management pages.",
+                      "dependsOn":  [
+                                        "dashboard-shell-lpn-nursing"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/lpn-nursing/vista/subscriptions/items/page.tsx",
+                                    "src/app/dashboards/lpn-nursing/vista/subscriptions/packages/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-auth-nclex-rn",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(auth): update nclex-rn dashboard sign-in and account routes",
+                      "body":  "Update nclex-rn dashboard login, logout, registration and account settings routes.",
+                      "dependsOn":  [
+                                        "dashboard-shell-nclex-rn"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/nclex-rn/auth/account/edit/page.tsx",
+                                    "src/app/dashboards/nclex-rn/auth/account/recovery/password/page.tsx",
+                                    "src/app/dashboards/nclex-rn/auth/account/recovery/social/page.tsx",
+                                    "src/app/dashboards/nclex-rn/auth/account/security/2fa/page.tsx",
+                                    "src/app/dashboards/nclex-rn/auth/account/security/password/page.tsx",
+                                    "src/app/dashboards/nclex-rn/auth/account/security/profile/page.tsx",
+                                    "src/app/dashboards/nclex-rn/auth/account/show/page.tsx",
+                                    "src/app/dashboards/nclex-rn/auth/account/support/page.tsx",
+                                    "src/app/dashboards/nclex-rn/auth/account/verify/email/page.tsx",
+                                    "src/app/dashboards/nclex-rn/auth/account/verify/phone/page.tsx",
+                                    "src/app/dashboards/nclex-rn/auth/login/page.tsx",
+                                    "src/app/dashboards/nclex-rn/auth/logout/page.tsx",
+                                    "src/app/dashboards/nclex-rn/auth/register/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-assessment-nclex-rn",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update nclex-rn assessment views",
+                      "body":  "Update nclex-rn dashboard assessment and exam report, progress and result views.",
+                      "dependsOn":  [
+                                        "dashboard-shell-nclex-rn"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/nclex-rn/vista/assessment/assessments/absolute/outline/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/assessment/assessments/absolute/overview/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/assessment/assessments/distinct/outline/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/assessment/assessments/distinct/overview/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/assessment/exams/absolute/outline/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/assessment/exams/absolute/overview/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/assessment/exams/distinct/outline/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/assessment/exams/distinct/overview/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/assessment/exams/progress/absolute/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/assessment/exams/reports/absolute/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/assessment/exams/reports/absolute/summary/Comparison.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/assessment/exams/reports/distinct/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/assessment/exams/reports/relative/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/assessment/exams/results/distinct/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-learning-nclex-rn",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update nclex-rn learning views",
+                      "body":  "Update nclex-rn dashboard program, course and subject learning views.",
+                      "dependsOn":  [
+                                        "dashboard-shell-nclex-rn"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/nclex-rn/vista/learning/courses/absolute/outline/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/learning/courses/absolute/overview/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/learning/courses/distinct/outline/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/learning/courses/distinct/overview/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/learning/programs/absolute/outline/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/learning/programs/absolute/overview/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/learning/programs/distinct/outline/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/learning/programs/distinct/overview/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/learning/subjects/absolute/outline/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/learning/subjects/absolute/overview/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/learning/subjects/distinct/outline/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/learning/subjects/distinct/overview/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-content-nclex-rn",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update nclex-rn vista content pages",
+                      "body":  "Update nclex-rn dashboard about, contact, support and terms pages.",
+                      "dependsOn":  [
+                                        "dashboard-shell-nclex-rn"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/nclex-rn/vista/pages/about-us/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/pages/contact-us/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/pages/support/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/pages/terms-of-service/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-subs-nclex-rn",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(subscription): update nclex-rn subscription management pages",
+                      "body":  "Update nclex-rn dashboard subscription item and package management pages.",
+                      "dependsOn":  [
+                                        "dashboard-shell-nclex-rn"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/nclex-rn/vista/subscriptions/items/page.tsx",
+                                    "src/app/dashboards/nclex-rn/vista/subscriptions/packages/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-auth-nclex-pn",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(auth): update nclex-pn dashboard sign-in and account routes",
+                      "body":  "Update nclex-pn dashboard login, logout, registration and account settings routes.",
+                      "dependsOn":  [
+                                        "dashboard-shell-nclex-pn"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/nclex-pn/auth/account/edit/page.tsx",
+                                    "src/app/dashboards/nclex-pn/auth/account/recovery/password/page.tsx",
+                                    "src/app/dashboards/nclex-pn/auth/account/recovery/social/page.tsx",
+                                    "src/app/dashboards/nclex-pn/auth/account/security/2fa/page.tsx",
+                                    "src/app/dashboards/nclex-pn/auth/account/security/password/page.tsx",
+                                    "src/app/dashboards/nclex-pn/auth/account/security/profile/page.tsx",
+                                    "src/app/dashboards/nclex-pn/auth/account/show/page.tsx",
+                                    "src/app/dashboards/nclex-pn/auth/account/support/page.tsx",
+                                    "src/app/dashboards/nclex-pn/auth/account/verify/email/page.tsx",
+                                    "src/app/dashboards/nclex-pn/auth/account/verify/phone/page.tsx",
+                                    "src/app/dashboards/nclex-pn/auth/login/page.tsx",
+                                    "src/app/dashboards/nclex-pn/auth/logout/page.tsx",
+                                    "src/app/dashboards/nclex-pn/auth/register/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-assessment-nclex-pn",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update nclex-pn assessment views",
+                      "body":  "Update nclex-pn dashboard assessment and exam report, progress and result views.",
+                      "dependsOn":  [
+                                        "dashboard-shell-nclex-pn"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/nclex-pn/vista/assessment/assessments/absolute/outline/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/assessment/assessments/absolute/overview/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/assessment/assessments/distinct/outline/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/assessment/assessments/distinct/overview/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/assessment/exams/absolute/outline/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/assessment/exams/absolute/overview/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/assessment/exams/distinct/outline/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/assessment/exams/distinct/overview/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/assessment/exams/progress/absolute/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/assessment/exams/reports/absolute/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/assessment/exams/reports/absolute/summary/Comparison.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/assessment/exams/reports/distinct/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/assessment/exams/reports/relative/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/assessment/exams/results/distinct/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-learning-nclex-pn",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update nclex-pn learning views",
+                      "body":  "Update nclex-pn dashboard program, course and subject learning views.",
+                      "dependsOn":  [
+                                        "dashboard-shell-nclex-pn"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/nclex-pn/vista/learning/courses/absolute/outline/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/learning/courses/absolute/overview/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/learning/courses/distinct/outline/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/learning/courses/distinct/overview/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/learning/programs/absolute/outline/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/learning/programs/absolute/overview/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/learning/programs/distinct/outline/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/learning/programs/distinct/overview/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/learning/subjects/absolute/outline/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/learning/subjects/absolute/overview/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/learning/subjects/distinct/outline/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/learning/subjects/distinct/overview/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-content-nclex-pn",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update nclex-pn vista content pages",
+                      "body":  "Update nclex-pn dashboard about, contact, support and terms pages.",
+                      "dependsOn":  [
+                                        "dashboard-shell-nclex-pn"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/nclex-pn/vista/pages/about-us/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/pages/contact-us/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/pages/support/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/pages/terms-of-service/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dash-subs-nclex-pn",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(subscription): update nclex-pn subscription management pages",
+                      "body":  "Update nclex-pn dashboard subscription item and package management pages.",
+                      "dependsOn":  [
+                                        "dashboard-shell-nclex-pn"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/nclex-pn/vista/subscriptions/items/page.tsx",
+                                    "src/app/dashboards/nclex-pn/vista/subscriptions/packages/page.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dashboard-diy-modals",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update DIY exam creation modals",
+                      "body":  "Update DIY exam and DIY exam question creation modals.",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/shared/modal/diyExamCreation.tsx",
+                                    "src/app/dashboards/shared/modal/diyExamQuestionCreation.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dashboard-subjects-section",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(dashboard): update distinct subjects section",
+                      "body":  "Update the shared distinct subjects dashboard section.",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/shared/section/DistinctSubjects.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "dashboard-active-subscription",
+                      "unit":  "Dashboard Components",
+                      "message":  "feat(subscription): update active subscription package view",
+                      "body":  "Update the shared active subscription package component.",
+                      "dependsOn":  [
+                                        "config"
+                                    ],
+                      "files":  [
+                                    "src/app/dashboards/shared/subscription/ActiveSubscriptionPackage.tsx"
+                                ]
+                  },
+                  {
+                      "id":  "docs-design-system",
+                      "unit":  "Documentation",
+                      "message":  "docs(design): add NURVIA design system documentation",
+                      "body":  "Add the NURVIA design system reference documentation.",
+                      "dependsOn":  [
+
+                                    ],
+                      "files":  [
+                                    "docs/nurvia-ui-transformation/NURVIA_DESIGN_SYSTEM.md"
+                                ]
+                  },
+                  {
+                      "id":  "docs-ui-inventory",
+                      "unit":  "Documentation",
+                      "message":  "docs(ui): add application UI inventory",
+                      "body":  "Add the application UI inventory documentation.",
+                      "dependsOn":  [
+
+                                    ],
+                      "files":  [
+                                    "docs/nurvia-ui-transformation/APPLICATION_UI_INVENTORY.md"
+                                ]
+                  },
+                  {
+                      "id":  "docs-baseline-report",
+                      "unit":  "Documentation",
+                      "message":  "docs(ui): add UI transformation baseline report",
+                      "body":  "Add the UI transformation baseline report documentation.",
+                      "dependsOn":  [
+
+                                    ],
+                      "files":  [
+                                    "docs/nurvia-ui-transformation/BASELINE_REPORT.md"
+                                ]
+                  },
+                  {
+                      "id":  "git-tooling",
+                      "unit":  "Configuration",
+                      "message":  "chore(git): add incremental git integration tooling",
+                      "body":  "Add the incremental Git integration engine, security audit script and integration manifest.",
+                      "dependsOn":  [
+
+                                    ],
+                      "files":  [
+                                    "tools/git/Invoke-IncrementalGitIntegration.ps1",
+                                    "tools/git/Invoke-SecurityAudit.ps1",
+                                    "tools/git/integration-manifest.json",
+                                    "tools/git/.gitignore",
+                                    "tools/git/modules/RepositoryScanner.psm1",
+                                    "tools/git/modules/FeatureClassifier.psm1",
+                                    "tools/git/modules/SecurityEngine.psm1",
+                                    "tools/git/modules/ValidationEngine.psm1",
+                                    "tools/git/modules/IncrementalCommitEngine.psm1",
+                                    "tools/git/modules/RemoteSyncEngine.psm1",
+                                    "tools/git/modules/EngineeringReporter.psm1"
+                                ]
+                  }
+              ],
+    "excluded":  [
+                     "EXECUTION_SUMMARY.md",
+                     "FINAL_EXECUTION_GUIDE.md",
+                     "batch1_core_infrastructure.md",
+                     "batch_execution_plan.md",
+                     "feature_inventory.md",
+                     "final_engineering_report.md",
+                     "phase0_baseline_report.md",
+                     "phase3_implementation_plan.md",
+                     "phase6_engineering_report.md",
+                     "test_commit.js",
+                     "tools_git_filelist.txt",
+                     ".env.local"
+                 ],
+    "validateAfter":  [
+                          {
+                              "afterUnit":  "auth-validate-support",
+                              "commands":  [
+                                               "npx tsc --noEmit"
+                                           ],
+                              "label":  "post-auth"
+                          },
+                          {
+                              "afterUnit":  "page-subscription",
+                              "commands":  [
+                                               "npx tsc --noEmit"
+                                           ],
+                              "label":  "post-web-pages"
+                          },
+                          {
+                              "afterUnit":  "dashboard-active-subscription",
+                              "commands":  [
+                                               "npx tsc --noEmit"
+                                           ],
+                              "label":  "pre-push"
+                          }
+                      ]
+}
