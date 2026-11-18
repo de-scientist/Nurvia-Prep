@@ -126,52 +126,42 @@ export default function EntrancePage() {
     });
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 px-2 py-5 sm:px-6 sm:py-10 lg:px-8">
-
+        <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B1220] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
             <div className="mx-auto max-w-7xl">
-
                 {/* Page heading */}
-                <div className="mb-5 text-center sm:mb-9">
-
-                    <h1 className="text-xl font-extrabold text-slate-900 sm:text-3xl lg:text-4xl">
+                <div className="mb-8 text-center sm:mb-12">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3.5 py-1 text-xs font-semibold text-[#0D9488] dark:text-teal-300 mb-3">
+                        NURVIA Programme Directory
+                    </div>
+                    <h1 className="text-2xl font-extrabold text-[#0F172A] dark:text-white sm:text-3xl lg:text-4xl">
                         Where would you like to start?
                     </h1>
-
-                    <p className="mx-auto mt-1.5 max-w-2xl text-xs leading-relaxed text-slate-500 sm:mt-3 sm:text-sm">
-                        Pick a track below to jump into practice exams, study
-                        resources, and progress tracking built for that path.
+                    <p className="mx-auto mt-2 max-w-2xl text-xs leading-relaxed text-slate-600 dark:text-slate-300 sm:mt-3 sm:text-base">
+                        Pick a clinical track below to jump into practice exams, study resources, and progress tracking built for that path.
                     </p>
-
                 </div>
 
                 {/* Loading */}
                 {isLoading && (
-                    <p className="py-8 text-center text-sm text-slate-400">
+                    <p className="py-12 text-center text-sm text-slate-500 dark:text-slate-400">
                         Loading Programs…
                     </p>
                 )}
 
                 {/* Empty state */}
                 {!isLoading && orderedPrograms.length === 0 && (
-                    <p className="py-8 text-center text-sm text-slate-400">
-                        No Programs Found ⚓
+                    <p className="py-12 text-center text-sm text-slate-500 dark:text-slate-400">
+                        No Programs Found
                     </p>
                 )}
 
                 {/* Responsive cards */}
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-6">
-
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
                     {orderedPrograms.map((program) => {
                         const segment = program.segment ?? "";
-
-                        const presentation =
-                            SEGMENT_PRESENTATION[segment] ??
-                            DEFAULT_PRESENTATION;
-
+                        const presentation = SEGMENT_PRESENTATION[segment] ?? DEFAULT_PRESENTATION;
                         const Icon = presentation.icon;
-
                         const dashboardSlug = SEGMENT_DASHBOARD_MAP[segment];
-
                         if (!dashboardSlug) return null;
 
                         const accessHref = `/dashboards/${dashboardSlug}`;
@@ -180,219 +170,75 @@ export default function EntrancePage() {
                         return (
                             <div
                                 key={program.guidId}
-                                className={`
-                                    group relative flex min-w-0 flex-col
-                                    overflow-hidden rounded-xl border
-                                    border-slate-200 bg-white
-                                    p-2.5 shadow-sm ring-1 ring-transparent
-                                    transition-all duration-300
-                                    hover:-translate-y-1 hover:shadow-lg
-                                    sm:rounded-2xl sm:p-5 sm:ring-2
-                                    lg:p-6
-                                    ${presentation.ring}
-                                `}
+                                className="group relative flex min-w-0 flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-6 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-[#0D9488]/50 hover:shadow-md"
                             >
-
                                 {/* Featured badge */}
                                 {program.isFeatured && (
-                                    <div className="
-                                        absolute right-1.5 top-1.5 z-10
-                                        rounded-full bg-amber-400
-                                        px-1.5 py-0.5
-                                        text-[7px] font-extrabold
-                                        uppercase tracking-wide text-amber-950
-                                        shadow-sm
-                                        sm:right-3 sm:top-3
-                                        sm:px-2.5 sm:py-1 sm:text-[10px]
-                                    ">
-                                        ⭐ Featured
+                                    <div className="absolute right-4 top-4 z-10 rounded-full border border-teal-500/30 bg-teal-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#0D9488] dark:text-teal-300">
+                                        Featured
                                     </div>
                                 )}
 
-                                {/* Card content */}
                                 <div className="min-w-0">
-
                                     {/* Icon and title */}
-                                    <div className="
-                                        mb-2 flex min-w-0 items-center gap-2
-                                        pr-0
-                                        sm:mb-3 sm:gap-3
-                                    ">
-
-                                        <div
-                                            className={`
-                                                flex h-8 w-8 shrink-0
-                                                items-center justify-center
-                                                rounded-lg bg-gradient-to-br
-                                                ${presentation.accent}
-                                                text-white shadow-sm
-                                                transition-transform duration-300
-                                                group-hover:scale-105
-                                                sm:h-11 sm:w-11 sm:rounded-xl
-                                            `}
-                                        >
-                                            <Icon
-                                                size={17}
-                                                className="sm:hidden"
-                                            />
-
-                                            <Icon
-                                                size={23}
-                                                className="hidden sm:block"
-                                            />
+                                    <div className="mb-3 flex min-w-0 items-center gap-3 pr-16">
+                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#142B4A] text-white shadow-xs">
+                                            <Icon size={22} />
                                         </div>
-
-                                        <h2 className="
-                                            min-w-0 break-words
-                                            text-[11px] font-extrabold
-                                            leading-tight text-slate-900
-                                            sm:text-base
-                                            lg:text-lg
-                                        ">
+                                        <h2 className="min-w-0 break-words text-base font-bold leading-snug text-[#0F172A] dark:text-white lg:text-lg">
                                             {program.name}
                                         </h2>
-
                                     </div>
 
                                     {/* Description */}
                                     {program.description && (
-                                        <p className="
-                                            line-clamp-2
-                                            text-[9px] leading-snug
-                                            text-slate-500
-                                            sm:line-clamp-3
-                                            sm:text-xs sm:leading-relaxed
-                                        ">
+                                        <p className="line-clamp-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300 sm:text-sm">
                                             {program.description}
                                         </p>
                                     )}
 
                                     {/* Metadata */}
-                                    <div className="
-                                        mt-2 flex flex-wrap items-center
-                                        gap-1
-                                        sm:mt-3 sm:gap-1.5
-                                    ">
-
+                                    <div className="mt-4 flex flex-wrap items-center gap-1.5">
                                         {typeof program.coursesCount === "number" && (
-                                            <span className="
-                                                rounded-full bg-slate-100
-                                                px-1.5 py-0.5
-                                                text-[8px] font-semibold
-                                                text-slate-600
-                                                sm:px-2.5 sm:py-1 sm:text-[10px]
-                                            ">
-                                                {program.coursesCount} Course
-                                                {program.coursesCount !== 1 ? "s" : ""}
+                                            <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                                                {program.coursesCount} Course{program.coursesCount !== 1 ? "s" : ""}
                                             </span>
                                         )}
-
                                         {program.level && (
-                                            <span className="
-                                                max-w-full truncate
-                                                rounded-full bg-slate-100
-                                                px-1.5 py-0.5
-                                                text-[8px] font-semibold
-                                                text-slate-600
-                                                sm:px-2.5 sm:py-1 sm:text-[10px]
-                                            ">
+                                            <span className="max-w-full truncate rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
                                                 {program.level}
                                             </span>
                                         )}
-
                                         {program.difficulty && (
-                                            <span className="
-                                                max-w-full truncate
-                                                rounded-full bg-slate-100
-                                                px-1.5 py-0.5
-                                                text-[8px] font-semibold
-                                                text-slate-600
-                                                sm:px-2.5 sm:py-1 sm:text-[10px]
-                                            ">
+                                            <span className="max-w-full truncate rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
                                                 {program.difficulty}
                                             </span>
                                         )}
-
                                     </div>
-
                                 </div>
 
                                 {/* Action buttons */}
-                                <div className="
-                                    mt-2 grid grid-cols-1 gap-1
-                                    sm:mt-5 sm:grid-cols-2 sm:gap-2
-                                ">
-
+                                <div className="mt-6 grid grid-cols-2 gap-2.5">
                                     <Link
                                         href={subscriptionsHref}
-                                        className="
-                                            flex min-h-7 items-center
-                                            justify-center rounded-md
-                                            border border-slate-300
-                                            bg-green-100 px-1.5 py-1
-                                            text-center text-[9px]
-                                            font-bold leading-tight
-                                            text-slate-700
-                                            transition-colors
-                                            hover:bg-yellow-300
-                                            sm:min-h-9 sm:rounded-lg
-                                            sm:px-2 sm:text-xs
-                                        "
+                                        className="flex min-h-10 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-[#F8FAFC] dark:bg-slate-800/80 px-3 py-2 text-center text-xs font-semibold text-slate-700 dark:text-slate-200 transition hover:border-[#0D9488] hover:text-[#0D9488]"
                                     >
                                         View Plans
                                     </Link>
 
                                     <Link
                                         href={accessHref}
-                                        className={`
-                                            flex min-h-7 items-center
-                                            justify-center gap-1 rounded-md
-                                            bg-gradient-to-br
-                                            ${presentation.accent}
-                                            px-1.5 py-1 text-center
-                                            text-[9px] font-bold
-                                            leading-tight text-white
-                                            shadow-sm transition-opacity
-                                            hover:opacity-90
-                                            sm:min-h-9 sm:rounded-lg
-                                            sm:px-2 sm:text-xs
-                                        `}
+                                        className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-[#142B4A] hover:bg-[#1E3A5F] px-3 py-2 text-center text-xs font-semibold text-white shadow-xs transition"
                                     >
                                         <span>Start Practice</span>
-
-                                        <ArrowRight
-                                            size={11}
-                                            className="
-                                                hidden sm:block shrink-0
-                                                transition-transform
-                                                group-hover:translate-x-1
-                                            "
-                                        />
+                                        <ArrowRight size={13} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
                                     </Link>
-
                                 </div>
-
-                                {/* Decorative hover glow */}
-                                <div
-                                    className={`
-                                        pointer-events-none absolute
-                                        -right-10 -top-10 h-24 w-24
-                                        rounded-full bg-gradient-to-br
-                                        ${presentation.accent}
-                                        opacity-0 blur-2xl
-                                        transition-opacity duration-300
-                                        group-hover:opacity-20
-                                    `}
-                                />
-
                             </div>
                         );
                     })}
-
                 </div>
-
             </div>
-
         </div>
     );
 }
