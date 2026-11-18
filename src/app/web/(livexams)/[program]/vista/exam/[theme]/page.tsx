@@ -141,7 +141,7 @@ export default function LiveExamRunnerPage() {
     val: string
   ) => {
     setAnswers((prev) => ({ ...prev, [qId]: val }));
-    await examService.submitAnswer(submissionType, {
+    await examService.submitAnswer(submissionType as any, {
       examId: eId,
       examGuidId: eGuid,
       sectionId: 0,

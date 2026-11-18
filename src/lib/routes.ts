@@ -18,6 +18,22 @@ export const ROUTES = {
   nclex: "/nclex",
   teas: "/teas",
 
+  // Additive Ecosystem Routes
+  categories: "/community/categories",
+  qotd: "/qotd",
+  groups: "/groups",
+  groupDetail: (id: string) => `/groups/${id}`,
+  mentors: "/mentors",
+  forum: "/forum",
+  insights: "/insights",
+  search: "/search",
+  newPost: "/new",
+  nursingExams: "/nursing-exams",
+  nursingExamsRn: "/nursing-exams/rn",
+  nursingExamsLpn: "/nursing-exams/lpn",
+  studyGuides: "/study-guides",
+  nclexStudy: "/nclex/study",
+
   // Public Supporting / Experience Routes
   examSession: "/exam-session",
   designSystem: "/design-system",

@@ -696,3 +696,247 @@ export interface StaffInvitationDto {
   createdAtUtc: string;
   status: 'Pending' | 'Accepted' | 'Revoked' | 'Expired';
 }
+
+// ============================================================================
+// ADDITIVE PRODUCT EXPANSION TYPES (Community, QOTD, Groups, Mentors, Insights)
+// ============================================================================
+
+export type CommunityPostType = 'Discussion' | 'Question' | 'ExamResult' | 'StudyGroup' | 'Poll';
+export type CommunityPostStatus = 'Open' | 'Solved' | 'Closed' | 'UnderReview';
+
+export interface CommunityCategoryGroupDto {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  sortOrder: number;
+  categories: CommunityCategoryDto[];
+}
+
+export interface CommunityCategoryDto {
+  id: string;
+  groupId: string;
+  groupName?: string;
+  slug: string;
+  name: string;
+  description: string;
+  icon?: string;
+  postCount: number;
+  isPinned?: boolean;
+  examTrack?: string;
+  visibility: 'Public' | 'LearnerOnly' | 'AdminOnly';
+}
+
+export interface CommunityPollOptionDto {
+  id: string;
+  text: string;
+  votes: number;
+  votedByCaller?: boolean;
+}
+
+export interface CommunityPostDetailDto extends CommunityPostDto {
+  postType: CommunityPostType;
+  status: CommunityPostStatus;
+  slug?: string;
+  tags: string[];
+  region?: string;
+  views: number;
+  downvoteCount?: number;
+  voteScore: number;
+  userVote?: 'up' | 'down' | null;
+  isBookmarked?: boolean;
+  examResultMeta?: {
+    examType: string;
+    outcome: 'Pass' | 'Fail' | 'Waiting';
+    examDate?: string;
+    questionCount?: number;
+    weeksStudied?: number;
+    prepResourcesUsed?: string[];
+  };
+  pollMeta?: {
+    question: string;
+    options: CommunityPollOptionDto[];
+    totalVotes: number;
+  };
+}
+
+export interface CreateCommunityPostRequest {
+  channelId: string;
+  title: string;
+  content: string;
+  postType?: CommunityPostType;
+  cohortLabel?: string;
+  tags?: string[];
+  region?: string;
+  examResultMeta?: {
+    examType: string;
+    outcome: 'Pass' | 'Fail' | 'Waiting';
+    examDate?: string;
+    questionCount?: number;
+    weeksStudied?: number;
+    prepResourcesUsed?: string[];
+  };
+  pollMeta?: {
+    question: string;
+    options: string[];
+  };
+}
+
+export interface QotdOptionDto {
+  id: string;
+  letter: 'A' | 'B' | 'C' | 'D';
+  text: string;
+  rationale?: string;
+}
+
+export interface QotdQuestionDto {
+  id: string;
+  dateStr: string; // YYYY-MM-DD
+  title: string;
+  stem: string;
+  category: string;
+  examContext: string;
+  cognitiveSkill: CognitiveSkill;
+  clientNeedCategory: ClientNeedCategory;
+  options: QotdOptionDto[];
+  totalAnswers: number;
+  correctPercentage?: number;
+  userAnswered?: boolean;
+  userSelectedOptionId?: string;
+  userIsCorrect?: boolean;
+  explanation?: string;
+}
+
+export interface SubmitQotdAnswerRequest {
+  questionId: string;
+  selectedOptionId: string;
+}
+
+export interface QotdSubmissionResultDto {
+  isCorrect: boolean;
+  correctOptionId: string;
+  explanation: string;
+  userStreak: number;
+  totalAnswered: number;
+  overallAccuracyPercentage: number;
+}
+
+export interface StudyGroupDto {
+  id: string;
+  title: string;
+  description: string;
+  examTrack: string;
+  subject?: string;
+  topic?: string;
+  targetExamDate?: string;
+  meetingCadence: string;
+  timezone: string;
+  maxMembers: number;
+  currentMembers: number;
+  isPrivate: boolean;
+  createdByUserId: string;
+  creatorName: string;
+  createdAtUtc: string;
+  isMember?: boolean;
+  isOwner?: boolean;
+  objectives?: string[];
+}
+
+export interface CreateStudyGroupRequest {
+  title: string;
+  description: string;
+  examTrack: string;
+  subject?: string;
+  targetExamDate?: string;
+  meetingCadence: string;
+  timezone: string;
+  maxMembers?: number;
+  isPrivate?: boolean;
+  objectives?: string[];
+}
+
+export interface MentorProfileDto {
+  id: string;
+  name: string;
+  qualification: string; // e.g. MSN, RN, CCRN
+  specialties: string[];
+  experienceYears: number;
+  examTracks: string[];
+  bio: string;
+  avatarUrl?: string;
+  isVerified: boolean;
+  availabilityStatus: 'Available' | 'Limited' | 'Unavailable';
+  sessionFormats: ('1-on-1 Q&A' | 'Study Plan Review' | 'Clinical Transition Guidance')[];
+  languages: string[];
+  rating: number;
+  reviewCount: number;
+}
+
+export interface MentorSessionRequestDto {
+  mentorId: string;
+  learnerId?: string;
+  topic: string;
+  examTrack: string;
+  message: string;
+  preferredCadence: string;
+}
+
+export interface CommunityExamOutcomeStatsDto {
+  examName: string;
+  passed: number;
+  failed: number;
+  waiting: number;
+}
+
+export interface CommunityInsightsSummaryDto {
+  totalResultsReported: number;
+  totalResults?: number;
+  averageStudyWeeks: number;
+  passPercentageOverall: number;
+  outcomesByQuestionCount: {
+    questionBracket: string; // e.g. "85 Qs", "86-100 Qs", "101-130 Qs", "131-150 Qs"
+    passed: number;
+    failed: number;
+  }[];
+  mostUsedResources: {
+    resourceName: string;
+    userCount: number;
+    passPercentage: number;
+  }[];
+  byExam: CommunityExamOutcomeStatsDto[];
+  recentSharedResults?: {
+    id: string;
+    examType: string;
+    outcome: 'Pass' | 'Fail' | 'Waiting';
+    examDate?: string;
+    questionCount?: number;
+    weeksStudied?: number;
+    prepResources: string[];
+    story?: string;
+    createdAtUtc: string;
+  }[];
+}
+
+export interface GlobalSearchFacetDto {
+  type: string;
+  label: string;
+  count: number;
+}
+
+export interface GlobalSearchResultItemDto {
+  id: string;
+  type: 'exam' | 'study_set' | 'care_plan' | 'lecture' | 'study_guide' | 'community_post' | 'group' | 'mentor';
+  title: string;
+  excerpt: string;
+  category: string;
+  url: string;
+  tags?: string[];
+  badge?: string;
+}
+
+export interface GlobalSearchResponseDto {
+  query: string;
+  totalCount: number;
+  items: GlobalSearchResultItemDto[];
+  facets: GlobalSearchFacetDto[];
+}

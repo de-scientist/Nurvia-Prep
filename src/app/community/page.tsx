@@ -68,7 +68,8 @@ export default function CommunityPage() {
     void nurviaApi.getCommunityPosts().then((res) => {
       if (!active) return;
       if (res.success && res.data) {
-        setPosts(res.data);
+        const list = Array.isArray(res.data) ? res.data : (res.data as any).items || [];
+        setPosts(list);
         setUnavailableError(null);
       } else {
         setUnavailableError(res.message || "Community Discussions are currently unavailable.");
@@ -114,6 +115,45 @@ export default function CommunityPage() {
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-surface text-sm placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-brand-teal"
                 />
               </div>
+            </div>
+
+            {/* Additive Ecosystem Quick Jump Bar */}
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
+              <Link href="/community/categories">
+                <Button variant="outline" size="sm" className="rounded-xl text-xs font-semibold">
+                  67 Categories
+                </Button>
+              </Link>
+              <Link href="/forum">
+                <Button variant="outline" size="sm" className="rounded-xl text-xs font-semibold">
+                  Live Forum
+                </Button>
+              </Link>
+              <Link href="/qotd">
+                <Button variant="outline" size="sm" className="rounded-xl text-xs font-semibold">
+                  Daily Question
+                </Button>
+              </Link>
+              <Link href="/groups">
+                <Button variant="outline" size="sm" className="rounded-xl text-xs font-semibold">
+                  Study Groups
+                </Button>
+              </Link>
+              <Link href="/mentors">
+                <Button variant="outline" size="sm" className="rounded-xl text-xs font-semibold">
+                  Nurse Mentors
+                </Button>
+              </Link>
+              <Link href="/insights">
+                <Button variant="outline" size="sm" className="rounded-xl text-xs font-semibold">
+                  Pass Insights
+                </Button>
+              </Link>
+              <Link href="/new">
+                <Button size="sm" className="rounded-xl bg-[#0A5C66] text-white hover:bg-[#084c55] text-xs font-semibold">
+                  + Create Post
+                </Button>
+              </Link>
             </div>
           </div>
         </section>

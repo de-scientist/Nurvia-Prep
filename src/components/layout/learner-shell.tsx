@@ -39,6 +39,10 @@ import {
   Stethoscope,
   Sparkles,
   ShieldAlert,
+  MessageSquare,
+  Compass,
+  Headphones,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -67,6 +71,7 @@ export const learnerNavigation: NavSection[] = [
     title: "OVERVIEW",
     items: [
       { name: "Dashboard", href: "/learner", icon: LayoutDashboard },
+      { name: "Daily Question", href: "/qotd", icon: Sparkles, badge: "Daily" },
       { name: "Performance", href: "/learner/performance", icon: TrendingUp },
       { name: "Study Planner", href: "/learner/planner", icon: CalendarCheck, badge: "New" },
     ],
@@ -130,10 +135,23 @@ export const learnerNavigation: NavSection[] = [
     title: "RESOURCES",
     items: [
       { name: "Study Hub", href: "/learner/hub", icon: Layers },
-      { name: "Study Guides", href: "/learner/guides", icon: FileText },
+      { name: "NCLEX Prep Hub", href: "/nclex/study", icon: GraduationCap, badge: "Core" },
+      { name: "Study Guides", href: "/study-guides", icon: FileText },
       { name: "Flashcards", href: "/learner/flashcards", icon: Layers, badge: "SRS" },
-      { name: "Care Plans", href: "/learner/care-plans", icon: HeartHandshake },
+      { name: "Care Plans", href: "/care-plans", icon: HeartHandshake },
+      { name: "Mark K. Lectures", href: "/mark-k", icon: Headphones },
+      { name: "Exam Directory", href: "/nursing-exams", icon: BookOpen },
       { name: "Calculators", href: "/learner/calculators", icon: Calculator },
+    ],
+  },
+  {
+    title: "COMMUNITY & COLLABORATION",
+    items: [
+      { name: "Community Forum", href: "/forum", icon: MessageSquare },
+      { name: "Category Directory", href: "/community/categories", icon: Layers },
+      { name: "Study Groups", href: "/groups", icon: Users },
+      { name: "Nurse Mentors", href: "/mentors", icon: Compass },
+      { name: "Community Insights", href: "/insights", icon: TrendingUp },
     ],
   },
   {
@@ -433,7 +451,3 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-
-
-

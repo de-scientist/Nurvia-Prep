@@ -265,7 +265,7 @@ export const nurviaApi = {
   async uploadAvatar(file: File): Promise<ApiResponse<{ storageKey: string; message: string }>> {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     return request<{ storageKey: string; message: string }>('/api/avatar', {
       method: 'POST',
       body: formData,
@@ -1180,34 +1180,168 @@ export const nurviaApi = {
     return unprovisionedResponse('Study Guides');
   },
 
-  // Community (not yet provisioned on LexmaCasto)
-  async getCommunityPosts(_params?: { channelId?: string; search?: string }): Promise<ApiResponse<import('./api-types').CommunityPostDto[]>> {
-    return unprovisionedResponse('Community Discussions');
+  // Community & Additive Ecosystem API Integrations
+  async getCommunityCategoryGroups(): Promise<ApiResponse<import('./api-types').CommunityCategoryGroupDto[]>> {
+    return request<import('./api-types').CommunityCategoryGroupDto[]>('/api/community/categories');
   },
 
-  async getCommunityPost(_id: string): Promise<ApiResponse<import('./api-types').CommunityPostDto>> {
-    return unprovisionedResponse('Community Discussions');
+  async getCommunityPosts(params?: {
+    sort?: 'newest' | 'hot' | 'top' | 'comments' | 'unanswered';
+    categorySlug?: string;
+    channelId?: string;
+    postType?: import('./api-types').CommunityPostType;
+    search?: string;
+    solvedOnly?: boolean;
+    region?: string;
+    tag?: string;
+    page?: number;
+    pageSize?: number;
+  }): Promise<ApiResponse<{ items: import('./api-types').CommunityPostDetailDto[]; totalCount: number; page: number; totalPages: number }>> {
+    const qs = buildQuery(params);
+    return request<{ items: import('./api-types').CommunityPostDetailDto[]; totalCount: number; page: number; totalPages: number }>(
+      `/api/community/posts${qs ? `?${qs}` : ''}`
+    );
   },
 
-  async createCommunityPost(_payload: {
-    channelId: string;
-    cohortLabel: string;
-    title: string;
-    content: string;
-  }): Promise<ApiResponse<import('./api-types').CommunityPostDto>> {
-    return unprovisionedResponse('Community Discussions');
+  async getCommunityPost(id: string): Promise<ApiResponse<import('./api-types').CommunityPostDetailDto>> {
+    return request<import('./api-types').CommunityPostDetailDto>(`/api/community/posts/${encodeURIComponent(id)}`);
   },
 
-  async addCommunityReply(_postId: string, _content: string): Promise<ApiResponse<import('./api-types').CommunityReplyDto>> {
-    return unprovisionedResponse('Community Discussions');
+  async createCommunityPost(payload: import('./api-types').CreateCommunityPostRequest): Promise<ApiResponse<import('./api-types').CommunityPostDetailDto>> {
+    return request<import('./api-types').CommunityPostDetailDto>('/api/community/posts', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
   },
 
-  async toggleCommunityLike(_postId: string): Promise<ApiResponse<{ liked: boolean; likeCount: number }>> {
-    return unprovisionedResponse('Community Discussions');
+  async addCommunityReply(postId: string, content: string): Promise<ApiResponse<import('./api-types').CommunityReplyDto>> {
+    return request<import('./api-types').CommunityReplyDto>(`/api/community/posts/${encodeURIComponent(postId)}/replies`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+  },
+
+  async toggleCommunityVote(postId: string, direction: 'up' | 'down'): Promise<ApiResponse<{ voteScore: number; userVote: 'up' | 'down' | null }>> {
+    return request<{ voteScore: number; userVote: 'up' | 'down' | null }>(`/api/community/posts/${encodeURIComponent(postId)}/vote`, {
+      method: 'POST',
+      body: JSON.stringify({ direction }),
+    });
+  },
+
+  async toggleCommunityLike(postId: string): Promise<ApiResponse<{ liked: boolean; likeCount: number }>> {
+    const res = await this.toggleCommunityVote(postId, 'up');
+    if (!res.success || !res.data) {
+      return {
+        success: false,
+        statusCode: res.statusCode,
+        errorCode: res.errorCode,
+        message: res.message,
+      };
+    }
+    return {
+      success: true,
+      statusCode: 200,
+      message: 'Vote recorded',
+      data: {
+        liked: res.data.userVote === 'up',
+        likeCount: res.data.voteScore,
+      },
+    };
+  },
+
+  async reportCommunityPost(postId: string, reason: string): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    return request<{ success: boolean; message: string }>(`/api/community/posts/${encodeURIComponent(postId)}/report`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
   },
 
   async deleteCommunityPost(_postId: string): Promise<ApiResponse<string>> {
-    return unprovisionedResponse('Community Discussions');
+    return unprovisionedResponse('Post Deletion');
+  },
+
+  // Question of the Day
+  async getQotdToday(): Promise<ApiResponse<import('./api-types').QotdQuestionDto>> {
+    return request<import('./api-types').QotdQuestionDto>('/api/qotd/today');
+  },
+
+  async submitQotdAnswer(questionId: string, selectedOptionId: string): Promise<ApiResponse<import('./api-types').QotdSubmissionResultDto>> {
+    return request<import('./api-types').QotdSubmissionResultDto>('/api/qotd/submit', {
+      method: 'POST',
+      body: JSON.stringify({ questionId, selectedOptionId }),
+    });
+  },
+
+  async getQotdHistory(): Promise<ApiResponse<{ streak: number; totalCompleted: number; pastQuestions: { id: string; dateStr: string; title: string; category: string }[] }>> {
+    return request<{ streak: number; totalCompleted: number; pastQuestions: { id: string; dateStr: string; title: string; category: string }[] }>('/api/qotd/history');
+  },
+
+  // Study Groups
+  async getStudyGroups(params?: { examTrack?: string; search?: string }): Promise<ApiResponse<import('./api-types').StudyGroupDto[]>> {
+    const qs = buildQuery(params);
+    return request<import('./api-types').StudyGroupDto[]>(`/api/groups${qs ? `?${qs}` : ''}`);
+  },
+
+  async getStudyGroup(id: string): Promise<ApiResponse<import('./api-types').StudyGroupDto>> {
+    return request<import('./api-types').StudyGroupDto>(`/api/groups/${encodeURIComponent(id)}`);
+  },
+
+  async createStudyGroup(payload: import('./api-types').CreateStudyGroupRequest): Promise<ApiResponse<import('./api-types').StudyGroupDto>> {
+    return request<import('./api-types').StudyGroupDto>('/api/groups', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async joinStudyGroup(id: string): Promise<ApiResponse<{ success: boolean; message: string; group?: import('./api-types').StudyGroupDto }>> {
+    return request<{ success: boolean; message: string; group?: import('./api-types').StudyGroupDto }>(`/api/groups/${encodeURIComponent(id)}/join`, {
+      method: 'POST',
+    });
+  },
+
+  async leaveStudyGroup(id: string): Promise<ApiResponse<{ success: boolean; message: string; group?: import('./api-types').StudyGroupDto }>> {
+    return request<{ success: boolean; message: string; group?: import('./api-types').StudyGroupDto }>(`/api/groups/${encodeURIComponent(id)}/leave`, {
+      method: 'POST',
+    });
+  },
+
+  // Nurse Mentors
+  async getMentors(params?: { specialty?: string; search?: string; examTrack?: string }): Promise<ApiResponse<import('./api-types').MentorProfileDto[]>> {
+    const qs = buildQuery(params);
+    return request<import('./api-types').MentorProfileDto[]>(`/api/mentors${qs ? `?${qs}` : ''}`);
+  },
+
+  async requestMentorSession(payload: import('./api-types').MentorSessionRequestDto): Promise<ApiResponse<{ success: boolean; message: string; requestId: string }>> {
+    return request<{ success: boolean; message: string; requestId: string }>('/api/mentors/request', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  // Community Insights
+  async getCommunityInsights(): Promise<ApiResponse<import('./api-types').CommunityInsightsSummaryDto>> {
+    return request<import('./api-types').CommunityInsightsSummaryDto>('/api/insights/summary');
+  },
+
+  async shareExamResult(payload: {
+    examType: string;
+    outcome: 'Pass' | 'Fail' | 'Waiting';
+    examDate?: string;
+    questionCount?: number;
+    weeksStudied?: number;
+    prepResources: string[];
+    story?: string;
+  }): Promise<ApiResponse<{ success: boolean; message: string; recordId: string }>> {
+    return request<{ success: boolean; message: string; recordId: string }>('/api/insights/share', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  // Global Multi-Faceted Search
+  async searchGlobal(query: string, type?: string): Promise<ApiResponse<import('./api-types').GlobalSearchResponseDto>> {
+    const qs = buildQuery({ q: query, type });
+    return request<import('./api-types').GlobalSearchResponseDto>(`/api/search/global${qs ? `?${qs}` : ''}`);
   },
 
   // AI Tutor Chat Sessions (not yet provisioned on LexmaCasto)
@@ -1520,4 +1654,3 @@ export const nurviaApi = {
     return request(`/api/system/debug/routes${query ? `?${query}` : ''}`);
   },
 };
-

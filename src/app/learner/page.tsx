@@ -9,6 +9,15 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { nurviaApi } from "@/lib/api-client";
 import type { ExamAttemptSummaryDto, ExamDto } from "@/lib/api-types";
 import { getPersonalizedGreeting } from "@/lib/greeting-utils";
+import {
+  Sparkles,
+  ArrowRight,
+  Flame,
+  Users,
+  GraduationCap,
+  Compass,
+  BookOpen,
+} from "lucide-react";
 
 export default function LearnerDashboardPage() {
   const { user } = useAuth();
@@ -59,6 +68,80 @@ export default function LearnerDashboardPage() {
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-foreground-secondary">
             Continue an in-progress attempt or choose a published exam. Your activity and results are drawn from your saved account data.
           </p>
+        </section>
+
+        {/* Additive Ecosystem Banner */}
+        <section className="rounded-2xl border border-teal-200 bg-gradient-to-r from-teal-50/70 via-white to-slate-50/70 p-5 shadow-sm dark:border-teal-900/60 dark:bg-surface">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-teal-100/80 pb-4 dark:border-border">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600 text-white shadow-sm">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-teal-800 dark:text-teal-400">
+                    Question of the Day
+                  </span>
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                    Daily Challenge
+                  </span>
+                </div>
+                <p className="text-xs text-foreground-secondary">
+                  Solve today's clinical judgment case question and maintain your daily streak.
+                </p>
+              </div>
+            </div>
+            <Link href="/qotd">
+              <Button size="sm" className="bg-[#0A5C66] text-white hover:bg-[#084c55] font-semibold text-xs">
+                Solve Today's Question →
+              </Button>
+            </Link>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6 pt-1">
+            <Link
+              href="/nclex/study"
+              className="flex items-center gap-2 rounded-xl border border-border bg-surface p-2.5 text-xs font-semibold text-foreground hover:border-teal-400 hover:text-teal-700 transition-all"
+            >
+              <GraduationCap className="h-4 w-4 text-teal-600" />
+              <span className="truncate">NCLEX Hub</span>
+            </Link>
+            <Link
+              href="/study-guides"
+              className="flex items-center gap-2 rounded-xl border border-border bg-surface p-2.5 text-xs font-semibold text-foreground hover:border-teal-400 hover:text-teal-700 transition-all"
+            >
+              <BookOpen className="h-4 w-4 text-indigo-600" />
+              <span className="truncate">Study Guides</span>
+            </Link>
+            <Link
+              href="/groups"
+              className="flex items-center gap-2 rounded-xl border border-border bg-surface p-2.5 text-xs font-semibold text-foreground hover:border-teal-400 hover:text-teal-700 transition-all"
+            >
+              <Users className="h-4 w-4 text-rose-600" />
+              <span className="truncate">Study Groups</span>
+            </Link>
+            <Link
+              href="/mentors"
+              className="flex items-center gap-2 rounded-xl border border-border bg-surface p-2.5 text-xs font-semibold text-foreground hover:border-teal-400 hover:text-teal-700 transition-all"
+            >
+              <Compass className="h-4 w-4 text-purple-600" />
+              <span className="truncate">Nurse Mentors</span>
+            </Link>
+            <Link
+              href="/insights"
+              className="flex items-center gap-2 rounded-xl border border-border bg-surface p-2.5 text-xs font-semibold text-foreground hover:border-teal-400 hover:text-teal-700 transition-all"
+            >
+              <Flame className="h-4 w-4 text-amber-600" />
+              <span className="truncate">Pass Rates</span>
+            </Link>
+            <Link
+              href="/forum"
+              className="flex items-center gap-2 rounded-xl border border-border bg-surface p-2.5 text-xs font-semibold text-foreground hover:border-teal-400 hover:text-teal-700 transition-all"
+            >
+              <Users className="h-4 w-4 text-sky-600" />
+              <span className="truncate">Community</span>
+            </Link>
+          </div>
         </section>
 
         {error && <p role="alert" className="rounded-lg border border-rose-300 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200">{error}</p>}

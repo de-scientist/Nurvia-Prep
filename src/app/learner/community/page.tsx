@@ -44,7 +44,8 @@ export default function CommunityPage() {
       channelId: channelId === "all" ? undefined : channelId,
     });
     if (res.success && res.data) {
-      setPosts(res.data);
+      const list = Array.isArray(res.data) ? res.data : (res.data as any).items || [];
+      setPosts(list);
     } else {
       setError(res.message || "Unable to load community discussions.");
     }
