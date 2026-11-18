@@ -186,36 +186,26 @@ export default function ChangePasswordPage() {
 
   if (!user) {
     return (
-      <main className="min-h-[70vh] flex items-center justify-center px-4 py-10 bg-amber-50">
-        <div className="w-full max-w-md rounded-3xl border border-[var(--text-color)]/15 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-cyan-500/10 backdrop-blur-xl shadow-xl px-6 py-8 text-center">
-
-          {/* Icon */}
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/20">
-            <FiLock className="h-7 w-7 text-indigo-500" />
+      <main className="min-h-[75vh] flex items-center justify-center px-4 py-12 bg-[#F8FAFC] dark:bg-[#0B1220]">
+        <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] shadow-lg px-6 py-8 text-center">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#142B4A]/10 dark:bg-white/10 border border-[#0D9488]/20">
+            <FiLock className="h-6 w-6 text-[#0D9488]" />
           </div>
-
-          {/* Heading */}
-          <h2 className="text-xl font-bold text-[var(--text-color)]">
+          <h2 className="text-xl font-bold text-[#0F172A] dark:text-white">
             Sign In Required
           </h2>
-
-          {/* Message */}
-          <p className="mt-2 text-sm leading-relaxed opacity-70 text-[var(--text-color)]">
+          <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
             You must be logged in to access your security settings.
             Please sign in to update your password or PIN.
           </p>
-
-          {/* Button */}
           <Link
             href="/auth/login"
-            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 hover:shadow-xl"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-[#142B4A] hover:bg-[#1E3A5F] px-6 py-3 text-sm font-semibold text-white shadow-sm transition"
           >
             <FiLogIn className="h-4 w-4" />
-            Log In to Continue
+            Sign In to Continue
           </Link>
-
-          {/* Small hint */}
-          <p className="mt-4 text-[11px] opacity-50 text-[var(--text-color)]">
+          <p className="mt-4 text-[11px] text-slate-400">
             Password and PIN settings are available only to signed-in users.
           </p>
         </div>
@@ -224,38 +214,35 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <main
-      className="pt-16 transition-all duration-300 ease-in-out overflow-x-hidden bg-yellow-100"
-    >
-      <div className="p-3 md:p-4 space-y-5 w-full max-w-2xl mx-auto">
+    <main className="py-12 min-h-[75vh] bg-[#F8FAFC] dark:bg-[#0B1220]">
+      <div className="px-4 sm:px-6 lg:px-8 space-y-5 w-full max-w-3xl mx-auto">
 
         {/* Current user info */}
-        <div className="rounded-2xl border border-[var(--text-color)]/15 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-cyan-500/10 backdrop-blur-xl px-5 py-5 flex flex-col items-center text-center gap-2">
-          <h1 className="text-lg font-bold text-[var(--text-color)] flex items-center gap-2">
-            <FiLock className="w-4 h-4 text-indigo-500" />
-            Change / Update My Current Password
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] px-6 py-6 flex flex-col items-center text-center gap-1 shadow-xs">
+          <h1 className="text-xl font-bold text-[#0F172A] dark:text-white flex items-center gap-2">
+            <FiLock className="w-5 h-5 text-[#0D9488]" />
+            Update Password & PIN
           </h1>
-          <p className="text-md opacity-60 text-[var(--text-color)]">{user.userName} ——  {user.email}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{user.userName} · {user.email}</p>
         </div>
 
-        {/* ─────────────────────────────────────────────────────────────────────── */}
-        <p className="text-xs opacity-60 text-[var(--text-color)] text-center">
+        <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
           Update your password, your PIN, or both — each is saved independently.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
           {/* Password card */}
-          <div className="rounded-2xl border border-[var(--text-color)] bg-[var(--content-bg)]p-4 md:p-5 space-y-4">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-6 space-y-4 shadow-xs">
 
             {passwordMessage && (
-              <p className={`text-xs text-center  font-semibold ${passwordMessage.ok ? "text-emerald-600" : "text-rose-600"}`}>
+              <p className={`text-xs text-center font-semibold ${passwordMessage.ok ? "text-emerald-600" : "text-rose-600"}`}>
                 {passwordMessage.text}
               </p>
             )}
 
-            <h2 className="text-sm font-bold text-[var(--text-color)] flex items-center gap-2">
-              <FiLock className="w-4 h-4 text-indigo-500" />
+            <h2 className="text-sm font-bold text-[#0F172A] dark:text-white flex items-center gap-2">
+              <FiLock className="w-4 h-4 text-[#0D9488]" />
               Password
             </h2>
 
@@ -274,13 +261,13 @@ export default function ChangePasswordPage() {
 
             {newPassword.length > 0 && (
               <div>
-                <div className="h-1.5 w-full rounded-full bg-[var(--text-color)] overflow-hidden">
+                <div className="h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                   <div
                     className={`h-full ${strength.tone} transition-all duration-300`}
                     style={{ width: `${strength.percent}%` }}
                   />
                 </div>
-                <p className="text-[16px] mt-1 opacity-60 text-[var(--text-color)]">
+                <p className="text-xs mt-1.5 text-slate-500 dark:text-slate-400">
                   Strength: {strength.label} — use 8+ characters with a mix of case, numbers, and symbols.
                 </p>
               </div>
@@ -293,31 +280,31 @@ export default function ChangePasswordPage() {
               autoComplete="new-password"
             />
             {confirmPassword.length > 0 && !passwordsMatch && (
-              <p className="text-[16px] font-semibold text-rose-600">Passwords do not match.</p>
+              <p className="text-xs font-semibold text-rose-600">Passwords do not match.</p>
             )}
 
             <button
               onClick={handlePasswordSubmit}
               disabled={!canSubmitPassword}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm bg-[#142B4A] hover:bg-[#0D9488] text-white shadow-xs transition disabled:opacity-50"
             >
               <FiCheckCircle className="w-4 h-4" />
-              {passwordBusy ? "Updating…" : "Submit & Update Password"}
+              {passwordBusy ? "Updating…" : "Update Password"}
             </button>
 
           </div>
 
           {/* PIN card */}
-          <div className="rounded-2xl border border-[var(--text-color)] bg-[var(--content-bg)] p-4 md:p-5 space-y-4">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] p-6 space-y-4 shadow-xs">
 
             {pinMessage && (
-              <p className={`text-xs  text-center font-semibold ${pinMessage.ok ? "text-emerald-600" : "text-rose-600"}`}>
+              <p className={`text-xs text-center font-semibold ${pinMessage.ok ? "text-emerald-600" : "text-rose-600"}`}>
                 {pinMessage.text}
               </p>
             )}
 
-            <h2 className="text-sm font-bold text-[var(--text-color)] flex items-center gap-2">
-              <FiLock className="w-4 h-4 text-indigo-500" />
+            <h2 className="text-sm font-bold text-[#0F172A] dark:text-white flex items-center gap-2">
+              <FiLock className="w-4 h-4 text-[#0D9488]" />
               PIN
             </h2>
 
@@ -340,16 +327,16 @@ export default function ChangePasswordPage() {
               autoComplete="off"
             />
             {confirmPin.length > 0 && !pinsMatch && (
-              <p className="text-[16px] font-semibold text-rose-600">PINs do not match.</p>
+              <p className="text-xs font-semibold text-rose-600">PINs do not match.</p>
             )}
             {newPin.length > 0 && newPin.length < 4 && (
-              <p className="text-[16px] font-semibold text-rose-600">PIN must be at least 4 digits.</p>
+              <p className="text-xs font-semibold text-rose-600">PIN must be at least 4 digits.</p>
             )}
 
             <button
               onClick={handlePinSubmit}
               disabled={!canSubmitPin}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm bg-[#142B4A] hover:bg-[#0D9488] text-white shadow-xs transition disabled:opacity-50"
             >
               <FiCheckCircle className="w-4 h-4" />
               {pinBusy ? "Updating…" : "Update PIN"}
