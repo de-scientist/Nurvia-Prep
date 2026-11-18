@@ -27,7 +27,7 @@ export function hasRole(user: AuthUserDto | null, role: string): boolean {
  */
 export function getLoginRedirectUrl(user: AuthUserDto | null, defaultUrl: string = '/'): string {
   if (!user) return defaultUrl;
-  
+
   // Determine the appropriate dashboard based on user roles
   if (hasRole(user, 'Superadmin')) {
     return '/admin/dashboard';
@@ -40,7 +40,7 @@ export function getLoginRedirectUrl(user: AuthUserDto | null, defaultUrl: string
   } else if (hasRole(user, 'Learner')) {
     return '/learner/dashboard';
   }
-  
+
   // Default fallback
   return defaultUrl;
 }
@@ -64,7 +64,7 @@ export function isProtectedRoute(path: string): boolean {
     '/reviewer',
     '/superadmin'
   ];
-  
+
   return protectedRoutes.some(route => path.startsWith(route));
 }
 
@@ -76,7 +76,7 @@ export function isValidRedirectUrl(url: string): boolean {
   if (url.startsWith('/')) {
     return true;
   }
-  
+
   // Allow URLs from the same origin
   try {
     const urlObj = new URL(url);

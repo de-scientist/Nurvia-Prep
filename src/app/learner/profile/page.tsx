@@ -40,7 +40,7 @@ export default function ProfilePage() {
   React.useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
-      
+
       try {
         const response = await nurviaApi.getProfile();
         if (response.success && response.data) {
@@ -253,7 +253,7 @@ export default function ProfilePage() {
           <div className="lg:col-span-2 space-y-6">
             <section className="rounded-2xl border border-border bg-surface p-6 sm:p-8">
               <h2 className="text-lg font-semibold text-foreground mb-4">Personal Information</h2>
-              
+
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -267,7 +267,7 @@ export default function ProfilePage() {
                       maxLength={100}
                     />
                   </div>
-                  
+
                   <div className="space-y-1.5">
                     <Label htmlFor="middleName">Middle Name</Label>
                     <Input
@@ -278,7 +278,7 @@ export default function ProfilePage() {
                       maxLength={100}
                     />
                   </div>
-                  
+
                   <div className="space-y-1.5">
                     <Label htmlFor="lastName">Last Name *</Label>
                     <Input
@@ -290,7 +290,7 @@ export default function ProfilePage() {
                       maxLength={100}
                     />
                   </div>
-                  
+
                   <div className="space-y-1.5">
                     <Label htmlFor="displayName">Display Name *</Label>
                     <Input
@@ -303,7 +303,7 @@ export default function ProfilePage() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-1.5">
                   <Label htmlFor="biography">Biography</Label>
                   <Textarea
@@ -315,7 +315,7 @@ export default function ProfilePage() {
                     rows={4}
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="phoneNumber">Phone Number</Label>
@@ -327,7 +327,7 @@ export default function ProfilePage() {
                       maxLength={20}
                     />
                   </div>
-                  
+
                   <div className="space-y-1.5">
                     <Label htmlFor="country">Country</Label>
                     <Input
@@ -338,7 +338,7 @@ export default function ProfilePage() {
                       maxLength={100}
                     />
                   </div>
-                  
+
                   <div className="space-y-1.5">
                     <Label htmlFor="city">City</Label>
                     <Input
@@ -349,7 +349,7 @@ export default function ProfilePage() {
                       maxLength={100}
                     />
                   </div>
-                  
+
                   <div className="space-y-1.5">
                     <Label htmlFor="professionalTitle">Professional Title</Label>
                     <Input
@@ -360,7 +360,7 @@ export default function ProfilePage() {
                       maxLength={200}
                     />
                   </div>
-                  
+
                   <div className="space-y-1.5">
                     <Label htmlFor="organization">Organization</Label>
                     <Input
@@ -390,7 +390,7 @@ export default function ProfilePage() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-end">
                   <Button type="submit" isLoading={isUpdating} disabled={isUpdating}>
                     {isUpdating ? "Saving..." : "Save Changes"}
@@ -399,24 +399,24 @@ export default function ProfilePage() {
               </form>
             </section>
           </div>
-          
+
           {/* Avatar Section */}
           <div className="space-y-6">
             <section className="rounded-2xl border border-border bg-surface p-6 sm:p-8">
               <h2 className="text-lg font-semibold text-foreground mb-4">Profile Photo</h2>
-              
+
               <div className="flex flex-col items-center space-y-4">
-                <UserAvatar 
-                  name={formData.displayName || user?.name} 
+                <UserAvatar
+                  name={formData.displayName || user?.name}
                   avatarUrl={avatarPreview || (profile?.avatarStorageKey ? `/api/avatar/${profile.avatarStorageKey}` : null)}
                   size="lg"
                 />
-                
+
                 <div className="w-full space-y-3">
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="flex-1"
                       onClick={() => document.getElementById('avatar-upload')?.click()}
                       disabled={isUploading}
@@ -430,11 +430,11 @@ export default function ProfilePage() {
                       className="hidden"
                       onChange={handleAvatarChange}
                     />
-                    
+
                     {profile?.avatarStorageKey && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         className="flex-1"
                         onClick={handleRemoveAvatar}
                         disabled={isUploading}
@@ -443,22 +443,22 @@ export default function ProfilePage() {
                       </Button>
                     )}
                   </div>
-                  
+
                   {avatarPreview && (
                     <div className="mt-2">
                       <p className="text-sm text-foreground-secondary mb-2">Preview:</p>
-                      <img 
-                        src={avatarPreview} 
-                        alt="Avatar preview" 
+                      <img
+                        src={avatarPreview}
+                        alt="Avatar preview"
                         className="w-24 h-24 rounded-full object-cover border border-border"
                       />
                     </div>
                   )}
-                  
+
                   <div className="flex justify-center">
-                    <Button 
-                      variant="secondary" 
-                      size="sm" 
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={handleUploadAvatar}
                       disabled={!avatarFile || isUploading}
                       className="w-full"
@@ -466,34 +466,34 @@ export default function ProfilePage() {
                       {isUploading ? "Saving..." : "Save Avatar"}
                     </Button>
                   </div>
-                  
+
                   <p className="text-xs text-foreground-muted">
                     JPG, PNG, or WebP. Maximum file size 5MB.
                   </p>
                 </div>
               </div>
             </section>
-            
+
             {/* Profile Summary */}
             <section className="rounded-2xl border border-border bg-surface p-6 sm:p-8">
               <h2 className="text-lg font-semibold text-foreground mb-4">Profile Summary</h2>
-              
+
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-foreground-secondary">Name</p>
                   <p className="font-medium">{profile?.displayName || user?.name}</p>
                 </div>
-                
+
                 <div>
                   <p className="text-sm text-foreground-secondary">Email</p>
                   <p className="font-medium">{user?.email}</p>
                 </div>
-                
+
                 <div>
                   <p className="text-sm text-foreground-secondary">Role</p>
                   <p className="font-medium">{user?.role}</p>
                 </div>
-                
+
                 <div>
                   <p className="text-sm text-foreground-secondary">Member Since</p>
                   <p className="font-medium">January 2024</p>
@@ -506,4 +506,3 @@ export default function ProfilePage() {
     </LearnerShell>
   );
 }
-

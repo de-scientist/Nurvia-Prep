@@ -15,7 +15,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       "(prefers-color-scheme: dark)"
     ).matches;
     const activeDark = storedTheme === "dark" || (!storedTheme && systemPrefersDark);
-    
+
     setIsDark(activeDark);
     if (activeDark) {
       document.documentElement.classList.add("dark");

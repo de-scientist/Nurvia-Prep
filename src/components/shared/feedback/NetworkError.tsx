@@ -39,13 +39,13 @@ export function NetworkError({
 }: NetworkErrorProps) {
   const [isRetrying, setIsRetrying] = React.useState(false);
   const [retryCount, setRetryCount] = React.useState(0);
-  
+
   const handleRetry = React.useCallback(async () => {
     if (!onRetry || isRetrying) return;
-    
+
     setIsRetrying(true);
     setRetryCount(prev => prev + 1);
-    
+
     try {
       // Attempt retry using the retry infrastructure
       if (shouldRetryRequest(error, { retry: true })) {
@@ -53,7 +53,7 @@ export function NetworkError({
         const result = await retryOperation(async () => {
           await onRetry();
         }, options);
-        
+
         if (result.error) {
           // Handle retry failure
           console.error("Retry failed:", result.error);
@@ -68,14 +68,14 @@ export function NetworkError({
       setIsRetrying(false);
     }
   }, [onRetry, isRetrying, error, retryOptions]);
-  
+
   // If we have an error and it's not just a network error, use the ApiErrorHandler
   if (error && !isRetrying) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="max-w-md w-full">
-          <ApiErrorHandler 
-            error={error} 
+          <ApiErrorHandler
+            error={error}
             onRetry={handleRetry}
             title={title}
             showRetry={showRetry}
@@ -84,7 +84,7 @@ export function NetworkError({
       </div>
     );
   }
-  
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="flex flex-col items-center gap-6 text-center max-w-md">

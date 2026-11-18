@@ -57,7 +57,7 @@ class AuthErrorBoundary extends React.Component<AuthErrorBoundaryProps, AuthErro
                 Something went wrong
               </h1>
               <p className="mt-3 text-sm text-foreground-secondary">
-                We encountered an error while loading your authentication state. 
+                We encountered an error while loading your authentication state.
                 This may be due to a temporary issue with the authentication system.
               </p>
             </motion.div>

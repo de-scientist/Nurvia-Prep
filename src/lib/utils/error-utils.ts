@@ -44,7 +44,7 @@ export function classifyError(error: unknown): ErrorType {
   // Handle API errors
   if (error && typeof error === 'object' && 'statusCode' in error) {
     const apiError = error as ApiError;
-    
+
     switch (apiError.statusCode || apiError.status) {
       case 400:
         return ErrorType.HTTP_400;
@@ -89,7 +89,7 @@ export function classifyError(error: unknown): ErrorType {
  */
 export function isRetryableError(error: unknown): boolean {
   const errorType = classifyError(error);
-  
+
   // These errors are generally safe to retry
   return [
     ErrorType.NETWORK_ERROR,
@@ -106,7 +106,7 @@ export function isRetryableError(error: unknown): boolean {
  */
 export function isAuthError(error: unknown): boolean {
   const errorType = classifyError(error);
-  
+
   return [
     ErrorType.HTTP_401,
     ErrorType.HTTP_403
@@ -118,7 +118,7 @@ export function isAuthError(error: unknown): boolean {
  */
 export function getUserFriendlyMessage(error: unknown): string {
   const errorType = classifyError(error);
-  
+
   switch (errorType) {
     case ErrorType.NETWORK_ERROR:
       return 'Unable to connect to NURVIA services. Please check your internet connection.';

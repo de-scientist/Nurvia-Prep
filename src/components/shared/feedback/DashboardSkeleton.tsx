@@ -19,7 +19,7 @@ export function DashboardSkeleton({ className }: { className?: string }) {
         </div>
         <div className="h-10 w-32 bg-surface-muted rounded animate-pulse"></div>
       </motion.div>
-      
+
       {/* Stats Cards Skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -32,7 +32,7 @@ export function DashboardSkeleton({ className }: { className?: string }) {
           </SkeletonCard>
         ))}
       </div>
-      
+
       {/* Charts and Data Grid Skeleton */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
@@ -55,7 +55,7 @@ export function DashboardSkeleton({ className }: { className?: string }) {
           </SkeletonCard>
         </div>
       </div>
-      
+
       {/* Recent Activity */}
       <SkeletonCard className="h-64">
         <div className="h-4 w-32 bg-surface-muted rounded animate-pulse mb-4"></div>

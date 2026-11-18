@@ -28,7 +28,7 @@ export function RedirectScreen({
         >
           <Logo size="md" variant="compact" withLink={false} />
         </motion.div>
-        
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -41,7 +41,7 @@ export function RedirectScreen({
             {description}
           </p>
         </motion.div>
-        
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

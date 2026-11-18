@@ -21,15 +21,15 @@ export interface RetryResult<T> {
  */
 export function calculateDelay(attempt: number, options: RetryOptions): number {
   const { initialDelay = 1000, maxDelay = 30000, backoffMultiplier = 2, jitter = true } = options;
-  
+
   let delay = Math.min(initialDelay * Math.pow(backoffMultiplier, attempt - 1), maxDelay);
-  
+
   if (jitter) {
     // Add jitter: random factor between 0.5 and 1.5
     const jitterFactor = 0.5 + Math.random() * 0.5;
     delay *= jitterFactor;
   }
-  
+
   return Math.floor(delay);
 }
 
@@ -47,30 +47,30 @@ export async function retryOperation<T>(
     backoffMultiplier = 2,
     jitter = true
   } = options;
-  
+
   let lastError: unknown | null = null;
   let attempts = 0;
-  
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     attempts = attempt;
-    
+
     try {
       const result = await operation();
       return { data: result, error: null, attempts };
     } catch (error) {
       lastError = error;
-      
+
       // Don't retry on the last attempt
       if (attempt === maxAttempts) {
         break;
       }
-      
+
       // Wait before retrying
       const delay = calculateDelay(attempt, { initialDelay, maxDelay, backoffMultiplier, jitter });
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
-  
+
   return { data: null, error: lastError, attempts };
 }
 

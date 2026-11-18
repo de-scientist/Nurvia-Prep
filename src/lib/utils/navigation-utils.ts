@@ -13,7 +13,7 @@ export async function safeNavigate(url: string, options?: { replace?: boolean })
     console.warn(`Invalid redirect URL attempted: ${url}`);
     return;
   }
-  
+
   // Navigate using Next.js router or window.location
   if (typeof window !== 'undefined') {
     if (options?.replace) {
@@ -32,7 +32,7 @@ export function getLoginRedirectUrl(redirectUrl?: string): string {
   if (redirectUrl && isValidRedirectUrl(redirectUrl)) {
     return redirectUrl;
   }
-  
+
   // Default to dashboard
   return '/';
 }
@@ -49,7 +49,7 @@ export function getLogoutRedirectUrl(): string {
  */
 export function navigateToDashboard(userRole: string | null): string {
   if (!userRole) return '/';
-  
+
   switch (userRole.toLowerCase()) {
     case 'superadmin':
       return '/superadmin/dashboard';
@@ -71,7 +71,7 @@ export function navigateToDashboard(userRole: string | null): string {
  */
 export function isNavigationAllowed(currentRole: string | null, targetRoute: string): boolean {
   if (!currentRole) return false;
-  
+
   // Define role-based access control
   const roleAccess: Record<string, string[]> = {
     'Learner': ['/learner'],
@@ -80,8 +80,8 @@ export function isNavigationAllowed(currentRole: string | null, targetRoute: str
     'Instructor': ['/instructor'],
     'Reviewer': ['/reviewer']
   };
-  
+
   const allowedPaths = roleAccess[currentRole] || [];
-  
+
   return allowedPaths.some(path => targetRoute.startsWith(path));
 }

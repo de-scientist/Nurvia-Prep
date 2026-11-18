@@ -30,12 +30,12 @@ export function shouldRetryRequest(error: unknown, options: RequestOptions = {})
   if (options.retry === false) {
     return false;
   }
-  
+
   // If request is not idempotent, don't retry
   if (options.idempotent === false) {
     return false;
   }
-  
+
   // Check if the error is retryable
   const errorType = classifyError(error);
   return [
@@ -53,12 +53,12 @@ export function shouldRetryRequest(error: unknown, options: RequestOptions = {})
  */
 export function isValidRetry(requestOptions: RequestOptions = {}): boolean {
   const { method = 'GET', idempotent = true } = requestOptions;
-  
+
   // Non-idempotent methods should not be retried automatically
   if (!idempotent && !isIdempotent(method)) {
     return false;
   }
-  
+
   return true;
 }
 

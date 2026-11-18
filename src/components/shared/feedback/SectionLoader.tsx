@@ -10,7 +10,7 @@ interface SectionLoaderProps {
   children?: React.ReactNode;
 }
 
-export function SectionLoader({ 
+export function SectionLoader({
   message = "Loading content...",
   className,
   children
@@ -28,12 +28,12 @@ export function SectionLoader({
           <div className="h-3 w-3 rounded-full bg-brand-teal animate-bounce" style={{ animationDelay: '0.1s' }}></div>
           <div className="h-3 w-3 rounded-full bg-brand-teal animate-bounce" style={{ animationDelay: '0.2s' }}></div>
         </div>
-        
+
         <p className="text-sm text-foreground-secondary">
           {message}
         </p>
       </motion.div>
-      
+
       {children && (
         <div className="mt-4">
           {children}

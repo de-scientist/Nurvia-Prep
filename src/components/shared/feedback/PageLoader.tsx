@@ -12,8 +12,8 @@ interface PageLoaderProps {
   children?: React.ReactNode;
 }
 
-export function PageLoader({ 
-  isLoading = true, 
+export function PageLoader({
+  isLoading = true,
   message = "Loading your workspace...",
   className,
   children

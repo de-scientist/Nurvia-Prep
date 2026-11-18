@@ -9,7 +9,7 @@ interface InlineLoaderProps {
   className?: string;
 }
 
-export function InlineLoader({ 
+export function InlineLoader({
   message = "Loading...",
   className
 }: InlineLoaderProps) {
@@ -25,7 +25,7 @@ export function InlineLoader({
         <div className="h-2 w-2 rounded-full bg-brand-teal animate-bounce" style={{ animationDelay: '0.1s' }}></div>
         <div className="h-2 w-2 rounded-full bg-brand-teal animate-bounce" style={{ animationDelay: '0.2s' }}></div>
       </div>
-      
+
       {message && (
         <span className="text-xs text-foreground-secondary">
           {message}
