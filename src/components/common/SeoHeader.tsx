@@ -37,7 +37,7 @@ export default function SEOHead({
       <meta name="twitter:image" content={SEO.ogImage} />
 
       {/* Favicon */}
-      <link rel="icon" href="/favicons/favicon.png" />
+      <link rel="icon" href="/brand/favicon.svg" />
       <link rel="canonical" href={url} />
     </Head>
   )

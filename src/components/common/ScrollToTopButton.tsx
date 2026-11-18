@@ -11,7 +11,7 @@ export default function ScrollToTopButton() {
       setVisible(window.scrollY > 200);
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -25,7 +25,7 @@ export default function ScrollToTopButton() {
   return (
     <button
       onClick={scrollToTop}
-      className={`fixed bottom-6 right-6 z-50 p-3 rounded-full shadow-md transition-all duration-300 bg-blue-600 hover:bg-blue-700 text-white backdrop-blur-md
+      className={`fixed bottom-6 right-6 z-50 p-3 rounded-full shadow-lg border border-white/15 transition-all duration-200 bg-[#142B4A] hover:bg-[#0D9488] text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0D9488]
         ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
       aria-label="Scroll to top"
     >
