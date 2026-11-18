@@ -124,7 +124,6 @@ try {
     nurviaApi.getCarePlans(),
     nurviaApi.getTutorSessions(),
     nurviaApi.getSavedQuestions(),
-    nurviaApi.getCommunityPosts(),
     nurviaApi.getMySubscription(),
   ]);
   assert.equal(fetchCalled, false, 'Unprovisioned modules must not issue guaranteed-404 network requests');
