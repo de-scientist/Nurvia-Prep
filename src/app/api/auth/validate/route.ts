@@ -8,6 +8,8 @@ const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' };
 export async function GET(request: NextRequest) {
   const token = (request.nextUrl.searchParams.get('token') || '').trim();
   const context = (request.nextUrl.searchParams.get('context') || '').trim();
+  const userGuidId = (request.nextUrl.searchParams.get('userGuidId') || '').trim();
+  const email = (request.nextUrl.searchParams.get('email') || '').trim();
 
   if (!token || !context) {
     return NextResponse.json(
@@ -20,6 +22,12 @@ export async function GET(request: NextRequest) {
     token: token.slice(0, 512),
     context: context.slice(0, 128),
   });
+  if (userGuidId) {
+    params.set('userGuidId', userGuidId.slice(0, 128));
+  }
+  if (email) {
+    params.set('email', email.slice(0, 256));
+  }
 
   const session = await getServerCastoSession();
   const siteMeta = extractSiteMetadataFromRequestHeaders(request.headers, '/api/auth/validate');

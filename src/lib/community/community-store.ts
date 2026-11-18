@@ -5,8 +5,13 @@ import type {
   CommunityReplyDto,
   CreateCommunityPostRequest,
   CommunityPostType,
-  CommunityPostStatus,
 } from '@/lib/api-types';
+
+export interface ReportedCommunityPostRecord {
+  postId: string;
+  reason: string;
+  reportedAtUtc: string;
+}
 
 export const COMMUNITY_CATEGORY_GROUPS: CommunityCategoryGroupDto[] = [
   {
@@ -290,6 +295,7 @@ Cross off units: mL cancels with mL, leaving \`gtt / min\`. Zero memorized conve
 class CommunityStore {
   private posts: CommunityPostDetailDto[] = [...initialPosts];
   private reportedPostIds = new Set<string>();
+  private reportedPosts: ReportedCommunityPostRecord[] = [];
 
   getCategoryGroups(): CommunityCategoryGroupDto[] {
     return COMMUNITY_CATEGORY_GROUPS;
@@ -470,8 +476,18 @@ class CommunityStore {
   reportPost(postId: string, reason: string): boolean {
     const post = this.posts.find((p) => p.id === postId);
     if (!post) return false;
+    const sanitizedReason = (reason || '').trim() || 'Flagged for moderation review';
     this.reportedPostIds.add(postId);
+    this.reportedPosts.push({
+      postId,
+      reason: sanitizedReason,
+      reportedAtUtc: new Date().toISOString(),
+    });
     return true;
+  }
+
+  getReportedPosts(): ReportedCommunityPostRecord[] {
+    return [...this.reportedPosts];
   }
 }
 

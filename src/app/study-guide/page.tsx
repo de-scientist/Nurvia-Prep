@@ -1,13 +1,14 @@
 import { redirect } from "next/navigation";
 
-export default function StudyGuideSingularRedirect({
+export default async function StudyGuideSingularRedirect({
   searchParams,
 }: {
-  searchParams?: { subject?: string; topic?: string };
+  searchParams?: Promise<{ subject?: string; topic?: string }>;
 }) {
+  const resolved = searchParams ? await searchParams : undefined;
   const query = new URLSearchParams();
-  if (searchParams?.subject) query.set("subject", searchParams.subject);
-  if (searchParams?.topic) query.set("topic", searchParams.topic);
+  if (resolved?.subject) query.set("subject", resolved.subject);
+  if (resolved?.topic) query.set("topic", resolved.topic);
 
   const qs = query.toString();
   redirect(`/study-guides${qs ? `?${qs}` : ""}`);
