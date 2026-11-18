@@ -273,8 +273,8 @@ export default function UpperStickyNavBar() {
                         >
                             {/* Light logo */}
                             <Image
-                                src={isLightLogoBroken ? "/logo/logo-dark.png" : "/logo/logo.png"}
-                                alt="Logo"
+                                src="/brand/nurvia-symbol.svg"
+                                alt="NURVIA"
                                 width={0}
                                 height={0}
                                 sizes="100vw"
@@ -290,8 +290,8 @@ export default function UpperStickyNavBar() {
 
                             {/* Dark logo */}
                             <Image
-                                src={isDarkLogoBroken ? "/logo/logo.png" : "/logo/logo-dark.png"}
-                                alt="Logo Dark"
+                                src="/brand/nurvia-symbol.svg"
+                                alt="NURVIA"
                                 width={0}
                                 height={0}
                                 sizes="100vw"
@@ -491,7 +491,7 @@ export default function UpperStickyNavBar() {
                                     </p>
 
                                     {/* Change the overall row text color here */}
-                                    <div className="space-y-2.5 text-xs text-white dark:text-white">
+                                    <div className="space-y-2.5 text-xs text-slate-700 dark:text-slate-200">
                                         <Row icon={<User size={12} />} label="Role" value={role} />
 
                                         <Row

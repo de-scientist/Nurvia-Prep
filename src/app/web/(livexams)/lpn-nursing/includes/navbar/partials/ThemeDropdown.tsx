@@ -133,8 +133,7 @@ const ThemeDropdown: React.FC = () => {
         <div className="fixed inset-0 flex items-center justify-center z-50 select-none">
           <div
             className="
-            bg-gray-300
-            dark:bg-gradient-to-br from-green-400 via-amber-200/90 to-yellow-400/90
+            bg-white dark:bg-slate-900
             p-3
             rounded-xl
             shadow-2xl
@@ -199,9 +198,7 @@ const ThemeDropdown: React.FC = () => {
                   text-s
                   border-2
                 rounded-lg
-                  bg-yellow-300
-                  text-black
-                  border-black
+                  bg-slate-50 text-slate-900 border-slate-300
                   focus:ring-2 focus:ring-cyan-400
                 "
               >
@@ -268,7 +265,7 @@ const ThemeDropdown: React.FC = () => {
                 active:scale-95
               "
             >
-              Apply &amp; Close 🏌️‍♂️
+              Apply &amp; Close
             </button>
 
             <hr className="my-3 border-gray-200 dark:border-gray-700" />

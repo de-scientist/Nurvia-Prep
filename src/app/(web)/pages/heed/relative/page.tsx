@@ -109,14 +109,11 @@ export default function RelativeHeedMessagesPage() {
     <main className="min-h-screen bg-[var(--content-bg)] px-3 pb-10 pt-20 text-[var(--text-color)]">
       <div className="mx-auto max-w-4xl space-y-4">
         {/* Header */}
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111C2E] px-5 py-6 text-center shadow-xs">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3 py-0.5 text-[11px] font-semibold text-[#0D9488] dark:text-teal-300 mb-2">
-            NURVIA Support Center
-          </div>
-          <h1 className="text-2xl font-extrabold text-[#0F172A] dark:text-white md:text-3xl">Your Inbox</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">Conversations with our academic & technical support team</p>
+        <div className="rounded-2xl border border-[var(--text-color)]/40 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 px-5 py-4 text-center shadow-sm">
+          <h1 className="text-2xl font-extrabold md:text-3xl">Your Inbox</h1>
+          <p className="text-sm opacity-70">Conversations with our support team ⚓</p>
           {unreadIds.length > 0 && (
-            <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-[#0D9488] px-3 py-0.5 text-xs font-bold text-white">
+            <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-0.5 text-xs font-bold text-white">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
               {unreadIds.length} new repl{unreadIds.length === 1 ? "y" : "ies"}
             </span>
@@ -152,7 +149,7 @@ export default function RelativeHeedMessagesPage() {
           <SearchBar
             value={searchInput}
             onChange={setSearchInput}
-            placeholder="Search conversations . . . 🏌️‍♂️"
+            placeholder="Search conversations..."
           />
         </div>
 
