@@ -119,9 +119,9 @@ export default function Comparison({
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="px-5 py-2 border-b border-green-300 bg-green-100 flex items-start justify-between gap-3 flex-shrink-0">
+                <div className="px-5 py-2 border-b border-slate-200 bg-gradient-to-r from-[#142B4A] to-[#0D9488] text-white flex items-start justify-between gap-3 flex-shrink-0">
                     <div>
-                        <h2 className="text-2xl font-black text-indigo-900">Title : {examTitle}</h2>
+                        <h2 className="text-lg font-bold text-white">Title : {examTitle}</h2>
                     </div>
                     <button
                         onClick={onClose}
@@ -266,7 +266,7 @@ export default function Comparison({
 
                     <button
                         onClick={onClose}
-                        className="flex-shrink-0 rounded-lg border border-slate-300 px-4 py-1.5 bg-yellow-300 text-xs font-bold text-slate-600 hover:bg-slate-50 transition"
+                        className="flex-shrink-0 rounded-lg border border-slate-200 px-4 py-1.5 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
                     >
                         Cancel &amp; Close
                     </button>
