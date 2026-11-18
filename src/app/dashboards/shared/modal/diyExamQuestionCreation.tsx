@@ -250,11 +250,11 @@ function ModalBody({
     <div className="fixed inset-0 z-[9999]" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative mx-auto mt-6 flex max-h-[calc(100vh-3rem)] w-[min(44rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 shadow-2xl">
-        <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-gradient-to-r from-fuchsia-100 via-lime-100 to-blue-100 px-4 py-3">
+      <div className="relative mx-auto mt-6 flex max-h-[calc(100vh-3rem)] w-[min(44rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0B1220] text-slate-900 dark:text-slate-100 shadow-2xl">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-[#142B4A] via-[#0F2036] to-[#0D9488] px-5 py-4 text-white">
           <div className="min-w-0">
             <h1 className="truncate text-lg font-bold">{subjectName} — Custom Test</h1>
-            <p className="truncate text-xs text-slate-600">
+            <p className="truncate text-xs text-slate-200/80">
               {courseName ? `${courseName} · ` : ""}Pick the exams to draw questions from.
             </p>
           </div>
@@ -262,7 +262,7 @@ function ModalBody({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-xl border border-slate-300 bg-white p-2 text-slate-600 hover:bg-red-100"
+            className="rounded-xl border border-white/20 bg-white/10 p-2 text-white hover:bg-white/20 transition"
           >
             <X className="h-4 w-4" />
           </button>
@@ -395,9 +395,9 @@ function ModalBody({
                   key={m}
                   type="button"
                   onClick={() => setMode(m)}
-                  className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${mode === m
-                    ? "border-indigo-600 bg-indigo-600 text-white"
-                    : "border-slate-300 text-slate-700 hover:bg-slate-100"
+                  className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${mode === m
+                    ? "border-[#142B4A] bg-[#142B4A] text-white"
+                    : "border-slate-300 text-slate-700 hover:border-[#0D9488] hover:text-[#0D9488]"
                     }`}
                 >
                   {m}
@@ -409,7 +409,7 @@ function ModalBody({
               type="button"
               onClick={handleSubmit}
               disabled={!canSubmit}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#142B4A] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#0D9488] disabled:cursor-not-allowed disabled:opacity-40"
             >
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {submitting ? "Creating . . ." : `Create Exam (${totalQuestions} Qs)`}

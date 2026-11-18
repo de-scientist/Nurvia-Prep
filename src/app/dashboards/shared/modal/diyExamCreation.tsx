@@ -126,7 +126,7 @@ function IndeterminateCheckbox({
             aria-label={label}
             checked={state === "all"}
             onChange={(e) => onChange(e.target.checked)}
-            className="h-4 w-4 shrink-0 cursor-pointer accent-indigo-600"
+            className="h-4 w-4 shrink-0 cursor-pointer accent-[#0D9488]"
         />
     );
 }
@@ -600,19 +600,19 @@ export default function DiyExamCreationModal({
                 <SubjectExamsLoader key={s} subjectGuid={s} onLoaded={reportExams} />
             ))}
 
-            <div className="relative mx-auto mt-6 flex max-h-[calc(100vh-3rem)] w-[min(76rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 shadow-2xl">
-                <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-gradient-to-r from-fuchsia-100 via-lime-100 to-blue-100 px-4 py-3">
+            <div className="relative mx-auto mt-6 flex max-h-[calc(100vh-3rem)] w-[min(76rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0B1220] text-slate-900 dark:text-slate-100 shadow-2xl">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-[#142B4A] via-[#0F2036] to-[#0D9488] px-5 py-4 text-white">
                     <div>
                         <h1 className="text-lg font-bold">Build Your Own {targetName} Exam</h1>
-                        <p className="text-xs text-slate-600">
-                            Tick courses, subjects or individual exams. Ticking a parent selects everything inside it.
+                        <p className="text-xs text-slate-200/80">
+                            Select courses, subjects, or individual exams. Selecting a parent selects everything inside it.
                         </p>
                     </div>
                     <button
                         type="button"
                         onClick={onClose}
                         aria-label="Close"
-                        className="rounded-xl border border-slate-300 bg-white p-2 text-slate-600 hover:bg-red-100"
+                        className="rounded-xl border border-white/20 bg-white/10 p-2 text-white hover:bg-white/20 transition"
                     >
                         <X className="h-4 w-4" />
                     </button>
@@ -784,13 +784,13 @@ export default function DiyExamCreationModal({
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder="Leave empty to auto-generate"
-                                        className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500"
+                                        className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setTitle(generateTitle())}
                                         title="Auto-generate a title"
-                                        className="inline-flex items-center gap-1 rounded-lg border border-indigo-300 bg-indigo-50 px-3 text-xs font-semibold text-indigo-800 hover:bg-indigo-100"
+                                        className="inline-flex items-center gap-1 rounded-xl border border-teal-200 bg-teal-50 px-3 text-xs font-semibold text-[#0D9488] hover:bg-teal-100 transition-colors"
                                     >
                                         <Sparkles className="h-3.5 w-3.5" /> Auto
                                     </button>
@@ -863,9 +863,9 @@ export default function DiyExamCreationModal({
                                                 key={m}
                                                 type="button"
                                                 onClick={() => setMode(m)}
-                                                className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${mode === m
-                                                    ? "border-indigo-600 bg-indigo-600 text-white"
-                                                    : "border-slate-300 text-slate-700 hover:bg-slate-100"
+                                                className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${mode === m
+                                                    ? "border-[#142B4A] bg-[#142B4A] text-white"
+                                                    : "border-slate-300 text-slate-700 hover:border-[#0D9488] hover:text-[#0D9488]"
                                                     }`}
                                             >
                                                 {m}
@@ -961,7 +961,7 @@ export default function DiyExamCreationModal({
                                     type="button"
                                     onClick={handleSubmit}
                                     disabled={!canSubmit}
-                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#142B4A] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#0D9488] disabled:cursor-not-allowed disabled:opacity-40"
                                 >
                                     {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                                     {submitting ? "Creating . . ." : `Create Exam (${totalQuestions} Qs)`}
