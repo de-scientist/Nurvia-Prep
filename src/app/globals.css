@@ -1,26 +1,233 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * NURVIA-PREP — Canonical NURVIA Design System (Tailwind CSS v4)
+ * Primary Navy: #142B4A | Clinical Teal: #0D9488 | Background: #FFFFFF
+ * Surface: #F8FAFC | Primary Text: #0F172A | Muted Text: #64748B | Border: #E2E8F0
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Canonical Brand Identity */
+  --brand-navy: #142B4A;
+  --brand-navy-deep: #0F2036;
+  --brand-teal: #0D9488;
+  --brand-teal-dark: #0F766E;
+
+  /* Base Surfaces */
+  --background: #FFFFFF;
+  --foreground: #0F172A;
+  --surface: #F8FAFC;
+  --surface-muted: #F1F5F9;
+  --surface-elevated: #FFFFFF;
+  --secondary-surface: #F8FAFC;
+
+  /* Typography */
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  --text-color: #0F172A;
+
+  /* Structural Borders & Rings */
+  --border: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --input: #E2E8F0;
+  --ring: #0D9488;
+
+  /* Interactive Actions */
+  --primary: #0D9488;
+  --primary-hover: #0F766E;
+  --primary-foreground: #FFFFFF;
+  --accent: #D97706;
+  --accent-hover: #B45309;
+
+  /* Semantic States */
+  --success: #059669;
+  --warning: #D97706;
+  --error: #BE123C;
+  --info: #0D9488;
+
+  /* Examination-Specific Semantic Tokens */
+  --correct-answer: #059669;
+  --correct-answer-soft: #E8F5EF;
+  --incorrect-answer: #BE123C;
+  --incorrect-answer-soft: #FBEBEE;
+  --bookmarked-question: #D97706;
+  --bookmarked-question-soft: #FBEFE0;
+  --unanswered-question: #94A3B8;
+  --answered-question: #0D9488;
+  --answer-saved: #059669;
+  --answer-saving: #64748B;
+  --answer-save-failed: #BE123C;
+
+  /* Dashboard Panel Surface Defaults (PanelThemeContext) */
+  --navbar-bg: #FFFFFF;
+  --leftSidebar-bg: #F8FAFC;
+  --rightSidebar-bg: #F8FAFC;
+  --content-bg: #FFFFFF;
+  --footer-bg: #F8FAFC;
+  --content-text: #0F172A;
+
+  /* Examination Layout Surface Defaults (ExamThemeContext) */
+  --exam-upper-nav-bg: #FFFFFF;
+  --exam-lower-nav-bg: #F8FAFC;
+  --exam-non-sticky-nav-bg: #F8FAFC;
+  --exam-content-bg: #F8FAFC;
+  --exam-footer-bg: #F1F5F9;
+  --exam-left-sidebar-bg: #F8FAFC;
+  --exam-right-sidebar-bg: #F8FAFC;
+  --exam-upper-nav-text: #0F172A;
+  --exam-lower-nav-text: #334155;
+  --exam-non-sticky-nav-text: #334155;
+  --exam-content-text: #0F172A;
+  --exam-footer-text: #475569;
+  --exam-left-sidebar-text: #334155;
+  --exam-right-sidebar-text: #334155;
+
+  /* Font Stacks */
+  --font-brand: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-ui: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Radii & Elevation */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05);
+  --shadow-md: 0 4px 12px rgb(15 23 42 / 0.08);
+  --shadow-lg: 0 12px 32px rgb(15 23 42 / 0.12);
+}
+
+.dark {
+  --brand-navy: #F8FAFC;
+  --brand-navy-deep: #0B1220;
+  --brand-teal: #2DD4BF;
+  --brand-teal-dark: #5EEAD4;
+
+  --background: #0B1220;
+  --foreground: #F8FAFC;
+  --surface: #111C2E;
+  --surface-muted: #18263B;
+  --surface-elevated: #1B2B42;
+  --secondary-surface: #27364A;
+
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-color: #F8FAFC;
+
+  --border: #27364A;
+  --border-strong: #3B4C63;
+  --input: #3B4C63;
+  --ring: #2DD4BF;
+
+  --primary: #2DD4BF;
+  --primary-hover: #5EEAD4;
+  --primary-foreground: #0B1220;
+  --accent: #F59E0B;
+  --accent-hover: #FBBF24;
+
+  --success: #34D399;
+  --warning: #F59E0B;
+  --error: #FB7185;
+  --info: #2DD4BF;
+
+  --correct-answer: #34D399;
+  --correct-answer-soft: #0C2620;
+  --incorrect-answer: #FB7185;
+  --incorrect-answer-soft: #2A1017;
+  --bookmarked-question: #F59E0B;
+  --bookmarked-question-soft: #2C220C;
+  --unanswered-question: #94A3B8;
+  --answered-question: #2DD4BF;
+  --answer-saved: #34D399;
+  --answer-saving: #94A3B8;
+  --answer-save-failed: #FB7185;
+
+  --navbar-bg: #0F172A;
+  --leftSidebar-bg: #0F172A;
+  --rightSidebar-bg: #111C2E;
+  --content-bg: #0B1220;
+  --footer-bg: #0F172A;
+  --content-text: #F8FAFC;
+
+  --exam-upper-nav-bg: #0F172A;
+  --exam-lower-nav-bg: #111C2E;
+  --exam-non-sticky-nav-bg: #111C2E;
+  --exam-content-bg: #0B1220;
+  --exam-footer-bg: #0F172A;
+  --exam-left-sidebar-bg: #0F172A;
+  --exam-right-sidebar-bg: #0F172A;
+  --exam-upper-nav-text: #F8FAFC;
+  --exam-lower-nav-text: #CBD5E1;
+  --exam-non-sticky-nav-text: #CBD5E1;
+  --exam-content-text: #F8FAFC;
+  --exam-footer-text: #94A3B8;
+  --exam-left-sidebar-text: #CBD5E1;
+  --exam-right-sidebar-text: #CBD5E1;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.2);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.35);
+  --shadow-lg: 0 12px 32px rgb(0 0 0 / 0.45);
 }
 
 @theme inline {
+  --color-brand-navy: #142B4A;
+  --color-brand-navyDeep: #0F2036;
+  --color-brand-teal: #0D9488;
+  --color-brand-tealDark: #0F766E;
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-foreground: var(--text-primary);
+  --color-foreground-secondary: var(--text-secondary);
+  --color-foreground-muted: var(--text-muted);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-semantic-success: var(--success);
+  --color-semantic-warning: var(--warning);
+  --color-semantic-error: var(--error);
+  --color-semantic-info: var(--info);
+  --font-brand: var(--font-brand);
+  --font-ui: var(--font-ui);
+  --font-sans: var(--font-ui);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  overflow-x: clip;
+  max-width: 100%;
 }
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text-primary);
+  font-family: var(--font-ui), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .font-brand {
+  font-family: var(--font-brand), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.65);
 }
