@@ -35,12 +35,17 @@ interface ExamStats {
 }
 
 const TINTS = [
-    "bg-pink-100 border-pink-400",
-    "bg-emerald-100 border-emerald-400",
-    "bg-sky-100 border-sky-400",
-    "bg-orange-100 border-orange-400",
+    "bg-white dark:bg-[#111C2E] border-slate-200 dark:border-slate-800 hover:border-[#0D9488]",
+    "bg-white dark:bg-[#111C2E] border-slate-200 dark:border-slate-800 hover:border-[#0D9488]",
+    "bg-white dark:bg-[#111C2E] border-slate-200 dark:border-slate-800 hover:border-[#0D9488]",
+    "bg-white dark:bg-[#111C2E] border-slate-200 dark:border-slate-800 hover:border-[#0D9488]",
 ];
-const BTNS = ["bg-pink-400", "bg-emerald-400", "bg-sky-400", "bg-orange-400"];
+const BTNS = [
+    "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700",
+    "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700",
+    "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700",
+    "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700",
+];
 
 const orderOf = (v: unknown) => {
     const n = parseInt(String(v ?? "").trim(), 10);
@@ -206,28 +211,28 @@ export default function DistinctSubjects({
                         return (
                             <div
                                 key={`${s.courseGuid}-${s.guid}`}
-                                className={`flex flex-col rounded-2xl border p-3 text-slate-900 shadow ${TINTS[i % 4]}`}
+                                className={`flex flex-col rounded-2xl border p-4 text-slate-900 dark:text-slate-100 shadow-xs transition-all ${TINTS[i % 4]}`}
                             >
-                                <div className="flex items-center gap-2">
-                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow">
-                                        <BookOpen className="h-4 w-4 text-slate-600" />
+                                <div className="flex items-center gap-2.5">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                        <BookOpen className="h-4.5 w-4.5 text-[#0D9488]" />
                                     </div>
                                     <div className="min-w-0">
-                                        <h6 className="truncate text-sm font-extrabold">{s.name}</h6>
-                                        <small className="block truncate text-[10px] text-slate-500">{s.courseName}</small>
+                                        <h6 className="truncate text-sm font-bold">{s.name}</h6>
+                                        <small className="block truncate text-[10px] font-semibold text-slate-500 dark:text-slate-400">{s.courseName}</small>
                                     </div>
                                 </div>
 
-                                <p className="my-2 line-clamp-2 text-[11px] text-slate-600">
+                                <p className="my-2.5 line-clamp-2 text-[11px] text-slate-500 dark:text-slate-400">
                                     {truncate(s.description, 90)}
                                 </p>
 
-                                <div className="mb-2 flex gap-1.5 text-[10px] font-bold uppercase">
-                                    <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-800">
+                                <div className="mb-3 flex gap-1.5 text-[10px] font-bold uppercase">
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800/70 px-2 py-0.5 text-[#0D9488] dark:text-[#2DD4BF]">
                                         <FileText className="h-3 w-3" />
                                         {stats ? stats.exams : "…"} exams
                                     </span>
-                                    <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 text-slate-700 dark:text-slate-300">
                                         <HelpCircle className="h-3 w-3" />
                                         {stats ? stats.questions : "…"} Qs
                                     </span>
@@ -236,14 +241,14 @@ export default function DistinctSubjects({
                                 <div className="mt-auto flex gap-2">
                                     <Link
                                         href={`/dashboards/${targetPanel}/vista/learning/subjects/distinct/overview?identifier=${s.courseGuid}`}
-                                        className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-center text-[11px] font-extrabold ${BTNS[i % 4]}`}
+                                        className={`flex flex-1 items-center justify-center gap-1 rounded-xl py-2 text-center text-[11px] font-semibold transition-colors ${BTNS[i % 4]}`}
                                     >
                                         Study <ArrowRight className="h-3 w-3" />
                                     </Link>
                                     <button
                                         type="button"
                                         onClick={() => setDiySubject({ guid: s.guid, name: s.name, courseName: s.courseName })}
-                                        className="flex-1 rounded-lg bg-gradient-to-r from-blue-700 to-violet-700 py-1.5 text-[11px] font-extrabold text-white"
+                                        className="flex-1 rounded-xl bg-[#142B4A] hover:bg-[#0D9488] py-2 text-[11px] font-semibold text-white transition-colors"
                                     >
                                         Custom Test
                                     </button>
