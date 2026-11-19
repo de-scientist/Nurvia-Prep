@@ -22,7 +22,6 @@
 import { classifyError, isRetryableError, ErrorType } from './utils/error-utils';
 import { parseApiResponse } from './api-response';
 import { buildApiUrl, DEDICATED_AUTH_ROUTES } from './api-url.mjs';
-import { extractQuestionOptions, cleanWordHtml } from './content/html-normalizer';
 
 function unprovisionedResponse<T>(featureName: string, context?: unknown): ApiResponse<T> {
   const detail =
@@ -167,21 +166,58 @@ function isWebsiteTargetList(value: unknown): boolean {
   return typeof value === 'string' && /WEBSITE_\d+/i.test(value);
 }
 
-function inferExamPathway(item: Record<string, any>): string {
+function parseExamTag(rawTag: unknown): string {
+  if (typeof rawTag !== 'string') return '';
+  const trimmed = rawTag.trim();
+  if (!trimmed) return '';
+  if (trimmed.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(trimmed) as { tagValue?: unknown; tagName?: unknown };
+      return String(parsed.tagValue || parsed.tagName || '').trim();
+    } catch {
+      return trimmed;
+    }
+  }
+  return trimmed;
+}
+
+export function inferExamPathway(item: Record<string, any>): import('./api-types').NursingPathway {
   if (typeof item.pathway === 'string' && item.pathway.trim() && !isWebsiteTargetList(item.pathway)) {
-    return item.pathway.trim();
+    const p = item.pathway.trim();
+    if (['RN', 'PN_LPN', 'RN_Exit', 'PN_Exit'].includes(p)) {
+      return p as import('./api-types').NursingPathway;
+    }
   }
   if (typeof item.target === 'string' && item.target.trim() && !isWebsiteTargetList(item.target)) {
-    return item.target.trim();
+    const t = item.target.trim();
+    if (['RN', 'PN_LPN', 'RN_Exit', 'PN_Exit'].includes(t)) {
+      return t as import('./api-types').NursingPathway;
+    }
   }
-  const haystack = [item.assessmentName, item.programName, item.title, item.code]
-    .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+  const haystack = [item.pathway, item.assessmentName, item.programName, item.title, item.code]
+    .filter((v): v is string => typeof v === 'string' && v.trim().length > 0 && !isWebsiteTargetList(v))
     .join(' ')
     .toLowerCase();
   if (/\b(pn|lpn)\s*exit\b|pn_exit/.test(haystack)) return 'PN_Exit';
   if (/\brn\s*exit\b|rn_exit/.test(haystack)) return 'RN_Exit';
   if (/\b(pn|lpn|practical)\b|pn_lpn/.test(haystack)) return 'PN_LPN';
   return 'RN';
+}
+
+export function inferExamCategory(item: Record<string, any>): import('./api-types').ExamCategory {
+  const direct = typeof item.category === 'string' ? item.category.trim() : '';
+  if (['ATI', 'HESI', 'RegularCourse', 'Certification', 'ExitPredictor'].includes(direct)) {
+    return direct as import('./api-types').ExamCategory;
+  }
+  const haystack = [item.category, item.type, item.assessmentName, item.title]
+    .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+    .join(' ')
+    .toLowerCase();
+  if (/\bati\b|teas/.test(haystack)) return 'ATI';
+  if (/\bhesi\b/.test(haystack)) return 'HESI';
+  if (/exit|predictor/.test(haystack)) return 'ExitPredictor';
+  if (/nclex|certif/.test(haystack)) return 'Certification';
+  return 'RegularCourse';
 }
 
 function matchesRequestedPathway(item: Record<string, any>, requestedPathway: string): boolean {
@@ -224,13 +260,15 @@ export function inferExamDeliveryMode(item: Record<string, any>): import('./api-
     if (raw === 'tutor') return 'Tutor';
   }
 
-  const tag = String(item.tag ?? item.tagName ?? '').trim().toLowerCase();
+  const parsedTag = parseExamTag(item.tag ?? item.tagName ?? item.examTag ?? '');
+  const tag = parsedTag.toLowerCase();
+  const type = String(item.type ?? item.examType ?? '').trim().toLowerCase();
   const allowReview = Boolean(item.allowReview);
 
-  if (tag.includes('tutor')) {
+  if (tag.includes('tutor') || type === 'tutor') {
     return 'Tutor';
   }
-  if (tag.includes('review') || tag.includes('practice')) {
+  if (tag.includes('review') || tag.includes('practice') || type === 'review') {
     return allowReview ? 'All' : 'Review';
   }
   if (tag.includes('exam') || item.type === 'Examination') {
@@ -441,12 +479,21 @@ export const nurviaApi = {
       const page = Number(params.pageNumber ?? params.page ?? 1) || 1;
       const rawPerPage = Number(params.pageSize ?? params.perPage ?? 20) || 20;
       const perPage = Math.max(1, Math.min(100, rawPerPage));
+      const requestedPathway =
+        typeof params.pathway === 'string' && params.pathway.trim()
+          ? params.pathway.trim()
+          : null;
+      const fetchPage = requestedPathway ? 1 : page;
+      const fetchPerPage = requestedPathway ? 100 : perPage;
+
       const strataRes = await this.getStrata<Record<string, any>>('exams', {
         fetchtype: 'absolute',
-        page,
-        perPage,
+        page: fetchPage,
+        perPage: fetchPerPage,
+        dynamicPage: fetchPage,
+        dynamicPerPage: fetchPerPage,
         ...(typeof params.search === 'string' && params.search.trim()
-          ? { search: params.search.trim() }
+          ? { search: params.search.trim(), dynamicSearch: params.search.trim() }
           : {}),
       });
 
@@ -459,11 +506,6 @@ export const nurviaApi = {
           statusCode: strataRes.statusCode,
         };
       }
-
-      const requestedPathway =
-        typeof params.pathway === 'string' && params.pathway.trim()
-          ? params.pathway.trim()
-          : null;
 
       const mappedItems: ExamDto[] = strataRes.data.items
         .filter((item) => {
@@ -481,14 +523,8 @@ export const nurviaApi = {
           code: String(item.code ?? item.guidId ?? item.id ?? ''),
           title: String(item.title ?? item.name ?? 'Untitled Exam'),
           description: String(item.description ?? ''),
-          pathway: inferExamPathway(item) as ExamDto['pathway'],
-          category: (typeof item.category === 'string' && item.category
-            ? item.category
-            : typeof item.type === 'string' && item.type
-              ? item.type
-              : typeof item.assessmentName === 'string' && item.assessmentName
-                ? item.assessmentName
-                : 'RegularCourse') as ExamDto['category'],
+          pathway: inferExamPathway(item),
+          category: inferExamCategory(item),
           modeAllowed: inferExamDeliveryMode(item),
           timeLimitMinutes: Number(item.timeLimitMinutes ?? item.duration ?? 60),
           passingScorePercentage: Number(item.passingScorePercentage ?? item.passMark ?? 75),
@@ -500,18 +536,23 @@ export const nurviaApi = {
         }))
         .filter((item) => Boolean(item.id));
 
-      const totalCount = strataRes.data.skewTotal ?? mappedItems.length;
-      const totalPages = strataRes.data.skewTotalPages ?? Math.max(1, Math.ceil(totalCount / perPage));
+      const pagedItems = requestedPathway
+        ? mappedItems.slice((page - 1) * perPage, page * perPage)
+        : mappedItems;
+      const totalCount = requestedPathway ? mappedItems.length : (strataRes.data.skewTotal ?? mappedItems.length);
+      const totalPages = requestedPathway
+        ? Math.max(1, Math.ceil(totalCount / perPage))
+        : Math.max(1, strataRes.data.skewTotalPages ?? Math.ceil(totalCount / perPage));
 
       return {
         success: true,
         message: strataRes.message || 'OK',
         statusCode: strataRes.statusCode,
         data: {
-          items: mappedItems,
+          items: pagedItems,
           totalCount,
-          pageNumber: strataRes.data.skewPage ?? page,
-          pageSize: strataRes.data.skewPerPage ?? perPage,
+          pageNumber: page,
+          pageSize: perPage,
           totalPages,
           hasNextPage: page < totalPages,
           hasPreviousPage: page > 1,
@@ -598,78 +639,25 @@ export const nurviaApi = {
     const body = options
       ? { deliveryMode: options.deliveryMode || 'Exam', layoutMode: options.layoutMode ?? null }
       : undefined;
-    const directRes = await request<StartAttemptResultDto>(`/api/attempts/start/${examId}`, {
+    return request<StartAttemptResultDto>(`/api/attempts/start/${encodeURIComponent(examId)}`, {
       method: 'POST',
       body: body ? JSON.stringify(body) : undefined,
     });
-    if (directRes.success && directRes.data && Array.isArray(directRes.data.questions) && directRes.data.questions.length > 0) {
-      return directRes;
-    }
-
-    // Gracefully bridge to authoritative Strata assessment questions when dedicated /api/attempts/start endpoint is not provisioned on remote backend
-    const questionsRes = await this.getStrata<Record<string, any>>('questions', {
-      fetchtype: 'absolute',
-      examId,
-      perPage: 50,
-    });
-
-    if (!questionsRes.success || !questionsRes.data || !Array.isArray(questionsRes.data.items) || questionsRes.data.items.length === 0) {
-      return directRes;
-    }
-
-    const rawItems = questionsRes.data.items;
-    const studySetRes = await this.getStudySetDetail(examId);
-    const studySet = studySetRes.data;
-
-    const mappedQuestions: import('./api-types').ActiveExamQuestionDto[] = rawItems.map((q, idx) => ({
-      id: String(q.guidId ?? q.id ?? `q-${idx + 1}`),
-      orderIndex: idx + 1,
-      stem: cleanWordHtml(String(q.metaQuestionText || q.questionText || `Question ${idx + 1}`)),
-      questionType: (typeof q.type === 'string' && q.type ? q.type : 'SingleChoice') as import('./api-types').QuestionType,
-      cognitiveSkill: 'Application' as import('./api-types').CognitiveSkill,
-      clientNeedCategory: 'SafeAndEffectiveCareEnvironment' as import('./api-types').ClientNeedCategory,
-      options: extractQuestionOptions(q),
-      exhibits: Array.isArray(q.exhibits)
-        ? q.exhibits.map((ex: any, eIdx: number) => ({
-            id: String(ex.guidId ?? ex.id ?? `exh-${eIdx + 1}`),
-            type: (ex.type || 'NursesNotes') as import('./api-types').ExhibitType,
-            title: String(ex.title ?? ex.name ?? `Exhibit ${eIdx + 1}`),
-            content: String(ex.content ?? ex.description ?? ''),
-            displayOrder: eIdx + 1,
-          }))
-        : [],
-    }));
-
-    const durationMinutes = studySet?.timeLimitMinutes ?? 60;
-    return {
-      success: true,
-      statusCode: 200,
-      message: 'OK',
-      data: {
-        attemptId: `att-${examId}-${Date.now()}`,
-        examId,
-        examTitle: studySet?.title || 'Examination Session',
-        timeLimitMinutes: durationMinutes,
-        remainingSeconds: durationMinutes * 60,
-        startedAtUtc: new Date().toISOString(),
-        deadlineUtc: new Date(Date.now() + durationMinutes * 60 * 1000).toISOString(),
-        totalQuestions: mappedQuestions.length,
-        deliveryMode: options?.deliveryMode || 'Exam',
-        layoutMode: options?.layoutMode || 'Sequential',
-        allowedLayouts: studySet?.allowedLayouts || 'Both',
-        questions: mappedQuestions,
-        savedResponses: {},
-      },
-    };
   },
 
   async getExamReviewContent(examId: string): Promise<ApiResponse<ExamReviewContentDto>> {
-    const directRes = await request<ExamReviewContentDto>(`/api/exams/${examId}/review-content`);
+    const directRes = await request<ExamReviewContentDto>(
+      `/api/exams/${encodeURIComponent(examId)}/review-content`
+    );
     if (directRes.success && directRes.data) {
       return directRes;
     }
 
-    // Verify whether published exam configuration permits review
+    if (directRes.errorCode === 'REVIEW_NOT_PERMITTED') {
+      return directRes;
+    }
+
+    // Verify whether published exam configuration permits review when caller checks metadata
     const studySetRes = await this.getStudySetDetail(examId);
     const studySet = studySetRes.data;
     if (studySet && !isModeEnabled(studySet.modeAllowed, 'Review')) {
@@ -681,60 +669,7 @@ export const nurviaApi = {
       };
     }
 
-    const questionsRes = await this.getStrata<Record<string, any>>('questions', {
-      fetchtype: 'absolute',
-      examId,
-      perPage: 50,
-    });
-
-    if (!questionsRes.success || !questionsRes.data || !Array.isArray(questionsRes.data.items) || questionsRes.data.items.length === 0) {
-      return directRes;
-    }
-
-    return {
-      success: true,
-      statusCode: 200,
-      message: 'OK',
-      data: {
-        examId,
-        examTitle: studySet?.title || 'Examination Review',
-        pathway: studySet?.pathway || 'RN',
-        category: studySet?.category || 'RegularCourse',
-        instructions: studySet?.description || 'Review the following questions and rationale explanations.',
-        timeLimitMinutes: studySet?.timeLimitMinutes || 250,
-        reviewReleased: true,
-        questions: questionsRes.data.items.map((q, idx) => ({
-          questionId: String(q.guidId ?? q.id ?? `q-${idx + 1}`),
-          orderIndex: idx + 1,
-          stem: cleanWordHtml(String(q.metaQuestionText || q.questionText || `Question ${idx + 1}`)),
-          questionType: (typeof q.type === 'string' ? q.type : 'SingleChoice') as import('./api-types').QuestionType,
-          cognitiveSkill: 'Application' as import('./api-types').CognitiveSkill,
-          clientNeedCategory: 'SafeAndEffectiveCareEnvironment' as import('./api-types').ClientNeedCategory,
-          generalRationale: cleanWordHtml(String(q.explanation || q.hint || 'Correct answer adheres to standard clinical nursing protocols.')),
-          learnerResponse: undefined,
-          isCorrect: true,
-          pointsAwarded: 1,
-          maxPoints: 1,
-          options: extractQuestionOptions(q).map((opt) => ({
-            id: opt.id,
-            optionIndex: opt.optionIndex,
-            optionText: opt.optionText,
-            isCorrect: opt.isCorrect,
-            specificRationale: opt.specificRationale,
-            wasSelected: Boolean(opt.wasSelected),
-          })),
-          exhibits: Array.isArray(q.exhibits)
-            ? q.exhibits.map((ex: any, eIdx: number) => ({
-                id: String(ex.guidId ?? ex.id ?? `exh-${eIdx + 1}`),
-                type: (ex.type || 'NursesNotes') as import('./api-types').ExhibitType,
-                title: String(ex.title ?? ex.name ?? `Exhibit ${eIdx + 1}`),
-                content: String(ex.content ?? ex.description ?? ''),
-                displayOrder: eIdx + 1,
-              }))
-            : [],
-        })),
-      },
-    };
+    return directRes;
   },
 
   async getExamPreviewContent(examId: string): Promise<ApiResponse<ExamReviewContentDto>> {
@@ -762,8 +697,22 @@ export const nurviaApi = {
     return request<SubmittedExamResultDto>(`/api/attempts/${attemptId}/review`);
   },
 
-  async getAttemptHistory(): Promise<ApiResponse<ExamAttemptSummaryDto[]>> {
-    return request<ExamAttemptSummaryDto[]>('/api/attempts/history');
+  async getAttemptHistory(params?: {
+    page?: number;
+    perPage?: number;
+    fetchAll?: boolean;
+    pathway?: string;
+    status?: string;
+  }): Promise<ApiResponse<ExamAttemptSummaryDto[]>> {
+    const fetchAll = params?.fetchAll !== undefined ? params.fetchAll : !params?.page;
+    const query = buildQuery({
+      ...(params?.page ? { page: params.page } : {}),
+      ...(params?.perPage ? { perPage: params.perPage } : {}),
+      ...(fetchAll ? { fetchAll: 'true' } : {}),
+      ...(params?.pathway ? { pathway: params.pathway } : {}),
+      ...(params?.status ? { status: params.status } : {}),
+    });
+    return request<ExamAttemptSummaryDto[]>(`/api/attempts/history${query ? `?${query}` : ''}`);
   },
 
   // Mark K. Lecture Notes
@@ -836,12 +785,39 @@ export const nurviaApi = {
         ? params.search.trim()
         : undefined;
 
+    const reqPathway = typeof params?.pathway === 'string' && params.pathway.trim() ? params.pathway.trim().toLowerCase() : null;
+    const reqCategory = typeof params?.category === 'string' && params.category.trim() ? params.category.trim().toLowerCase() : null;
+    const reqSchool = typeof params?.school === 'string' && params.school.trim() ? params.school.trim().toLowerCase() : null;
+    const reqSubject = typeof params?.subject === 'string' && params.subject.trim() ? params.subject.trim().toLowerCase() : null;
+    const reqTopic = typeof params?.topic === 'string' && params.topic.trim() ? params.topic.trim().toLowerCase() : null;
+    const reqDifficulty = typeof params?.difficulty === 'string' && params.difficulty.trim() ? params.difficulty.trim().toLowerCase() : null;
+    const reqSeason = typeof params?.season === 'string' && params.season.trim() ? params.season.trim().toLowerCase() : null;
+    const reqYear = params?.academicYear ? Number(params.academicYear) : null;
+    const reqExamId = typeof params?.examId === 'string' && params.examId.trim() ? params.examId.trim() : null;
+
+    const hasLocalFilter = Boolean(
+      reqPathway ||
+      reqCategory ||
+      reqSchool ||
+      reqSubject ||
+      reqTopic ||
+      reqDifficulty ||
+      reqSeason ||
+      reqYear ||
+      reqExamId
+    );
+
+    const fetchPage = hasLocalFilter ? 1 : pageNumber;
+    const fetchPerPage = hasLocalFilter ? 100 : pageSize;
+
     const strataRes = await this.getStrata<Record<string, any>>('exams', {
       fetchtype: 'absolute',
-      page: pageNumber,
-      perPage: pageSize,
-      ...(search ? { search } : {}),
-      ...(typeof params?.examId === 'string' && params.examId.trim() ? { examId: params.examId.trim() } : {}),
+      page: fetchPage,
+      perPage: fetchPerPage,
+      dynamicPage: fetchPage,
+      dynamicPerPage: fetchPerPage,
+      ...(search ? { search, dynamicSearch: search } : {}),
+      ...(reqExamId ? { examId: reqExamId } : {}),
     });
 
     if (!strataRes.success || !strataRes.data) {
@@ -854,27 +830,24 @@ export const nurviaApi = {
       };
     }
 
-    const reqPathway = typeof params?.pathway === 'string' && params.pathway.trim() ? params.pathway.trim().toLowerCase() : null;
-    const reqCategory = typeof params?.category === 'string' && params.category.trim() ? params.category.trim().toLowerCase() : null;
-    const reqSchool = typeof params?.school === 'string' && params.school.trim() ? params.school.trim().toLowerCase() : null;
-    const reqSubject = typeof params?.subject === 'string' && params.subject.trim() ? params.subject.trim().toLowerCase() : null;
-    const reqTopic = typeof params?.topic === 'string' && params.topic.trim() ? params.topic.trim().toLowerCase() : null;
-    const reqDifficulty = typeof params?.difficulty === 'string' && params.difficulty.trim() ? params.difficulty.trim().toLowerCase() : null;
-    const reqSeason = typeof params?.season === 'string' && params.season.trim() ? params.season.trim().toLowerCase() : null;
-    const reqYear = params?.academicYear ? Number(params.academicYear) : null;
-
     const mappedItems: import('./api-types').StudySetCardDto[] = strataRes.data.items
       .filter((item) => {
         const itemStatus = typeof item.status === 'string' ? item.status.trim().toLowerCase() : '';
         if (itemStatus && itemStatus !== 'published' && itemStatus !== 'active') {
           return false;
         }
+        if (reqExamId) {
+          const itemGuid = String(item.guidId ?? item.id ?? '').trim();
+          const itemNumId = String(item.id ?? '').trim();
+          if (itemGuid !== reqExamId && itemNumId !== reqExamId) return false;
+        }
         if (reqPathway && !matchesRequestedPathway(item, reqPathway)) {
           return false;
         }
         if (reqCategory) {
+          const inferredCat = inferExamCategory(item).toLowerCase();
           const itemCat = String(item.category ?? item.type ?? item.assessmentName ?? '').trim().toLowerCase();
-          if (itemCat && !itemCat.includes(reqCategory)) return false;
+          if (inferredCat !== reqCategory && !itemCat.includes(reqCategory)) return false;
         }
         if (reqSchool) {
           const itemSchool = String(item.school ?? item.schoolName ?? '').trim().toLowerCase();
@@ -907,14 +880,8 @@ export const nurviaApi = {
         code: String(item.code ?? item.guidId ?? item.id ?? ''),
         title: String(item.title ?? item.name ?? 'Untitled Study Set'),
         description: String(item.description ?? ''),
-        pathway: inferExamPathway(item) as import('./api-types').NursingPathway,
-        category: (typeof item.category === 'string' && item.category
-          ? item.category
-          : typeof item.type === 'string' && item.type
-            ? item.type
-            : typeof item.assessmentName === 'string' && item.assessmentName
-              ? item.assessmentName
-              : 'RegularCourse') as import('./api-types').ExamCategory,
+        pathway: inferExamPathway(item),
+        category: inferExamCategory(item),
         totalQuestions: Number(item.totalQuestions ?? item.questionsCount ?? 0),
         timeLimitMinutes: Number(item.timeLimitMinutes ?? item.duration ?? 60),
         modeAllowed: inferExamDeliveryMode(item),
@@ -938,16 +905,10 @@ export const nurviaApi = {
       }))
       .filter((item) => Boolean(item.id));
 
-    const hasLocalFilter = Boolean(
-      reqPathway ||
-      reqCategory ||
-      reqSchool ||
-      reqSubject ||
-      reqTopic ||
-      reqDifficulty ||
-      reqSeason ||
-      reqYear
-    );
+    const pagedItems = hasLocalFilter
+      ? mappedItems.slice((pageNumber - 1) * pageSize, pageNumber * pageSize)
+      : mappedItems;
+
     const totalCount = hasLocalFilter
       ? mappedItems.length
       : (strataRes.data.skewTotal ?? mappedItems.length);
@@ -960,10 +921,10 @@ export const nurviaApi = {
       message: strataRes.message || 'OK',
       statusCode: strataRes.statusCode,
       data: {
-        items: mappedItems,
+        items: pagedItems,
         totalCount,
-        pageNumber: strataRes.data.skewPage ?? pageNumber,
-        pageSize: strataRes.data.skewPerPage ?? pageSize,
+        pageNumber,
+        pageSize,
         totalPages,
         hasNextPage: pageNumber < totalPages,
         hasPreviousPage: pageNumber > 1,
@@ -996,9 +957,15 @@ export const nurviaApi = {
     const examItems = examsRes.success && examsRes.data ? examsRes.data.items : [];
     const sectionItems = sectionsRes.success && sectionsRes.data ? sectionsRes.data.items : [];
 
+    const pathwaySet = new Set<import('./api-types').NursingPathway>();
+    const categorySet = new Set<import('./api-types').ExamCategory>();
     const yearSet = new Set<number>();
     const seasonSet = new Set<string>();
     const difficultySet = new Set<string>();
+    for (const rec of examItems) {
+      pathwaySet.add(inferExamPathway(rec));
+      categorySet.add(inferExamCategory(rec));
+    }
     for (const rec of [...examItems, ...sectionItems]) {
       const y = rec.academicYear ?? rec.year;
       if (typeof y === 'number' && Number.isFinite(y)) yearSet.add(y);
@@ -1012,8 +979,8 @@ export const nurviaApi = {
       success: true,
       message: 'OK',
       data: {
-        pathways: [],
-        categories: [],
+        pathways: Array.from(pathwaySet),
+        categories: Array.from(categorySet),
         schools: (schoolsRes.data?.items ?? []).map(pickName).filter(Boolean),
         academicYears: Array.from(yearSet).sort((a, b) => b - a),
         subjects: (subjectsRes.data?.items ?? []).map(pickName).filter(Boolean),
@@ -1023,8 +990,8 @@ export const nurviaApi = {
             id: pickId(ex),
             code: typeof ex.code === 'string' && ex.code.trim() ? ex.code.trim() : pickId(ex),
             title: pickName(ex),
-            pathway: typeof ex.pathway === 'string' ? ex.pathway : 'RN',
-            category: typeof ex.category === 'string' ? ex.category : 'RegularCourse',
+            pathway: inferExamPathway(ex),
+            category: inferExamCategory(ex),
           }))
           .filter((ex) => ex.id && ex.title),
         topics: (topicsRes.data?.items ?? []).map(pickName).filter(Boolean),
@@ -1036,7 +1003,7 @@ export const nurviaApi = {
 
   async getStudyLibrarySummary(): Promise<ApiResponse<import('./api-types').StudyLibrarySummaryDto>> {
     const [examsRes, categoriesRes, questionsRes] = await Promise.all([
-      this.getStrata<Record<string, any>>('exams', { fetchtype: 'absolute', page: 1, perPage: 1 }),
+      this.getStrata<Record<string, any>>('exams', { fetchtype: 'absolute', page: 1, perPage: 50 }),
       this.getStrata<Record<string, any>>('categories', { fetchtype: 'absolute', page: 1, perPage: 1 }),
       this.getStrata<Record<string, any>>('questions', { fetchtype: 'absolute', page: 1, perPage: 1 }),
     ]);
@@ -1049,6 +1016,10 @@ export const nurviaApi = {
       };
     }
 
+    const discoveredPathways = new Set(
+      (examsRes.data?.items ?? []).map((item) => inferExamPathway(item))
+    );
+
     return {
       success: true,
       message: 'OK',
@@ -1056,7 +1027,7 @@ export const nurviaApi = {
         totalPublishedStudySets: examsRes.data?.skewTotal ?? examsRes.data?.items.length ?? 0,
         totalAvailableQuestions: questionsRes.data?.skewTotal ?? questionsRes.data?.items.length ?? 0,
         totalCategories: categoriesRes.data?.skewTotal ?? categoriesRes.data?.items.length ?? 0,
-        totalPathways: 0,
+        totalPathways: discoveredPathways.size,
       },
     };
   },

@@ -18,27 +18,61 @@ export type ExamStatus =
 export type QuestionType =
   | 'MultipleChoice'
   | 'MultipleResponse'
+  | 'MultipleSelect'
   | 'SelectAllThatApply'
   | 'TrueFalse'
   | 'FillInTheBlank'
+  | 'BlankFill'
+  | 'BlankSelect'
   | 'Cloze'
   | 'NumericResponse'
   | 'NumericCalculation'
   | 'OrderedResponse'
+  | 'OrderingNumber'
+  | 'OrderingItem'
+  | 'OrderingDragDrop'
   | 'Matching'
   | 'MatrixGrid'
+  | 'MatrixSingleChoice'
+  | 'MatrixMultipleSelect'
   | 'ClinicalCaseStudy'
   | 'UnfoldingCaseStudy'
   | 'BowTie'
   | 'DynamicLabBowTie'
   | 'MultipleTrueFalse'
   | 'ImageBased'
+  | 'DynamicImage'
+  | 'MultipleImage'
   | 'MultipleImageSelection'
+  | 'Hotspot'
   | 'DragAndDrop'
   | 'ExtendedResponse'
   | 'TabularResponse'
   | 'ShortAnswer'
+  | 'OpenEnded'
+  | 'HighLight'
+  | 'AudioBased'
+  | 'VideoBased'
   | 'SingleChoice'
+  | 'CaseBasedSingleChoice'
+  | 'CaseBasedMultipleSelect'
+  | 'CaseBasedTrueFalse'
+  | 'CaseBasedNumericResponse'
+  | 'CaseBasedMatching'
+  | 'CaseBasedOrderingNumber'
+  | 'CaseBasedOrderingItem'
+  | 'CaseBasedOrderingDragDrop'
+  | 'CaseBasedDynamicImage'
+  | 'CaseBasedMultipleImage'
+  | 'CaseBasedBlankSelect'
+  | 'CaseBasedBlankFill'
+  | 'CaseBasedHotspot'
+  | 'CaseBasedOpenEnded'
+  | 'CaseBasedHighLight'
+  | 'CaseBasedAudioBased'
+  | 'CaseBasedVideoBased'
+  | 'CaseBasedMatrixSingleChoice'
+  | 'CaseBasedMatrixMultipleSelect'
   | number;
 
 export type NursingPathway = 'RN' | 'PN_LPN' | 'RN_Exit' | 'PN_Exit';
@@ -224,6 +258,7 @@ export interface ApiResponse<T> {
 
 export interface AuthUserDto {
   id: string;
+  guidId?: string;
   name: string;
   email: string;
   role: string;
@@ -232,11 +267,84 @@ export interface AuthUserDto {
   emailVerified?: boolean;
 }
 
+export interface QuestionMediaDto {
+  id: string;
+  numericId?: number;
+  type: string;
+  url: string;
+  thumbnailUrl?: string;
+  description?: string;
+  instructions?: string;
+  mimeType?: string;
+  width?: number;
+  height?: number;
+  duration?: number;
+  isPrimary?: boolean;
+}
+
+export interface QuestionMatrixCellDto {
+  id: string;
+  numericId?: number;
+  rowIndex: number;
+  columnIndex: number;
+  cellValue?: string;
+  isLocked?: boolean;
+  /** Stripped in active Exam mode; only populated in Review or evaluated Tutor mode. */
+  isCorrect?: boolean;
+  explanation?: string;
+}
+
+export interface QuestionMatrixDto {
+  id: string;
+  title?: string;
+  description?: string;
+  topLeftCell?: string;
+  rowCount: number;
+  columnCount: number;
+  rowHeaders: string[];
+  columnHeaders: string[];
+  responseType: 'singleChoice' | 'multipleChoice' | string;
+  instructions?: string;
+  allowPartialCredit?: boolean;
+  cells: QuestionMatrixCellDto[];
+}
+
+export interface QuestionCorrectAnswerMetaDto {
+  correctOptionIds?: string[];
+  correctMediaIds?: string[];
+  correctCellIds?: string[];
+  correctOrderIds?: string[];
+  correctMatches?: Record<string, string>;
+  correctBlanks?: Record<string, string>;
+  expectedNumeric?: string;
+  modelAnswerHtml?: string;
+  explanationImages?: string[];
+  allowPartialCredit?: boolean;
+}
+
+export interface ExamModePermissionsDto {
+  canExam: boolean;
+  canReview: boolean;
+  canTutor: boolean;
+  examReason?: string;
+  reviewReason?: string;
+  tutorReason?: string;
+  allowLayoutSwitching: boolean;
+  allowModeSwitching: boolean;
+  reviewReleased: boolean;
+}
+
 export interface ActiveExamOptionDto {
   id: string;
+  numericId?: number;
   optionIndex: number;
   optionText: string;
   displayOrder: number;
+  description?: string;
+  data?: string;
+  label?: string;
+  order?: string;
+  link?: string;
   /** Only populated for Tutor-mode attempts; Exam mode is strictly sanitized server-side. */
   isCorrect?: boolean;
   specificRationale?: string;
@@ -244,8 +352,16 @@ export interface ActiveExamOptionDto {
 
 export interface ActiveExamQuestionDto {
   id: string;
+  numericId?: number;
+  guidId?: string;
+  examGuidId?: string;
+  sectionId?: number;
+  sectionGuidId?: string;
+  sectionName?: string;
   orderIndex: number;
   stem: string;
+  metaStem?: string;
+  instructions?: string;
   questionType: QuestionType;
   cognitiveSkill: CognitiveSkill;
   clientNeedCategory: ClientNeedCategory;
@@ -254,6 +370,12 @@ export interface ActiveExamQuestionDto {
   generalRationale?: string;
   options: ActiveExamOptionDto[];
   exhibits: QuestionExhibitDto[];
+  media?: QuestionMediaDto[];
+  matrix?: QuestionMatrixDto;
+  blankSelectPassage?: string;
+  highlightPassage?: string;
+  correctAnswerMeta?: QuestionCorrectAnswerMetaDto;
+  contentIntegrityError?: string;
 }
 
 export interface LearnerAnswerStateDto {
@@ -273,15 +395,22 @@ export interface StartAttemptRequestDto {
 export interface StartAttemptResultDto {
   attemptId: string;
   examId: string;
+  examNumericId?: number;
   examTitle: string;
   timeLimitMinutes: number;
   remainingSeconds: number;
   startedAtUtc: string;
   deadlineUtc: string;
   totalQuestions: number;
+  configuredQuestionCount?: number;
+  loadedQuestionCount?: number;
   deliveryMode: 'Exam' | 'Tutor';
   layoutMode: ExamLayout;
   allowedLayouts: ExamLayoutPolicy;
+  modePermissions?: ExamModePermissionsDto;
+  attemptNumber?: number;
+  isDurableBackendSynced?: boolean;
+  integrityWarnings?: string[];
   questions: ActiveExamQuestionDto[];
   savedResponses: Record<string, LearnerAnswerStateDto>;
 }
@@ -302,8 +431,14 @@ export interface AutosaveResultDto {
 
 export interface ReviewOptionDto {
   id: string;
+  numericId?: number;
   optionIndex: number;
   optionText: string;
+  description?: string;
+  data?: string;
+  label?: string;
+  order?: string;
+  link?: string;
   isCorrect: boolean;
   specificRationale?: string;
   wasSelected: boolean;
@@ -311,8 +446,15 @@ export interface ReviewOptionDto {
 
 export interface ReviewQuestionDto {
   questionId: string;
+  numericId?: number;
+  guidId?: string;
+  sectionId?: number;
+  sectionGuidId?: string;
+  sectionName?: string;
   orderIndex: number;
   stem: string;
+  metaStem?: string;
+  instructions?: string;
   questionType: QuestionType;
   cognitiveSkill: CognitiveSkill;
   clientNeedCategory: ClientNeedCategory;
@@ -324,6 +466,12 @@ export interface ReviewQuestionDto {
   maxPoints: number;
   options: ReviewOptionDto[];
   exhibits: QuestionExhibitDto[];
+  media?: QuestionMediaDto[];
+  matrix?: QuestionMatrixDto;
+  blankSelectPassage?: string;
+  highlightPassage?: string;
+  correctAnswerMeta?: QuestionCorrectAnswerMetaDto;
+  contentIntegrityError?: string;
 }
 
 /** Review-mode study content for a published exam (answer keys + rationales, no graded attempt). */
@@ -334,6 +482,9 @@ export interface ExamReviewContentDto {
   category: ExamCategory;
   instructions: string;
   timeLimitMinutes: number;
+  configuredQuestionCount?: number;
+  loadedQuestionCount?: number;
+  modePermissions?: ExamModePermissionsDto;
   reviewReleased: boolean;
   questions: ReviewQuestionDto[];
 }
@@ -342,17 +493,23 @@ export interface SubmittedExamResultDto {
   attemptId: string;
   examId: string;
   examTitle: string;
+  pathway?: NursingPathway | string;
+  examCategory?: ExamCategory | string;
   status: string;
   startedAtUtc: string;
   submittedAtUtc: string;
   timeSpentSeconds: number;
   timeLimitMinutes?: number;
   totalQuestions: number;
+  totalAnswered?: number;
   correctQuestions: number;
+  totalWrong?: number;
   scorePercentage: number;
   passingScorePercentage: number;
   passed: boolean;
+  grade?: string;
   reviewReleased: boolean;
+  modePermissions?: ExamModePermissionsDto;
   reviewQuestions: ReviewQuestionDto[];
 }
 
@@ -360,12 +517,26 @@ export interface ExamAttemptSummaryDto {
   attemptId: string;
   examId: string;
   examTitle: string;
+  examCategory?: string;
+  pathway?: NursingPathway | string;
   status: string;
   startedAtUtc: string;
   submittedAtUtc?: string;
   scorePercentage?: number;
+  passingScorePercentage?: number;
   passed?: boolean;
   totalQuestions: number;
+  totalCorrect?: number;
+  totalWrong?: number;
+  totalAnswered?: number;
+  timeSpentSeconds?: number;
+  attemptNumber?: number;
+  allowReview?: boolean;
+  canReview?: boolean;
+  canTutor?: boolean;
+  subjectName?: string;
+  topicName?: string;
+  grade?: string;
 }
 
 export interface UserProfileDto {
@@ -785,32 +956,42 @@ export interface CreateCommunityPostRequest {
 
 export interface QotdOptionDto {
   id: string;
-  letter: 'A' | 'B' | 'C' | 'D';
+  letter: string;
   text: string;
   rationale?: string;
+  isCorrect?: boolean;
 }
 
 export interface QotdQuestionDto {
   id: string;
   dateStr: string; // YYYY-MM-DD
+  timezone?: string;
+  source?: 'published_bank' | 'backend' | 'unavailable';
+  persistenceScope?: 'session_local' | 'backend_persisted';
+  authRequired?: boolean;
   title: string;
   stem: string;
   category: string;
   examContext: string;
+  questionType?: QuestionType;
   cognitiveSkill: CognitiveSkill;
   clientNeedCategory: ClientNeedCategory;
   options: QotdOptionDto[];
+  rendererQuestion?: import('../components/exam/renderers/types').RendererQuestion;
   totalAnswers: number;
   correctPercentage?: number;
   userAnswered?: boolean;
   userSelectedOptionId?: string;
+  userResponseJson?: string;
   userIsCorrect?: boolean;
+  correctOptionId?: string;
   explanation?: string;
 }
 
 export interface SubmitQotdAnswerRequest {
   questionId: string;
-  selectedOptionId: string;
+  selectedOptionId?: string;
+  responseJson?: string;
 }
 
 export interface QotdSubmissionResultDto {
@@ -820,6 +1001,9 @@ export interface QotdSubmissionResultDto {
   userStreak: number;
   totalAnswered: number;
   overallAccuracyPercentage: number;
+  persistenceScope?: 'session_local' | 'backend_persisted';
+  correctAnswerMeta?: QuestionCorrectAnswerMetaDto;
+  optionRationales?: Array<{ id: string; isCorrect: boolean; rationale?: string }>;
 }
 
 export interface StudyGroupDto {

@@ -44,7 +44,14 @@ export function buildApiUrl(endpoint) {
       endpoint.startsWith('/api/strata/') ||
       endpoint.startsWith('/api/lectures') ||
       endpoint.startsWith('/api/attempts/') ||
-      endpoint.startsWith('/api/study-library/')
+      endpoint.startsWith('/api/study-library/') ||
+      endpoint.startsWith('/api/qotd/') ||
+      endpoint.startsWith('/api/insights/') ||
+      endpoint.startsWith('/api/community/') ||
+      endpoint.startsWith('/api/groups/') ||
+      endpoint.startsWith('/api/mentors') ||
+      endpoint.startsWith('/api/search/') ||
+      endpoint.startsWith('/api/exams/')
     ) {
       return endpoint;
     }

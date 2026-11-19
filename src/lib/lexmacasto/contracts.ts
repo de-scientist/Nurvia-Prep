@@ -17,6 +17,7 @@ export const LEXMACASTO_AUTH_ENDPOINTS = {
 export const LEXMACASTO_EXTRA_ENDPOINTS = {
   SEEK_BASE: '/api/castoline/strata/seek',
   DIY_EXAM_STORE: '/api/castoline/strata/assessment/exams/diy/learning/store',
+  EXAM_UPSERT_BASE: '/api/castoline/strata/assessment/exams/upsert',
   RECOVERY_PASSWORD: '/api/castoline/auth/recovery/password',
   RECOVERY_SOCIAL: '/api/castoline/auth/recovery/social',
   SUPPORT_BASE: '/api/castoline/strata/support',
@@ -316,6 +317,11 @@ export const LEXMACASTO_STRATA_ENDPOINTS = {
     fetchtype: 'absolute',
     requiresAuth: false,
   },
+  examCurrent: {
+    path: '/api/castoline/strata/assessment/exams/list/current',
+    fetchtype: 'current',
+    requiresAuth: false,
+  },
   examsLive: {
     path: '/api/castoline/strata/assessment/exams/list/live',
     fetchtype: 'live',
@@ -324,6 +330,11 @@ export const LEXMACASTO_STRATA_ENDPOINTS = {
   examResults: {
     path: '/api/castoline/strata/assessment/exams/results/list/relative',
     fetchtype: 'relative',
+    requiresAuth: true,
+  },
+  examResultsDistinct: {
+    path: '/api/castoline/strata/assessment/exams/results/list/distinct',
+    fetchtype: 'distinct',
     requiresAuth: true,
   },
   sections: {
@@ -398,6 +409,19 @@ export function buildStrataEndpointPath(
         params.set(key, String(value));
       }
     }
+    // Bridge Castoline's `dynamic*` query naming so backend pagination and search take effect.
+    const pageAlias = queryParams.page ?? queryParams.skewPage;
+    if (!params.has('dynamicPage') && pageAlias !== undefined && pageAlias !== null && pageAlias !== '') {
+      params.set('dynamicPage', String(pageAlias));
+    }
+    const perPageAlias = queryParams.perPage ?? queryParams.skewPerPage ?? queryParams.limit;
+    if (!params.has('dynamicPerPage') && perPageAlias !== undefined && perPageAlias !== null && perPageAlias !== '') {
+      params.set('dynamicPerPage', String(perPageAlias));
+    }
+    const searchAlias = queryParams.search ?? queryParams.q;
+    if (!params.has('dynamicSearch') && searchAlias !== undefined && searchAlias !== null && searchAlias !== '') {
+      params.set('dynamicSearch', String(searchAlias));
+    }
   }
   if (fetchtypeOverride) {
     params.set('fetchtype', fetchtypeOverride);
@@ -405,6 +429,14 @@ export function buildStrataEndpointPath(
     params.set('fetchtype', def.fetchtype);
   }
   return `${basePath}?${params.toString()}`;
+}
+
+export function buildExamUpsertPath(
+  segment: 'user/answers' | 'actions' | 'question/actions' | 'lifecycle' | 'preferences',
+  isDiy = false
+): string {
+  const base = '/api/castoline/strata/assessment/exams/upsert';
+  return isDiy ? `${base}/diy/${segment}` : `${base}/${segment}`;
 }
 
 /**
@@ -459,14 +491,22 @@ export interface LexmaCastoLogoutPayload {
 }
 
 export interface LexmaCastoAuthUserRaw {
-  id?: string;
+  id?: string | number;
+  guidId?: string;
+  userGuidId?: string;
   userId?: string;
   username?: string;
+  userName?: string;
   name?: string;
   fullName?: string;
   email?: string;
+  emailConfirmed?: boolean;
+  emailVerified?: boolean;
+  isEmailVerified?: boolean;
+  email_verified?: boolean;
+  emails?: Array<{ email?: string; isVerified?: boolean; isPrimary?: boolean }>;
   role?: string;
-  roles?: string[];
+  roles?: Array<string | { name?: string; rank?: number; roleName?: string }>;
   castoBadge?: string;
   castoLine?: string;
   dashboardName?: string;
