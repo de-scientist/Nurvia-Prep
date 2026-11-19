@@ -4,8 +4,10 @@ import * as React from "react";
 import { QuestionRendererProps } from "./types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
+import { ContentIntegrityAlert } from "./ContentIntegrityAlert";
+import { ReviewRationaleBox } from "./ReviewRationaleBox";
 
 export function BowTieRenderer({
   question,
@@ -13,8 +15,8 @@ export function BowTieRenderer({
   onChange,
   disabled = false,
   isReview = false,
+  hideRationaleBox = false,
 }: QuestionRendererProps) {
-  // Bow-Tie state: Actions (2), Condition (1), Parameters (2)
   const state = React.useMemo<{
     actions: string[];
     condition: string | null;
@@ -25,9 +27,13 @@ export function BowTieRenderer({
       if (value.startsWith("{")) {
         const parsed = JSON.parse(value);
         return {
-          actions: parsed.Actions || parsed.actions || [],
-          condition: parsed.Condition || parsed.condition || null,
-          parameters: parsed.Parameters || parsed.parameters || [],
+          actions: Array.isArray(parsed.Actions || parsed.actions)
+            ? (parsed.Actions || parsed.actions).map(String)
+            : [],
+          condition: parsed.Condition || parsed.condition ? String(parsed.Condition || parsed.condition) : null,
+          parameters: Array.isArray(parsed.Parameters || parsed.parameters)
+            ? (parsed.Parameters || parsed.parameters).map(String)
+            : [],
         };
       }
       return { actions: [], condition: null, parameters: [] };
@@ -52,13 +58,13 @@ export function BowTieRenderer({
     const next = current.includes(optId)
       ? current.filter((id) => id !== optId)
       : current.length < 2
-      ? [...current, optId]
-      : current;
+        ? [...current, optId]
+        : current;
     updateBowTie(next, state.condition, state.parameters);
   };
 
   const setCondition = (optId: string) => {
-    updateBowTie(state.actions, optId, state.parameters);
+    updateBowTie(state.actions, state.condition === optId ? null : optId, state.parameters);
   };
 
   const toggleParam = (optId: string) => {
@@ -66,31 +72,76 @@ export function BowTieRenderer({
     const next = current.includes(optId)
       ? current.filter((id) => id !== optId)
       : current.length < 2
-      ? [...current, optId]
-      : current;
+        ? [...current, optId]
+        : current;
     updateBowTie(state.actions, state.condition, next);
   };
 
   const options = question.options;
 
+  if (question.contentIntegrityError || options.length === 0) {
+    return (
+      <div className="space-y-4">
+        <ContentIntegrityAlert
+          questionId={question.id}
+          questionType={question.questionType}
+          message={question.contentIntegrityError}
+        />
+        {isReview && !hideRationaleBox && (
+          <ReviewRationaleBox question={question} value={value} />
+        )}
+      </div>
+    );
+  }
+
+  // Prefer explicit option metadata grouping (`data` or `label`), else divide evenly without overlap
+  const taggedActions = options.filter((o) => /action/i.test(`${o.data ?? ""} ${o.label ?? ""}`));
+  const taggedConditions = options.filter((o) => /condit|diag/i.test(`${o.data ?? ""} ${o.label ?? ""}`));
+  const taggedParams = options.filter((o) => /param|monitor/i.test(`${o.data ?? ""} ${o.label ?? ""}`));
+
+  const hasExplicitGroups =
+    taggedActions.length > 0 && taggedConditions.length > 0 && taggedParams.length > 0;
+
+  const third = Math.max(1, Math.ceil(options.length / 3));
+  const actionOptions = hasExplicitGroups ? taggedActions : options.slice(0, third);
+  const conditionOptions = hasExplicitGroups ? taggedConditions : options.slice(third, third * 2);
+  const paramOptions = hasExplicitGroups ? taggedParams : options.slice(third * 2);
+
+  const renderBtnClass = (isSelected: boolean, isCorrect?: boolean, isPrimary?: boolean) => {
+    if (isReview) {
+      if (isCorrect) {
+        return "border-emerald-500 bg-emerald-50/90 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 font-semibold ring-1 ring-emerald-500";
+      }
+      if (isSelected && !isCorrect) {
+        return "border-rose-500 bg-rose-50/90 dark:bg-rose-950/40 text-rose-950 dark:text-rose-100 font-semibold ring-1 ring-rose-500";
+      }
+    }
+    if (isSelected) {
+      return isPrimary
+        ? "border-brand-teal bg-brand-teal text-white font-bold shadow-xs"
+        : "border-brand-teal bg-brand-teal/10 text-foreground font-semibold ring-1 ring-brand-teal";
+    }
+    return "border-border bg-surface hover:bg-surface-muted text-foreground-secondary";
+  };
+
   return (
     <div className="space-y-6">
-      <div className="text-xs text-foreground-secondary flex items-center justify-between">
-        <span>Complete the clinical judgment Bow-Tie by selecting items for each section:</span>
+      <div className="text-xs text-foreground-secondary flex items-center justify-between gap-2">
+        <span>Complete the clinical judgment Bow-Tie by selecting items for each column:</span>
         <Badge variant="outline" className="text-[10px]">NGN NextGen Format</Badge>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-2xl border border-border bg-surface-muted/40">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 rounded-2xl border border-border bg-surface-muted/40">
         {/* Left: Actions to Take (Pick 2) */}
-        <div className="space-y-3 rounded-xl border border-border bg-background p-4">
-          <div className="flex items-center justify-between">
+        <div className="space-y-3 rounded-xl border border-border bg-background p-4 min-w-0">
+          <div className="flex items-center justify-between gap-2">
             <span className="font-brand font-bold text-xs text-foreground uppercase tracking-wider">
               1. Actions to Take
             </span>
-            <Badge variant="teal" className="text-[10px]">Pick 2</Badge>
+            <Badge variant="teal" className="text-[10px] shrink-0">Pick 2</Badge>
           </div>
           <div className="space-y-2">
-            {options.slice(0, 4).map((opt) => {
+            {actionOptions.map((opt) => {
               const isSelected = state.actions.includes(opt.id);
               return (
                 <button
@@ -99,13 +150,13 @@ export function BowTieRenderer({
                   disabled={disabled}
                   onClick={() => toggleAction(opt.id)}
                   className={cn(
-                    "w-full text-left p-3 rounded-lg border text-xs transition-all",
-                    isSelected
-                      ? "border-brand-teal bg-brand-teal/10 text-foreground font-semibold ring-1 ring-brand-teal"
-                      : "border-border bg-surface hover:bg-surface-muted text-foreground-secondary"
+                    "w-full text-left p-3 rounded-lg border text-xs transition-all flex items-center justify-between gap-2",
+                    renderBtnClass(isSelected, opt.isCorrect)
                   )}
                 >
-                  <RichQuestionContent content={opt.optionText} />
+                  <RichQuestionContent content={opt.optionText} as="span" className="flex-1" />
+                  {isReview && opt.isCorrect && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
+                  {isReview && isSelected && !opt.isCorrect && <XCircle className="w-4 h-4 text-rose-500 shrink-0" />}
                 </button>
               );
             })}
@@ -113,16 +164,16 @@ export function BowTieRenderer({
         </div>
 
         {/* Center: Potential Condition (Pick 1) */}
-        <div className="space-y-3 rounded-xl border-2 border-brand-teal/40 bg-brand-teal/5 p-4 flex flex-col justify-between">
+        <div className="space-y-3 rounded-xl border-2 border-brand-teal/40 bg-brand-teal/5 p-4 flex flex-col justify-between min-w-0">
           <div>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between gap-2 mb-3">
               <span className="font-brand font-bold text-xs text-brand-teal uppercase tracking-wider">
                 2. Potential Condition
               </span>
-              <Badge variant="teal" className="text-[10px]">Pick 1</Badge>
+              <Badge variant="teal" className="text-[10px] shrink-0">Pick 1</Badge>
             </div>
             <div className="space-y-2">
-              {options.slice(2, 6).map((opt) => {
+              {conditionOptions.map((opt) => {
                 const isSelected = state.condition === opt.id;
                 return (
                   <button
@@ -131,33 +182,33 @@ export function BowTieRenderer({
                     disabled={disabled}
                     onClick={() => setCondition(opt.id)}
                     className={cn(
-                      "w-full text-left p-3 rounded-lg border text-xs transition-all",
-                      isSelected
-                        ? "border-brand-teal bg-brand-teal text-white font-bold shadow-xs"
-                        : "border-border bg-surface hover:bg-surface-muted text-foreground-secondary"
+                      "w-full text-left p-3 rounded-lg border text-xs transition-all flex items-center justify-between gap-2",
+                      renderBtnClass(isSelected, opt.isCorrect, true)
                     )}
                   >
-                    <RichQuestionContent content={opt.optionText} />
+                    <RichQuestionContent content={opt.optionText} as="span" className="flex-1" />
+                    {isReview && opt.isCorrect && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
+                    {isReview && isSelected && !opt.isCorrect && <XCircle className="w-4 h-4 text-rose-500 shrink-0" />}
                   </button>
                 );
               })}
             </div>
           </div>
           <div className="text-[11px] text-center text-foreground-muted italic pt-2">
-            Core Client Diagnosis / Hypothesized State
+            Core Client Condition / Hypothesis
           </div>
         </div>
 
         {/* Right: Parameters to Monitor (Pick 2) */}
-        <div className="space-y-3 rounded-xl border border-border bg-background p-4">
-          <div className="flex items-center justify-between">
+        <div className="space-y-3 rounded-xl border border-border bg-background p-4 min-w-0">
+          <div className="flex items-center justify-between gap-2">
             <span className="font-brand font-bold text-xs text-foreground uppercase tracking-wider">
               3. Parameters to Monitor
             </span>
-            <Badge variant="teal" className="text-[10px]">Pick 2</Badge>
+            <Badge variant="teal" className="text-[10px] shrink-0">Pick 2</Badge>
           </div>
           <div className="space-y-2">
-            {options.slice( options.length > 4 ? options.length - 4 : 0 ).map((opt) => {
+            {paramOptions.map((opt) => {
               const isSelected = state.parameters.includes(opt.id);
               return (
                 <button
@@ -166,13 +217,13 @@ export function BowTieRenderer({
                   disabled={disabled}
                   onClick={() => toggleParam(opt.id)}
                   className={cn(
-                    "w-full text-left p-3 rounded-lg border text-xs transition-all",
-                    isSelected
-                      ? "border-brand-teal bg-brand-teal/10 text-foreground font-semibold ring-1 ring-brand-teal"
-                      : "border-border bg-surface hover:bg-surface-muted text-foreground-secondary"
+                    "w-full text-left p-3 rounded-lg border text-xs transition-all flex items-center justify-between gap-2",
+                    renderBtnClass(isSelected, opt.isCorrect)
                   )}
                 >
-                  <RichQuestionContent content={opt.optionText} />
+                  <RichQuestionContent content={opt.optionText} as="span" className="flex-1" />
+                  {isReview && opt.isCorrect && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
+                  {isReview && isSelected && !opt.isCorrect && <XCircle className="w-4 h-4 text-rose-500 shrink-0" />}
                 </button>
               );
             })}
@@ -180,14 +231,8 @@ export function BowTieRenderer({
         </div>
       </div>
 
-      {isReview && question.generalRationale && (
-        <div className="p-4 rounded-xl bg-brand-teal/10 border border-brand-teal/20 text-xs text-foreground-secondary space-y-1">
-          <div className="font-bold text-brand-teal flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>Bow-Tie Clinical Judgment Rationale</span>
-          </div>
-          <RichQuestionContent content={question.generalRationale} className="pt-1 leading-relaxed" />
-        </div>
+      {isReview && !hideRationaleBox && (
+        <ReviewRationaleBox question={question} value={value} includeOptionRationales />
       )}
     </div>
   );

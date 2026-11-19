@@ -64,6 +64,14 @@ test('1. Verify all 18 question renderer component files exist on disk', () => {
 test('2. QuestionRendererRegistry dispatches all 18 canonical question type integers (1-18)', () => {
   const registryCode = fs.readFileSync(path.join(renderersDir, 'QuestionRendererRegistry.tsx'), 'utf8');
   for (let i = 1; i <= 18; i++) {
+    if (i === 9) {
+      // Legacy integer type "9" is resolved via the case-study wrapper instead of a switch case
+      assert(
+        registryCode.includes('resolved.baseType === "9"'),
+        'Registry missing legacy integer type "9" resolution'
+      );
+      continue;
+    }
     assert(registryCode.includes(`case "${i}":`), `Registry missing integer case "${i}"`);
   }
 });
@@ -92,6 +100,14 @@ test('3. QuestionRendererRegistry dispatches string aliases for all 18 canonical
   ];
 
   for (const alias of expectedAliases) {
+    if (alias === 'clinicalcasestudy') {
+      // The case-study alias is resolved via the legacy case-study wrapper instead of a switch case
+      assert(
+        registryCode.includes('resolved.baseType === "clinicalcasestudy"'),
+        'Registry missing legacy clinicalcasestudy resolution'
+      );
+      continue;
+    }
     assert(registryCode.includes(`case "${alias}":`), `Registry missing string alias case "${alias}"`);
   }
 });
@@ -100,11 +116,17 @@ test('3. QuestionRendererRegistry dispatches string aliases for all 18 canonical
 test('4. Question renderers support isReview prop and rationale feedback display', () => {
   const singleChoice = fs.readFileSync(path.join(renderersDir, 'SingleChoiceRenderer.tsx'), 'utf8');
   assert(singleChoice.includes('isReview'), 'SingleChoiceRenderer missing isReview prop handling');
-  assert(singleChoice.includes('generalRationale'), 'SingleChoiceRenderer missing generalRationale');
+  assert(
+    singleChoice.includes('ReviewRationaleBox'),
+    'SingleChoiceRenderer must render the shared rationale box in review mode'
+  );
 
   const multipleResponse = fs.readFileSync(path.join(renderersDir, 'MultipleResponseRenderer.tsx'), 'utf8');
   assert(multipleResponse.includes('isReview'), 'MultipleResponseRenderer missing isReview prop handling');
-  assert(multipleResponse.includes('generalRationale'), 'MultipleResponseRenderer missing generalRationale');
+  assert(
+    multipleResponse.includes('ReviewRationaleBox'),
+    'MultipleResponseRenderer must render the shared rationale box in review mode'
+  );
 
   const caseStudy = fs.readFileSync(path.join(renderersDir, 'CaseStudyRenderer.tsx'), 'utf8');
   assert(caseStudy.includes('isReview'), 'CaseStudyRenderer missing isReview prop handling');
@@ -118,7 +140,10 @@ test('5. MultipleImageSelection emits the canonical multi-selection payload', ()
   const mis = fs.readFileSync(path.join(renderersDir, 'MultipleImageSelectionRenderer.tsx'), 'utf8');
   // Canonical contract consumed by QuestionResponseGrader.FindSelectedOptions
   assert(mis.includes('{ SelectedOptionIds: next }'), 'Renderer must emit the canonical SelectedOptionIds array payload');
-  assert(mis.includes('SelectedOptionIds ?? parsed.selectedOptionIds'), 'Renderer must restore saved canonical selections');
+  assert(
+    mis.includes('parsed.SelectedOptionIds') && mis.includes('parsed.selectedOptionIds'),
+    'Renderer must restore saved canonical selections'
+  );
   assert(mis.includes('parsed.SelectedOptionId'), 'Renderer must restore legacy scalar payloads for in-flight attempts');
   assert(mis.includes('selectedIds.includes(id)'), 'Renderer must support toggling multiple selections on');
   assert(mis.includes('selectedIds.filter'), 'Renderer must support toggling selections off');
@@ -129,10 +154,10 @@ test('5. MultipleImageSelection emits the canonical multi-selection payload', ()
 test('6. ShortAnswer emits a payload the grader consumes', () => {
   const shortAnswer = fs.readFileSync(path.join(renderersDir, 'ShortAnswerRenderer.tsx'), 'utf8');
   // Canonical contract consumed by QuestionResponseGrader (Cloze/ShortAnswer case)
-  assert(shortAnswer.includes('{ TextResponse: val }'), 'Renderer must emit the canonical TextResponse payload');
+  assert(shortAnswer.includes('{ TextResponse: e.target.value }'), 'Renderer must emit the canonical TextResponse payload');
   assert(shortAnswer.includes('parsed.TextResponse'), 'Renderer must restore saved TextResponse values');
   assert(shortAnswer.includes('parsed.ShortAnswer'), 'Renderer must restore legacy ShortAnswer payloads for in-flight attempts');
-  assert(!/JSON\.stringify\(\{ ShortAnswer: val \}\)/.test(shortAnswer), 'Renderer must no longer emit the unconsumed ShortAnswer payload');
+  assert(!/JSON\.stringify\(\{ ShortAnswer/.test(shortAnswer), 'Renderer must no longer emit the unconsumed ShortAnswer payload');
 });
 
 test('7. Admin question authoring and edit previews reuse QuestionRendererRegistry', () => {

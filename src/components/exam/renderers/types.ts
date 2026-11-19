@@ -1,8 +1,20 @@
+import type {
+  QuestionCorrectAnswerMetaDto,
+  QuestionMatrixDto,
+  QuestionMediaDto,
+} from '@/lib/api-types';
+
 export interface RendererOption {
   id: string;
+  numericId?: number;
   optionIndex: number;
   optionText: string;
   displayOrder?: number;
+  description?: string;
+  data?: string;
+  label?: string;
+  order?: string;
+  link?: string;
   isCorrect?: boolean;
   specificRationale?: string;
   wasSelected?: boolean;
@@ -18,15 +30,30 @@ export interface RendererExhibit {
 
 export interface RendererQuestion {
   id: string;
+  numericId?: number;
+  guidId?: string;
+  sectionId?: number;
+  sectionGuidId?: string;
+  sectionName?: string;
   orderIndex?: number;
   stem: string;
+  metaStem?: string;
+  instructions?: string;
   questionType: string | number;
   cognitiveSkill?: string | number;
   clientNeedCategory?: string | number;
   options: RendererOption[];
   exhibits?: RendererExhibit[];
+  media?: QuestionMediaDto[];
+  matrix?: QuestionMatrixDto;
+  blankSelectPassage?: string;
+  highlightPassage?: string;
+  correctAnswerMeta?: QuestionCorrectAnswerMetaDto;
+  contentIntegrityError?: string;
   contentJsonData?: string;
   generalRationale?: string;
+  isCorrect?: boolean;
+  learnerResponse?: string;
 }
 
 export interface QuestionRendererProps {
@@ -35,4 +62,5 @@ export interface QuestionRendererProps {
   onChange?: (val: string) => void;
   disabled?: boolean;
   isReview?: boolean;
+  hideRationaleBox?: boolean;
 }

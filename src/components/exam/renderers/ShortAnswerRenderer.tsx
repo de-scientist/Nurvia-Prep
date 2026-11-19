@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import { QuestionRendererProps } from "./types";
-import { cn } from "@/lib/utils";
 import { CheckCircle2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
+import { ReviewRationaleBox } from "./ReviewRationaleBox";
 
 export function ShortAnswerRenderer({
   question,
@@ -13,22 +13,20 @@ export function ShortAnswerRenderer({
   onChange,
   disabled = false,
   isReview = false,
+  hideRationaleBox = false,
 }: QuestionRendererProps) {
-  // Canonical response contract: {"TextResponse": "<text>"} — consumed verbatim by
-  // QuestionResponseGrader. Legacy {"ShortAnswer": "<text>"} payloads persisted by
-  // earlier renderer versions are restored for in-flight attempts.
   const currentText = React.useMemo(() => {
     if (!value) return "";
     try {
       if (value.startsWith("{")) {
         const parsed = JSON.parse(value);
-        return (
+        return String(
           parsed.TextResponse ??
-          parsed.textResponse ??
-          parsed.value ??
-          parsed.ShortAnswer ??
-          parsed.shortAnswer ??
-          ""
+            parsed.textResponse ??
+            parsed.value ??
+            parsed.ShortAnswer ??
+            parsed.shortAnswer ??
+            ""
         );
       }
       return value.replace(/^"(.*)"$/, "$1");
@@ -39,15 +37,16 @@ export function ShortAnswerRenderer({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (disabled) return;
-    const val = e.target.value;
-    onChange?.(JSON.stringify({ TextResponse: val }));
+    onChange?.(JSON.stringify({ TextResponse: e.target.value }));
   };
 
   const correctOption = question.options.find((o) => o.isCorrect);
+  const expectedText =
+    question.correctAnswerMeta?.modelAnswerHtml || correctOption?.optionText || "";
 
   return (
-    <div className="space-y-4 max-w-md">
-      <div className="space-y-2">
+    <div className="space-y-4">
+      <div className="max-w-md space-y-2">
         <label className="text-xs font-semibold text-foreground-secondary">
           Clinical Answer (Term, Dose, or Specific Finding):
         </label>
@@ -56,24 +55,28 @@ export function ShortAnswerRenderer({
           value={currentText}
           onChange={handleChange}
           disabled={disabled}
-          placeholder="e.g. Naloxone"
+          placeholder="Enter clinical answer..."
           className="h-12 text-sm font-semibold"
         />
       </div>
 
-      {isReview && correctOption && (
-        <div className="p-3.5 rounded-xl bg-surface-muted border border-border text-xs space-y-1">
-          <div className="flex items-center gap-1.5 font-bold text-emerald-600">
+      {isReview && expectedText && (
+        <div className="max-w-xl p-3.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-500/40 text-xs space-y-1">
+          <div className="flex flex-wrap items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-300">
             <CheckCircle2 className="w-4 h-4" />
-            <span>Target Term:</span>
+            <span>Target Response:</span>
             <span className="font-mono text-sm text-foreground bg-surface px-2 py-0.5 rounded border border-border">
-              <RichQuestionContent content={correctOption.optionText} />
+              <RichQuestionContent content={expectedText} as="span" />
             </span>
           </div>
-          {correctOption.specificRationale && (
+          {correctOption?.specificRationale && (
             <RichQuestionContent content={correctOption.specificRationale} className="text-foreground-secondary mt-1" />
           )}
         </div>
+      )}
+
+      {isReview && !hideRationaleBox && (
+        <ReviewRationaleBox question={question} value={value} />
       )}
     </div>
   );

@@ -2,10 +2,8 @@
 
 import * as React from "react";
 import { QuestionRendererProps } from "./types";
-import { cn } from "@/lib/utils";
-import { FileText, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
+import { ReviewRationaleBox } from "./ReviewRationaleBox";
 
 export function ExtendedResponseRenderer({
   question,
@@ -13,13 +11,16 @@ export function ExtendedResponseRenderer({
   onChange,
   disabled = false,
   isReview = false,
+  hideRationaleBox = false,
 }: QuestionRendererProps) {
   const essayText = React.useMemo(() => {
     if (!value) return "";
     try {
       if (value.startsWith("{")) {
         const parsed = JSON.parse(value);
-        return parsed.EssayResponse || parsed.essayResponse || parsed.value || "";
+        return String(
+          parsed.EssayResponse || parsed.essayResponse || parsed.TextResponse || parsed.value || ""
+        );
       }
       return value.replace(/^"(.*)"$/, "$1");
     } catch {
@@ -29,8 +30,7 @@ export function ExtendedResponseRenderer({
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (disabled) return;
-    const val = e.target.value;
-    onChange?.(JSON.stringify({ EssayResponse: val }));
+    onChange?.(JSON.stringify({ EssayResponse: e.target.value }));
   };
 
   const wordCount = essayText.trim() ? essayText.trim().split(/\s+/).length : 0;
@@ -38,9 +38,9 @@ export function ExtendedResponseRenderer({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between text-xs text-foreground-secondary">
-        <span>Provide your clinical explanation using the SBAR framework:</span>
+        <span>Provide your structured clinical response:</span>
         <Badge variant="outline" className="text-[10px] font-mono">
-          {wordCount} words (Minimum recommended: 30)
+          {wordCount} words
         </Badge>
       </div>
 
@@ -50,19 +50,13 @@ export function ExtendedResponseRenderer({
           disabled={disabled}
           value={essayText}
           onChange={handleChange}
-          placeholder="Situation, Background, Assessment, and Recommendation (SBAR)..."
+          placeholder="Document your clinical assessment, prioritization, and rationale..."
           className="w-full p-4 rounded-xl border border-border bg-background text-sm leading-relaxed focus:outline-brand-teal focus:ring-1 focus:ring-brand-teal text-foreground"
         />
       </div>
 
-      {isReview && question.generalRationale && (
-        <div className="p-4 rounded-xl bg-brand-teal/10 border border-brand-teal/20 text-xs text-foreground-secondary space-y-1">
-          <div className="font-bold text-brand-teal flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>Exemplary SBAR Clinical Response</span>
-          </div>
-          <RichQuestionContent content={question.generalRationale} className="pt-1 leading-relaxed" />
-        </div>
+      {isReview && !hideRationaleBox && (
+        <ReviewRationaleBox question={question} value={value} />
       )}
     </div>
   );
