@@ -181,9 +181,18 @@
   --color-foreground: var(--text-primary);
   --color-foreground-secondary: var(--text-secondary);
   --color-foreground-muted: var(--text-muted);
+  --color-card: var(--surface-elevated);
+  --color-card-foreground: var(--text-primary);
+  --color-muted: var(--surface-muted);
+  --color-muted-foreground: var(--text-muted);
+  --color-destructive: var(--error);
+  --color-destructive-foreground: #FFFFFF;
   --color-surface: var(--surface);
+  --color-surface-card: var(--surface-elevated);
+  --color-surface-primary: var(--background);
   --color-surface-muted: var(--surface-muted);
   --color-surface-elevated: var(--surface-elevated);
+  --color-brand-tealDeep: var(--brand-teal-dark);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-primary: var(--primary);

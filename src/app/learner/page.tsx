@@ -8,10 +8,10 @@ import { Card } from "@/components/ui/card";
 import { useAuth } from "@/components/auth/auth-provider";
 import { nurviaApi } from "@/lib/api-client";
 import type { ExamAttemptSummaryDto, ExamDto } from "@/lib/api-types";
+import { computePerformanceSummary } from "@/lib/analytics/performance-analytics";
 import { getPersonalizedGreeting } from "@/lib/greeting-utils";
 import {
   Sparkles,
-  ArrowRight,
   Flame,
   Users,
   GraduationCap,
@@ -50,11 +50,8 @@ export default function LearnerDashboardPage() {
 
   const completedAttempts = attempts.filter((attempt) =>
     ["Graded", "Submitted"].includes(attempt.status));
-  const scoredAttempts = completedAttempts.filter((attempt) =>
-    typeof attempt.scorePercentage === "number");
-  const averageScore = scoredAttempts.length
-    ? Math.round(scoredAttempts.reduce((sum, attempt) => sum + (attempt.scorePercentage || 0), 0) / scoredAttempts.length)
-    : null;
+  const summary = React.useMemo(() => computePerformanceSummary(attempts), [attempts]);
+  const averageScore = summary.averageScore !== null ? Math.round(summary.averageScore) : null;
   const activeAttempts = attempts.filter((attempt) => attempt.status === "InProgress");
 
   return (
