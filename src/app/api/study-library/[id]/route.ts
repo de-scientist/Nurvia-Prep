@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractSiteMetadataFromRequestHeaders, lexmaCastoRequest } from '@/lib/lexmacasto/client';
 import { buildStrataEndpointPath } from '@/lib/lexmacasto/contracts';
 import { getServerCastoSession } from '@/lib/lexmacasto/session';
-import { inferExamDeliveryMode } from '@/lib/api-client';
-import type { StudySetDetailDto, StudySetCardDto } from '@/lib/api-types';
+import { inferExamCategory, inferExamDeliveryMode, inferExamPathway } from '@/lib/api-client';
+import type { StudySetDetailDto, StudySetCardDto, ExamLayoutPolicy, ExamLayout, DifficultyLevel } from '@/lib/api-types';
 
 const NO_STORE_HEADERS = {
   'Cache-Control': 'no-store, no-cache, must-revalidate, private',
@@ -30,23 +30,36 @@ export async function GET(
     `/api/study-library/${trimmedId}`
   );
 
-  // 1. Fetch exam details from Strata
-  const examsPath = buildStrataEndpointPath(
-    'exams',
-    { examId: trimmedId, perPage: 1 },
-    'absolute'
+  // Authoritative single-exam lookup via Castoline `exams/list/current?identifier=...`
+  const examCurrentPath = buildStrataEndpointPath(
+    'examCurrent',
+    { identifier: trimmedId },
+    'current'
   );
 
   const examRes = await lexmaCastoRequest<{
-    data?: { items?: any[] };
-    items?: any[];
-  }>(examsPath, {
+    data?: Record<string, any> & { items?: Record<string, any>[] };
+    items?: Record<string, any>[];
+  }>(examCurrentPath, {
     method: 'GET',
     session,
     siteMeta,
   });
 
-  const rawItem = examRes.data?.data?.items?.[0] ?? examRes.data?.items?.[0] ?? null;
+  const rawData = examRes.data?.data;
+  const candidateItem =
+    rawData && Array.isArray(rawData.items)
+      ? rawData.items[0]
+      : rawData && typeof rawData === 'object' && ('guidId' in rawData || 'id' in rawData)
+        ? rawData
+        : examRes.data?.items?.[0] ?? null;
+
+  const rawItem =
+    candidateItem &&
+    (String(candidateItem.guidId ?? '').trim() === trimmedId ||
+      String(candidateItem.id ?? '').trim() === trimmedId)
+      ? candidateItem
+      : null;
 
   if (!rawItem) {
     return NextResponse.json(
@@ -59,35 +72,91 @@ export async function GET(
     );
   }
 
+  const totalQuestions = Number(rawItem.questionsCount ?? rawItem.totalQuestions ?? 0);
+  const timeLimitMinutes = Number(rawItem.duration ?? rawItem.timeLimitMinutes ?? 0);
+  const passingScorePercentage = Number(rawItem.passMark ?? rawItem.passingScorePercentage ?? 75);
+
   const cardDto: StudySetCardDto = {
     id: String(rawItem.guidId ?? rawItem.id ?? trimmedId),
     code: String(rawItem.code ?? rawItem.guidId ?? trimmedId),
-    title: String(rawItem.name ?? rawItem.title ?? 'Published Examination Set'),
-    description: String(rawItem.description ?? rawItem.instructions ?? 'Comprehensive practice examination questions with clinical rationales.'),
-    pathway: (rawItem.pathway || 'RN') as any,
-    category: (rawItem.category || 'Comprehensive') as any,
+    title: String(rawItem.title ?? rawItem.name ?? 'Published Examination Set'),
+    description: String(
+      rawItem.description ??
+        'Published examination set retrieved directly from the authoritative assessment bank.'
+    ),
+    pathway: inferExamPathway(rawItem),
+    category: inferExamCategory(rawItem),
     modeAllowed: inferExamDeliveryMode(rawItem),
-    timeLimitMinutes: Number(rawItem.timeLimitMinutes ?? rawItem.durationMinutes ?? 90) || 90,
-    passingScorePercentage: Number(rawItem.passingScorePercentage ?? 75),
-    totalQuestions: Number(rawItem.totalQuestions ?? rawItem.questionCount ?? 50) || 50,
-    allowedLayouts: (rawItem.allowedLayouts || 'Both') as any,
-    defaultLayout: (rawItem.defaultLayout || 'Sequential') as any,
-    reviewCount: Number(rawItem.reviewCount ?? 12),
+    timeLimitMinutes: Number.isFinite(timeLimitMinutes) && timeLimitMinutes > 0 ? timeLimitMinutes : 60,
+    passingScorePercentage: Number.isFinite(passingScorePercentage) ? passingScorePercentage : 75,
+    totalQuestions: Number.isFinite(totalQuestions) && totalQuestions >= 0 ? totalQuestions : 0,
+    school:
+      typeof rawItem.schoolName === 'string' && rawItem.schoolName.trim()
+        ? rawItem.schoolName.trim()
+        : typeof rawItem.school === 'string' && rawItem.school.trim()
+          ? rawItem.school.trim()
+          : null,
+    academicYear:
+      typeof rawItem.year === 'number'
+        ? rawItem.year
+        : typeof rawItem.academicYear === 'number'
+          ? rawItem.academicYear
+          : null,
+    season: typeof rawItem.season === 'string' && rawItem.season.trim() ? rawItem.season.trim() : null,
+    subject:
+      typeof rawItem.subjectName === 'string' && rawItem.subjectName.trim()
+        ? rawItem.subjectName.trim()
+        : typeof rawItem.subject === 'string' && rawItem.subject.trim()
+          ? rawItem.subject.trim()
+          : null,
+    topic:
+      typeof rawItem.topicName === 'string' && rawItem.topicName.trim()
+        ? rawItem.topicName.trim()
+        : typeof rawItem.topic === 'string' && rawItem.topic.trim()
+          ? rawItem.topic.trim()
+          : null,
+    difficulty: (typeof rawItem.difficulty === 'string' && rawItem.difficulty.trim()
+      ? rawItem.difficulty.trim()
+      : null) as DifficultyLevel | null,
+    allowedLayouts: (typeof rawItem.allowedLayouts === 'string' && rawItem.allowedLayouts && rawItem.allowedLayouts !== 'Any'
+      ? rawItem.allowedLayouts
+      : 'Both') as ExamLayoutPolicy,
+    defaultLayout: (typeof rawItem.defaultLayout === 'string' && rawItem.defaultLayout && rawItem.defaultLayout !== 'Classic'
+      ? rawItem.defaultLayout
+      : 'Sequential') as ExamLayout,
+    averageRating:
+      typeof rawItem.averageRating === 'number'
+        ? rawItem.averageRating
+        : typeof rawItem.rating === 'number' && rawItem.rating > 0
+          ? Number((rawItem.rating / 20).toFixed(1))
+          : null,
+    reviewCount: Number(rawItem.reviewCount ?? 0),
     isSaved: false,
   };
 
+  const subjectsCovered = [rawItem.subjectName, rawItem.courseName, rawItem.programName]
+    .filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+  const topicsCovered = [rawItem.topicName, rawItem.unitName, rawItem.lessonName]
+    .filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+
   const detailDto: StudySetDetailDto = {
     ...cardDto,
-    instructions: 'Answer all questions carefully and within the allocated time, using current best practices and critical thinking.',
-    learningObjectives: [
-      'Strengthen clinical judgment and diagnostic reasoning across core nursing competencies.',
-      'Practice NCLEX-format question answering and time allocation endurance.',
-    ],
-    subjectsCovered: ['Adult Health', 'Pharmacology', 'Fundamentals of Nursing'],
-    topicsCovered: ['Clinical Judgment', 'Safe and Effective Care', 'Priority Interventions'],
-    questionTypesIncluded: ['SingleChoice', 'MultipleResponse', 'BowTie'],
+    instructions:
+      typeof rawItem.instructions === 'string' && rawItem.instructions.trim()
+        ? rawItem.instructions.trim()
+        : 'Answer all questions carefully and within the allocated time using current clinical judgment standards.',
+    learningObjectives:
+      typeof rawItem.objectives === 'string' && rawItem.objectives.trim()
+        ? rawItem.objectives
+            .split(/\r?\n|;/)
+            .map((s: string) => s.trim())
+            .filter(Boolean)
+        : [],
+    subjectsCovered: Array.from(new Set(subjectsCovered)),
+    topicsCovered: Array.from(new Set(topicsCovered)),
+    questionTypesIncluded: [],
     reviews: [],
-    canReview: true,
+    canReview: false,
   };
 
   return NextResponse.json(

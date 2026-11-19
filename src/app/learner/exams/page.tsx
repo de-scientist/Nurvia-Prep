@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { LearnerShell } from "@/components/layout/learner-shell";
 import { StudyLibraryView } from "@/components/study/study-library-view";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, Stethoscope, Award, BookOpen } from "lucide-react";
+import { GraduationCap, Stethoscope, Award } from "lucide-react";
 
 function LearnerExamsContent() {
   const searchParams = useSearchParams();
@@ -14,6 +14,11 @@ function LearnerExamsContent() {
   const category = searchParams?.get("category") || "";
 
   const trackTitles: Record<string, { title: string; subtitle: string; icon: React.ElementType }> = {
+    All: {
+      title: "All Nursing & Clinical Examination Tracks",
+      subtitle: "Complete published catalogue across RN, PN/LPN, Exit Predictors, TEAS, and Dosage Math.",
+      icon: GraduationCap,
+    },
     RN: {
       title: "Registered Nurse (RN) Examination Track",
       subtitle: "Comprehensive ATI proctored, HESI specialty, and semester course exams for RN students.",
@@ -33,6 +38,11 @@ function LearnerExamsContent() {
       title: "LPN Exit & Benchmark Predictor Exams",
       subtitle: "Predictive exit examinations assessing readiness for NCLEX-PN licensure.",
       icon: Award,
+    },
+    NursingMath: {
+      title: "Nursing Math & Dosage Calculation Exams",
+      subtitle: "Targeted clinical math, dimensional analysis, and IV drip-rate assessments.",
+      icon: Stethoscope,
     },
   };
 

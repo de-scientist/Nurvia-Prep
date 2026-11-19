@@ -25,8 +25,13 @@ export function buildStudySessionHref(
   layoutPolicy?: ExamLayoutPolicy
 ): string {
   const params = new URLSearchParams({ examId, mode });
-  if (layoutPolicy === "AllInOneOnly") params.set("layout", "AllInOne");
-  else if (layoutPolicy === "SequentialOnly") params.set("layout", "Sequential");
+  if (layoutPolicy === "AllInOneOnly") {
+    params.set("layout", "AllInOne");
+  } else if (layoutPolicy === "SequentialOnly") {
+    params.set("layout", "Sequential");
+  } else {
+    params.set("layout", mode === "Review" ? "AllInOne" : "Sequential");
+  }
   return `/exam-session?${params.toString()}`;
 }
 

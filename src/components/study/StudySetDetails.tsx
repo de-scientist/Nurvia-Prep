@@ -241,7 +241,9 @@ export function StudySetDetails({ examId, isPublic = false }: StudySetDetailsPro
           </div>
           {(!canExam || !canReview || !canTutor) && (
             <p className="text-[11px] text-foreground-muted">
-              Available modes are governed by the published exam configuration.
+              Available modes are governed by the published exam configuration
+              {!canReview && " — Review mode is disabled when allowReview is false on the exam record"}
+              {!canTutor && "; Tutor mode requires an enabled Practice/Tutor rule"}.
             </p>
           )}
         </div>

@@ -54,8 +54,8 @@ export function StudyLibraryView({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const queryTrack = initialTrack || searchParams?.get("track") || "All";
-  const queryCategory = initialCategory || searchParams?.get("category") || "All";
+  const queryTrack = searchParams?.get("track") || initialTrack || "All";
+  const queryCategory = searchParams?.get("category") || initialCategory || "All";
 
   const [pathway, setPathway] = React.useState<string>(queryTrack);
   const [category, setCategory] = React.useState<string>(queryCategory);
@@ -125,7 +125,11 @@ export function StudyLibraryView({
   // Sync URL query params
   React.useEffect(() => {
     const params = new URLSearchParams();
-    if (pathway !== "All") params.set("track", pathway);
+    if (pathway !== "All") {
+      params.set("track", pathway);
+    } else if (initialTrack && initialTrack !== "All") {
+      params.set("track", "All");
+    }
     if (category !== "All") params.set("category", category);
     if (debouncedSearch.trim()) params.set("q", debouncedSearch.trim());
     if (advanced.school) params.set("school", advanced.school);
