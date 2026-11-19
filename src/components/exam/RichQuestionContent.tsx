@@ -2,7 +2,12 @@
 
 import * as React from "react";
 import parse, { DOMNode, Element, domToReact } from "html-react-parser";
-import { cleanWordHtml, containsHtmlTags, stripHtmlToPlainText } from "@/lib/content/html-normalizer";
+import {
+  cleanWordHtml,
+  containsHtmlTags,
+  normalizeMediaUrl,
+  stripHtmlToPlainText,
+} from "@/lib/content/html-normalizer";
 import { cn } from "@/lib/utils";
 
 interface RichQuestionContentProps {
@@ -53,14 +58,15 @@ export function RichQuestionContent({
       return parse(cleaned, {
         replace: (domNode: DOMNode) => {
           if (domNode instanceof Element) {
-            // Ensure images have responsive clinical styling
+            // Ensure images have responsive clinical styling and normalized media URLs
             if (domNode.name === "img") {
               const attribs = domNode.attribs || {};
-              const src = attribs.src || "";
+              const rawSrc = attribs.src || "";
               // Reject unsafe javascript or data-svg with scripts
-              if (src.toLowerCase().startsWith("javascript:")) {
+              if (rawSrc.toLowerCase().startsWith("javascript:")) {
                 return <span className="text-xs text-rose-500">[Unsafe media blocked]</span>;
               }
+              const src = normalizeMediaUrl(rawSrc) || rawSrc;
               return (
                 <img
                   src={src}
@@ -100,8 +106,11 @@ export function RichQuestionContent({
               );
             }
 
-            // Paragraphs: preserve spacing without excessive margins
+            // Paragraphs: unwrap <p> when rendering inline (as="span") to avoid invalid button/span nesting
             if (domNode.name === "p") {
+              if (Component === "span") {
+                return <span className="inline">{domToReact(domNode.children as DOMNode[])}</span>;
+              }
               return (
                 <p className="mb-2 last:mb-0 leading-relaxed">
                   {domToReact(domNode.children as DOMNode[])}

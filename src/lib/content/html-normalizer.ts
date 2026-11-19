@@ -7,6 +7,27 @@
  * inline media, and EHR exhibits while preventing script injection.
  */
 
+export function normalizeMediaUrl(rawUrl: unknown): string {
+  if (typeof rawUrl !== 'string') return '';
+  const trimmed = rawUrl.trim();
+  if (!trimmed || trimmed.toLowerCase() === 'null' || trimmed.toLowerCase() === 'undefined') {
+    return '';
+  }
+  if (/^(javascript|data:text\/html|vbscript):/i.test(trimmed)) {
+    return '';
+  }
+  if (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('/api/media/') ||
+    trimmed.startsWith('/brand/') ||
+    trimmed.startsWith('/images/') ||
+    trimmed.startsWith('data:image/')
+  ) {
+    return trimmed;
+  }
+  return `/api/media/${trimmed.replace(/^\/+/, '')}`;
+}
 // Basic entity unescaper for double-encoded HTML strings (e.g. &lt;p class=&quot;MsoNormal&quot;&gt;)
 export function unescapeHtmlEntities(input: string): string {
   if (!input || typeof input !== 'string') return '';
@@ -86,7 +107,8 @@ export function cleanWordHtml(input: string): string {
       if (lower.startsWith('margin-top:') || lower.startsWith('margin-bottom:')) continue;
       if (lower.startsWith('margin-left:') || lower.startsWith('margin-right:')) continue;
 
-      // Keep highlights, text formatting, borders, alignment
+      // Keep safe highlights, text formatting, borders, alignment
+      if (lower.includes('url(') || lower.includes('expression(')) continue;
       if (
         lower.includes('background') ||
         lower.includes('color') ||
@@ -111,16 +133,16 @@ export function cleanWordHtml(input: string): string {
   // 6. Clean empty paragraphs with only whitespace or &nbsp;
   html = html.replace(/<p[^>]*>(?:\s|&nbsp;|&#160;|<br\s*\/?>)*<\/p>/gi, '');
 
-  // 7. Strip forbidden active code (scripts, iframes, objects, forms, on* event attributes)
+  // 7. Strip forbidden active code (scripts, iframes, objects, forms, SVG onload, on* event attributes)
   html = html
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
     .replace(/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi, '')
     .replace(/<object[\s\S]*?>[\s\S]*?<\/object>/gi, '')
     .replace(/<embed[\s\S]*?>[\s\S]*?<\/embed>/gi, '')
     .replace(/<applet[\s\S]*?>[\s\S]*?<\/applet>/gi, '')
-    .replace(/\s*on[a-z]+=(["']).*?\1/gi, '')
-    .replace(/\s*on[a-z]+=[^\s>]+/gi, '')
-    .replace(/href=(["'])javascript:.*?\1/gi, 'href="#"');
+    .replace(/\s*on[a-z]+\s*=\s*(["'])[\s\S]*?\1/gi, '')
+    .replace(/\s*on[a-z]+\s*=[^\s>]+/gi, '')
+    .replace(/(href|src)=(["'])(?:javascript:|data:text\/html)[\s\S]*?\2/gi, '$1="#"');
 
   return html.trim();
 }
@@ -220,24 +242,42 @@ export function normalizeOptionContent(rawText: string, optionIndex?: number): {
   };
 }
 
-/**
- * Extracts options array from a raw question record, supporting all known Strata,
- * Qlex, and backend schema variants.
- */
-export function extractQuestionOptions(raw: Record<string, unknown>): Array<{
+export interface ExtractedOption {
   id: string;
+  numericId?: number;
   optionIndex: number;
   optionText: string;
   displayOrder: number;
   isCorrect: boolean;
   specificRationale?: string;
   wasSelected?: boolean;
-}> {
+  description?: string;
+  data?: string;
+  label?: string;
+  order?: string;
+  link?: string;
+}
+
+/**
+ * Extracts options array from a raw question record, supporting all known Strata,
+ * Qlex, and backend schema variants, including joining `questionCorrectAnswers[]`.
+ */
+export function extractQuestionOptions(raw: Record<string, unknown>): ExtractedOption[] {
   const candidateLists = [
     raw.questionOptions,
     raw.options,
     raw.singleChoiceQuestion,
     raw.multipleSelectQuestion,
+    raw.trueFalseQuestion,
+    raw.matchingQuestion,
+    raw.orderingItemQuestion,
+    raw.orderingNumberQuestion,
+    raw.orderingDragDropQuestion,
+    raw.dynamicImageQuestion,
+    raw.blankSelectQuestion,
+    raw.blankFillQuestion,
+    raw.hotspotQuestion,
+    raw.highlightQuestion,
     raw.choices,
     raw.answers,
     raw.items,
@@ -255,10 +295,14 @@ export function extractQuestionOptions(raw: Record<string, unknown>): Array<{
     return [];
   }
 
+  const correctAnswers = Array.isArray(raw.questionCorrectAnswers)
+    ? (raw.questionCorrectAnswers as Array<Record<string, unknown>>)
+    : [];
+
   return rawOptions.map((opt: Record<string, unknown>, idx: number) => {
     const rawText =
-      opt.optionText ??
       opt.answerContent ??
+      opt.optionText ??
       opt.text ??
       opt.content ??
       opt.option ??
@@ -269,12 +313,35 @@ export function extractQuestionOptions(raw: Record<string, unknown>): Array<{
 
     const { normalizedText } = normalizeOptionContent(String(rawText), idx + 1);
 
+    const numericId =
+      typeof opt.id === 'number' && Number.isFinite(opt.id)
+        ? opt.id
+        : typeof opt.id === 'string' && /^\d+$/.test(opt.id.trim())
+          ? Number(opt.id.trim())
+          : undefined;
+
+    const canonicalId =
+      opt.id !== undefined && opt.id !== null && String(opt.id).trim() !== ''
+        ? String(opt.id).trim()
+        : String(opt.guidId ?? `opt-${idx + 1}`);
+
+    const matchingCorrectRecord = correctAnswers.find((ca) => {
+      if (numericId !== undefined && ca.questionOptionId !== undefined && ca.questionOptionId !== null) {
+        return Number(ca.questionOptionId) === numericId;
+      }
+      if (ca.questionOptionId !== undefined && ca.questionOptionId !== null) {
+        return String(ca.questionOptionId) === canonicalId;
+      }
+      return false;
+    });
+
     const isCorrect = Boolean(
       opt.isCorrect ??
-      opt.correct ??
-      opt.isAnswer ??
-      (opt.state === 'correct') ??
-      false
+        opt.correct ??
+        opt.isAnswer ??
+        opt.state === 'correct' ??
+        matchingCorrectRecord?.isCorrect ??
+        false
     );
 
     const specificRationale =
@@ -282,16 +349,37 @@ export function extractQuestionOptions(raw: Record<string, unknown>): Array<{
       opt.explanation ??
       opt.rationale ??
       opt.feedback ??
+      matchingCorrectRecord?.description ??
       undefined;
 
+    const cleanRationale =
+      specificRationale && String(specificRationale).trim() && String(specificRationale).trim().toLowerCase() !== 'null'
+        ? cleanWordHtml(String(specificRationale))
+        : undefined;
+
     return {
-      id: String(opt.guidId ?? opt.id ?? `opt-${idx + 1}`),
+      id: canonicalId,
+      ...(numericId !== undefined ? { numericId } : {}),
       optionIndex: idx + 1,
       optionText: normalizedText,
-      displayOrder: typeof opt.displayOrder === 'number' ? opt.displayOrder : idx + 1,
+      displayOrder:
+        typeof opt.displayOrder === 'number'
+          ? opt.displayOrder
+          : typeof opt.order === 'string' && /^\d+$/.test(opt.order.trim())
+            ? Number(opt.order.trim())
+            : idx + 1,
       isCorrect,
-      specificRationale: specificRationale ? String(specificRationale) : undefined,
+      specificRationale: cleanRationale,
       wasSelected: Boolean(opt.wasSelected),
+      ...(typeof opt.description === 'string' && opt.description.trim()
+        ? { description: opt.description.trim() }
+        : {}),
+      ...(typeof opt.data === 'string' && opt.data.trim() ? { data: opt.data } : {}),
+      ...(typeof opt.label === 'string' && opt.label.trim() ? { label: opt.label } : {}),
+      ...(opt.order !== undefined && opt.order !== null && String(opt.order).trim()
+        ? { order: String(opt.order) }
+        : {}),
+      ...(typeof opt.link === 'string' && opt.link.trim() ? { link: opt.link } : {}),
     };
   });
 }
