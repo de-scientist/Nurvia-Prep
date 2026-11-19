@@ -4,6 +4,7 @@ import * as React from "react";
 import { BookOpen, CheckCircle2, HelpCircle, Lightbulb, Sparkles, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { nurviaApi } from "@/lib/api-client";
+import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 import type {
   TutorEvaluateResponseDto,
   TutorHintResponseDto,
@@ -30,6 +31,13 @@ export function TutorModePanel({
   const [hints, setHints] = React.useState<TutorHintResponseDto[]>([]);
   const [loadingStage, setLoadingStage] = React.useState<TutorStage | "evaluate" | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Reset per-question hint state whenever the active question changes
+  React.useEffect(() => {
+    setHints([]);
+    setLoadingStage(null);
+    setError(null);
+  }, [questionId]);
 
   const handleRequestHint = async (stage: TutorStage) => {
     setLoadingStage(stage);
@@ -125,22 +133,22 @@ export function TutorModePanel({
         </p>
       )}
 
-      {/* Progressive Hints (Stages 2 & 3) */}
+      {/* Progressive Hints */}
       {hints.length > 0 && (
         <div className="space-y-2">
           {hints.map((hint) => (
             <div
               key={hint.stage}
-              className="rounded-lg border border-border bg-surface p-3 text-xs text-foreground-secondary"
+              className="rounded-lg border border-border bg-surface p-3 text-xs text-foreground-secondary space-y-1"
             >
               <p className="font-semibold text-foreground">{hint.title}</p>
-              <p className="mt-1 leading-relaxed">{hint.content}</p>
+              <RichQuestionContent content={hint.content} className="leading-relaxed" />
             </div>
           ))}
         </div>
       )}
 
-      {/* Stage 4, 5, 6: Evaluation + Educational Explanation + Takeaway */}
+      {/* Evaluation + Authoritative Rationale + Study Guidance */}
       {evaluation && (
         <div className="space-y-3 rounded-lg border border-border bg-surface p-4 text-xs">
           <div className="flex items-center justify-between gap-2">
@@ -165,8 +173,11 @@ export function TutorModePanel({
           </div>
 
           <div className="space-y-1">
-            <p className="font-semibold text-foreground">Educational Explanation</p>
-            <p className="leading-relaxed text-foreground-secondary">{evaluation.generalRationale}</p>
+            <p className="font-semibold text-foreground">Official Bank Rationale</p>
+            <RichQuestionContent
+              content={evaluation.generalRationale}
+              className="leading-relaxed text-foreground-secondary"
+            />
           </div>
 
           {evaluation.optionRationales.some((o) => o.specificRationale) && (
@@ -182,12 +193,14 @@ export function TutorModePanel({
                         : "bg-background/60 text-foreground-secondary"
                     }`}
                   >
-                    <span className="font-semibold">
-                      {opt.isCorrect ? "✓ " : "• "}
-                      {opt.optionText}
+                    <span className="font-semibold inline-flex items-start gap-1">
+                      <span>{opt.isCorrect ? "✓" : "•"}</span>
+                      <RichQuestionContent content={opt.optionText} as="span" />
                     </span>
                     {opt.specificRationale && (
-                      <p className="mt-0.5 text-[11px] leading-relaxed">{opt.specificRationale}</p>
+                      <div className="mt-0.5 text-[11px] leading-relaxed">
+                        <RichQuestionContent content={opt.specificRationale} />
+                      </div>
                     )}
                   </li>
                 ))}
@@ -195,9 +208,14 @@ export function TutorModePanel({
             </div>
           )}
 
-          <div className="rounded-lg bg-brand-teal/10 p-3 text-foreground">
-            <p className="font-semibold text-brand-teal">Key Takeaway · {evaluation.clinicalConcept}</p>
-            <p className="mt-1 leading-relaxed text-foreground-secondary">{evaluation.takeaway}</p>
+          <div className="rounded-lg bg-brand-teal/10 p-3 text-foreground space-y-1">
+            <p className="font-semibold text-brand-teal">
+              Supplementary Study Takeaway · {evaluation.clinicalConcept}
+            </p>
+            <RichQuestionContent
+              content={evaluation.takeaway}
+              className="leading-relaxed text-foreground-secondary"
+            />
           </div>
         </div>
       )}

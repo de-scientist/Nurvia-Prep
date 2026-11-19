@@ -1,11 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveAttemptLearner, NO_STORE_HEADERS } from '@/lib/attempts/auth-helper';
+import { NO_STORE_HEADERS, resolveAttemptLearner } from '@/lib/attempts/auth-helper';
 import { attemptStore } from '@/lib/attempts/attempt-store';
+import { ensureAttemptLoaded } from '@/lib/attempts/live-exam-loader';
+import {
+  getStrataSubmissionType,
+  toStrataAnswerPayload,
+} from '@/lib/attempts/strata-answer-adapter';
+import {
+  extractSiteMetadataFromRequestHeaders,
+  lexmaCastoRequest,
+} from '@/lib/lexmacasto/client';
+import { buildExamUpsertPath } from '@/lib/lexmacasto/contracts';
+import { validateSameOriginRequest } from '@/lib/lexmacasto/session';
 
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ attemptId: string }> }
 ) {
+  const csrf = validateSameOriginRequest(request);
+  if (!csrf.ok) {
+    return NextResponse.json(
+      { success: false, message: csrf.reason, errorCode: 'CSRF_REJECTED' },
+      { status: 403, headers: NO_STORE_HEADERS }
+    );
+  }
+
   const learner = await resolveAttemptLearner(request);
   if (!learner) {
     return NextResponse.json(
@@ -15,41 +34,95 @@ export async function POST(
   }
 
   const { attemptId } = await context.params;
-  const rawAttempt = attemptStore.getRawAttempt(attemptId);
+  const siteMeta = extractSiteMetadataFromRequestHeaders(
+    request.headers,
+    `/api/attempts/${attemptId}/tutor/evaluate`
+  );
 
-  if (!rawAttempt) {
+  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta);
+  if (!loaded.ok) {
     return NextResponse.json(
-      { success: false, message: 'Attempt not found.', errorCode: 'NOT_FOUND' },
-      { status: 404, headers: NO_STORE_HEADERS }
+      { success: false, message: loaded.message, errorCode: loaded.errorCode },
+      { status: loaded.status, headers: NO_STORE_HEADERS }
     );
   }
 
-  if (rawAttempt.userId !== learner.userId && learner.userId !== 'system' && learner.userId !== 'superadmin') {
+  if (loaded.attempt.deliveryMode !== 'Tutor' && !loaded.attempt.modePermissions?.canTutor) {
     return NextResponse.json(
-      { success: false, message: 'Forbidden.', errorCode: 'FORBIDDEN' },
+      {
+        success: false,
+        message:
+          loaded.attempt.modePermissions?.tutorReason ||
+          'Tutor evaluation is not enabled for this examination by backend policy.',
+        errorCode: 'TUTOR_NOT_PERMITTED',
+      },
       { status: 403, headers: NO_STORE_HEADERS }
     );
   }
 
-  const body = await request.json().catch(() => ({}));
-  const questionId = String(body.questionId || '');
-  const responseJson = typeof body.responseJson === 'string' ? body.responseJson : JSON.stringify(body.responseJson ?? '');
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body.questionId !== 'string' || typeof body.responseJson !== 'string') {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'questionId and responseJson are required.',
+        errorCode: 'VALIDATION_ERROR',
+      },
+      { status: 400, headers: NO_STORE_HEADERS }
+    );
+  }
 
-  const result = attemptStore.evaluateTutorAnswer(learner.userId, attemptId, questionId, responseJson);
+  const questionId = body.questionId.trim();
+  const result = attemptStore.evaluateTutorAnswer(
+    learner.userId,
+    attemptId,
+    questionId,
+    body.responseJson
+  );
 
   if (!result.success) {
     return NextResponse.json(
-      { success: false, message: result.error || 'Evaluation failed.' },
+      {
+        success: false,
+        message: result.error,
+        errorCode: result.status === 403 ? 'FORBIDDEN' : 'NOT_FOUND',
+      },
       { status: result.status, headers: NO_STORE_HEADERS }
     );
+  }
+
+  // Persist evaluated response durably to explicitbackend.com when numeric IDs exist
+  const raw = loaded.attempt;
+  const q = raw.questions.find((item) => item.id === questionId);
+  if (raw.examNumericId && q?.numericId) {
+    const answerVal = toStrataAnswerPayload(q, body.responseJson);
+    if (answerVal !== null) {
+      lexmaCastoRequest(buildExamUpsertPath('user/answers'), {
+        method: 'POST',
+        session: learner.session,
+        siteMeta,
+        body: {
+          examId: raw.examNumericId,
+          examGuidId: raw.examId,
+          sectionId: q.sectionId ?? 0,
+          sectionGuidId: q.sectionGuidId ?? '',
+          questionId: q.numericId,
+          questionGuidId: q.guidId ?? q.id,
+          answer: answerVal,
+          submissionType: getStrataSubmissionType(q.questionType),
+          actionGroup: 'ExamAnswers',
+          isDiy: false,
+        },
+      }).catch(() => undefined);
+    }
   }
 
   return NextResponse.json(
     {
       success: true,
-      message: 'Answer evaluated.',
+      message: 'Tutor evaluation completed.',
       data: result.data,
     },
-    { status: 200, headers: NO_STORE_HEADERS }
+    { headers: NO_STORE_HEADERS }
   );
 }

@@ -1,12 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveAttemptLearner, NO_STORE_HEADERS } from '@/lib/attempts/auth-helper';
+import { NO_STORE_HEADERS, resolveAttemptLearner } from '@/lib/attempts/auth-helper';
 import { attemptStore } from '@/lib/attempts/attempt-store';
+import { ensureAttemptLoaded } from '@/lib/attempts/live-exam-loader';
+import { extractSiteMetadataFromRequestHeaders } from '@/lib/lexmacasto/client';
+import { validateSameOriginRequest } from '@/lib/lexmacasto/session';
 import type { TutorStage } from '@/lib/api-types';
+
+const ALLOWED_STAGES: TutorStage[] = ['FirstHint', 'GuidedReasoning', 'ExplainConcept'];
 
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ attemptId: string }> }
 ) {
+  const csrf = validateSameOriginRequest(request);
+  if (!csrf.ok) {
+    return NextResponse.json(
+      { success: false, message: csrf.reason, errorCode: 'CSRF_REJECTED' },
+      { status: 403, headers: NO_STORE_HEADERS }
+    );
+  }
+
   const learner = await resolveAttemptLearner(request);
   if (!learner) {
     return NextResponse.json(
@@ -16,31 +29,59 @@ export async function POST(
   }
 
   const { attemptId } = await context.params;
-  const rawAttempt = attemptStore.getRawAttempt(attemptId);
+  const siteMeta = extractSiteMetadataFromRequestHeaders(
+    request.headers,
+    `/api/attempts/${attemptId}/tutor/hint`
+  );
 
-  if (!rawAttempt) {
+  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta);
+  if (!loaded.ok) {
     return NextResponse.json(
-      { success: false, message: 'Attempt not found.', errorCode: 'NOT_FOUND' },
-      { status: 404, headers: NO_STORE_HEADERS }
+      { success: false, message: loaded.message, errorCode: loaded.errorCode },
+      { status: loaded.status, headers: NO_STORE_HEADERS }
     );
   }
 
-  if (rawAttempt.userId !== learner.userId && learner.userId !== 'system' && learner.userId !== 'superadmin') {
+  // Enforce Tutor permission strictly server-side
+  if (loaded.attempt.deliveryMode !== 'Tutor' && !loaded.attempt.modePermissions?.canTutor) {
     return NextResponse.json(
-      { success: false, message: 'Forbidden.', errorCode: 'FORBIDDEN' },
+      {
+        success: false,
+        message:
+          loaded.attempt.modePermissions?.tutorReason ||
+          'Tutor mode is not enabled for this examination by backend policy.',
+        errorCode: 'TUTOR_NOT_PERMITTED',
+      },
       { status: 403, headers: NO_STORE_HEADERS }
     );
   }
 
-  const body = await request.json().catch(() => ({}));
-  const questionId = String(body.questionId || '');
-  const stage = (body.stage || 'FirstHint') as TutorStage;
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body.questionId !== 'string' || !ALLOWED_STAGES.includes(body.stage)) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Valid questionId and Tutor stage are required.',
+        errorCode: 'VALIDATION_ERROR',
+      },
+      { status: 400, headers: NO_STORE_HEADERS }
+    );
+  }
 
-  const result = attemptStore.getTutorHint(learner.userId, attemptId, questionId, stage);
+  const result = attemptStore.getTutorHint(
+    learner.userId,
+    attemptId,
+    body.questionId.trim(),
+    body.stage
+  );
 
   if (!result.success) {
     return NextResponse.json(
-      { success: false, message: result.error || 'Failed to load hint.' },
+      {
+        success: false,
+        message: result.error,
+        errorCode: result.status === 403 ? 'FORBIDDEN' : 'NOT_FOUND',
+      },
       { status: result.status, headers: NO_STORE_HEADERS }
     );
   }
@@ -48,9 +89,9 @@ export async function POST(
   return NextResponse.json(
     {
       success: true,
-      message: 'Hint generated.',
+      message: 'Tutor hint generated.',
       data: result.data,
     },
-    { status: 200, headers: NO_STORE_HEADERS }
+    { headers: NO_STORE_HEADERS }
   );
 }
