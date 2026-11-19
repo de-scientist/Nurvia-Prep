@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   LayoutDashboard,
   TrendingUp,
@@ -32,13 +31,10 @@ import {
   X,
   Search,
   Bell,
-  Flame,
   Award,
-  ExternalLink,
   GraduationCap,
   Stethoscope,
   Sparkles,
-  ShieldAlert,
   MessageSquare,
   Compass,
   Headphones,
@@ -411,7 +407,7 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
         )}
       >
         {/* Top Learner Navbar matching screenshot */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 border-b border-border bg-surface/90 backdrop-blur-md px-4 sm:px-6 overflow-x-hidden">
+        <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-2 border-b border-border bg-surface/95 backdrop-blur-md px-4 sm:px-6 overflow-x-clip">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <Button
               variant="ghost"

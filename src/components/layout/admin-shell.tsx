@@ -21,9 +21,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  X,
-  Search,
-  Bell,
   HardDrive,
   FileText,
   Lock,
@@ -214,7 +211,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         )}
       >
         {/* Admin Navbar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-surface/90 backdrop-blur-md px-4 sm:px-6">
+        <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-surface/95 backdrop-blur-md px-4 sm:px-6 overflow-x-clip">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
