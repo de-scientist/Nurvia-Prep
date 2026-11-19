@@ -4,6 +4,12 @@ import type {
   CognitiveSkill,
   ClientNeedCategory,
 } from '@/lib/api-types';
+import {
+  PublishedBankDailyQuestionProvider,
+  computeConsecutiveUtcStreak,
+  getUtcDateKey,
+  sanitizeDailyQuestionForPreSubmit,
+} from './daily-question-core.mjs';
 
 export interface InternalQotdRecord {
   id: string;
@@ -158,44 +164,65 @@ const SEED_QUESTIONS: InternalQotdRecord[] = [
   },
 ];
 
+interface QotdAttemptRecord {
+  questionId: string;
+  selectedOptionId: string;
+  isCorrect: boolean;
+  date: string;
+}
+
+interface GlobalQotdState {
+  questions: InternalQotdRecord[];
+  userAttempts: Map<string, QotdAttemptRecord[]>;
+}
+
+const globalForQotd = globalThis as typeof globalThis & {
+  __nurviaQotdState?: GlobalQotdState;
+};
+
+function getGlobalQotdState(): GlobalQotdState {
+  if (!globalForQotd.__nurviaQotdState) {
+    globalForQotd.__nurviaQotdState = {
+      questions: [...SEED_QUESTIONS],
+      userAttempts: new Map(),
+    };
+  }
+  return globalForQotd.__nurviaQotdState;
+}
+
 class QotdStore {
-  private questions = [...SEED_QUESTIONS];
-  private userAttempts = new Map<string, { questionId: string; selectedOptionId: string; isCorrect: boolean; date: string }[]>();
+  private provider = new PublishedBankDailyQuestionProvider();
+
+  private get questions(): InternalQotdRecord[] {
+    return getGlobalQotdState().questions;
+  }
+
+  private get userAttempts(): Map<string, QotdAttemptRecord[]> {
+    return getGlobalQotdState().userAttempts;
+  }
 
   getTodayQuestion(userId?: string): QotdQuestionDto {
-    const todayStr = new Date().toISOString().slice(0, 10);
-    let record = this.questions.find((q) => q.dateStr === todayStr);
-    if (!record) {
-      record = this.questions[0]; // fallback to latest seed
-    }
+    const todayStr = getUtcDateKey();
+    const record: InternalQotdRecord =
+      (this.provider.selectQuestion(this.questions, todayStr) as InternalQotdRecord | null) ??
+      this.questions[0];
 
     const attempts = userId ? this.userAttempts.get(userId) || [] : [];
-    const attempt = attempts.find((a) => a.questionId === record.id);
-
+    const attempt = attempts.find((a) => a.questionId === record.id && a.date === todayStr);
     const hasAnswered = Boolean(attempt);
+    const correctOpt = record.options.find(
+      (o: InternalQotdRecord['options'][number]) => o.isCorrect
+    );
 
-    return {
-      id: record.id,
-      dateStr: record.dateStr,
-      title: record.title,
-      stem: record.stem,
-      category: record.category,
-      examContext: record.examContext,
-      cognitiveSkill: record.cognitiveSkill,
-      clientNeedCategory: record.clientNeedCategory,
-      totalAnswers: record.totalAnswers,
-      correctPercentage: Math.round((record.correctAnswers / Math.max(1, record.totalAnswers)) * 100),
-      userAnswered: hasAnswered,
+    return sanitizeDailyQuestionForPreSubmit(record, {
+      hasAnswered,
       userSelectedOptionId: attempt?.selectedOptionId,
       userIsCorrect: attempt?.isCorrect,
-      explanation: hasAnswered ? record.generalRationale : undefined,
-      options: record.options.map((o) => ({
-        id: o.id,
-        letter: o.letter,
-        text: o.text,
-        rationale: hasAnswered ? o.specificRationale : undefined,
-      })),
-    };
+      correctOptionId: hasAnswered ? correctOpt?.id : undefined,
+      dateKey: todayStr,
+      source: 'published_bank',
+      persistenceScope: 'session_local',
+    });
   }
 
   submitAnswer(userId: string, questionId: string, optionId: string): QotdSubmissionResultDto | null {
@@ -205,47 +232,62 @@ class QotdStore {
     const chosenOption = record.options.find((o) => o.id === optionId);
     if (!chosenOption) return null;
 
-    const isCorrect = chosenOption.isCorrect;
-    record.totalAnswers += 1;
-    if (isCorrect) record.correctAnswers += 1;
-
     let userList = this.userAttempts.get(userId);
     if (!userList) {
       userList = [];
       this.userAttempts.set(userId, userList);
     }
 
-    const todayStr = new Date().toISOString().slice(0, 10);
-    userList.push({
-      questionId,
-      selectedOptionId: optionId,
-      isCorrect,
-      date: todayStr,
-    });
-
+    const todayStr = getUtcDateKey();
+    const existing = userList.find((a) => a.questionId === questionId && a.date === todayStr);
     const correctOption = record.options.find((o) => o.isCorrect);
 
-    // Calculate streak
-    let streak = 0;
-    const sortedDates = Array.from(new Set(userList.map((a) => a.date))).sort().reverse();
-    streak = sortedDates.length;
+    if (!existing) {
+      const isCorrect = chosenOption.isCorrect;
+      record.totalAnswers += 1;
+      if (isCorrect) record.correctAnswers += 1;
+
+      userList.push({
+        questionId,
+        selectedOptionId: optionId,
+        isCorrect,
+        date: todayStr,
+      });
+    }
+
+    const effectiveAttempt = existing ?? userList[userList.length - 1];
+    const streak = computeConsecutiveUtcStreak(
+      userList.map((a) => a.date),
+      todayStr
+    );
 
     const totalAnswered = userList.length;
     const totalCorrect = userList.filter((a) => a.isCorrect).length;
     const overallAccuracy = Math.round((totalCorrect / Math.max(1, totalAnswered)) * 100);
 
     return {
-      isCorrect,
+      isCorrect: effectiveAttempt.isCorrect,
       correctOptionId: correctOption?.id || optionId,
       explanation: record.generalRationale,
       userStreak: streak,
       totalAnswered,
       overallAccuracyPercentage: overallAccuracy,
+      persistenceScope: 'session_local',
+      optionRationales: record.options.map((o) => ({
+        id: o.id,
+        isCorrect: o.isCorrect,
+        rationale: o.specificRationale,
+      })),
     };
   }
 
-  getHistory(userId?: string): { streak: number; totalCompleted: number; pastQuestions: { id: string; dateStr: string; title: string; category: string }[] } {
+  getHistory(userId?: string): {
+    streak: number;
+    totalCompleted: number;
+    pastQuestions: { id: string; dateStr: string; title: string; category: string }[];
+  } {
     const attempts = userId ? this.userAttempts.get(userId) || [] : [];
+    const todayStr = getUtcDateKey();
     const pastQuestions = this.questions.map((q) => ({
       id: q.id,
       dateStr: q.dateStr,
@@ -254,7 +296,10 @@ class QotdStore {
     }));
 
     return {
-      streak: attempts.length > 0 ? Array.from(new Set(attempts.map((a) => a.date))).length : 0,
+      streak: computeConsecutiveUtcStreak(
+        attempts.map((a) => a.date),
+        todayStr
+      ),
       totalCompleted: attempts.length,
       pastQuestions,
     };

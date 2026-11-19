@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
-import { getServerCastoSession } from '@/lib/lexmacasto/session';
+import { NextRequest, NextResponse } from 'next/server';
+import { NO_STORE_HEADERS, resolveAttemptLearner } from '@/lib/attempts/auth-helper';
 import { qotdStore } from '@/lib/qotd/qotd-store';
 
-const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' };
+export async function GET(request: NextRequest) {
+  const learner = await resolveAttemptLearner(request);
+  const anonId = request.headers.get('x-nurvia-qotd-anon')?.trim();
+  const userId = learner?.userId ?? (anonId ? `anon:${anonId}` : undefined);
 
-export async function GET() {
-  const session = await getServerCastoSession();
-  const userId = session?.castoLine || undefined;
   const history = qotdStore.getHistory(userId);
 
   return NextResponse.json(
