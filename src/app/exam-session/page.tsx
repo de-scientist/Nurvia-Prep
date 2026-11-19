@@ -2,10 +2,9 @@
 
 import * as React from "react";
 import { Suspense } from "react";
-import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ExamShell } from "@/components/layout/exam-shell";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -23,8 +22,6 @@ import {
   XCircle,
   MinusCircle,
   FileText,
-  Activity,
-  FlaskConical,
   RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -36,8 +33,10 @@ import {
   SubmittedExamResultDto,
   ExamReviewContentDto,
   ExamLayout,
+  ExamModePermissionsDto,
   TutorEvaluateResponseDto,
 } from "@/lib/api-types";
+import { resolveNormalizedQuestionType } from "@/lib/attempts/strata-answer-core.mjs";
 import { QuestionRendererRegistry, RendererQuestion } from "@/components/exam/renderers";
 import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -96,10 +95,16 @@ function ExamSessionContent() {
   const [loadingStage, setLoadingStage] = React.useState<number>(1);
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
 
-  // Layout state — persisted on the attempt server-side so resume keeps the choice.
-  const [layout, setLayout] = React.useState<ExamLayout>(layoutParam || "Sequential");
+  // Layout state — defaults to Sequential during active exams and AllInOne during Review.
+  const [layout, setLayout] = React.useState<ExamLayout>(
+    layoutParam || (modeParam === "Review" || modeParam === "Preview" ? "AllInOne" : "Sequential")
+  );
   const [layoutPolicy, setLayoutPolicy] = React.useState<LayoutPolicy>(null);
-  const [isLayoutModalOpen, setIsLayoutModalOpen] = React.useState<boolean>(false);
+  const [modePermissions, setModePermissions] = React.useState<ExamModePermissionsDto | undefined>(undefined);
+  const [configuredQuestionCount, setConfiguredQuestionCount] = React.useState<number | undefined>(undefined);
+  const [integrityWarnings, setIntegrityWarnings] = React.useState<string[]>([]);
+  const [modeSwitchNotice, setModeSwitchNotice] = React.useState<string | null>(null);
+  const [reviewFilter, setReviewFilter] = React.useState<"All" | "Correct" | "Incorrect" | "Unanswered" | "Flagged">("All");
 
   // Review-mode study session (no graded attempt) and Tutor reveal state.
   const [isReviewContent, setIsReviewContent] = React.useState<boolean>(false);
@@ -138,24 +143,32 @@ function ExamSessionContent() {
     async function loadSession() {
       if (attemptIdParam) {
         setIsLoading(true);
+        setLoadingStage(2);
         setLoadError(null);
         if (modeParam === "Review") {
           const reviewRes = await nurviaApi.getAttemptReview(attemptIdParam);
           if (!cancelled && reviewRes.success && reviewRes.data) {
+            setLoadingStage(4);
             hydrateFromReview(reviewRes.data);
+            setLoadingStage(5);
             setIsLoading(false);
             return;
           }
         }
 
+        setLoadingStage(3);
         const res = await nurviaApi.getActiveAttempt(attemptIdParam);
         if (!cancelled && res.success && res.data) {
+          setLoadingStage(4);
           hydrateFromAttempt(res.data);
+          setLoadingStage(5);
         } else if (!cancelled) {
           // Attempt may already be submitted, try loading completed review
           const reviewRes = await nurviaApi.getAttemptReview(attemptIdParam);
           if (reviewRes.success && reviewRes.data) {
+            setLoadingStage(4);
             hydrateFromReview(reviewRes.data);
+            setLoadingStage(5);
           } else {
             setLoadError(reviewRes.message || res.message || "Unable to load this exam attempt.");
           }
@@ -163,27 +176,26 @@ function ExamSessionContent() {
         if (!cancelled) setIsLoading(false);
       } else if (examIdParam && (modeParam === "Review" || modeParam === "Preview")) {
         // Review mode: study the published exam's approved answer keys without
-        // creating any graded attempt. Preview mode is the admin equivalent:
-        // same read-only rendering, available for any exam status via the
-        // admin-only preview endpoint.
+        // creating any graded attempt. Preview mode is the admin equivalent.
         setIsLoading(true);
+        setLoadingStage(2);
         setLoadError(null);
         const res = modeParam === "Preview"
           ? await nurviaApi.getExamPreviewContent(examIdParam)
           : await nurviaApi.getExamReviewContent(examIdParam);
         if (!cancelled && res.success && res.data) {
+          setLoadingStage(4);
           hydrateFromReviewContent(res.data);
           if (modeParam === "Preview") setIsPreview(true);
+          setLoadingStage(5);
         } else if (!cancelled) {
           setLoadError(res.message || "Review is not available for this examination.");
         }
         if (!cancelled) setIsLoading(false);
-      } else if (examIdParam && layoutParam) {
-        // Layout already chosen (e.g. from an exam card) — start immediately.
-        await startFreshAttempt(layoutParam);
       } else if (examIdParam) {
-        // Ask the learner to choose a permitted navigation layout first.
-        setIsLayoutModalOpen(true);
+        // Immediately start in Sequential layout unless AllInOne is explicitly requested (no blocking pre-start modal)
+        const initialLayout: ExamLayout = layoutParam === "AllInOne" ? "AllInOne" : "Sequential";
+        await startFreshAttempt(initialLayout);
       } else {
         setLoadError("Choose a published exam before opening an exam session.");
       }
@@ -191,6 +203,7 @@ function ExamSessionContent() {
 
     async function startFreshAttempt(chosenLayout: ExamLayout) {
       setIsLoading(true);
+      setLoadingStage(2);
       setLoadError(null);
       const res = await nurviaApi.startAttempt(examIdParam!, {
         deliveryMode: modeParam === "Tutor" ? "Tutor" : "Exam",
@@ -198,9 +211,10 @@ function ExamSessionContent() {
       });
       if (cancelled) return;
       if (res.success && res.data) {
+        setLoadingStage(4);
         setAttemptId(res.data.attemptId);
-        setIsLayoutModalOpen(false);
         hydrateFromAttempt(res.data);
+        setLoadingStage(5);
       } else {
         setLoadError(res.message || "Unable to start this exam. Please choose another published exam.");
       }
@@ -226,25 +240,49 @@ function ExamSessionContent() {
     setExamTitle(data.examTitle);
     setIsReviewContent(true);
     setDeliveryMode("Review");
+    setLayout(layoutParam === "Sequential" ? "Sequential" : "AllInOne");
+    if (data.modePermissions) setModePermissions(data.modePermissions);
+    if (data.configuredQuestionCount) setConfiguredQuestionCount(data.configuredQuestionCount);
 
     const mapped: RendererQuestion[] = data.questions.map((q) => ({
       id: q.questionId,
+      numericId: q.numericId,
+      guidId: q.guidId,
+      sectionId: q.sectionId,
+      sectionGuidId: q.sectionGuidId,
+      sectionName: q.sectionName,
       orderIndex: q.orderIndex,
       stem: q.stem,
+      metaStem: q.metaStem,
+      instructions: q.instructions,
       questionType: q.questionType,
       cognitiveSkill: q.cognitiveSkill,
       clientNeedCategory: q.clientNeedCategory,
       generalRationale: q.generalRationale,
+      learnerResponse: q.learnerResponse,
+      isCorrect: q.isCorrect,
       options: q.options.map((o) => ({
         id: o.id,
+        numericId: o.numericId,
         optionIndex: o.optionIndex,
         optionText: o.optionText,
+        description: o.description,
+        data: o.data,
+        label: o.label,
+        order: o.order,
+        link: o.link,
         isCorrect: o.isCorrect,
         specificRationale: o.specificRationale,
         wasSelected: o.wasSelected,
         displayOrder: o.optionIndex,
       })),
       exhibits: q.exhibits,
+      media: q.media,
+      matrix: q.matrix,
+      blankSelectPassage: q.blankSelectPassage,
+      highlightPassage: q.highlightPassage,
+      correctAnswerMeta: q.correctAnswerMeta,
+      contentIntegrityError: q.contentIntegrityError,
     }));
     setQuestions(mapped);
   };
@@ -255,26 +293,49 @@ function ExamSessionContent() {
     setIsSubmitted(true);
     setSubmittedResult(data);
     setDeliveryMode("Review");
+    setLayout(layoutParam === "Sequential" ? "Sequential" : "AllInOne");
+    if (data.modePermissions) setModePermissions(data.modePermissions);
 
     if (data.reviewQuestions && data.reviewQuestions.length > 0) {
       const mapped: RendererQuestion[] = data.reviewQuestions.map((q) => ({
         id: q.questionId,
+        numericId: q.numericId,
+        guidId: q.guidId,
+        sectionId: q.sectionId,
+        sectionGuidId: q.sectionGuidId,
+        sectionName: q.sectionName,
         orderIndex: q.orderIndex,
         stem: q.stem,
+        metaStem: q.metaStem,
+        instructions: q.instructions,
         questionType: q.questionType,
         cognitiveSkill: q.cognitiveSkill,
         clientNeedCategory: q.clientNeedCategory,
         generalRationale: q.generalRationale,
+        learnerResponse: q.learnerResponse,
+        isCorrect: q.isCorrect,
         options: q.options.map((o) => ({
           id: o.id,
+          numericId: o.numericId,
           optionIndex: o.optionIndex,
           optionText: o.optionText,
+          description: o.description,
+          data: o.data,
+          label: o.label,
+          order: o.order,
+          link: o.link,
           isCorrect: o.isCorrect,
           specificRationale: o.specificRationale,
           wasSelected: o.wasSelected,
           displayOrder: o.optionIndex,
         })),
         exhibits: q.exhibits,
+        media: q.media,
+        matrix: q.matrix,
+        blankSelectPassage: q.blankSelectPassage,
+        highlightPassage: q.highlightPassage,
+        correctAnswerMeta: q.correctAnswerMeta,
+        contentIntegrityError: q.contentIntegrityError,
       }));
       setQuestions(mapped);
 
@@ -293,14 +354,24 @@ function ExamSessionContent() {
     setExamTitle(data.examTitle);
     setSecondsRemaining(data.remainingSeconds);
     setLayoutPolicy(data.allowedLayouts);
-    setLayout(data.layoutMode);
+    setLayout(data.layoutMode || "Sequential");
     setDeliveryMode(data.deliveryMode === "Tutor" ? "Tutor" : "Exam");
+    if (data.modePermissions) setModePermissions(data.modePermissions);
+    if (data.configuredQuestionCount) setConfiguredQuestionCount(data.configuredQuestionCount);
+    if (Array.isArray(data.integrityWarnings)) setIntegrityWarnings(data.integrityWarnings);
 
     if (data.questions && data.questions.length > 0) {
       const mapped: RendererQuestion[] = data.questions.map((q) => ({
         id: q.id,
+        numericId: q.numericId,
+        guidId: q.guidId,
+        sectionId: q.sectionId,
+        sectionGuidId: q.sectionGuidId,
+        sectionName: q.sectionName,
         orderIndex: q.orderIndex,
         stem: q.stem,
+        metaStem: q.metaStem,
+        instructions: q.instructions,
         questionType: q.questionType,
         cognitiveSkill: q.cognitiveSkill,
         clientNeedCategory: q.clientNeedCategory,
@@ -308,13 +379,25 @@ function ExamSessionContent() {
         generalRationale: q.generalRationale,
         options: q.options.map((o) => ({
           id: o.id,
+          numericId: o.numericId,
           optionIndex: o.optionIndex,
           optionText: o.optionText,
           displayOrder: o.displayOrder,
+          description: o.description,
+          data: o.data,
+          label: o.label,
+          order: o.order,
+          link: o.link,
           isCorrect: o.isCorrect,
           specificRationale: o.specificRationale,
         })),
         exhibits: q.exhibits,
+        media: q.media,
+        matrix: q.matrix,
+        blankSelectPassage: q.blankSelectPassage,
+        highlightPassage: q.highlightPassage,
+        correctAnswerMeta: q.correctAnswerMeta,
+        contentIntegrityError: q.contentIntegrityError,
       }));
       setQuestions(mapped);
     }
@@ -459,7 +542,7 @@ function ExamSessionContent() {
   // Layout switch: permitted only when the exam allows both layouts. Switching
   // never touches persisted responses; the choice is persisted on the attempt.
   const handleLayoutChange = async (nextLayout: ExamLayout) => {
-    if (layoutPolicy && layoutPolicy !== "Both") return;
+    if (layoutPolicy === "AllInOneOnly" || layoutPolicy === "SequentialOnly") return;
     if (nextLayout === layout) return;
     setLayout(nextLayout);
     if (attemptId && !isSubmitted) {
@@ -468,6 +551,60 @@ function ExamSessionContent() {
         setAutosaveStatus("saving");
         await persistResponse(currentQ.id, answers[currentQ.id] ?? null, flags[currentQ.id] || false, nextLayout);
       }
+    }
+  };
+
+  // Mode switch: enforces exam backend permissions & prevents key leakage mid-exam
+  const handleModeChange = (nextMode: DeliveryMode) => {
+    setModeSwitchNotice(null);
+    if (nextMode === deliveryMode) return;
+
+    if (nextMode === "Review") {
+      if (!isSubmitted && !isReviewContent) {
+        if (modePermissions && !modePermissions.canReview) {
+          setModeSwitchNotice(
+            modePermissions.reviewReason ||
+              "Review mode is disabled by this examination's backend configuration."
+          );
+          return;
+        }
+        setModeSwitchNotice(
+          "Submit your examination first (click Finish Exam) to unlock Review mode with answer keys and rationales."
+        );
+        return;
+      }
+      if (isSubmitted && submittedResult && !submittedResult.reviewReleased) {
+        setModeSwitchNotice(
+          modePermissions?.reviewReason ||
+            "Detailed Review rationales are withheld for this examination by backend policy."
+        );
+        return;
+      }
+      setDeliveryMode("Review");
+      setLayout("AllInOne");
+      return;
+    }
+
+    if (nextMode === "Tutor") {
+      if (modePermissions && !modePermissions.canTutor && deliveryMode !== "Tutor") {
+        setModeSwitchNotice(
+          modePermissions.tutorReason ||
+            "Tutor mode is not enabled for this examination by backend policy."
+        );
+        return;
+      }
+      setDeliveryMode("Tutor");
+      return;
+    }
+
+    if (nextMode === "Exam") {
+      if (isSubmitted || isReviewContent) {
+        setModeSwitchNotice(
+          "Graded reviews are read-only. Return to the Study Library to begin a new timed Exam attempt."
+        );
+        return;
+      }
+      setDeliveryMode("Exam");
     }
   };
 
@@ -515,7 +652,6 @@ function ExamSessionContent() {
 
   const currentQ = questions[currentIndex];
   const isCurrentFlagged = currentQ ? Boolean(flags[currentQ.id]) : false;
-  const currentAnswer = currentQ ? answers[currentQ.id] : null;
 
   const answeredCount = Object.keys(answers).length;
   const unansweredCount = Math.max(0, questions.length - answeredCount);
@@ -563,7 +699,7 @@ function ExamSessionContent() {
     );
   }
 
-  if (loadError && !attemptId && !questions.length) {
+  if (loadError && !questions.length) {
     return (
       <ExamLoadingScreen
         title={examTitle}
@@ -577,7 +713,12 @@ function ExamSessionContent() {
   const renderQuestion = (q: RendererQuestion, index: number, isSequential: boolean) => {
     const showReview = reviewStateFor(q);
     return (
-      <div key={q.id} ref={(el) => { if (!isSequential) allInOneRefs.current[q.id] = el; }} className="scroll-mt-24">
+      <div
+        key={q.id}
+        id={`question-card-${q.id}`}
+        ref={(el) => { if (!isSequential) allInOneRefs.current[q.id] = el; }}
+        className="scroll-mt-28"
+      >
       <Card
         className={cn("p-6 space-y-6")}
       >
@@ -631,8 +772,13 @@ function ExamSessionContent() {
             className="font-brand text-base sm:text-lg font-bold text-foreground leading-relaxed"
           />
 
-          {/* Electronic Health Record (EHR) Clinical Exhibits (when attached) */}
-          {q.exhibits && q.exhibits.length > 0 && q.questionType !== 9 && q.questionType !== "CaseStudy" && (
+          {/* Electronic Health Record (EHR) Clinical Exhibits (when attached and not rendered by CaseStudy wrapper) */}
+          {q.exhibits &&
+            q.exhibits.length > 0 &&
+            !resolveNormalizedQuestionType(q.questionType).isCaseBased &&
+            q.questionType !== 9 &&
+            q.questionType !== "CaseStudy" &&
+            q.questionType !== "UnfoldingCaseStudy" && (
             <div className="rounded-xl border border-border bg-surface-muted overflow-hidden text-xs">
               <div className="bg-surface border-b border-border px-3 py-2 flex items-center gap-1.5 font-bold text-foreground">
                 <ClipboardList className="w-3.5 h-3.5 text-brand-teal" />
@@ -666,6 +812,7 @@ function ExamSessionContent() {
         {/* Progressive Tutor Mode Panel (Stages 1-6) */}
         {deliveryMode === "Tutor" && !isSubmitted && attemptId && (
           <TutorModePanel
+            key={q.id}
             attemptId={attemptId}
             questionId={q.id}
             hasSelectedAnswer={Boolean(answers[q.id])}
@@ -707,9 +854,14 @@ function ExamSessionContent() {
     <ExamShell
       examTitle={examTitle}
       totalQuestions={questions.length}
+      configuredQuestionCount={configuredQuestionCount}
       currentQuestion={layout === "Sequential" ? currentIndex + 1 : Math.min(answeredCount + 1, questions.length)}
       mode={deliveryMode}
-      onModeChange={setDeliveryMode}
+      onModeChange={handleModeChange}
+      modePermissions={modePermissions}
+      layoutMode={layout}
+      allowLayoutSwitching={layoutPolicy !== "AllInOneOnly" && layoutPolicy !== "SequentialOnly"}
+      onLayoutChange={(next) => void handleLayoutChange(next)}
       isFlagged={isCurrentFlagged}
       onToggleFlag={handleToggleFlag}
       onSubmitExam={() => {
@@ -721,12 +873,44 @@ function ExamSessionContent() {
       onRetrySave={retrySaveNow}
       answeredCount={answeredCount}
       onOpenQuestionGrid={() => setIsQuestionGridOpen(true)}
-      showTimer={!isReviewContent}
+      showTimer={!isReviewContent && !isSubmitted}
       showSubmitExam={!isReviewContent && !isSubmitted}
       showFlag={layout === "Sequential" && !isReviewContent && !isSubmitted}
       modeBadge={deliveryMode === "Tutor" ? "Tutor Mode · Immediate Feedback" : undefined}
     >
       <div className="space-y-6">
+        {modeSwitchNotice && (
+          <div
+            role="status"
+            className="rounded-xl border border-amber-500/40 bg-amber-50/90 dark:bg-amber-950/40 px-4 py-3 text-xs text-amber-950 dark:text-amber-100 flex items-center justify-between gap-3"
+          >
+            <span>{modeSwitchNotice}</span>
+            <button
+              type="button"
+              onClick={() => setModeSwitchNotice(null)}
+              className="font-semibold underline shrink-0"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {integrityWarnings.length > 0 && (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-50/70 dark:bg-amber-950/30 px-4 py-2.5 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+            <div className="font-semibold flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <span>Examination Delivery Integrity Notice</span>
+            </div>
+            <ul className="list-disc pl-5 space-y-0.5 text-[11px]">
+              {integrityWarnings.slice(0, 3).map((warn, idx) => (
+                <li key={idx}>{warn}</li>
+              ))}
+              {integrityWarnings.length > 3 && (
+                <li>And {integrityWarnings.length - 3} additional item warning(s).</li>
+              )}
+            </ul>
+          </div>
+        )}
         {/* Post-Submission Result Hero Banner */}
         {isSubmitted && submittedResult && (
           <div className="p-6 rounded-2xl border border-brand-teal/30 bg-surface shadow-md space-y-4 animate-in fade-in">
@@ -938,22 +1122,94 @@ function ExamSessionContent() {
             </div>
           </>
         ) : (
-          /* All-in-One View — continuous vertical scroll over the same attempt data */
+          /* All-in-One View — continuous vertical scroll + Review filter/navigator */
           <>
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <Badge variant="outline" className="text-xs font-mono">
-                All-in-One View · {questions.length} items
-              </Badge>
-              <button
-                onClick={() => setIsQuestionGridOpen(true)}
-                className="text-xs font-semibold text-brand-teal hover:underline flex items-center gap-1"
-              >
-                <ClipboardList className="w-3.5 h-3.5" />
-                <span>Question List ({answeredCount}/{questions.length})</span>
-              </button>
+            <div className="sticky top-[62px] z-30 rounded-xl border border-border bg-surface/95 backdrop-blur-md p-3 shadow-xs space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="outline" className="text-xs font-mono">
+                    All-in-One View · {questions.length} items
+                  </Badge>
+                  {(isSubmitted || deliveryMode === "Review") && (
+                    <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                      {(["All", "Correct", "Incorrect", "Unanswered", "Flagged"] as const).map((filterKey) => (
+                        <button
+                          key={filterKey}
+                          type="button"
+                          onClick={() => setReviewFilter(filterKey)}
+                          className={cn(
+                            "rounded-md border px-2 py-0.5 font-semibold transition-colors",
+                            reviewFilter === filterKey
+                              ? "border-brand-teal bg-brand-teal text-white"
+                              : "border-border bg-background text-foreground-secondary hover:bg-surface-muted"
+                          )}
+                        >
+                          {filterKey}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsQuestionGridOpen(true)}
+                  className="text-xs font-semibold text-brand-teal hover:underline flex items-center gap-1"
+                >
+                  <ClipboardList className="w-3.5 h-3.5" />
+                  <span>Question List ({answeredCount}/{questions.length})</span>
+                </button>
+              </div>
+
+              {(isSubmitted || deliveryMode === "Review") && questions.length > 0 && (
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                  {questions.map((q, idx) => {
+                    const rq = submittedResult?.reviewQuestions?.find((item) => item.questionId === q.id);
+                    const hasAns = Boolean(answers[q.id] || rq?.learnerResponse);
+                    const isRight = rq ? rq.isCorrect : q.options.some((o) => o.wasSelected && o.isCorrect);
+                    return (
+                      <button
+                        key={q.id}
+                        type="button"
+                        onClick={() => {
+                          setReviewFilter("All");
+                          document
+                            .getElementById(`question-card-${q.id}`)
+                            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }}
+                        className={cn(
+                          "h-7 min-w-7 px-1.5 rounded-md border text-[11px] font-bold shrink-0 transition-colors",
+                          !hasAns
+                            ? "border-border bg-surface-muted text-foreground-muted"
+                            : isRight
+                              ? "border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                              : "border-rose-500 bg-rose-500/15 text-rose-700 dark:text-rose-300"
+                        )}
+                        title={`Jump to Question ${idx + 1}`}
+                      >
+                        {idx + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
+
             <div className="space-y-6">
-              {questions.map((q, idx) => renderQuestion(q, idx, false))}
+              {questions
+                .map((q, idx) => ({ q, idx }))
+                .filter(({ q }) => {
+                  if (!(isSubmitted || deliveryMode === "Review") || reviewFilter === "All") return true;
+                  const rq = submittedResult?.reviewQuestions?.find((item) => item.questionId === q.id);
+                  const hasAns = Boolean(answers[q.id] || rq?.learnerResponse);
+                  const isRight = rq ? rq.isCorrect : q.options.some((o) => o.wasSelected && o.isCorrect);
+                  if (reviewFilter === "Correct") return hasAns && isRight;
+                  if (reviewFilter === "Incorrect") return hasAns && !isRight;
+                  if (reviewFilter === "Unanswered") return !hasAns;
+                  if (reviewFilter === "Flagged") return Boolean(flags[q.id]);
+                  return true;
+                })
+                .map(({ q, idx }) => renderQuestion(q, idx, false))}
             </div>
           </>
         )}
@@ -1173,58 +1429,8 @@ function ExamSessionContent() {
         </div>
       )}
 
-      {/* Layout Selection Modal — shown before starting a fresh attempt */}
-      {isLayoutModalOpen && examIdParam && !loadError && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-xl space-y-5">
-            <div>
-              <h3 className="font-brand font-bold text-base text-foreground">Choose your navigation layout</h3>
-              <p className="text-xs text-foreground-secondary pt-1">
-                Select how you want to move through this examination. Your choice is saved with the attempt.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => void startFreshAttemptFromModal("Sequential")}
-                className="w-full text-left p-4 rounded-xl border border-border bg-background hover:border-brand-teal/60 transition-colors space-y-1"
-              >
-                <div className="flex items-center gap-2 font-brand font-bold text-sm text-foreground">
-                  <Rows3 className="w-4 h-4 text-brand-teal" /> Sequential
-                  <Badge variant="outline" className="text-[10px]">Recommended</Badge>
-                </div>
-                <p className="text-xs text-foreground-secondary">One question at a time with Previous and Next controls.</p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => void startFreshAttemptFromModal("AllInOne")}
-                className="w-full text-left p-4 rounded-xl border border-border bg-background hover:border-brand-teal/60 transition-colors space-y-1"
-              >
-                <div className="flex items-center gap-2 font-brand font-bold text-sm text-foreground">
-                  <LayoutList className="w-4 h-4 text-brand-teal" /> All-in-One
-                </div>
-                <p className="text-xs text-foreground-secondary">All questions on one continuous scrolling page.</p>
-              </button>
-            </div>
-
-            <div className="pt-1 text-[11px] text-foreground-muted text-center">
-              {modeParam === "Tutor" ? "Tutor mode" : "Exam mode"} · {examTitle}
-            </div>
-          </div>
-        </div>
-      )}
     </ExamShell>
   );
-
-  async function startFreshAttemptFromModal(chosenLayout: ExamLayout) {
-    // Reuse the shared start routine for modal-initiated attempts.
-    setIsLayoutModalOpen(false);
-    const url = new URL(window.location.href);
-    url.searchParams.set("layout", chosenLayout);
-    router.replace(url.toString());
-  }
 }
 
 export default function ExamSessionPage() {

@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { nurviaApi } from "@/lib/api-client";
 import type { SubmittedExamResultDto } from "@/lib/api-types";
-import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { QuestionRendererRegistry, type RendererQuestion } from "@/components/exam/renderers";
+import { Sparkles } from "lucide-react";
 
 function isUnanswered(response?: string) {
   return !response || ["null", '""', "[]", "{}"].includes(response.trim());
@@ -33,14 +33,21 @@ export default function AttemptResultPage() {
       }
       setLoading(false);
     });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [attemptId]);
 
   const reviewWithheld = result ? !result.reviewReleased : false;
-  const unanswered = result?.reviewQuestions.filter((question) =>
-    isUnanswered(question.learnerResponse)).length || 0;
+  const hasQuestionBreakdown = Boolean(result && result.reviewQuestions.length > 0);
+  const unanswered = hasQuestionBreakdown
+    ? result!.reviewQuestions.filter((q) => isUnanswered(q.learnerResponse)).length
+    : Math.max(0, (result?.totalQuestions || 0) - (result?.totalAnswered ?? result?.totalQuestions ?? 0));
   const correct = result?.correctQuestions || 0;
-  const incorrect = Math.max(0, (result?.totalQuestions || 0) - correct - unanswered);
+  const incorrect = hasQuestionBreakdown
+    ? Math.max(0, result!.reviewQuestions.length - correct - unanswered)
+    : Math.max(0, (result?.totalWrong ?? (result?.totalQuestions || 0) - correct - unanswered));
+
   const distribution = [
     { label: "Correct", value: correct, color: "bg-emerald-500" },
     { label: "Incorrect", value: incorrect, color: "bg-rose-500" },
@@ -56,11 +63,13 @@ export default function AttemptResultPage() {
             <h1 className="font-brand text-2xl font-bold text-foreground sm:text-3xl">Result and review</h1>
           </div>
           <div className="flex items-center gap-2">
-            <Link href={`/exam-session?attemptId=${encodeURIComponent(attemptId)}&mode=Review`}>
-              <Button className="bg-brand-teal hover:bg-brand-tealDeep text-white gap-1.5">
-                <Sparkles className="w-4 h-4" /> Open Full Review Mode
-              </Button>
-            </Link>
+            {!reviewWithheld && (
+              <Link href={`/exam-session?attemptId=${encodeURIComponent(attemptId)}&mode=Review`}>
+                <Button className="bg-brand-teal hover:bg-brand-tealDeep text-white gap-1.5">
+                  <Sparkles className="w-4 h-4" /> Open Full Review Mode
+                </Button>
+              </Link>
+            )}
             <Link href="/learner"><Button variant="outline">Back to dashboard</Button></Link>
           </div>
         </div>
@@ -81,7 +90,11 @@ export default function AttemptResultPage() {
                 <div className="rounded-xl bg-surface-muted p-4">
                   <p className="text-xs text-foreground-secondary">Score</p>
                   <p className="mt-1 text-2xl font-bold text-foreground">{result.scorePercentage}%</p>
-                  {result.passed !== null && <p className="mt-1 text-xs text-foreground-secondary">{result.passed ? "Met" : "Did not meet"} configured passing score ({result.passingScorePercentage}%).</p>}
+                  {result.passed !== null && (
+                    <p className="mt-1 text-xs text-foreground-secondary">
+                      {result.passed ? "Met" : "Did not meet"} configured passing score ({result.passingScorePercentage}%).
+                    </p>
+                  )}
                 </div>
                 <div className="rounded-xl bg-surface-muted p-4">
                   <p className="text-xs text-foreground-secondary">Questions correct</p>
@@ -105,7 +118,8 @@ export default function AttemptResultPage() {
                 <p className="mt-1 text-sm text-foreground-secondary">
                   {correct} correct, {incorrect} incorrect, and {unanswered} unanswered out of {result.totalQuestions} questions.
                 </p>
-              </div>              <div className="space-y-4" aria-label="Question outcome counts">
+              </div>
+              <div className="space-y-4" aria-label="Question outcome counts">
                 {distribution.map((item) => {
                   const percentage = result.totalQuestions > 0
                     ? (item.value / result.totalQuestions) * 100
@@ -131,61 +145,77 @@ export default function AttemptResultPage() {
 
             <section className="space-y-4">
               <h2 className="font-brand text-xl font-bold text-foreground">Question review</h2>
-              {reviewWithheld && (
+              {reviewWithheld ? (
                 <p
                   role="status"
                   className="rounded-lg border border-brand-teal/30 bg-brand-teal/5 p-4 text-sm text-foreground-secondary"
                 >
-                  The answer key and rationales for this exam are withheld until NURVIA staff release
-                  the results. Your score summary above is final; review feedback will appear here
-                  once results are released.
+                  Answer keys and rationales are withheld for this examination because backend policy sets allowReview to false. Your graded score summary above is final.
                 </p>
+              ) : (
+                result.reviewQuestions.map((question) => {
+                  const rq: RendererQuestion = {
+                    id: question.questionId,
+                    numericId: question.numericId,
+                    guidId: question.guidId,
+                    sectionId: question.sectionId,
+                    sectionGuidId: question.sectionGuidId,
+                    sectionName: question.sectionName,
+                    orderIndex: question.orderIndex,
+                    stem: question.stem,
+                    metaStem: question.metaStem,
+                    instructions: question.instructions,
+                    questionType: question.questionType,
+                    cognitiveSkill: question.cognitiveSkill,
+                    clientNeedCategory: question.clientNeedCategory,
+                    generalRationale: question.generalRationale,
+                    isCorrect: question.isCorrect,
+                    learnerResponse: question.learnerResponse,
+                    options: question.options.map((o) => ({
+                      ...o,
+                      displayOrder: o.optionIndex,
+                    })),
+                    exhibits: question.exhibits,
+                    media: question.media,
+                    matrix: question.matrix,
+                    blankSelectPassage: question.blankSelectPassage,
+                    highlightPassage: question.highlightPassage,
+                    correctAnswerMeta: question.correctAnswerMeta,
+                    contentIntegrityError: question.contentIntegrityError,
+                  };
+
+                  return (
+                    <Card key={question.questionId} className="space-y-4 p-5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">
+                          Question {question.orderIndex}
+                        </p>
+                        <span
+                          className={
+                            isUnanswered(question.learnerResponse)
+                              ? "text-xs font-semibold text-foreground-muted"
+                              : question.isCorrect
+                                ? "text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+                                : "text-xs font-semibold text-rose-700 dark:text-rose-300"
+                          }
+                        >
+                          {isUnanswered(question.learnerResponse)
+                            ? "Unanswered"
+                            : question.isCorrect
+                              ? "Correct"
+                              : "Incorrect"}
+                        </span>
+                      </div>
+                      <QuestionRendererRegistry
+                        question={rq}
+                        value={question.learnerResponse ?? null}
+                        disabled
+                        isReview
+                      />
+                    </Card>
+                  );
+                })
               )}
-              {result.reviewQuestions.map((question) => (
-                <Card key={question.questionId} className="space-y-4 p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">Question {question.orderIndex}</p>
-                    <span className={reviewWithheld
-                      ? "text-xs font-semibold text-foreground-muted"
-                      : question.isCorrect
-                        ? "text-xs font-semibold text-emerald-700 dark:text-emerald-300"
-                        : "text-xs font-semibold text-rose-700 dark:text-rose-300"}>
-                      {isUnanswered(question.learnerResponse)
-                        ? "Unanswered"
-                        : reviewWithheld
-                          ? "Outcome pending release"
-                          : question.isCorrect
-                            ? "Correct"
-                            : "Incorrect"}
-                    </span>
-                  </div>
-                  <RichQuestionContent
-                    content={question.stem}
-                    className="text-sm font-medium leading-relaxed text-foreground"
-                  />
-                  {question.options.length > 0 && (
-                    <ul className="space-y-2">
-                      {question.options.map((option) => (
-                        <li key={option.id} className="rounded-lg border border-border p-3 text-sm text-foreground-secondary">
-                          <RichQuestionContent content={option.optionText} as="span" className="font-medium text-foreground" />
-                          <span className="ml-2 text-xs">
-                            {!reviewWithheld && option.isCorrect ? "Correct answer" : ""}
-                            {option.wasSelected ? " · Your selection" : ""}
-                          </span>
-                          {!reviewWithheld && option.specificRationale && (
-                            <RichQuestionContent content={option.specificRationale} className="mt-1 text-xs" />
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {!reviewWithheld && question.generalRationale && (
-                    <div className="border-t border-border pt-3 text-sm leading-relaxed text-foreground-secondary">
-                      <RichQuestionContent content={question.generalRationale} />
-                    </div>
-                  )}
-                </Card>
-              ))}
             </section>
           </>
         )}

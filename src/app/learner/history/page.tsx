@@ -6,19 +6,22 @@ import { LearnerShell } from "@/components/layout/learner-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { History, RotateCcw, CheckCircle2, Clock, Play, BookOpen } from "lucide-react";
+import { RotateCcw, Play, FileBarChart, Lock } from "lucide-react";
 import { nurviaApi } from "@/lib/api-client";
 import { ExamAttemptSummaryDto } from "@/lib/api-types";
 
 interface DisplayAttempt {
   id: string;
+  examId: string;
   title: string;
+  pathway?: string;
   date: string;
   score: string;
   mode: string;
   duration: string;
   status: string;
   passed?: boolean;
+  canReview: boolean;
 }
 
 export default function AttemptHistoryPage() {
@@ -32,37 +35,43 @@ export default function AttemptHistoryPage() {
         setIsLoading(true);
         const res = await nurviaApi.getAttemptHistory();
         if (res.success && res.data) {
-          setAttempts(res.data.map((a: ExamAttemptSummaryDto) => {
-            const dateStr = a.submittedAtUtc || a.startedAtUtc;
-            const formattedDate = dateStr
-              ? new Date(dateStr).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })
-              : "Recent";
+          setAttempts(
+            res.data.map((a: ExamAttemptSummaryDto) => {
+              const dateStr = a.submittedAtUtc || a.startedAtUtc;
+              const formattedDate = dateStr
+                ? new Date(dateStr).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })
+                : "Recent";
 
-            return {
-              id: a.attemptId,
-              title: a.examTitle,
-              date: formattedDate,
-              score:
-                a.scorePercentage !== undefined && a.scorePercentage !== null
-                  ? `${a.scorePercentage.toFixed(1)}%`
-                  : a.status === "InProgress"
-                  ? "In Progress"
-                  : "Pending",
-              // Backend attempt statuses are InProgress / Submitted / Graded / Expired.
-              // Any non-InProgress attempt has ended and is reviewable.
-              mode: a.status === "InProgress" ? "Active Attempt" : "Official Exam",
-              duration: a.status === "InProgress"
-                ? "In Progress"
-                : a.submittedAtUtc ? `${a.totalQuestions} Questions` : "Ended",
-              status: a.status,
-              passed: a.passed,
-            };
-          }));
+              return {
+                id: a.attemptId,
+                examId: a.examId,
+                title: a.examTitle,
+                pathway: a.pathway ? String(a.pathway).replace(/_/g, " ") : undefined,
+                date: formattedDate,
+                score:
+                  a.scorePercentage !== undefined && a.scorePercentage !== null
+                    ? `${a.scorePercentage.toFixed(1)}%`
+                    : a.status === "InProgress"
+                      ? "In Progress"
+                      : "Pending",
+                mode: a.status === "InProgress" ? "Active Attempt" : "Official Exam",
+                duration:
+                  a.status === "InProgress"
+                    ? "In Progress"
+                    : a.submittedAtUtc
+                      ? `${a.totalQuestions} Questions`
+                      : "Ended",
+                status: a.status,
+                passed: a.passed,
+                canReview: a.canReview ?? a.allowReview !== false,
+              };
+            })
+          );
         } else {
           setLoadFailed(true);
         }
@@ -80,14 +89,22 @@ export default function AttemptHistoryPage() {
   return (
     <LearnerShell>
       <div className="space-y-6">
-        <div className="space-y-1">
-          <Badge variant="teal">Record of Attempts</Badge>
-          <h1 className="font-brand text-2xl sm:text-3xl font-bold text-foreground">
-            Attempt History
-          </h1>
-          <p className="text-xs sm:text-sm text-foreground-secondary">
-            Review detailed question logs, historical scores, and individual rationale breakdowns.
-          </p>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="space-y-1">
+            <Badge variant="teal">Record of Attempts</Badge>
+            <h1 className="font-brand text-2xl sm:text-3xl font-bold text-foreground">
+              Attempt History
+            </h1>
+            <p className="text-xs sm:text-sm text-foreground-secondary">
+              Authoritative examination records, recorded scores, and review access governed by exam configuration.
+            </p>
+          </div>
+          <Link href="/learner/performance">
+            <Button variant="outline" size="sm" className="text-xs gap-1.5">
+              <FileBarChart className="w-3.5 h-3.5 text-brand-teal" />
+              View Performance Analytics
+            </Button>
+          </Link>
         </div>
 
         <Card className="overflow-hidden">
@@ -96,10 +113,10 @@ export default function AttemptHistoryPage() {
               <thead className="bg-surface-muted border-b border-border text-foreground-secondary font-semibold">
                 <tr>
                   <th className="p-4">Exam / Practice Set</th>
-                  <th className="p-4">Date Completed</th>
-                  <th className="p-4">Mode</th>
+                  <th className="p-4">Date Recorded</th>
+                  <th className="p-4">Status / Mode</th>
                   <th className="p-4">Score</th>
-                  <th className="p-4">Duration</th>
+                  <th className="p-4">Scope</th>
                   <th className="p-4 text-right">Action</th>
                 </tr>
               </thead>
@@ -121,7 +138,12 @@ export default function AttemptHistoryPage() {
                 ) : (
                   attempts.map((a) => (
                     <tr key={a.id} className="hover:bg-surface-muted/50 transition-colors">
-                      <td className="p-4 font-semibold text-foreground">{a.title}</td>
+                      <td className="p-4">
+                        <p className="font-semibold text-foreground">{a.title}</p>
+                        {a.pathway && (
+                          <span className="text-[11px] text-foreground-muted">{a.pathway}</span>
+                        )}
+                      </td>
                       <td className="p-4 text-foreground-muted">{a.date}</td>
                       <td className="p-4">
                         <Badge variant="outline" className="text-[10px]">
@@ -134,18 +156,39 @@ export default function AttemptHistoryPage() {
                       <td className="p-4 text-foreground-muted">{a.duration}</td>
                       <td className="p-4 text-right">
                         {a.status !== "InProgress" ? (
-                          <Link href={`/exam-session?attemptId=${a.id}&mode=Review`}>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs gap-1 hover:text-brand-teal"
-                            >
-                              <RotateCcw className="w-3 h-3" />
-                              <span>Review</span>
-                            </Button>
-                          </Link>
+                          <div className="inline-flex items-center justify-end gap-2">
+                            <Link href={`/learner/attempts/${encodeURIComponent(a.id)}`}>
+                              <Button variant="outline" size="sm" className="h-7 text-xs">
+                                Summary
+                              </Button>
+                            </Link>
+                            {a.canReview ? (
+                              <Link href={`/exam-session?attemptId=${encodeURIComponent(a.id)}&mode=Review`}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 text-xs gap-1 hover:text-brand-teal"
+                                >
+                                  <RotateCcw className="w-3 h-3" />
+                                  <span>Review</span>
+                                </Button>
+                              </Link>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                disabled
+                                title="Review is disabled by this exam's backend configuration (allowReview is false)."
+                                className="h-7 text-xs gap-1 text-foreground-muted cursor-not-allowed"
+                              >
+                                <Lock className="w-3 h-3" />
+                                <span>Review Locked</span>
+                              </Button>
+                            )}
+                          </div>
                         ) : (
-                          <Link href={`/exam-session?attemptId=${a.id}&mode=Exam`}>
+                          <Link href={`/exam-session?attemptId=${encodeURIComponent(a.id)}&mode=Exam`}>
                             <Button
                               variant="primary"
                               size="sm"
