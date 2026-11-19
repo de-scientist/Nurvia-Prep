@@ -5,9 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PublicShell } from "@/components/layout/public-shell";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { useAuth } from "@/components/auth/auth-provider";
 import { nurviaApi } from "@/lib/api-client";
 import type { CommunityCategoryGroupDto, CommunityPostType } from "@/lib/api-types";
 import {
@@ -60,7 +58,6 @@ const POST_TYPES: { type: CommunityPostType; label: string; icon: React.ReactNod
 
 export default function NewPostPage() {
   const router = useRouter();
-  const { status, user } = useAuth();
 
   const [categories, setCategories] = React.useState<CommunityCategoryGroupDto[]>([]);
   const [selectedType, setSelectedType] = React.useState<CommunityPostType>("Discussion");
@@ -77,10 +74,10 @@ export default function NewPostPage() {
   const [outcome, setOutcome] = React.useState<"Pass" | "Fail" | "Waiting">("Pass");
   const [questionCount, setQuestionCount] = React.useState(85);
   const [weeksStudied, setWeeksStudied] = React.useState(8);
-  const [prepResources, setPrepResources] = React.useState<string[]>(["NURVIA Study Library"]);
+  const [prepResources] = React.useState<string[]>(["NURVIA Study Library"]);
 
   // Poll specific fields
-  const [pollQuestion, setPollQuestion] = React.useState("");
+  const [pollQuestion] = React.useState("");
   const [pollOptions, setPollOptions] = React.useState<string[]>(["Option 1", "Option 2"]);
 
   // Fetch categories on mount

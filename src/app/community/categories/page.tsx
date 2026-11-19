@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { PublicShell } from "@/components/layout/public-shell";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { nurviaApi } from "@/lib/api-client";
 import type { CommunityCategoryGroupDto } from "@/lib/api-types";

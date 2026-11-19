@@ -1,13 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { WifiOff, RefreshCw } from "lucide-react";
 import { retryOperation } from "@/lib/utils/retry-utils";
 import { getRetryOptions, shouldRetryRequest } from "@/lib/utils/request-utils";
-import { ErrorType, getUserFriendlyMessage } from "@/lib/utils/error-utils";
 import { ApiErrorHandler } from "@/components/shared/feedback/ApiErrorHandler";
 
 interface NetworkErrorProps {
@@ -38,13 +36,11 @@ export function NetworkError({
   error
 }: NetworkErrorProps) {
   const [isRetrying, setIsRetrying] = React.useState(false);
-  const [retryCount, setRetryCount] = React.useState(0);
 
   const handleRetry = React.useCallback(async () => {
     if (!onRetry || isRetrying) return;
 
     setIsRetrying(true);
-    setRetryCount(prev => prev + 1);
 
     try {
       // Attempt retry using the retry infrastructure

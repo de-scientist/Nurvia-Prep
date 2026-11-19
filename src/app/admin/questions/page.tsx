@@ -3,29 +3,19 @@
 import * as React from "react";
 import Link from "next/link";
 import { AdminShell } from "@/components/layout/admin-shell";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   FileQuestion,
   Plus,
   Search,
-  Filter,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  Archive,
-  RefreshCw,
   GitBranch,
-  Eye,
   Edit3,
-  Layers,
   ChevronRight,
   ChevronLeft,
-  Sparkles,
 } from "lucide-react";
 import { nurviaApi } from "@/lib/api-client";
-import { QuestionDto, ContentStatus, NursingPathway, ExamCategory } from "@/lib/api-types";
+import { QuestionDto, ContentStatus } from "@/lib/api-types";
 
 export default function QuestionBankPage() {
   const [questions, setQuestions] = React.useState<QuestionDto[]>([]);

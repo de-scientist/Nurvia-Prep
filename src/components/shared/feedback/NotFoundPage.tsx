@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Logo } from "@/components/brand/logo";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { SearchX } from "lucide-react";

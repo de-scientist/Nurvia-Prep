@@ -12,9 +12,6 @@ import {
   CheckCircle2,
   XCircle,
   ArrowRight,
-  ShieldCheck,
-  Star,
-  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 

@@ -5,7 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { AlertTriangle, RotateCw } from "lucide-react";
-import { ErrorType, getUserFriendlyMessage, isRetryableError } from "@/lib/utils/error-utils";
+import { getUserFriendlyMessage, isRetryableError } from "@/lib/utils/error-utils";
 
 interface ApiErrorHandlerProps {
   error: unknown;

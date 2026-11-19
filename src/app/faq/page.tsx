@@ -4,19 +4,14 @@ import * as React from "react";
 import Link from "next/link";
 import { PublicShell } from "@/components/layout/public-shell";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   HelpCircle,
   Search,
   ChevronDown,
   ChevronUp,
   Mail,
-  ShieldCheck,
-  CheckCircle2,
-  Sparkles,
   ArrowRight,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface FaqItem {
   id: string;

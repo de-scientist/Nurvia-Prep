@@ -6,7 +6,6 @@ import { PublicShell } from "@/components/layout/public-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { useAuth } from "@/components/auth/auth-provider";
 import { nurviaApi } from "@/lib/api-client";
 import type { CommunityInsightsSummaryDto } from "@/lib/api-types";
 import {
@@ -15,19 +14,13 @@ import {
   Clock,
   BookOpen,
   PlusCircle,
-  CheckCircle2,
-  AlertCircle,
-  HelpCircle,
   BarChart3,
   Sparkles,
   X,
-  Share2,
   Users,
-  Compass,
 } from "lucide-react";
 
 export default function InsightsPage() {
-  const { status } = useAuth();
   const [data, setData] = React.useState<CommunityInsightsSummaryDto | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [modalOpen, setModalOpen] = React.useState(false);

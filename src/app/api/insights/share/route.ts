@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerCastoSession } from '@/lib/lexmacasto/session';
 import { insightsStore } from '@/lib/insights/insights-store';
 
 const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' };
@@ -18,7 +17,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const session = await getServerCastoSession();
     // Sharing is voluntary and anonymized
 
     const result = insightsStore.shareResult({

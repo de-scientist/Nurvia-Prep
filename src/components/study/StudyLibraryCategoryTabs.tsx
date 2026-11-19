@@ -39,8 +39,6 @@ const CATEGORY_LABELS: Record<string, string> = {
 export function StudyLibraryCategoryTabs({
   selectedPathway,
   selectedCategory,
-  availablePathways,
-  availableCategories,
   onSelectPathway,
   onSelectCategory,
 }: StudyLibraryCategoryTabsProps) {

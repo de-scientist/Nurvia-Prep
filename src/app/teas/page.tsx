@@ -11,12 +11,10 @@ import {
   Microscope,
   Calculator,
   FileText,
-  Sparkles,
   CheckCircle2,
   ArrowRight,
   ShieldCheck,
   GraduationCap,
-  AlertCircle,
 } from "lucide-react";
 
 interface TeasSubject {

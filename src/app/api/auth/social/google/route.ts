@@ -1,4 +1,3 @@
-import { getNurviaCastoSessionHeaders } from "@/lib/lexmacasto/qlexSessionBridge";
 // src/app/api/auth/social/google/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getBackendBaseUrl } from "@/lib/api/api/api";

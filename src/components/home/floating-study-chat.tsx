@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { MessageSquare, X, Send, Bot, Sparkles, User, BookOpen } from "lucide-react";
+import { MessageSquare, X, Send, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 

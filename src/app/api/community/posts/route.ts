@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerCastoSession } from '@/lib/lexmacasto/session';
 import { communityStore } from '@/lib/community/community-store';
-import type { CreateCommunityPostRequest, CommunityPostType } from '@/lib/api-types';
+import type { CommunityPostType, CreateCommunityPostRequest } from '@/lib/api-types';
 
 const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' };
 
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 201, headers: NO_STORE_HEADERS }
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
         success: false,

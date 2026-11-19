@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   HeartPulse,
   Clock,
@@ -11,7 +10,6 @@ import {
   ArrowLeft,
   CheckCircle2,
   XCircle,
-  HelpCircle,
   RotateCcw,
   Sparkles,
   BookOpen,
@@ -22,7 +20,7 @@ import { heroPracticeQuestions, SampleQuestion } from "@/lib/study-sets-data";
 export function PracticeQuestionPreview() {
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [selectedAnswers, setSelectedAnswers] = React.useState<Record<number, number>>({});
-  const [showRationale, setShowRationale] = React.useState(true);
+  const [showRationale] = React.useState(true);
   const [seconds, setSeconds] = React.useState(18); // matches the approved reference's 0:18 start
   const [isTimerRunning, setIsTimerRunning] = React.useState(true);
   const [completed, setCompleted] = React.useState(false);

@@ -3,15 +3,9 @@
 import * as React from "react";
 import {
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Award,
   Sparkles,
-  Quote,
 } from "lucide-react";
 import { StudentTestimonial, sampleStudentTestimonials } from "@/lib/study-sets-data";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface StudentTestimonialCarouselProps {

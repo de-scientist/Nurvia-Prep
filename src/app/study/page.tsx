@@ -15,9 +15,7 @@ import {
   BotMessageSquare,
   TrendingUp,
   ArrowRight,
-  BookOpen,
   Sparkles,
-  ShieldCheck,
   Search,
   CheckCircle2,
 } from "lucide-react";

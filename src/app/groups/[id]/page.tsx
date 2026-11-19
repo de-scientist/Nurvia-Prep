@@ -13,11 +13,9 @@ import {
   Users,
   Calendar,
   Clock,
-  Globe2,
   CheckCircle2,
   ArrowLeft,
   Target,
-  Sparkles,
 } from "lucide-react";
 
 export default function StudyGroupDetailPage() {

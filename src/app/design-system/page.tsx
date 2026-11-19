@@ -5,25 +5,16 @@ import { PublicShell } from "@/components/layout/public-shell";
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
-  CheckCircle2,
-  AlertTriangle,
-  AlertCircle,
-  Info,
   Layers,
   Palette,
   Type,
   SquareDashed,
   Layout,
   Sparkles,
-  ArrowRight,
-  Send,
-  Trash2,
-  Search,
 } from "lucide-react";
 
 export default function DesignSystemShowcasePage() {

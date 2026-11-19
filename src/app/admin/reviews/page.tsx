@@ -3,22 +3,16 @@
 import * as React from "react";
 import Link from "next/link";
 import { AdminShell } from "@/components/layout/admin-shell";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  Clock,
-  Search,
-  Eye,
-  MessageSquare,
   FileQuestion,
   BookCheck,
   ShieldCheck,
-  ChevronRight,
-  Filter,
 } from "lucide-react";
 import { nurviaApi } from "@/lib/api-client";
 import { QuestionDto, ExamDto } from "@/lib/api-types";

@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   AlertTriangle,
   RotateCcw,
-  CheckCircle2,
   Clock,
   Layers,
   FileText,

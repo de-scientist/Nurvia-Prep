@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/shared/avatar/UserAvatar";
 import { useAuth } from "@/components/auth/auth-provider";
 import { nurviaApi } from "@/lib/api-client";
-import { ApiResponse, UserProfileDto } from "@/lib/api-types";
+import { UserProfileDto } from "@/lib/api-types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 
@@ -61,7 +61,7 @@ export default function ProfilePage() {
         } else {
           setError("Failed to load profile data");
         }
-      } catch (err) {
+      } catch {
         setError("Failed to load profile data");
       } finally {
         setIsLoading(false);
@@ -105,7 +105,7 @@ export default function ProfilePage() {
       } else {
         setError(response.message || "Failed to update profile");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to update profile");
     } finally {
       setIsUpdating(false);
@@ -179,7 +179,7 @@ export default function ProfilePage() {
       } else {
         setError(response.message || "Failed to upload avatar");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to upload avatar");
     } finally {
       setIsUploading(false);
@@ -212,7 +212,7 @@ export default function ProfilePage() {
       } else {
         setError(response.message || "Failed to remove avatar");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to remove avatar");
     } finally {
       setIsUploading(false);

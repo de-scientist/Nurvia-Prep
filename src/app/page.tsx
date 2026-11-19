@@ -21,18 +21,11 @@ import {
   BrainCircuit,
   CheckCircle2,
   Clock,
-  Compass,
-  FileCheck2,
   HeartPulse,
-  Layers,
   Search,
-  ShieldCheck,
   Sparkles,
   Star,
   Stethoscope,
-  TrendingUp,
-  Users,
-  Eye,
   FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";

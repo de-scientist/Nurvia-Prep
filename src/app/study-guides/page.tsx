@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { PublicShell } from "@/components/layout/public-shell";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
@@ -13,12 +12,10 @@ import {
   getStudyGuideSubjectBySlug,
   getStudyGuideTopicBySlug,
   type StudyGuideTopicItem,
-  type StudyGuideSubjectItem,
 } from "@/lib/content/study-guides-repository";
 import {
   BookOpen,
   Search,
-  Sparkles,
   ChevronRight,
   Clock,
   Award,
@@ -28,8 +25,6 @@ import {
   ArrowLeft,
   FileText,
   Headphones,
-  Users,
-  Compass,
 } from "lucide-react";
 
 function StudyGuidesContent() {

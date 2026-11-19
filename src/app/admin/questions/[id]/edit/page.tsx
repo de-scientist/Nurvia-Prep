@@ -4,22 +4,17 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { AdminShell } from "@/components/layout/admin-shell";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  FileQuestion,
-  Plus,
-  Trash2,
   CheckCircle2,
   AlertCircle,
   Eye,
   Save,
   Send,
-  Layers,
   ChevronLeft,
   GitBranch,
-  History,
   ShieldCheck,
 } from "lucide-react";
 import { nurviaApi } from "@/lib/api-client";
@@ -27,12 +22,9 @@ import { QuestionRendererRegistry, RendererQuestion } from "@/components/exam/re
 import {
   QuestionDto,
   QuestionType,
-  NursingPathway,
-  ExamCategory,
   DifficultyLevel,
   CognitiveSkill,
   ClientNeedCategory,
-  ExhibitType,
   QuestionOptionDto,
   QuestionExhibitDto,
 } from "@/lib/api-types";

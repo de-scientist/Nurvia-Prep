@@ -2,10 +2,8 @@
 
 import * as React from "react";
 import { LearnerShell } from "@/components/layout/learner-shell";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calculator, Sparkles, CheckCircle2 } from "lucide-react";
 import { calculateIvRates } from "@/lib/calculators";
 
 export default function CalculatorsPage() {

@@ -6,7 +6,6 @@ import { PublicShell } from "@/components/layout/public-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { useAuth } from "@/components/auth/auth-provider";
 import { nurviaApi } from "@/lib/api-client";
 import type { StudyGroupDto } from "@/lib/api-types";
 import {
@@ -14,12 +13,9 @@ import {
   Plus,
   Calendar,
   Clock,
-  Target,
   Globe2,
   CheckCircle2,
   X,
-  Search,
-  Sparkles,
 } from "lucide-react";
 
 const EXAM_PILLS = [
@@ -37,10 +33,9 @@ const EXAM_PILLS = [
 ];
 
 export default function StudyGroupsPage() {
-  const { status } = useAuth();
   const [groups, setGroups] = React.useState<StudyGroupDto[]>([]);
   const [selectedTrack, setSelectedTrack] = React.useState("All");
-  const [search, setSearch] = React.useState("");
+  const [search] = React.useState("");
   const [loading, setLoading] = React.useState(true);
   const [createModalOpen, setCreateModalOpen] = React.useState(false);
   const [toastMessage, setToastMessage] = React.useState<string | null>(null);
@@ -51,7 +46,7 @@ export default function StudyGroupsPage() {
   const [newTrack, setNewTrack] = React.useState("NCLEX-RN");
   const [newCadence, setNewCadence] = React.useState("Tue & Thu 8:00 PM EST");
   const [newTimezone, setNewTimezone] = React.useState("America/New_York");
-  const [newMaxMembers, setNewMaxMembers] = React.useState(8);
+  const [newMaxMembers] = React.useState(8);
   const [creating, setCreating] = React.useState(false);
 
   const fetchGroups = React.useCallback(async () => {

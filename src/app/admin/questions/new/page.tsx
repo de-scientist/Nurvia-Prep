@@ -4,11 +4,10 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AdminShell } from "@/components/layout/admin-shell";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  FileQuestion,
   Plus,
   Trash2,
   CheckCircle2,
@@ -16,14 +15,9 @@ import {
   Eye,
   Save,
   Send,
-  Layers,
-  FileText,
-  Activity,
   ClipboardList,
-  Stethoscope,
   Sparkles,
   ChevronLeft,
-  Info,
 } from "lucide-react";
 import { nurviaApi } from "@/lib/api-client";
 import { QuestionRendererRegistry, RendererQuestion } from "@/components/exam/renderers";
@@ -43,7 +37,7 @@ export default function NewQuestionAuthoringPage() {
   const router = useRouter();
 
   // Core metadata
-  const [code, setCode] = React.useState("");
+  const [code] = React.useState("");
   const [pathway, setPathway] = React.useState<NursingPathway>("RN");
   const [category, setCategory] = React.useState<ExamCategory>("ATI");
   const [subject, setSubject] = React.useState("Pharmacology");

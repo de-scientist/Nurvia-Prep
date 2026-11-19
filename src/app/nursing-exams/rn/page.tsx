@@ -7,16 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
-  GraduationCap,
-  Award,
-  BookOpen,
-  ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
   Users,
-  Compass,
   FileText,
-  Sparkles,
   Headphones,
 } from "lucide-react";
 

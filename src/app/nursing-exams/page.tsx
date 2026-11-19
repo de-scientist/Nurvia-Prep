@@ -9,16 +9,7 @@ import { Card } from "@/components/ui/card";
 import {
   GraduationCap,
   Award,
-  BookOpen,
-  Clock,
-  Layers,
   ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
-  Users,
-  Compass,
-  FileText,
-  Sparkles,
 } from "lucide-react";
 
 interface ExamDirectoryItem {

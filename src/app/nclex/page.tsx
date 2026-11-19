@@ -5,19 +5,11 @@ import Link from "next/link";
 import { PublicShell } from "@/components/layout/public-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   GraduationCap,
-  Sparkles,
   CheckCircle2,
-  BrainCircuit,
-  Clock,
-  Layers,
   ArrowRight,
-  ShieldCheck,
-  Award,
   Stethoscope,
-  Activity,
 } from "lucide-react";
 
 export default function NclexPage() {

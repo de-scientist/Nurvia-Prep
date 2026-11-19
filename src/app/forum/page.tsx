@@ -8,26 +8,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { nurviaApi } from "@/lib/api-client";
-import type { CommunityPostDetailDto, CommunityPostType } from "@/lib/api-types";
+import type { CommunityPostDetailDto } from "@/lib/api-types";
 import {
   MessageSquare,
   ThumbsUp,
   ThumbsDown,
-  Share2,
   Flag,
   CheckCircle2,
-  HelpCircle,
   Award,
-  Users,
-  BarChart2,
   Clock,
   Eye,
   Plus,
   Send,
   Sparkles,
   Flame,
-  Search,
-  Filter,
 } from "lucide-react";
 
 function ForumContent() {

@@ -3,21 +3,15 @@
 import * as React from "react";
 import { PublicShell } from "@/components/layout/public-shell";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { useAuth } from "@/components/auth/auth-provider";
 import { nurviaApi } from "@/lib/api-client";
 import type { MentorProfileDto } from "@/lib/api-types";
 import {
-  Users,
   ShieldCheck,
   Star,
   Globe2,
-  Calendar,
-  MessageSquare,
   CheckCircle2,
   X,
-  Sparkles,
   Stethoscope,
 } from "lucide-react";
 
@@ -39,10 +33,9 @@ const SPECIALTY_PILLS = [
 ];
 
 export default function MentorsPage() {
-  const { status } = useAuth();
   const [mentors, setMentors] = React.useState<MentorProfileDto[]>([]);
   const [selectedSpecialty, setSelectedSpecialty] = React.useState("All");
-  const [search, setSearch] = React.useState("");
+  const [search] = React.useState("");
   const [loading, setLoading] = React.useState(true);
 
   // Modal state
