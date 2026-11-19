@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { FiHome, FiLogIn, FiHeart } from 'react-icons/fi'
 import { APP_NAME } from '@/lib/config/config'
+import { useAuth } from '@/components/auth/auth-provider'
 
 // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 // extract searchParams logic into a child (mirrors LoginSearchParamsHandler pattern)
@@ -31,6 +32,13 @@ function LogoutSearchParamsHandler({
 
 export default function WebLogoutPage() {
   const [message, setMessage] = useState('')
+  const { status, signOut } = useAuth()
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      void signOut()
+    }
+  }, [status, signOut])
 
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1220] px-4 py-12">

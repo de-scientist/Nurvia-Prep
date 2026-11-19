@@ -72,6 +72,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void refresh();
   }, [refresh]);
 
+  React.useEffect(() => {
+    const handleAvatarUpdated = () => {
+      void refresh();
+    };
+    window.addEventListener("nurvia:avatar-updated", handleAvatarUpdated);
+    return () => {
+      window.removeEventListener("nurvia:avatar-updated", handleAvatarUpdated);
+    };
+  }, [refresh]);
+
   const signIn = React.useCallback(async (credentials: SignInCredentials) => {
     const response = await nurviaApi.login(credentials);
     if (response.success && response.data) {
@@ -108,6 +118,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useOptionalAuth(): AuthContextValue | null {
+  return React.useContext(AuthContext);
 }
 
 export function useAuth() {

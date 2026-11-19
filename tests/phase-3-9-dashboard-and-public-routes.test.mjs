@@ -54,8 +54,10 @@ console.log('[PASS] 3. Published exams query verified /api/strata/exams while pr
 
 // 4. Investigation D: Avatar uses user.profile.profilePicture / avatarUrl from /api/auth/me without /api/backend/avatar 404s
 const clientSrc = readText('lib/lexmacasto/client.ts');
-assert.match(clientSrc, /sanitizeAvatarUrl/);
-assert.match(clientSrc, /rawUser\.profile\.profilePicture/);
+assert.match(clientSrc, /sanitize-user/);
+const sanitizerSrc = readText('lib/lexmacasto/sanitize-user.mjs');
+assert.match(sanitizerSrc, /sanitizeAvatarUrl/);
+assert.match(sanitizerSrc, /rawUser\.profile\.profilePicture/);
 const learnerShellSrc = readText('components/layout/learner-shell.tsx');
 const adminShellSrc = readText('components/layout/admin-shell.tsx');
 assert.equal(learnerShellSrc.includes('nurviaApi.getAvatar'), false, 'LearnerShell must not call obsolete /api/backend/avatar');

@@ -134,7 +134,11 @@ export function UserAccountMenu({ avatarUrl }: UserAccountMenuProps) {
       const res = await fetch("/api/auth/support/email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user?.email, action: "resend-verification" }),
+        body: JSON.stringify({
+          email: user?.email,
+          userGuidId: user?.guidId || user?.id,
+          action: "resend-verification",
+        }),
       });
 
       if (res.ok) {

@@ -430,68 +430,10 @@ export function extractCastoCredentialsFromLogin(
   return { castoLine, castoBadge };
 }
 
-function sanitizeAvatarUrl(rawUrl: unknown): string | undefined {
-  if (typeof rawUrl !== 'string') return undefined;
-  const trimmed = rawUrl.trim();
-  if (!trimmed) return undefined;
-  if (trimmed.startsWith('/') && !trimmed.startsWith('//')) {
-    return trimmed;
-  }
-  try {
-    const parsed = new URL(trimmed);
-    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
-      return parsed.toString();
-    }
-  } catch {
-    // Reject malformed or unsafe URL schemes (e.g. javascript:, data:)
-  }
-  return undefined;
-}
-
 /**
  * Maps a raw LexmaCasto user object to NURVIA's sanitized `AuthUserDto` (stripping castoLine/castoBadge).
  */
-export function sanitizeAuthUser(rawUser: LexmaCastoAuthUserRaw | undefined | null) {
-  if (!rawUser || typeof rawUser !== 'object') return null;
-
-  const id = String(rawUser.id ?? rawUser.userId ?? rawUser.email ?? '');
-  const email = typeof rawUser.email === 'string' ? rawUser.email : '';
-  const name =
-    (typeof rawUser.name === 'string' && rawUser.name) ||
-    (typeof rawUser.fullName === 'string' && rawUser.fullName) ||
-    (typeof rawUser.username === 'string' && rawUser.username) ||
-    email;
-  const role =
-    (typeof rawUser.role === 'string' && rawUser.role) ||
-    (Array.isArray(rawUser.roles) && typeof rawUser.roles[0] === 'string' && rawUser.roles[0]) ||
-    'Learner';
-
-  if (!email && !id) return null;
-
-  const profilePicture =
-    rawUser.profile && typeof rawUser.profile === 'object'
-      ? rawUser.profile.profilePicture
-      : undefined;
-
-  const emailVerified =
-    typeof rawUser.emailVerified === 'boolean'
-      ? rawUser.emailVerified
-      : typeof rawUser.isEmailVerified === 'boolean'
-        ? rawUser.isEmailVerified
-        : typeof rawUser.email_verified === 'boolean'
-          ? rawUser.email_verified
-          : Boolean(rawUser.email_verified_at || rawUser.emailVerifiedAt);
-
-  return {
-    id,
-    name,
-    email,
-    role,
-    dashboardName: typeof rawUser.dashboardName === 'string' ? rawUser.dashboardName : undefined,
-    avatarUrl: sanitizeAvatarUrl(rawUser.avatarUrl ?? profilePicture ?? rawUser.profilePicture),
-    emailVerified,
-  };
-}
+export { sanitizeAuthUser } from './sanitize-user.mjs';
 
 /**
  * Normalizes a LexmaCasto Academic Strata envelope (`{ success, message, data: { items, skewPage, ... } }`).

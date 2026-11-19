@@ -1,12 +1,23 @@
-import { getNurviaCastoSessionHeaders } from "@/lib/lexmacasto/qlexSessionBridge";
-import { getTemporaryChallenge } from "@/lib/auth/temporaryChallenge";
-// src/app/api/auth/social/onetap/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getBackendBaseUrl } from "@/lib/api/api/api";
 import { getSiteHeaders } from "@/lib/config/siteHeaders";
+import { getNurviaCastoSessionHeaders } from "@/lib/lexmacasto/qlexSessionBridge";
+import {
+  extractCastoCredentialsFromLogin,
+  sanitizeAuthUser,
+} from "@/lib/lexmacasto/client";
+import type { LexmaCastoLoginResponseRaw } from "@/lib/lexmacasto/contracts";
+import {
+  setServerCastoSession,
+  validateSameOriginRequest,
+} from "@/lib/lexmacasto/session";
+import { getTemporaryChallenge } from "@/lib/auth/temporaryChallenge";
 
-// Incoming payload now matches what socialService.oneTapLogin sends — same shape as
-// loginService's fingerprint/ipAddress/challenge attachment pattern.
+const NO_STORE_HEADERS = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, private",
+  Pragma: "no-cache",
+};
+
 export interface OneTapCredentialBody {
   credential: string;
   select_by?: string;
@@ -18,29 +29,27 @@ export interface OneTapCredentialBody {
   ipAddress?: string;
 }
 
-// ⚠️ ASSUMPTION: backend has a dedicated verification endpoint at
-// /api/castoline/auth/social/onetap that takes { idToken, context, role, dashboardName,
-// challenge, fingerprint, ipAddress }, verifies the JWT signature + audience + expiry
-// against Google's public keys server-side, upserts the user (create if context is
-// "register"/doesn't exist, else log in), and returns the SAME response shape as
-// /api/castoline/auth/login: { user: { castoBadge, castoLine }, ...rest }. Confirm this
-// endpoint + response shape against your ApiAuthController.
 export async function POST(req: NextRequest) {
+  const csrf = validateSameOriginRequest(req);
+  if (!csrf.ok) {
+    return NextResponse.json(
+      { success: false, message: csrf.reason, errorCode: "CSRF_REJECTED" },
+      { status: 403, headers: NO_STORE_HEADERS }
+    );
+  }
+
   try {
-    const body: OneTapCredentialBody = await req.json();
+    const body = (await req.json().catch(() => null)) as OneTapCredentialBody | null;
 
     if (!body?.credential) {
       return NextResponse.json(
-        { error: "Missing One Tap credential ⚓" },
-        { status: 400 }
+        { success: false, message: "Missing One Tap credential.", errorCode: "VALIDATION_ERROR" },
+        { status: 400, headers: NO_STORE_HEADERS }
       );
     }
 
     const backendBaseUrl = getBackendBaseUrl();
     const backendUrl = `${backendBaseUrl}/api/castoline/auth/social/onetap`;
-
-    console.log("Making POST request to:", backendUrl);
-    console.log("Request body:", JSON.stringify({ ...body, credential: "[redacted]" }));
 
     const backendResponse = await fetch(backendUrl, {
       method: "POST",
@@ -62,30 +71,42 @@ export async function POST(req: NextRequest) {
       }),
     });
 
-    console.log("Backend Response Status : ", backendResponse.status);
-    const responseBody = await backendResponse.json().catch(() => ({
-      error: "Failed to Parse Backend Response ⚓",
-    }));
+    const parsed = (await backendResponse.json().catch(() => ({}))) as LexmaCastoLoginResponseRaw;
 
-    console.log("📌 Backend Response Body : ", responseBody);
+    if (!backendResponse.ok) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: parsed?.message || "One Tap authentication failed.",
+          errorCode: "AUTH_FAILED",
+        },
+        { status: backendResponse.status, headers: NO_STORE_HEADERS }
+      );
+    }
 
-    const { user, ...rest } = responseBody;
+    const creds = extractCastoCredentialsFromLogin(parsed);
+    const rawUser = parsed.user ?? parsed.data?.user;
+    const safeUser = sanitizeAuthUser(rawUser);
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
-        ...rest,
-        casto_badge: user?.castoBadge,
-        casto_line: user?.castoLine,
+        success: true,
+        message: parsed.message || "Signed in via One Tap.",
+        user: safeUser,
       },
-      { status: backendResponse.status }
+      { status: 200, headers: NO_STORE_HEADERS }
     );
+
+    if (creds) {
+      setServerCastoSession(response, creds, safeUser?.dashboardName);
+    }
+
+    return response;
   } catch (err: unknown) {
-    console.error("One Tap API route error:", err);
     const message = err instanceof Error ? err.message : "One Tap login failed";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message, errorCode: "INTERNAL_ERROR" },
+      { status: 500, headers: NO_STORE_HEADERS }
+    );
   }
 }
-
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-// The End By : B.L.S.M.C ; - SkewBlanc - The Winds Chase Us ⚓
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

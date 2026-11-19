@@ -1,4 +1,6 @@
-﻿import * as React from "react";
+"use client";
+
+import * as React from "react";
 import { cn } from "@/lib/utils";
 
 interface UserAvatarProps {
@@ -22,6 +24,19 @@ export function UserAvatar({
   }, [avatarUrl]);
 
   const [failedAvatarUrl, setFailedAvatarUrl] = React.useState<string | null>(null);
+  const imgRef = React.useRef<HTMLImageElement>(null);
+
+  // Detect images that finished loading in a broken state before hydration/effect mount
+  React.useEffect(() => {
+    if (
+      normalizedAvatarUrl &&
+      imgRef.current &&
+      imgRef.current.complete &&
+      imgRef.current.naturalWidth === 0
+    ) {
+      setFailedAvatarUrl(normalizedAvatarUrl);
+    }
+  }, [normalizedAvatarUrl]);
 
   const sizeClasses = {
     sm: "w-8 h-8 text-xs",
@@ -47,6 +62,7 @@ export function UserAvatar({
     >
       {shouldShowImage ? (
         <img
+          ref={imgRef}
           src={normalizedAvatarUrl!}
           alt={`${name || "User"}'s avatar`}
           className="w-full h-full rounded-full object-cover"
