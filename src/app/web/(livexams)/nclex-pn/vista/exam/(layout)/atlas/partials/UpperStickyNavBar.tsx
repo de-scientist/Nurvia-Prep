@@ -245,8 +245,6 @@ export default function UpperStickyNavBar() {
             .filter(Boolean).join(" ");
     };
 
-    const [isLightLogoBroken, setIsLightLogoBroken] = useState(false);
-    const [isDarkLogoBroken, setIsDarkLogoBroken] = useState(false);
     const [aiModalOpen, setAiModalOpen] = useState(false);
 
     const role = user?.roles?.length ? [...user.roles].sort((a, b) => b.rank - a.rank)[0]?.name : "Guest";
@@ -285,7 +283,6 @@ export default function UpperStickyNavBar() {
                             dark:hidden
                             relative top-[0.02em]
                         "
-                                onError={() => setIsLightLogoBroken(true)}
                             />
 
                             {/* Dark logo */}
@@ -302,7 +299,6 @@ export default function UpperStickyNavBar() {
                             hidden dark:block
                             relative top-[0.02em]
                         "
-                                onError={() => setIsDarkLogoBroken(true)}
                             />
 
                             {/* App Name */}

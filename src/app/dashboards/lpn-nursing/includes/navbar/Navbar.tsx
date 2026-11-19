@@ -22,8 +22,6 @@ const TARGET_PROGRAM = "lpn-nursing"; // Default program for login link in navba
 const Navbar: React.FC = () => {
   const [seekOpen, setSeekOpen] = useState(false);
   const [isMac, setIsMac] = useState(false);
-  const [isLightLogoBroken, setIsLightLogoBroken] = useState(false);
-  const [isDarkLogoBroken, setIsDarkLogoBroken] = useState(false);
   const { user, loading: userLoading } = useCurrentSystemUser();
 
   const { theme } = useThemeContext();
@@ -80,7 +78,6 @@ const Navbar: React.FC = () => {
                 width={32}
                 height={32}
                 className="dark:hidden"
-                onError={() => setIsLightLogoBroken(true)}
               />
               <Image
                 src="/brand/nurvia-symbol.svg"
@@ -88,7 +85,6 @@ const Navbar: React.FC = () => {
                 width={32}
                 height={32}
                 className="hidden dark:block"
-                onError={() => setIsDarkLogoBroken(true)}
               />
             </Link>
 
@@ -149,7 +145,6 @@ const Navbar: React.FC = () => {
                 width={32}
                 height={32}
                 className="dark:hidden"
-                onError={() => setIsLightLogoBroken(true)}
               />
 
               {/* Dark logo */}
@@ -159,7 +154,6 @@ const Navbar: React.FC = () => {
                 width={32}
                 height={32}
                 className="hidden dark:block"
-                onError={() => setIsDarkLogoBroken(true)}
               />
 
               {/* App Name */}
