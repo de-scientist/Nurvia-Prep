@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveAttemptLearner, NO_STORE_HEADERS } from '@/lib/attempts/auth-helper';
+import { NO_STORE_HEADERS, resolveAttemptLearner } from '@/lib/attempts/auth-helper';
 import { attemptStore } from '@/lib/attempts/attempt-store';
+import { ensureAttemptLoaded } from '@/lib/attempts/live-exam-loader';
+import { extractSiteMetadataFromRequestHeaders } from '@/lib/lexmacasto/client';
 
 export async function GET(
   request: NextRequest,
@@ -15,28 +17,32 @@ export async function GET(
   }
 
   const { attemptId } = await context.params;
-  const rawAttempt = attemptStore.getRawAttempt(attemptId);
+  const siteMeta = extractSiteMetadataFromRequestHeaders(
+    request.headers,
+    `/api/attempts/${attemptId}/review`
+  );
 
-  if (!rawAttempt) {
+  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta);
+  if (!loaded.ok) {
     return NextResponse.json(
-      { success: false, message: 'Attempt not found.', errorCode: 'NOT_FOUND' },
-      { status: 404, headers: NO_STORE_HEADERS }
-    );
-  }
-
-  // IDOR protection
-  if (rawAttempt.userId !== learner.userId && learner.userId !== 'system' && learner.userId !== 'superadmin') {
-    return NextResponse.json(
-      { success: false, message: 'Forbidden. You do not own this attempt.', errorCode: 'FORBIDDEN' },
-      { status: 403, headers: NO_STORE_HEADERS }
+      { success: false, message: loaded.message, errorCode: loaded.errorCode },
+      { status: loaded.status, headers: NO_STORE_HEADERS }
     );
   }
 
   const result = attemptStore.getAttemptReview(learner.userId, attemptId);
-
   if (!result.success) {
     return NextResponse.json(
-      { success: false, message: result.error || 'Failed to load review.' },
+      {
+        success: false,
+        message: result.error,
+        errorCode:
+          result.status === 403
+            ? 'FORBIDDEN'
+            : result.status === 409
+              ? 'ATTEMPT_NOT_SUBMITTED'
+              : 'NOT_FOUND',
+      },
       { status: result.status, headers: NO_STORE_HEADERS }
     );
   }
@@ -44,9 +50,11 @@ export async function GET(
   return NextResponse.json(
     {
       success: true,
-      message: 'Examination review loaded successfully.',
+      message: result.data?.reviewReleased
+        ? 'Graded examination review retrieved.'
+        : 'Graded attempt summary retrieved; detailed answer key review is disabled by exam policy.',
       data: result.data,
     },
-    { status: 200, headers: NO_STORE_HEADERS }
+    { headers: NO_STORE_HEADERS }
   );
 }
