@@ -16,32 +16,61 @@ import type {
   ReviewQuestionDto,
   ExamAttemptSummaryDto,
   ExamLayout,
+  ExamLayoutPolicy,
   QuestionType,
   CognitiveSkill,
   ClientNeedCategory,
   QuestionExhibitDto,
+  QuestionMediaDto,
+  QuestionMatrixDto,
+  QuestionCorrectAnswerMetaDto,
+  ExamModePermissionsDto,
   TutorStage,
   TutorHintResponseDto,
   TutorEvaluateResponseDto,
   TutorSessionStateDto,
 } from '../api-types';
+import {
+  evaluateCanonicalQuestion,
+  wasCanonicalOptionSelected,
+} from './strata-answer-core.mjs';
 
 export interface StoredAttemptQuestion {
   id: string;
+  numericId?: number;
+  guidId?: string;
+  examGuidId?: string;
+  sectionId?: number;
+  sectionGuidId?: string;
+  sectionName?: string;
   orderIndex: number;
   stem: string;
+  metaStem?: string;
+  instructions?: string;
   questionType: QuestionType;
   cognitiveSkill: CognitiveSkill;
   clientNeedCategory: ClientNeedCategory;
   options: Array<{
     id: string;
+    numericId?: number;
     optionIndex: number;
     optionText: string;
     displayOrder: number;
     isCorrect: boolean;
     specificRationale?: string;
+    description?: string;
+    data?: string;
+    label?: string;
+    order?: string;
+    link?: string;
   }>;
   exhibits: QuestionExhibitDto[];
+  media?: QuestionMediaDto[];
+  matrix?: QuestionMatrixDto;
+  blankSelectPassage?: string;
+  highlightPassage?: string;
+  correctAnswerMeta?: QuestionCorrectAnswerMetaDto;
+  contentIntegrityError?: string;
   generalRationale: string;
   hint?: string;
   contentJsonData?: string;
@@ -50,17 +79,26 @@ export interface StoredAttemptQuestion {
 export interface StoredAttempt {
   attemptId: string;
   examId: string;
+  examNumericId?: number;
   examTitle: string;
+  pathway?: string;
+  examCategory?: string;
   userId: string;
   deliveryMode: 'Exam' | 'Tutor';
   layoutMode: ExamLayout;
-  allowedLayouts: 'AllInOneOnly' | 'SequentialOnly' | 'Both';
+  allowedLayouts: ExamLayoutPolicy;
   timeLimitMinutes: number;
   remainingSeconds: number;
   startedAtUtc: string;
   submittedAtUtc?: string;
   status: 'InProgress' | 'Submitted' | 'Graded';
   allowReview?: boolean;
+  configuredQuestionCount?: number;
+  passingScorePercentage?: number;
+  attemptNumber?: number;
+  modePermissions?: ExamModePermissionsDto;
+  isDurableBackendSynced?: boolean;
+  integrityWarnings?: string[];
   questions: StoredAttemptQuestion[];
   savedResponses: Record<
     string,
@@ -81,8 +119,25 @@ export interface StoredAttempt {
   >;
 }
 
+const globalAttemptCache = globalThis as typeof globalThis & {
+  __nurviaAttemptCache?: Map<string, StoredAttempt>;
+};
+
+function getHotAttemptCache(): Map<string, StoredAttempt> {
+  if (!globalAttemptCache.__nurviaAttemptCache) {
+    globalAttemptCache.__nurviaAttemptCache = new Map<string, StoredAttempt>();
+  }
+  return globalAttemptCache.__nurviaAttemptCache;
+}
+
 class AttemptStore {
-  private attempts = new Map<string, StoredAttempt>();
+  /**
+   * Short-lived global hot session cache shared across Next.js route bundles.
+   * Authoritative durable persistence resides on explicitbackend.com (Strata upserts & results).
+   */
+  private get attempts(): Map<string, StoredAttempt> {
+    return getHotAttemptCache();
+  }
 
   /**
    * Generates a stable canonical attempt ID.
@@ -133,33 +188,77 @@ class AttemptStore {
   sanitizeForActiveSession(attempt: StoredAttempt): StartAttemptResultDto {
     const isTutor = attempt.deliveryMode === 'Tutor';
 
-    const sanitizedQuestions: ActiveExamQuestionDto[] = attempt.questions.map((q) => ({
-      id: q.id,
-      orderIndex: q.orderIndex,
-      stem: q.stem,
-      questionType: q.questionType,
-      cognitiveSkill: q.cognitiveSkill,
-      clientNeedCategory: q.clientNeedCategory,
-      contentJsonData: q.contentJsonData,
-      // Rationales are strictly withheld in active Exam mode
-      generalRationale: isTutor ? q.generalRationale : undefined,
-      options: q.options.map((o) => ({
-        id: o.id,
-        optionIndex: o.optionIndex,
-        optionText: o.optionText,
-        displayOrder: o.displayOrder,
-        // isCorrect and specificRationale are withheld in Exam mode
-        isCorrect: isTutor ? o.isCorrect : undefined,
-        specificRationale: isTutor ? o.specificRationale : undefined,
-      })),
-      exhibits: q.exhibits,
-    }));
+    const sanitizedQuestions: ActiveExamQuestionDto[] = attempt.questions.map((q) => {
+      const sanitizedMatrix = q.matrix
+        ? {
+            ...q.matrix,
+            cells: q.matrix.cells.map((cell) => ({
+              id: cell.id,
+              numericId: cell.numericId,
+              rowIndex: cell.rowIndex,
+              columnIndex: cell.columnIndex,
+              cellValue: cell.cellValue,
+              isLocked: cell.isLocked,
+              // Answer keys and cell explanations are strictly withheld in Exam mode
+              ...(isTutor
+                ? { isCorrect: cell.isCorrect, explanation: cell.explanation }
+                : {}),
+            })),
+          }
+        : undefined;
+
+      return {
+        id: q.id,
+        numericId: q.numericId,
+        guidId: q.guidId,
+        examGuidId: q.examGuidId ?? attempt.examId,
+        sectionId: q.sectionId,
+        sectionGuidId: q.sectionGuidId,
+        sectionName: q.sectionName,
+        orderIndex: q.orderIndex,
+        stem: q.stem,
+        metaStem: q.metaStem,
+        instructions: q.instructions,
+        questionType: q.questionType,
+        cognitiveSkill: q.cognitiveSkill,
+        clientNeedCategory: q.clientNeedCategory,
+        contentJsonData: q.contentJsonData,
+        // Rationales and answer metadata are strictly withheld in active Exam mode
+        generalRationale: isTutor ? q.generalRationale : undefined,
+        correctAnswerMeta: isTutor ? q.correctAnswerMeta : undefined,
+        options: q.options.map((o) => ({
+          id: o.id,
+          numericId: o.numericId,
+          optionIndex: o.optionIndex,
+          optionText: o.optionText,
+          displayOrder: o.displayOrder,
+          description: o.description,
+          data: o.data,
+          label: o.label,
+          order: o.order,
+          link: o.link,
+          // isCorrect and specificRationale are strictly withheld in Exam mode
+          isCorrect: isTutor ? o.isCorrect : undefined,
+          specificRationale: isTutor ? o.specificRationale : undefined,
+        })),
+        exhibits: q.exhibits,
+        media: q.media,
+        matrix: sanitizedMatrix,
+        blankSelectPassage: q.blankSelectPassage,
+        highlightPassage: q.highlightPassage,
+        contentIntegrityError: q.contentIntegrityError,
+      };
+    });
 
     const mappedSavedResponses: Record<string, import('../api-types').LearnerAnswerStateDto> = {};
     for (const [qid, state] of Object.entries(attempt.savedResponses)) {
       mappedSavedResponses[qid] = {
         responseJson: state.responseJson ?? undefined,
-        isAnswered: Boolean(state.responseJson),
+        isAnswered: Boolean(
+          state.responseJson &&
+            state.responseJson !== 'null' &&
+            state.responseJson !== '""'
+        ),
         isFlagged: state.isFlagged,
         savedAtUtc: state.savedAtUtc,
         tutorStageReached: attempt.tutorProgression[qid]?.stage ?? 0,
@@ -169,6 +268,7 @@ class AttemptStore {
     return {
       attemptId: attempt.attemptId,
       examId: attempt.examId,
+      examNumericId: attempt.examNumericId,
       examTitle: attempt.examTitle,
       timeLimitMinutes: attempt.timeLimitMinutes,
       remainingSeconds: attempt.remainingSeconds,
@@ -177,9 +277,15 @@ class AttemptStore {
         new Date(attempt.startedAtUtc).getTime() + (attempt.timeLimitMinutes || 90) * 60 * 1000
       ).toISOString(),
       totalQuestions: sanitizedQuestions.length,
+      configuredQuestionCount: attempt.configuredQuestionCount ?? sanitizedQuestions.length,
+      loadedQuestionCount: sanitizedQuestions.length,
       deliveryMode: attempt.deliveryMode,
       layoutMode: attempt.layoutMode,
       allowedLayouts: attempt.allowedLayouts,
+      modePermissions: attempt.modePermissions,
+      attemptNumber: attempt.attemptNumber,
+      isDurableBackendSynced: attempt.isDurableBackendSynced,
+      integrityWarnings: attempt.integrityWarnings,
       questions: sanitizedQuestions,
       savedResponses: mappedSavedResponses,
     };
@@ -250,21 +356,34 @@ class AttemptStore {
 
     const submittedAtUtc = new Date().toISOString();
     let correctQuestions = 0;
+    let totalAnswered = 0;
 
     const reviewQuestions: ReviewQuestionDto[] = raw.questions.map((q) => {
       const saved = raw.savedResponses[q.id];
       const learnerResponse = saved?.responseJson ?? undefined;
-      const isCorrect = this.evaluateQuestionCorrectness(q, learnerResponse);
+      if (
+        learnerResponse &&
+        !['null', '""', '[]', '{}', ''].includes(learnerResponse.trim())
+      ) {
+        totalAnswered++;
+      }
+      const isCorrect = evaluateCanonicalQuestion(q, learnerResponse);
 
       if (isCorrect) correctQuestions++;
 
       // Map options with wasSelected flags
       const mappedOptions = q.options.map((opt) => {
-        const wasSelected = this.wasOptionSelected(opt.id, learnerResponse);
+        const wasSelected = wasCanonicalOptionSelected(opt.id, learnerResponse);
         return {
           id: opt.id,
+          numericId: opt.numericId,
           optionIndex: opt.optionIndex,
           optionText: opt.optionText,
+          description: opt.description,
+          data: opt.data,
+          label: opt.label,
+          order: opt.order,
+          link: opt.link,
           isCorrect: opt.isCorrect,
           specificRationale: opt.specificRationale,
           wasSelected,
@@ -273,8 +392,15 @@ class AttemptStore {
 
       return {
         questionId: q.id,
+        numericId: q.numericId,
+        guidId: q.guidId,
+        sectionId: q.sectionId,
+        sectionGuidId: q.sectionGuidId,
+        sectionName: q.sectionName,
         orderIndex: q.orderIndex,
         stem: q.stem,
+        metaStem: q.metaStem,
+        instructions: q.instructions,
         questionType: q.questionType,
         cognitiveSkill: q.cognitiveSkill,
         clientNeedCategory: q.clientNeedCategory,
@@ -285,35 +411,47 @@ class AttemptStore {
         maxPoints: 1,
         options: mappedOptions,
         exhibits: q.exhibits,
+        media: q.media,
+        matrix: q.matrix,
+        blankSelectPassage: q.blankSelectPassage,
+        highlightPassage: q.highlightPassage,
+        correctAnswerMeta: q.correctAnswerMeta,
+        contentIntegrityError: q.contentIntegrityError,
       };
     });
 
     const totalQuestions = raw.questions.length;
     const scorePercentage =
       totalQuestions > 0 ? Math.round((correctQuestions / totalQuestions) * 100) : 0;
-    const passingScorePercentage = 75;
+    const passingScorePercentage = raw.passingScorePercentage ?? 75;
     const passed = scorePercentage >= passingScorePercentage;
     const timeSpentSeconds = Math.max(
       15,
       Math.floor((new Date(submittedAtUtc).getTime() - new Date(raw.startedAtUtc).getTime()) / 1000)
     );
+    const reviewReleased = raw.allowReview !== false;
 
     const result: SubmittedExamResultDto = {
       attemptId: raw.attemptId,
       examId: raw.examId,
       examTitle: raw.examTitle,
+      pathway: raw.pathway,
+      examCategory: raw.examCategory,
       status: 'Graded',
       scorePercentage,
       passingScorePercentage,
       passed,
       totalQuestions,
+      totalAnswered,
       correctQuestions,
+      totalWrong: Math.max(0, totalQuestions - correctQuestions),
       timeSpentSeconds,
       timeLimitMinutes: raw.timeLimitMinutes,
       startedAtUtc: raw.startedAtUtc,
       submittedAtUtc,
-      reviewReleased: raw.allowReview !== false,
-      reviewQuestions: raw.allowReview !== false ? reviewQuestions : [],
+      reviewReleased,
+      modePermissions: raw.modePermissions,
+      reviewQuestions: reviewReleased ? reviewQuestions : [],
     };
 
     raw.status = 'Graded';
@@ -328,7 +466,8 @@ class AttemptStore {
   }
 
   /**
-   * Retrieves the graded review for an attempt.
+   * Retrieves the graded review for a submitted attempt.
+   * Never auto-submits an active InProgress attempt.
    */
   getAttemptReview(
     userId: string,
@@ -343,10 +482,29 @@ class AttemptStore {
     }
 
     if (raw.result) {
+      // Guarantee answer keys and rationales remain stripped if review is disabled by backend
+      if (raw.allowReview === false) {
+        return {
+          success: true,
+          status: 200,
+          data: {
+            ...raw.result,
+            reviewReleased: false,
+            reviewQuestions: [],
+          },
+        };
+      }
       return { success: true, status: 200, data: raw.result };
     }
 
-    // If attempt has not yet been submitted, score it now to return review
+    if (raw.status !== 'Submitted' && raw.status !== 'Graded') {
+      return {
+        success: false,
+        error: 'Attempt has not been submitted yet. Submit the examination before requesting graded review.',
+        status: 409,
+      };
+    }
+
     return this.submitAttempt(userId, attemptId);
   }
 
@@ -425,7 +583,7 @@ class AttemptStore {
     const q = raw.questions.find((item) => item.id === questionId);
     if (!q) return { success: false, error: 'Question not found.', status: 404 };
 
-    const isCorrect = this.evaluateQuestionCorrectness(q, responseJson);
+    const isCorrect = evaluateCanonicalQuestion(q, responseJson);
     const correctOpt = q.options.find((o) => o.isCorrect);
 
     const explanation = isCorrect
@@ -517,12 +675,23 @@ class AttemptStore {
           attemptId: a.attemptId,
           examId: a.examId,
           examTitle: a.examTitle,
+          examCategory: a.examCategory,
+          pathway: a.pathway,
           status: a.status,
           startedAtUtc: a.startedAtUtc,
           submittedAtUtc: a.submittedAtUtc,
           scorePercentage: a.result?.scorePercentage,
+          passingScorePercentage: a.result?.passingScorePercentage ?? a.passingScorePercentage,
           passed: a.result?.passed,
           totalQuestions: a.questions.length,
+          totalCorrect: a.result?.correctQuestions,
+          totalWrong: a.result?.totalWrong,
+          totalAnswered: a.result?.totalAnswered,
+          timeSpentSeconds: a.result?.timeSpentSeconds,
+          attemptNumber: a.attemptNumber,
+          allowReview: a.allowReview,
+          canReview: a.modePermissions?.canReview ?? a.allowReview !== false,
+          canTutor: a.modePermissions?.canTutor ?? false,
         });
       }
     }
@@ -534,74 +703,11 @@ class AttemptStore {
   // ─────────────────────────────────────────────────────────────────────────────
 
   private evaluateQuestionCorrectness(q: StoredAttemptQuestion, responseJson?: string): boolean {
-    if (!responseJson || ['null', '""', '[]', '{}', ''].includes(responseJson.trim())) {
-      return false;
-    }
-
-    try {
-      // 1. SingleChoice / TrueFalse (either { SelectedOptionId: "opt-1" } or scalar "opt-1")
-      if (responseJson.startsWith('{')) {
-        const parsed = JSON.parse(responseJson);
-        if (parsed.SelectedOptionId || parsed.selectedOptionId) {
-          const selectedId = String(parsed.SelectedOptionId || parsed.selectedOptionId);
-          const opt = q.options.find((o) => o.id === selectedId);
-          return Boolean(opt?.isCorrect);
-        }
-        if (Array.isArray(parsed.SelectedOptionIds || parsed.selectedOptionIds)) {
-          const selectedIds = new Set(
-            (parsed.SelectedOptionIds || parsed.selectedOptionIds).map(String)
-          );
-          const correctIds = new Set(q.options.filter((o) => o.isCorrect).map((o) => o.id));
-          if (selectedIds.size !== correctIds.size) return false;
-          for (const id of correctIds) {
-            if (!selectedIds.has(id)) return false;
-          }
-          return true;
-        }
-      }
-
-      // 2. Direct string or JSON array
-      const trimmed = responseJson.replace(/^"(.*)"$/, '$1').trim();
-      const directOpt = q.options.find((o) => o.id === trimmed);
-      if (directOpt) return Boolean(directOpt.isCorrect);
-
-      // Multiple choice JSON array [ "opt-1", "opt-2" ]
-      if (responseJson.startsWith('[')) {
-        const parsedArr: string[] = JSON.parse(responseJson).map(String);
-        const selectedIds = new Set(parsedArr);
-        const correctIds = new Set(q.options.filter((o) => o.isCorrect).map((o) => o.id));
-        if (selectedIds.size !== correctIds.size) return false;
-        for (const id of correctIds) {
-          if (!selectedIds.has(id)) return false;
-        }
-        return true;
-      }
-
-      return false;
-    } catch {
-      return false;
-    }
+    return evaluateCanonicalQuestion(q, responseJson);
   }
 
   private wasOptionSelected(optionId: string, responseJson?: string): boolean {
-    if (!responseJson) return false;
-    try {
-      if (responseJson.startsWith('{')) {
-        const parsed = JSON.parse(responseJson);
-        if (parsed.SelectedOptionId || parsed.selectedOptionId) {
-          return String(parsed.SelectedOptionId || parsed.selectedOptionId) === optionId;
-        }
-        if (Array.isArray(parsed.SelectedOptionIds || parsed.selectedOptionIds)) {
-          return (parsed.SelectedOptionIds || parsed.selectedOptionIds).map(String).includes(optionId);
-        }
-      }
-      if (responseJson.startsWith('[')) {
-        return (JSON.parse(responseJson) as string[]).map(String).includes(optionId);
-      }
-      return responseJson.replace(/^"(.*)"$/, '$1').trim() === optionId;
-    } catch {
-      return false;
-    }
+    return wasCanonicalOptionSelected(optionId, responseJson);
   }
 }
 

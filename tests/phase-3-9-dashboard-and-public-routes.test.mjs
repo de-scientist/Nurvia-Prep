@@ -38,10 +38,10 @@ try {
 const contractsSrc = readText('lib/lexmacasto/contracts.ts');
 assert.match(contractsSrc, /examResults:\s*\{[\s\S]*\/api\/castoline\/strata\/assessment\/exams\/results\/list\/relative/);
 const attemptsHistoryRoute = readText('app/api/attempts/history/route.ts');
-assert.match(attemptsHistoryRoute, /getServerCastoSession\(\)/);
+assert.match(attemptsHistoryRoute, /resolveAttemptLearner\(/);
 assert.match(attemptsHistoryRoute, /status:\s*401/);
 assert.match(attemptsHistoryRoute, /buildStrataEndpointPath\(\s*'examResults'/);
-assert.match(attemptsHistoryRoute, /'Cache-Control':\s*'no-store/);
+assert.match(attemptsHistoryRoute, /NO_STORE_HEADERS/);
 console.log('[PASS] 2. Attempts history routes to /api/attempts/history backed by LexmaCasto examResults relative contract');
 
 // 3. Investigation C: Published exams use verified /api/strata/exams while preserving admin exam routes

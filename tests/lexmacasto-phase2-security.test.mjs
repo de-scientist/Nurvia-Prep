@@ -88,7 +88,7 @@ test('7. Strata route handler enforces query parameter allowlist, pagination bou
   const strataSrc = readRel('app/api/strata/[resource]/route.ts');
   assert.equal(strataSrc.includes('ALLOWED_STRATA_QUERY_PARAMS'), true);
   assert.equal(strataSrc.includes('PAGINATION_SIZE_KEYS'), true);
-  assert.equal(strataSrc.includes('n > 100'), true);
+  assert.equal(strataSrc.includes('n > 250'), true);
   assert.equal(strataSrc.includes("'Cache-Control': cacheHeader"), true);
 });
 

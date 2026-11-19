@@ -21,10 +21,19 @@ import { getServerCastoSession, validateSameOriginRequest } from '@/lib/lexmacas
 const ALLOWED_STRATA_QUERY_PARAMS = new Set([
   'page',
   'skewPage',
+  'dynamicPage',
   'perPage',
   'skewPerPage',
+  'dynamicPerPage',
   'limit',
   'search',
+  'dynamicSearch',
+  'dynamicSortColumn',
+  'dynamicSortDirection',
+  'identifier',
+  'dynamicExamLayout',
+  'dynamicExamMode',
+  'dynamicAttemptNumber',
   'q',
   'domainId',
   'categoryId',
@@ -55,8 +64,8 @@ const ALLOWED_FETCH_TYPES = new Set<StrataFetchType>([
   'live',
 ]);
 
-const PAGINATION_PAGE_KEYS = new Set(['page', 'skewPage']);
-const PAGINATION_SIZE_KEYS = new Set(['perPage', 'skewPerPage', 'limit']);
+const PAGINATION_PAGE_KEYS = new Set(['page', 'skewPage', 'dynamicPage']);
+const PAGINATION_SIZE_KEYS = new Set(['perPage', 'skewPerPage', 'dynamicPerPage', 'limit']);
 const MAX_MUTATION_BODY_BYTES = 1_048_576;
 const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' };
 
@@ -128,9 +137,9 @@ export async function GET(
     }
     if (PAGINATION_SIZE_KEYS.has(key)) {
       const n = Number(value);
-      if (!Number.isInteger(n) || n < 1 || n > 100) {
+      if (!Number.isInteger(n) || n < 1 || n > 250) {
         return NextResponse.json(
-          { success: false, message: `Invalid pagination size for "${key}" (expected 1..100).`, errorCode: 'VALIDATION_ERROR' },
+          { success: false, message: `Invalid pagination size for "${key}" (expected 1..250).`, errorCode: 'VALIDATION_ERROR' },
           { status: 400, headers: NO_STORE_HEADERS }
         );
       }
