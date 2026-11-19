@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBackendBaseUrl } from "@/lib/api/api/api";
 import { getSiteHeaders } from "@/lib/config/siteHeaders";
+import { getNurviaCastoSessionHeaders } from "@/lib/lexmacasto/qlexSessionBridge";
 
 export interface DynamicStrataResponse<T = unknown> {
   message?: string;
@@ -52,10 +53,11 @@ async function forwardToBackend(
     const headers: HeadersInit = {
       "Content-Type": "application/json",
       ...(await getSiteHeaders()),
+      ...(await getNurviaCastoSessionHeaders()),
     };
 
-    if (castoLine) headers["x-casto-line"] = castoLine;
-    if (castoBadge) headers["x-casto-badge"] = castoBadge;
+    if (castoLine && !("x-casto-line" in headers)) headers["x-casto-line"] = castoLine;
+    if (castoBadge && !("x-casto-badge" in headers)) headers["x-casto-badge"] = castoBadge;
 
     const backendResponse = await fetch(url, {
       method,
