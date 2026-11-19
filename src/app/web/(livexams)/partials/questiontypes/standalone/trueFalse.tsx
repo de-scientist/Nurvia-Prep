@@ -41,7 +41,17 @@ export const TrueFalseQuestion = ({
   const { getAnswer, submitAnswer } = useLiveExamActionContext();
 
   const saved = getAnswer(q.id);
-  const savedOptionId = typeof saved?.answer === "number" ? saved.answer : null;
+  const savedOptionId = (() => {
+    if (typeof saved?.answer === "number") return saved.answer;
+    if (typeof saved?.answer === "boolean") {
+      const target = saved.answer ? "true" : "false";
+      const match = q.questionOptions?.find(
+        (o) => (o.option ?? o.answerContent ?? "").toLowerCase().trim() === target
+      );
+      return match?.id ?? null;
+    }
+    return null;
+  })();
 
   // Auto-populate from backend savedUserAnswer if provided else just display answers without selection
   const persistedOptionId = (() => {

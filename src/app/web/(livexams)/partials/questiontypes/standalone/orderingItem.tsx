@@ -152,7 +152,7 @@ export const OrderingItemQuestion = ({
     dragIndex.current = null;
     dragOverIndex.current = null;
 
-    submitAnswer("ActionOrderingItem", {
+    submitAnswer(hideQuestionHeader ? "ActionCaseBasedOrderingItem" : "ActionOrderingItem", {
       questionId: q.id,
       questionGuidId: q.guidId,
       examId,

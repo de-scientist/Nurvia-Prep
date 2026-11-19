@@ -151,7 +151,7 @@ export const HotspotQuestion = ({
     if (shape === "circle") {
       return (
         <>
-          <circle r="1" fill={`${color.replace("0.9", "0.15")}`} stroke={color} strokeWidth="0.2" />
+          <circle r="1" fill={color} fillOpacity={0.18} stroke={color} strokeWidth="0.2" />
           <text x="1.2" y="-1.1" fontSize="0.9" fontWeight="700" fill={color} dominantBaseline="middle">{label}</text>
         </>
       );
