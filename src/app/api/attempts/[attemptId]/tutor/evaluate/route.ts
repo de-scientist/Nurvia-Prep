@@ -2,15 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { NO_STORE_HEADERS, resolveAttemptLearner } from '@/lib/attempts/auth-helper';
 import { attemptStore } from '@/lib/attempts/attempt-store';
 import { ensureAttemptLoaded } from '@/lib/attempts/live-exam-loader';
-import {
-  getStrataSubmissionType,
-  toStrataAnswerPayload,
-} from '@/lib/attempts/strata-answer-adapter';
-import {
-  extractSiteMetadataFromRequestHeaders,
-  lexmaCastoRequest,
-} from '@/lib/lexmacasto/client';
-import { buildExamUpsertPath } from '@/lib/lexmacasto/contracts';
+import { extractSiteMetadataFromRequestHeaders } from '@/lib/lexmacasto/client';
 import { validateSameOriginRequest } from '@/lib/lexmacasto/session';
 
 export async function POST(
@@ -91,31 +83,12 @@ export async function POST(
     );
   }
 
-  // Persist evaluated response durably to explicitbackend.com when numeric IDs exist
-  const raw = loaded.attempt;
-  const q = raw.questions.find((item) => item.id === questionId);
-  if (raw.examNumericId && q?.numericId) {
-    const answerVal = toStrataAnswerPayload(q, body.responseJson);
-    if (answerVal !== null) {
-      lexmaCastoRequest(buildExamUpsertPath('user/answers'), {
-        method: 'POST',
-        session: learner.session,
-        siteMeta,
-        body: {
-          examId: raw.examNumericId,
-          examGuidId: raw.examId,
-          sectionId: q.sectionId ?? 0,
-          sectionGuidId: q.sectionGuidId ?? '',
-          questionId: q.numericId,
-          questionGuidId: q.guidId ?? q.id,
-          answer: answerVal,
-          submissionType: getStrataSubmissionType(q.questionType),
-          actionGroup: 'ExamAnswers',
-          isDiy: false,
-        },
-      }).catch(() => undefined);
-    }
-  }
+  // Tutor evaluations must NOT use the examination ExamAnswers action group,
+    // as that collides with ordinary examination response persistence and would
+    // contaminate submitted answers, scores, and timestamps. Tutor state is
+    // managed exclusively through the attempt store's tutorProgression and the
+    // server-authoritative Tutor session endpoint.
+    // Persisting to ExamAnswers is omitted for tutor evaluations.
 
   return NextResponse.json(
     {

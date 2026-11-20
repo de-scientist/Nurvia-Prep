@@ -618,6 +618,33 @@ export interface ReviewLectureRequest {
   comments: string;
 }
 
+export interface SubjectCardDto {
+  id: string;
+  guidId?: string;
+  code: string;
+  name: string;
+  title: string;
+  description: string;
+  pathway: string;
+  category: string;
+  programId?: string | number | null;
+  programName?: string | null;
+  courseId?: string | number | null;
+  courseName?: string | null;
+  school?: string | null;
+  academicYear?: number | null;
+  season?: string | null;
+  difficulty?: DifficultyLevel | null;
+  totalExams: number;
+  totalQuestions: number;
+  featuredExams?: Array<{
+    id: string;
+    title: string;
+    totalQuestions: number;
+    modeAllowed?: ExamDeliveryMode;
+  }>;
+}
+
 export interface StudySetCardDto {
   id: string;
   code: string;
@@ -682,6 +709,9 @@ export interface StudyLibraryFiltersDto {
   difficulties: DifficultyLevel[];
   questionTypes: QuestionType[];
   exams: StudyLibraryExamOptionDto[];
+  /** Academic Strata hierarchy options; populated by lexmacasto/strata-filters when available. */
+  programs?: Array<{ id: string; name: string; domainId?: string }>;
+  courses?: Array<{ id: string; name: string; programId?: string }>;
 }
 
 export interface StudyLibrarySummaryDto {
@@ -733,6 +763,7 @@ export interface TutorQuestionStateDto {
   questionId: string;
   stageReached: number;
   evaluation?: TutorEvaluateResponseDto | null;
+  responseJson?: string | null;
 }
 
 /** Full Tutor session recovery payload with per-question stage state and already-authorized evaluation content. */

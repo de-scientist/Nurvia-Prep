@@ -864,6 +864,8 @@ export async function ensureAttemptLoaded(
         ? completedResultRecord.createdAt
         : new Date().toISOString();
 
+  const inferredDelivery = inferExamDeliveryMode(loaded.exam as unknown as Record<string, unknown>);
+
   const storedAttempt: StoredAttempt = {
     attemptId,
     examId: loaded.examId,
@@ -872,7 +874,7 @@ export async function ensureAttemptLoaded(
     pathway: loaded.pathway,
     examCategory: loaded.examCategory,
     userId: learner.userId,
-    deliveryMode: 'Exam',
+    deliveryMode: inferredDelivery === 'Tutor' ? 'Tutor' : 'Exam',
     layoutMode:
       loaded.allowedLayouts === 'AllInOneOnly' ? 'AllInOne' : 'Sequential',
     allowedLayouts: loaded.allowedLayouts,

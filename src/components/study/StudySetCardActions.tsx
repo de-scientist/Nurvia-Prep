@@ -5,18 +5,13 @@ import Link from "next/link";
 import { Bookmark, BookmarkCheck, Copy, ExternalLink, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ExamDeliveryMode, ExamLayoutPolicy, StudySetCardDto } from "@/lib/api-types";
+import { isModeEnabled as sharedIsModeEnabled } from "@/lib/api-client";
 
 export function isModeEnabled(
   modeAllowed: ExamDeliveryMode | string | undefined | null,
   target: "Exam" | "Review" | "Tutor"
 ): boolean {
-  if (!modeAllowed) return false;
-  const normalized = String(modeAllowed).trim().toLowerCase();
-  if (normalized === "all") return true;
-  if (normalized === "both") {
-    return target === "Exam" || target === "Review";
-  }
-  return normalized === target.toLowerCase();
+  return sharedIsModeEnabled(modeAllowed, target);
 }
 
 export function buildStudySessionHref(

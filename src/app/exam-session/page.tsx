@@ -110,6 +110,7 @@ function ExamSessionContent() {
   const [isReviewContent, setIsReviewContent] = React.useState<boolean>(false);
   const [isPreview, setIsPreview] = React.useState<boolean>(false);
   const [tutorEvaluations, setTutorEvaluations] = React.useState<Record<string, TutorEvaluateResponseDto>>({});
+  const [tutorResponseJsons, setTutorResponseJsons] = React.useState<Record<string, string | null>>({});
 
   // Review & Submit state
   const [isSubmitModalOpen, setIsSubmitModalOpen] = React.useState<boolean>(false);
@@ -414,10 +415,11 @@ function ExamSessionContent() {
       setFlags(initialFlags);
     }
 
-    // Tutor session recovery: restore server-authoritative stage progression.
-    // The backend only returns evaluation content for questions whose own answer
-    // was already evaluated (stage >= 4) — no premature answer disclosure.
-    if (data.deliveryMode === "Tutor") {
+    // Tutor session recovery: restore server-authoritative stage progression when
+    // the published configuration permits Tutor access. The backend only returns
+    // evaluation content for questions whose own answer was already evaluated
+    // (stage >= 4) — no premature answer disclosure.
+    if (modePermissions?.canTutor) {
       void (async () => {
         try {
           const res = await nurviaApi.getTutorSessionState(data.attemptId);
@@ -425,6 +427,7 @@ function ExamSessionContent() {
             const recovered: Record<string, TutorEvaluateResponseDto> = {};
             res.data.questions.forEach((q) => {
               if (q.evaluation) recovered[q.questionId] = q.evaluation;
+              setTutorResponseJsons((prev) => ({ ...prev, [q.questionId]: q.responseJson ?? null }));
             });
             if (Object.keys(recovered).length > 0) {
               setTutorEvaluations((prev) => ({ ...recovered, ...prev }));
@@ -586,7 +589,10 @@ function ExamSessionContent() {
     }
 
     if (nextMode === "Tutor") {
-      if (modePermissions && !modePermissions.canTutor && deliveryMode !== "Tutor") {
+      // Allow Tutor mode entry from submitted state when the published
+      // configuration permits it. Tutor has independent answer/evaluation state
+      // and does not modify the submitted examination.
+      if (modePermissions && !modePermissions.canTutor) {
         setModeSwitchNotice(
           modePermissions.tutorReason ||
             "Tutor mode is not enabled for this examination by backend policy."
@@ -809,8 +815,14 @@ function ExamSessionContent() {
           />
         </div>
 
-        {/* Progressive Tutor Mode Panel (Stages 1-6) */}
-        {deliveryMode === "Tutor" && !isSubmitted && attemptId && (
+        {/* Progressive Tutor Mode Panel (Stages 1-6)
+            Tutor is available after submission when the published configuration
+            permits it (modePermissions.canTutor). Tutor maintains independent
+            answer/evaluation state that does not modify the submitted examination. */}
+        {deliveryMode === "Tutor" && attemptId && (isSubmitted
+          ? modePermissions?.canTutor
+          : true
+        ) && (
           <TutorModePanel
             key={q.id}
             attemptId={attemptId}
@@ -818,6 +830,7 @@ function ExamSessionContent() {
             hasSelectedAnswer={Boolean(answers[q.id])}
             serializedAnswer={answers[q.id] ?? null}
             evaluation={tutorEvaluations[q.id] ?? null}
+            responseJson={tutorResponseJsons[q.id] ?? null}
             onEvaluated={(result) =>
               setTutorEvaluations((prev) => ({ ...prev, [q.id]: result }))
             }
@@ -1099,7 +1112,7 @@ function ExamSessionContent() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setDeliveryMode("Tutor")}
+                    onClick={() => void handleModeChange("Tutor")}
                     className="text-xs gap-1.5 border-brand-teal/40 text-brand-teal hover:bg-brand-teal/10"
                   >
                     <Lightbulb className="w-3.5 h-3.5 text-amber-500" /> Switch to Guided Tutor Mode
@@ -1109,7 +1122,7 @@ function ExamSessionContent() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setDeliveryMode("Review")}
+                    onClick={() => void handleModeChange("Review")}
                     className="text-xs gap-1.5 border-brand-teal/40 text-brand-teal hover:bg-brand-teal/10"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 text-brand-teal" /> Return to Review Mode
@@ -1215,7 +1228,30 @@ function ExamSessionContent() {
         )}
       </div>
 
-      {/* Question Grid Modal / Drawer */}
+      {/* Review/Tutor transition controls (All-In-One layout) */}
+      <div className="flex items-center gap-2">
+                  {deliveryMode === "Review" && attemptId && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void handleModeChange("Tutor")}
+                      className="text-xs gap-1.5 border-brand-teal/40 text-brand-teal hover:bg-brand-teal/10"
+                    >
+                      <Lightbulb className="w-3.5 h-3.5 text-amber-500" /> Switch to Guided Tutor Mode
+                    </Button>
+                  )}
+                  {deliveryMode === "Tutor" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void handleModeChange("Review")}
+                      className="text-xs gap-1.5 border-brand-teal/40 text-brand-teal hover:bg-brand-teal/10"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 text-brand-teal" /> Return to Review Mode
+                    </Button>
+                  )}
+                </div>
+
       {isQuestionGridOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
           <div className="w-full max-w-2xl rounded-2xl border border-border bg-surface p-6 shadow-xl space-y-5">

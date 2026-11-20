@@ -17,6 +17,7 @@ interface TutorModePanelProps {
   hasSelectedAnswer: boolean;
   serializedAnswer: string | null;
   evaluation: TutorEvaluateResponseDto | null;
+  responseJson: string | null;
   onEvaluated: (result: TutorEvaluateResponseDto) => void;
 }
 
@@ -26,48 +27,82 @@ export function TutorModePanel({
   hasSelectedAnswer,
   serializedAnswer,
   evaluation,
+  responseJson,
   onEvaluated,
 }: TutorModePanelProps) {
   const [hints, setHints] = React.useState<TutorHintResponseDto[]>([]);
   const [loadingStage, setLoadingStage] = React.useState<TutorStage | "evaluate" | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [pendingHintStage, setPendingHintStage] = React.useState<TutorStage | null>(null);
+  const [isEvaluating, setIsEvaluating] = React.useState<boolean>(false);
+  const [storedResponse, setStoredResponse] = React.useState<string | null>(null);
 
-  // Reset per-question hint state whenever the active question changes
+  // Reset per-question hint state and stored response whenever the active question changes
   React.useEffect(() => {
     setHints([]);
     setLoadingStage(null);
     setError(null);
+    setPendingHintStage(null);
+    setStoredResponse(null);
   }, [questionId]);
 
+  // Restore stored response from session when component mounts
+  React.useEffect(() => {
+    if (responseJson) {
+      setStoredResponse(responseJson);
+    }
+  }, [responseJson]);
+
   const handleRequestHint = async (stage: TutorStage) => {
+    // Prevent concurrent hint requests
+    if (pendingHintStage !== null) return;
+    setPendingHintStage(stage);
     setLoadingStage(stage);
     setError(null);
-    const res = await nurviaApi.requestTutorHint(attemptId, { questionId, stage });
-    if (res.success && res.data) {
-      setHints((prev) => {
-        const filtered = prev.filter((h) => h.stage !== stage);
-        return [...filtered, res.data!];
-      });
-    } else {
-      setError(res.message || "Unable to load tutor hint.");
+    try {
+      const res = await nurviaApi.requestTutorHint(attemptId, { questionId, stage });
+      if (res.success && res.data) {
+        setHints((prev) => {
+          const filtered = prev.filter((h) => h.stage !== stage);
+          return [...filtered, res.data!];
+        });
+      } else {
+        setError(res.message || "Unable to load tutor hint.");
+      }
+    } catch {
+      setError("Unable to load tutor hint. Please try again.");
+    } finally {
+      setPendingHintStage(null);
+      setLoadingStage(null);
     }
-    setLoadingStage(null);
   };
 
   const handleEvaluate = async () => {
+    // If we already have a stored response, do not re-evaluate
+    if (storedResponse) return;
     if (!serializedAnswer) return;
+    if (isEvaluating) return;
+    setIsEvaluating(true);
     setLoadingStage("evaluate");
     setError(null);
-    const res = await nurviaApi.evaluateTutorAnswer(attemptId, {
-      questionId,
-      responseJson: serializedAnswer,
-    });
-    if (res.success && res.data) {
-      onEvaluated(res.data);
-    } else {
-      setError(res.message || "Unable to evaluate your answer.");
+    try {
+      const res = await nurviaApi.evaluateTutorAnswer(attemptId, {
+        questionId,
+        responseJson: serializedAnswer,
+      });
+      if (res.success && res.data) {
+        onEvaluated(res.data);
+        // Store the newly evaluated response so it persists across renders
+        setStoredResponse(serializedAnswer);
+      } else {
+        setError(res.message || "Unable to evaluate your answer.");
+      }
+    } catch {
+      setError("Unable to evaluate your answer. Please try again.");
+    } finally {
+      setIsEvaluating(false);
+      setLoadingStage(null);
     }
-    setLoadingStage(null);
   };
 
   return (
@@ -78,7 +113,12 @@ export function TutorModePanel({
           <span>Guided Tutor Mode</span>
         </div>
 
-        {!evaluation && (
+        {/* Show stored response if available, otherwise show hint/evaluate controls */}
+        {storedResponse ? (
+          <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-foreground-secondary">
+            <span>Answer stored: {storedResponse.substring(0, 50)}{storedResponse.length > 50 ? '…' : ''}</span>
+          </div>
+        ) : (
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
@@ -116,6 +156,7 @@ export function TutorModePanel({
             <Button
               type="button"
               size="sm"
+              variant="outline"
               disabled={!hasSelectedAnswer}
               isLoading={loadingStage === "evaluate"}
               onClick={() => void handleEvaluate()}
@@ -123,6 +164,12 @@ export function TutorModePanel({
             >
               Submit My Answer
             </Button>
+          </div>
+        )}
+
+        {!storedResponse && evaluation && (
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-foreground-muted"> Previously evaluated</span>
           </div>
         )}
       </div>

@@ -115,6 +115,7 @@ export interface StoredAttempt {
       stage: number;
       hintsRequested: TutorStage[];
       evaluated?: TutorEvaluateResponseDto;
+      responseJson?: string;
     }
   >;
 }
@@ -612,17 +613,16 @@ class AttemptStore {
     };
 
     if (!raw.tutorProgression[questionId]) {
-      raw.tutorProgression[questionId] = { stage: 4, hintsRequested: [] };
+      raw.tutorProgression[questionId] = { stage: 4, hintsRequested: [], responseJson: undefined };
     }
     raw.tutorProgression[questionId].stage = 4;
     raw.tutorProgression[questionId].evaluated = result;
+    raw.tutorProgression[questionId].responseJson = responseJson;
 
-    // Also persist the answer in savedResponses
-    raw.savedResponses[questionId] = {
-      responseJson,
-      isFlagged: false,
-      savedAtUtc: new Date().toISOString(),
-    };
+    // Tutor answers are persisted exclusively in tutorProgression; they must never
+    // be written to savedResponses (which is the examination response contract).
+    // The evaluation result and submitted response are already captured in
+    // raw.tutorProgression[questionId].
 
     return {
       success: true,
@@ -650,6 +650,7 @@ class AttemptStore {
         questionId: q.id,
         stageReached: prog?.stage || 1,
         evaluation: prog?.evaluated ?? null,
+        responseJson: prog?.responseJson ?? null,
       };
     });
 
@@ -683,7 +684,7 @@ class AttemptStore {
           scorePercentage: a.result?.scorePercentage,
           passingScorePercentage: a.result?.passingScorePercentage ?? a.passingScorePercentage,
           passed: a.result?.passed,
-          totalQuestions: a.questions.length,
+          totalQuestions: a.questions?.length ?? 0,
           totalCorrect: a.result?.correctQuestions,
           totalWrong: a.result?.totalWrong,
           totalAnswered: a.result?.totalAnswered,
@@ -695,7 +696,11 @@ class AttemptStore {
         });
       }
     }
-    return list.sort((x, y) => new Date(y.startedAtUtc).getTime() - new Date(x.startedAtUtc).getTime());
+    return list.sort((x, y) => {
+      const timeY = y.startedAtUtc ? new Date(y.startedAtUtc).getTime() : 0;
+      const timeX = x.startedAtUtc ? new Date(x.startedAtUtc).getTime() : 0;
+      return (Number.isFinite(timeY) ? timeY : 0) - (Number.isFinite(timeX) ? timeX : 0);
+    });
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
