@@ -27,6 +27,7 @@ import {
   inferExamCategory,
   inferExamDeliveryMode,
   inferExamPathway,
+  resolveAuthoritativeExamTitleAndDifficulty,
 } from '@/lib/api-client';
 import {
   cleanWordHtml,
@@ -167,24 +168,20 @@ export function resolveExamModePermissions(
   );
   const inferredDelivery = inferExamDeliveryMode((exam ?? {}) as Record<string, unknown>);
 
-  const allowReview =
-    exam?.allowReview === true ||
-    design?.reviewable === true ||
-    hasExplicitReviewMode;
+  const selectedMode = String((exam as Record<string, unknown>)?.selectedMode ?? '').toLowerCase();
+  const hasModeRestrictions = Array.isArray(modes) && modes.length > 0;
 
-  const canTutor =
-    hasExplicitTutorMode ||
-    inferredDelivery === 'Tutor' ||
-    inferredDelivery === 'Both' ||
-    inferredDelivery === 'All';
+  const canExam = hasModeRestrictions
+    ? enabledModes.some((m) => /exam/i.test(String(m.mode ?? '')))
+    : (inferredDelivery === 'All' || inferredDelivery === 'Both' || inferredDelivery === 'Exam');
 
-  const onlyExplicitReview =
-    enabledModes.length > 0 &&
-    enabledModes.every((m) => /review/i.test(String(m.mode ?? ''))) &&
-    !hasExplicitTutorMode;
+  const canReview = hasModeRestrictions
+    ? (hasExplicitReviewMode || exam?.allowReview === true || design?.reviewable === true)
+    : (selectedMode === 'review' || inferredDelivery === 'All' || inferredDelivery === 'Both' || inferredDelivery === 'Review');
 
-  const canExam = !onlyExplicitReview;
-  const canReview = allowReview;
+  const canTutor = hasModeRestrictions
+    ? (hasExplicitTutorMode || inferredDelivery === 'Tutor' || inferredDelivery === 'All')
+    : (selectedMode === 'tutor' || inferredDelivery === 'All' || inferredDelivery === 'Tutor');
 
   const allowLayoutSwitching = design?.allowLayoutSwitching !== false;
   const allowModeSwitching = design?.allowModeSwitching !== false && (canReview || canTutor);
@@ -196,13 +193,13 @@ export function resolveExamModePermissions(
     examReason: canExam ? undefined : 'This item is configured strictly as a Review-only resource.',
     reviewReason: canReview
       ? undefined
-      : 'Review mode is disabled by this examination’s backend configuration (allowReview is false).',
+      : 'Review mode is disabled by this examination’s backend configuration.',
     tutorReason: canTutor
       ? undefined
       : 'Tutor mode is not enabled for this examination by backend policy.',
     allowLayoutSwitching,
     allowModeSwitching,
-    reviewReleased: allowReview,
+    reviewReleased: canReview,
   };
 }
 
@@ -738,6 +735,7 @@ export async function fetchLiveExamFromBackend(
       : 75;
 
   const examRecord = exam as unknown as Record<string, unknown>;
+  const titleInfo = resolveAuthoritativeExamTitleAndDifficulty(examRecord);
   const modePermissions = resolveExamModePermissions(
     exam,
     firstSession.design,
@@ -749,7 +747,7 @@ export async function fetchLiveExamFromBackend(
     exam,
     examId: examGuidId,
     examNumericId: typeof exam.id === 'number' ? exam.id : undefined,
-    examTitle: cleanWordHtml(String(exam.title || 'NURVIA Examination')),
+    examTitle: cleanWordHtml(String(titleInfo.title || exam.title || 'NURVIA Examination')),
     pathway: inferExamPathway(examRecord),
     examCategory: inferExamCategory(examRecord),
     instructions: cleanWordHtml(
@@ -781,7 +779,8 @@ export async function fetchLiveExamFromBackend(
 export async function ensureAttemptLoaded(
   learner: { userId: string; session: CastoSessionCredentials },
   attemptId: string,
-  siteMeta?: LexmaCastoRequestOptions['siteMeta']
+  siteMeta?: LexmaCastoRequestOptions['siteMeta'],
+  preferredMode?: 'Exam' | 'Tutor'
 ): Promise<
   | { ok: true; attempt: StoredAttempt }
   | { ok: false; status: number; message: string; errorCode: string }
@@ -865,6 +864,8 @@ export async function ensureAttemptLoaded(
         : new Date().toISOString();
 
   const inferredDelivery = inferExamDeliveryMode(loaded.exam as unknown as Record<string, unknown>);
+  const deliveryMode: 'Exam' | 'Tutor' =
+    preferredMode === 'Tutor' || inferredDelivery === 'Tutor' ? 'Tutor' : 'Exam';
 
   const storedAttempt: StoredAttempt = {
     attemptId,
@@ -874,7 +875,7 @@ export async function ensureAttemptLoaded(
     pathway: loaded.pathway,
     examCategory: loaded.examCategory,
     userId: learner.userId,
-    deliveryMode: inferredDelivery === 'Tutor' ? 'Tutor' : 'Exam',
+    deliveryMode,
     layoutMode:
       loaded.allowedLayouts === 'AllInOneOnly' ? 'AllInOne' : 'Sequential',
     allowedLayouts: loaded.allowedLayouts,
@@ -897,9 +898,17 @@ export async function ensureAttemptLoaded(
   attemptStore.setAttempt(storedAttempt);
 
   const isBackendCompleted =
-    completedResultRecord &&
-    (/complet|grad|submit/i.test(String(completedResultRecord.status ?? '')) ||
-      Boolean(completedResultRecord.reviewedAt));
+    completedResultRecord != null &&
+    (
+      Boolean(completedResultRecord.reviewedAt) ||
+      Boolean(completedResultRecord.submittedAt) ||
+      completedResultRecord.isAttempted === true ||
+      typeof completedResultRecord.score === 'number' ||
+      typeof completedResultRecord.percentageScore === 'number' ||
+      typeof completedResultRecord.scorePercentage === 'number' ||
+      typeof completedResultRecord.passed === 'boolean' ||
+      /complet|grad|submit|finish|pass|attempt|done/i.test(String(completedResultRecord.status ?? ''))
+    );
 
   if (isBackendCompleted) {
     attemptStore.submitAttempt(learner.userId, attemptId);
