@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       },
       { status: result.status, headers: NO_STORE_HEADERS }
     );
-    if (result.status === 401) {
+    if (result.status === 401 || result.status >= 500) {
       clearServerCastoSession(response);
     }
     return response;
