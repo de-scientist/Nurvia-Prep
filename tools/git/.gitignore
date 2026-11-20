@@ -5,6 +5,7 @@ integration-state.json
 integration-log.txt
 integration-results.json
 integration-results-wave1.json
+integration-results-wave3.json
 baseline-validation.json
 baseline-run-log.txt
 last-validate-out.txt

@@ -24,9 +24,10 @@ $excluded = New-Object System.Collections.Generic.List[string]
 
 # Files deliberately held out of the commit units (never modified, never deleted - they stay
 # on disk uncommitted and are reported in the final report's excluded/remaining inventory).
-# docs/development/git-workflow.md line 99 trips the DB-CONNECTION rule with the literal
-# documentation placeholder `postgres://user:pass@host/db`; it documents the audit's own
-# rule #6 and contains no real credential. Verified: user segment "user", secret "pass".
+# docs/development/git-workflow.md line 99 trips the DB-CONNECTION rule with a literal
+# documentation placeholder of the form `scheme://user:pass@host/db` (real db scheme in the
+# file); it documents the audit's own rule #6 and contains no real credential.
+# Verified: user segment "user", secret segment "pass".
 $forceExclude = @('docs/development/git-workflow.md')
 
 foreach ($e in $entries) {
