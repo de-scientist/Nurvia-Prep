@@ -21,7 +21,6 @@ import {
   BrainCircuit,
   CheckCircle2,
   Clock,
-  HeartPulse,
   Search,
   Sparkles,
   Star,
@@ -48,10 +47,10 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = React.useState<string>("All");
   const { status, user } = useAuth();
   const startHref = status === "authenticated" && user?.role === "Learner"
-    ? "/learner/exams"
+    ? "/learner/library"
     : status === "authenticated"
       ? "/access-denied"
-    : "/sign-up?returnTo=%2Flearner%2Fexams";
+    : "/sign-up?returnTo=%2Flearner%2Flibrary";
 
   const categories = [
     "All",
@@ -191,7 +190,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-            {/* Left Featured Card: ATI Exams */}
+            {/* Left Featured Card: RN Exams */}
             <div className="rounded-2xl border border-border/80 bg-surface p-7 sm:p-8 flex flex-col justify-between space-y-6 shadow-xs hover:border-brand-teal/50 transition-all">
               <div className="space-y-4">
                 <div className="flex items-center gap-3.5">
@@ -200,7 +199,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h3 className="font-brand text-2xl font-bold text-foreground">
-                      ATI Exams
+                      RN Exams
                     </h3>
                     <p className="text-xs font-semibold text-brand-teal">
                       From Fundamentals to Predictor
@@ -209,7 +208,7 @@ export default function HomePage() {
                 </div>
 
                 <p className="text-sm text-foreground-secondary leading-relaxed">
-                  Follow your ATI course sequence, sharpen clinical judgment, and use each rationale to understand the decision behind the answer.
+                  Follow your nursing course sequence, sharpen clinical judgment, and use each rationale to understand the decision behind the answer.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
@@ -225,24 +224,66 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <Link href="/exams?category=ATI" className="w-full block pt-2">
+              <Link href="/learner/library?track=RN" className="w-full block pt-2">
                 <Button className="w-full h-11 text-sm font-semibold bg-brand-navy hover:bg-brand-navyDeep text-white dark:bg-brand-teal dark:hover:bg-brand-tealDark justify-center gap-1.5">
-                  <span>Open ATI Practice</span>
+                  <span>Start RN Practice</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
             </div>
 
-            {/* Right Featured Card: HESI & Exit Exams */}
+            {/* Right Featured Card: LPN Exams */}
             <div className="rounded-2xl border border-border/80 bg-surface p-7 sm:p-8 flex flex-col justify-between space-y-6 shadow-xs hover:border-brand-teal/50 transition-all">
               <div className="space-y-4">
                 <div className="flex items-center gap-3.5">
                   <div className="w-12 h-12 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center">
-                    <HeartPulse className="w-6 h-6" />
+                    <Stethoscope className="w-6 h-6" />
                   </div>
                   <div>
                     <h3 className="font-brand text-2xl font-bold text-foreground">
-                      HESI & Exit Exams
+                      LPN Exams
+                    </h3>
+                    <p className="text-xs font-semibold text-brand-teal">
+                      From Fundamentals to Predictor
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-sm text-foreground-secondary leading-relaxed">
+                  Follow your nursing course sequence, sharpen clinical judgment, and use each rationale to understand the decision behind the answer.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                  <span className="px-3 py-1 rounded-full bg-surface-muted text-foreground-secondary font-medium">
+                    • Course-aligned practice
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-surface-muted text-foreground-secondary font-medium">
+                    • NGN included
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-surface-muted text-foreground-secondary font-medium">
+                    • Full rationales
+                  </span>
+                </div>
+              </div>
+
+              <Link href="/learner/library?track=PN_LPN" className="w-full block pt-2">
+                <Button className="w-full h-11 text-sm font-semibold bg-brand-navy hover:bg-brand-navyDeep text-white dark:bg-brand-teal dark:hover:bg-brand-tealDark justify-center gap-1.5">
+                  <span>Start LPN Practice</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+
+            {/* Left Featured Card: RN Exit Exams */}
+            <div className="rounded-2xl border border-border/80 bg-surface p-7 sm:p-8 flex flex-col justify-between space-y-6 shadow-xs hover:border-brand-teal/50 transition-all">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center">
+                    <BookOpen className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-brand text-2xl font-bold text-foreground">
+                      RN Exit Exams
                     </h3>
                     <p className="text-xs font-semibold text-brand-teal">
                       Specialty and exit-exam practice
@@ -251,13 +292,10 @@ export default function HomePage() {
                 </div>
 
                 <p className="text-sm text-foreground-secondary leading-relaxed">
-                  Prepare by specialty or rehearse the full exit-exam experience, then review the reasoning behind every answer you submit.
+                  Prepare sit for the NCLEX RN Exit exam, rehearse the full exit-exam experience, then review the reasoning behind every answer you submit.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-                  <span className="px-3 py-1 rounded-full bg-surface-muted text-foreground-secondary font-medium">
-                    • Specialty practice
-                  </span>
                   <span className="px-3 py-1 rounded-full bg-surface-muted text-foreground-secondary font-medium">
                     • Exit exam banks
                   </span>
@@ -267,9 +305,48 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <Link href="/exams?category=HESI" className="w-full block pt-2">
+              <Link href="/learner/library?track=RN_Exit" className="w-full block pt-2">
                 <Button className="w-full h-11 text-sm font-semibold bg-brand-navy hover:bg-brand-navyDeep text-white dark:bg-brand-teal dark:hover:bg-brand-tealDark justify-center gap-1.5">
-                  <span>Open HESI Practice</span>
+                  <span>Start RN Exit Practice</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+
+            {/* Right Featured Card: LPN Exit Exams */}
+            <div className="rounded-2xl border border-border/80 bg-surface p-7 sm:p-8 flex flex-col justify-between space-y-6 shadow-xs hover:border-brand-teal/50 transition-all">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center">
+                    <BookOpen className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-brand text-2xl font-bold text-foreground">
+                      LPN Exit Exams
+                    </h3>
+                    <p className="text-xs font-semibold text-brand-teal">
+                      Specialty and exit-exam practice
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-sm text-foreground-secondary leading-relaxed">
+                  Prepare sit for the NCLEX PN Exit exam, rehearse the full exit-exam experience, then review the reasoning behind every answer you submit.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                  <span className="px-3 py-1 rounded-full bg-surface-muted text-foreground-secondary font-medium">
+                    • Exit exam banks
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-surface-muted text-foreground-secondary font-medium">
+                    • Review • Exam • Tutor
+                  </span>
+                </div>
+              </div>
+
+              <Link href="/learner/library?track=PN_Exit" className="w-full block pt-2">
+                <Button className="w-full h-11 text-sm font-semibold bg-brand-navy hover:bg-brand-navyDeep text-white dark:bg-brand-teal dark:hover:bg-brand-tealDark justify-center gap-1.5">
+                  <span>Start LPN Exit Practice</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
