@@ -270,7 +270,7 @@ export function StudyLibraryView({
 
   return (
     <div className="space-y-6">
-      <StudyLibraryHeader isPublic={isPublic} summary={summary} />
+      <StudyLibraryHeader isPublic={isPublic} summary={summary} selectedPathway={pathway} selectedSubject={advanced.subject} />
 
       <StudyLibrarySearch
         value={searchInput}

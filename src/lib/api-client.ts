@@ -1235,15 +1235,32 @@ export const nurviaApi = {
     }
 
     // Exclude NCLEX, pre-nursing admissions, and unrelated subjects
+    const excludedProgramIds = new Set([7, 8, 3, 5, 13])
     const rawSubjects = (subjectsRes.success && subjectsRes.data ? subjectsRes.data.items : []).filter((sub: Record<string, any>) => {
       const name = String(sub.name ?? sub.title ?? '').trim();
       if (/nclex|ged|teas|hesi|explicit/i.test(name)) return false;
       const cId = sub.courseId ? String(sub.courseId) : '';
       const c = cId ? coursesMap.get(cId) : undefined;
       const pId = Number(sub.programId ?? c?.programId ?? 0);
-      if (pId === 7 || pId === 8 || pId === 3 || pId === 5 || pId === 13) return false;
+      if (excludedProgramIds.has(pId)) return false;
       return true;
     });
+
+    // Build a map of authoritative subject IDs for canonical grouping
+    // This ensures we correctly identify shared subjects across RN and PN pathways
+    const authoritativeSubjectMap = new Map<string, Record<string, any>>()
+    for (const sub of rawSubjects) {
+      const subId = String(sub.id ?? sub.guidId ?? '').trim().toLowerCase()
+      const subName = String(sub.name ?? sub.title ?? '').trim().toLowerCase()
+      if (subId && !authoritativeSubjectMap.has(subId)) {
+        authoritativeSubjectMap.set(subId, sub)
+      }
+      // Also map by cleaned display name for variant merging
+      const cleanedName = cleanSubjectDisplayName(String(sub.name ?? sub.title ?? '')).toLowerCase()
+      if (cleanedName && !authoritativeSubjectMap.has(cleanedName)) {
+        authoritativeSubjectMap.set(cleanedName, sub)
+      }
+    }
 
     const fallbackSubjects: Array<Record<string, any>> = [
       { id: 'subj-pharm', name: 'Pharmacology & Parenteral Therapies', pathway: 'RN', category: 'ATI', courseName: 'Pharmacology', programName: 'RN Nursing Exams', year: 2026, season: 'Fall', difficulty: 'Intermediate', description: 'High-yield drug classifications, therapeutic ranges, critical adverse reactions, toxicities, and antidotes.' },
@@ -1327,7 +1344,23 @@ export const nurviaApi = {
         const itemTitle = String(ex.title ?? '').toLowerCase();
         const itemDesc = String(ex.description ?? '').toLowerCase();
         const itemAssess = String(ex.assessmentName ?? '').toLowerCase();
+        const itemCourse = String(ex.courseId ?? '').toLowerCase();
         const text = `${itemSub} ${itemTitle} ${itemDesc} ${itemAssess}`;
+
+        // First, try course-based matching (most reliable)
+        if (courseName && itemCourse.includes(courseName.toLowerCase())) {
+          return true;
+        }
+
+        // Then, try subject ID-based matching using authoritative map
+        const primarySubId = String(primarySub.id ?? primarySub.guidId ?? '').trim().toLowerCase();
+        if (primarySubId && (itemSub.includes(primarySubId) || itemTitle.includes(primarySubId))) {
+          return true;
+        }
+
+        // Fall back to cleaned subject name matching
+        const cleanSub = subjectName.replace(/\([^)]*\)/g, '').replace(/[-–—]/g, ' ').trim().toLowerCase();
+        const subTokens = cleanSub.split(/\s+/).filter((t: string) => t.length > 2);
 
         return itemSub.includes(cleanSub) || text.includes(cleanSub) || (subTokens.length > 0 && subTokens.every((tok: string) => text.includes(tok)));
       });

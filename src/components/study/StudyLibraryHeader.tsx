@@ -7,9 +7,11 @@ import type { StudyLibrarySummaryDto } from "@/lib/api-types";
 interface StudyLibraryHeaderProps {
   isPublic?: boolean;
   summary: StudyLibrarySummaryDto | null;
+  selectedPathway?: string;
+  selectedSubject?: string;
 }
 
-export function StudyLibraryHeader({ isPublic = false, summary }: StudyLibraryHeaderProps) {
+export function StudyLibraryHeader({ isPublic = false, summary, selectedPathway, selectedSubject }: StudyLibraryHeaderProps) {
   return (
     <header className="flex flex-col gap-4 border-b border-border pb-6 lg:flex-row lg:items-end lg:justify-between">
       <div className="space-y-1.5">
@@ -23,6 +25,19 @@ export function StudyLibraryHeader({ isPublic = false, summary }: StudyLibraryHe
           Discover examinations, practice questions and curated learning resources.
         </p>
       </div>
+
+      {selectedSubject && (
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-2">
+          <h2 className="font-semibold text-foreground">
+            {selectedSubject}
+          </h2>
+          {selectedPathway && (
+            <span className="text-xs font-medium text-brand-teal">
+              {selectedPathway.replace("_", " ")} (RN)
+            </span>
+          )}
+        </div>
+      )}
 
       {summary && (
         <div className="flex flex-wrap items-center gap-3" aria-label="Live catalog statistics">

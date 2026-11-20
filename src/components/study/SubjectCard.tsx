@@ -159,13 +159,13 @@ export function SubjectCard({
         )}
       </div>
 
-      {/* Primary Action Button with Unified RN / PN Selection */}
+      {/* Primary Action Button with Unified Subject Navigation */}
       <div className="relative pt-2" ref={menuRef}>
         {hasMultiplePathways && hasExams ? (
           <div className="flex w-full rounded-lg shadow-sm">
             <Button
               type="button"
-              onClick={() => onSelectSubject(subject.title, "RN")}
+              onClick={() => onSelectSubject(subject.title, subject.pathway)}
               className="flex-1 flex items-center justify-center gap-2 rounded-r-none"
             >
               <span>Explore Subject</span>
