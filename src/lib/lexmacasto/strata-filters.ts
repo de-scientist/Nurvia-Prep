@@ -92,9 +92,9 @@ export async function fetchStrataFilterOptions(): Promise<StrataHierarchyFilters
   return {
     pathways: [],
     categories: [],
-    schools: schoolItems.map(extractDisplayName).filter(Boolean),
+    schools: Array.from(new Set(schoolItems.map(extractDisplayName).filter(Boolean))),
     academicYears: Array.from(yearSet).sort((a, b) => b - a),
-    subjects: subjectItems.map(extractDisplayName).filter(Boolean),
+    subjects: Array.from(new Set(subjectItems.map(extractDisplayName).filter(Boolean))),
     seasons: Array.from(seasonSet),
     exams: examItems
       .map((ex) => ({
@@ -104,40 +104,40 @@ export async function fetchStrataFilterOptions(): Promise<StrataHierarchyFilters
         pathway: typeof ex.pathway === 'string' ? ex.pathway : 'RN',
         category: typeof ex.category === 'string' ? ex.category : 'Assessment',
       }))
-      .filter((ex) => ex.id && ex.title),
-    topics: topicItems.map(extractDisplayName).filter(Boolean),
+      .filter((ex, idx, arr) => ex.id && ex.title && arr.findIndex((x) => x.id === ex.id) === idx),
+    topics: Array.from(new Set(topicItems.map(extractDisplayName).filter(Boolean))),
     difficulties: Array.from(difficultySet) as StudyLibraryFiltersDto['difficulties'],
     questionTypes: [],
     institutions: institutionItems
       .map((item) => ({ id: extractId(item), name: extractDisplayName(item) }))
-      .filter((i) => i.id && i.name),
+      .filter((i, idx, arr) => i.id && i.name && arr.findIndex((x) => x.id === i.id) === idx),
     programs: programItems
       .map((item) => ({
         id: extractId(item),
         name: extractDisplayName(item),
         domainId: item.domainId ? String(item.domainId) : undefined,
       }))
-      .filter((i) => i.id && i.name),
+      .filter((i, idx, arr) => i.id && i.name && arr.findIndex((x) => x.id === i.id) === idx),
     courses: courseItems
       .map((item) => ({
         id: extractId(item),
         name: extractDisplayName(item),
         programId: item.programId ? String(item.programId) : undefined,
       }))
-      .filter((i) => i.id && i.name),
+      .filter((i, idx, arr) => i.id && i.name && arr.findIndex((x) => x.id === i.id) === idx),
     cohorts: cohortItems
       .map((item) => ({
         id: extractId(item),
         name: extractDisplayName(item),
         divisionId: item.divisionId ? String(item.divisionId) : undefined,
       }))
-      .filter((i) => i.id && i.name),
+      .filter((i, idx, arr) => i.id && i.name && arr.findIndex((x) => x.id === i.id) === idx),
     classes: classItems
       .map((item) => ({
         id: extractId(item),
         name: extractDisplayName(item),
         cohortId: item.cohortId ? String(item.cohortId) : undefined,
       }))
-      .filter((i) => i.id && i.name),
+      .filter((i, idx, arr) => i.id && i.name && arr.findIndex((x) => x.id === i.id) === idx),
   };
 }

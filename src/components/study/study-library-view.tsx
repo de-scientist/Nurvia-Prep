@@ -2,12 +2,14 @@
 
 import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { nurviaApi } from "@/lib/api-client";
 import type {
   StudyLibraryFiltersDto,
   StudyLibrarySummaryDto,
   StudySetCardDto,
+  SubjectCardDto,
 } from "@/lib/api-types";
 import {
   StudyLibraryAdvancedFilters,
@@ -23,6 +25,7 @@ import {
   StudyLibraryResultsHeader,
 } from "./StudyLibraryStates";
 import { StudySetCard } from "./StudySetCard";
+import { SubjectCard } from "./SubjectCard";
 import { useFeedback } from "@/lib/feedback/feedback-context";
 
 interface StudyLibraryViewProps {
@@ -41,6 +44,8 @@ const DEFAULT_ADVANCED: AdvancedFilterState = {
   difficulty: "",
   questionType: "",
   savedOnly: false,
+  program: "",
+  course: "",
 };
 
 const PAGE_SIZE = 12;
@@ -71,11 +76,14 @@ export function StudyLibraryView({
     difficulty: searchParams?.get("difficulty") || "",
     questionType: searchParams?.get("questionType") || "",
     savedOnly: searchParams?.get("saved") === "true",
+    program: searchParams?.get("program") || "",
+    course: searchParams?.get("course") || "",
   });
   const [pageNumber, setPageNumber] = React.useState<number>(
     Math.max(1, Number(searchParams?.get("page") || "1") || 1)
   );
 
+  const [subjects, setSubjects] = React.useState<SubjectCardDto[]>([]);
   const [studySets, setStudySets] = React.useState<StudySetCardDto[]>([]);
   const [totalCount, setTotalCount] = React.useState(0);
   const [totalPages, setTotalPages] = React.useState(1);
@@ -86,6 +94,8 @@ export function StudyLibraryView({
   const [error, setError] = React.useState<string | null>(null);
   const [retryCount, setRetryCount] = React.useState(0);
   const { showSuccess, showError, showInfo } = useFeedback();
+
+  const isExamView = Boolean(advanced.subject || advanced.examId);
 
   // Debounce search input
   React.useEffect(() => {
@@ -141,52 +151,74 @@ export function StudyLibraryView({
     if (advanced.difficulty) params.set("difficulty", advanced.difficulty);
     if (advanced.questionType) params.set("questionType", advanced.questionType);
     if (advanced.savedOnly) params.set("saved", "true");
+    if (advanced.program) params.set("program", advanced.program);
+    if (advanced.course) params.set("course", advanced.course);
     if (pageNumber > 1) params.set("page", String(pageNumber));
 
     const qs = params.toString();
     const nextUrl = qs ? `${pathname}?${qs}` : pathname;
     router.replace(nextUrl, { scroll: false });
-  }, [pathname, router, pathway, category, debouncedSearch, advanced, pageNumber]);
+  }, [pathname, router, pathway, category, debouncedSearch, advanced, pageNumber, initialTrack]);
 
-  // Fetch paginated study sets from backend
+  // Fetch paginated subjects (subject-first catalogue) or examinations
   React.useEffect(() => {
     let active = true;
     setLoading(true);
     setError(null);
 
-    void nurviaApi
-      .getStudyLibrary({
-        pathway: pathway === "All" ? undefined : pathway,
-        category: category === "All" ? undefined : category,
-        searchTerm: debouncedSearch.trim() || undefined,
-        school: advanced.school || undefined,
-        academicYear: advanced.academicYear ? Number(advanced.academicYear) : undefined,
-        subject: advanced.subject || undefined,
-        season: advanced.season || undefined,
-        examId: advanced.examId || undefined,
-        topic: advanced.topic || undefined,
-        difficulty: advanced.difficulty || undefined,
-        questionType: advanced.questionType || undefined,
-        savedOnly: advanced.savedOnly || undefined,
-        pageNumber,
-        pageSize: PAGE_SIZE,
-      })
-      .then((response) => {
-        if (!active) return;
-        if (!response.success || !response.data) {
-          setError(response.message || "Unable to load published study sets.");
-        } else {
-          setStudySets(response.data.items);
-          setTotalCount(response.data.totalCount);
-          setTotalPages(Math.max(1, response.data.totalPages || Math.ceil(response.data.totalCount / PAGE_SIZE)));
-        }
-        setLoading(false);
-      });
+    const queryParams = {
+      pathway: pathway === "All" ? undefined : pathway,
+      category: category === "All" ? undefined : category,
+      searchTerm: debouncedSearch.trim() || undefined,
+      school: advanced.school || undefined,
+      academicYear: advanced.academicYear ? Number(advanced.academicYear) : undefined,
+      subject: advanced.subject || undefined,
+      season: advanced.season || undefined,
+      examId: advanced.examId || undefined,
+      topic: advanced.topic || undefined,
+      difficulty: advanced.difficulty || undefined,
+      questionType: advanced.questionType || undefined,
+      savedOnly: advanced.savedOnly || undefined,
+      program: advanced.program || undefined,
+      course: advanced.course || undefined,
+      pageNumber,
+      pageSize: PAGE_SIZE,
+    };
+
+    if (isExamView) {
+      void nurviaApi
+        .getStudyLibrary(queryParams)
+        .then((response) => {
+          if (!active) return;
+          if (!response.success || !response.data) {
+            setError(response.message || "Unable to load examinations for this subject.");
+          } else {
+            setStudySets(response.data.items);
+            setTotalCount(response.data.totalCount);
+            setTotalPages(Math.max(1, response.data.totalPages || Math.ceil(response.data.totalCount / PAGE_SIZE)));
+          }
+          setLoading(false);
+        });
+    } else {
+      void nurviaApi
+        .getStudyLibrarySubjects(queryParams)
+        .then((response) => {
+          if (!active) return;
+          if (!response.success || !response.data) {
+            setError(response.message || "Unable to load published subjects.");
+          } else {
+            setSubjects(response.data.items);
+            setTotalCount(response.data.totalCount);
+            setTotalPages(Math.max(1, response.data.totalPages || Math.ceil(response.data.totalCount / PAGE_SIZE)));
+          }
+          setLoading(false);
+        });
+    }
 
     return () => {
       active = false;
     };
-  }, [pathway, category, debouncedSearch, advanced, pageNumber, retryCount]);
+  }, [pathway, category, debouncedSearch, advanced, pageNumber, retryCount, isExamView]);
 
   const handleToggleSave = async (studySet: StudySetCardDto) => {
     const nextSaved = !studySet.isSaved;
@@ -214,7 +246,11 @@ export function StudyLibraryView({
     setCategory("All");
     setSearchInput("");
     setDebouncedSearch("");
-    setAdvanced(DEFAULT_ADVANCED);
+    setAdvanced({
+      ...DEFAULT_ADVANCED,
+      program: "",
+      course: "",
+    });
     setPageNumber(1);
   };
 
@@ -272,18 +308,99 @@ export function StudyLibraryView({
         value={advanced}
         isPublic={isPublic}
         onChange={(patch) => {
-          setAdvanced((prev) => ({ ...prev, ...patch }));
+          setAdvanced((prev) => {
+            const next = { ...prev, ...patch };
+            // Cascading: clear downstream filters when upstream changes
+            // Hierarchy: GLOBAL -> PROGRAM -> COURSE -> SUBJECT -> YEAR -> SEASON -> SCHOOL -> EXAM
+            if ("program" in patch && patch.program !== prev.program) {
+              next.course = "";
+              next.subject = "";
+              next.academicYear = "";
+              next.season = "";
+              next.school = "";
+              next.topic = "";
+              next.examId = "";
+            } else if ("course" in patch && patch.course !== prev.course) {
+              next.subject = "";
+              next.academicYear = "";
+              next.season = "";
+              next.school = "";
+              next.topic = "";
+              next.examId = "";
+            } else if ("subject" in patch && patch.subject !== prev.subject) {
+              next.academicYear = "";
+              next.season = "";
+              next.school = "";
+              next.topic = "";
+              next.examId = "";
+            } else if ("academicYear" in patch && patch.academicYear !== prev.academicYear) {
+              next.season = "";
+              next.school = "";
+              next.topic = "";
+              next.examId = "";
+            } else if ("season" in patch && patch.season !== prev.season) {
+              next.school = "";
+              next.topic = "";
+              next.examId = "";
+            } else if ("school" in patch && patch.school !== prev.school) {
+              next.examId = "";
+            }
+            return next;
+          });
           setPageNumber(1);
         }}
         onClearAll={handleClearAllFilters}
       />
 
+      {/* Subject-to-Examination Breadcrumb Context Banner */}
+      {isExamView && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-teal/30 bg-surface p-4 shadow-sm">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2 text-xs text-foreground-muted">
+              <button
+                type="button"
+                onClick={() => {
+                  setAdvanced((prev) => ({ ...prev, subject: "", examId: "" }));
+                  setPageNumber(1);
+                }}
+                className="font-medium hover:text-brand-teal hover:underline flex items-center gap-1"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+                Subject Catalogue
+              </button>
+              <span>/</span>
+              <span className="font-semibold text-foreground truncate max-w-xs sm:max-w-md">
+                {advanced.subject || "Selected Examination"}
+              </span>
+            </div>
+            <h2 className="font-brand text-lg font-bold text-foreground">
+              {advanced.subject ? `Examinations in ${advanced.subject}` : "Examination Practice Sets"}
+            </h2>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setAdvanced((prev) => ({ ...prev, subject: "", examId: "" }));
+              setPageNumber(1);
+            }}
+            className="rounded-lg"
+          >
+            <ChevronLeft className="mr-1.5 h-4 w-4 text-brand-teal" />
+            Back to Subject Catalogue
+          </Button>
+        </div>
+      )}
+
       {!loading && !error && (
         <StudyLibraryResultsHeader
-          shownCount={studySets.length}
+          shownCount={isExamView ? studySets.length : subjects.length}
           totalCount={totalCount}
           pageNumber={pageNumber}
           totalPages={totalPages}
+          itemLabel={isExamView ? "examination" : "subject"}
         />
       )}
 
@@ -301,14 +418,23 @@ export function StudyLibraryView({
         </div>
       )}
 
-      {!loading && !error && studySets.length === 0 && (
+      {!loading && !error && isExamView && studySets.length === 0 && (
         <StudyLibraryEmptyState
           hasActiveFilters={hasActiveFilters}
           onClearFilters={handleClearAllFilters}
+          itemLabel="examinations"
         />
       )}
 
-      {!loading && !error && studySets.length > 0 && (
+      {!loading && !error && !isExamView && subjects.length === 0 && (
+        <StudyLibraryEmptyState
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={handleClearAllFilters}
+          itemLabel="subjects"
+        />
+      )}
+
+      {!loading && !error && isExamView && studySets.length > 0 && (
         <>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {studySets.map((studySet) => (
@@ -318,6 +444,30 @@ export function StudyLibraryView({
                 isPublic={isPublic}
                 onToggleSave={handleToggleSave}
                 onNotify={(msg) => showInfo(msg)}
+              />
+            ))}
+          </div>
+
+          <StudyLibraryPagination
+            pageNumber={pageNumber}
+            totalPages={totalPages}
+            onPageChange={setPageNumber}
+          />
+        </>
+      )}
+
+      {!loading && !error && !isExamView && subjects.length > 0 && (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {subjects.map((subject) => (
+              <SubjectCard
+                key={subject.id}
+                subject={subject}
+                isPublic={isPublic}
+                onSelectSubject={(subjectName) => {
+                  setAdvanced((prev) => ({ ...prev, subject: subjectName, examId: "" }));
+                  setPageNumber(1);
+                }}
               />
             ))}
           </div>

@@ -32,20 +32,22 @@ export function StudyLibraryLoadingState() {
 export function StudyLibraryEmptyState({
   hasActiveFilters,
   onClearFilters,
+  itemLabel = "study sets",
 }: {
   hasActiveFilters: boolean;
   onClearFilters: () => void;
+  itemLabel?: string;
 }) {
   return (
     <Card className="flex flex-col items-center justify-center p-10 text-center">
       <SearchX className="h-10 w-10 text-foreground-muted" aria-hidden="true" />
       <h2 className="mt-3 font-brand text-lg font-bold text-foreground">
-        No published study sets match your criteria
+        No published {itemLabel} match your criteria
       </h2>
       <p className="mt-1 max-w-md text-sm text-foreground-secondary">
         {hasActiveFilters
           ? "Try adjusting your search keywords or clearing one or more academic filters."
-          : "Published study sets and examinations will appear here once released."}
+          : `Published ${itemLabel} will appear here once released.`}
       </p>
       {hasActiveFilters && (
         <Button type="button" variant="outline" size="sm" onClick={onClearFilters} className="mt-4">
@@ -61,18 +63,21 @@ export function StudyLibraryResultsHeader({
   totalCount,
   pageNumber,
   totalPages,
+  itemLabel = "study set",
 }: {
   shownCount: number;
   totalCount: number;
   pageNumber: number;
   totalPages: number;
+  itemLabel?: string;
 }) {
+  const plural = totalCount === 1 ? itemLabel : `${itemLabel}s`;
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-foreground-muted" aria-live="polite">
       <p>
         Showing <span className="font-semibold text-foreground">{shownCount}</span> of{" "}
-        <span className="font-semibold text-foreground">{totalCount}</span> published study{" "}
-        {totalCount === 1 ? "set" : "sets"}
+        <span className="font-semibold text-foreground">{totalCount}</span> published{" "}
+        {plural}
       </p>
       {totalPages > 1 && (
         <p>

@@ -1,4 +1,4 @@
-﻿import {
+import {
   ApiResponse,
   PagedResult,
   QuestionDto,
@@ -787,6 +787,8 @@ export const nurviaApi = {
 
     const reqPathway = typeof params?.pathway === 'string' && params.pathway.trim() ? params.pathway.trim().toLowerCase() : null;
     const reqCategory = typeof params?.category === 'string' && params.category.trim() ? params.category.trim().toLowerCase() : null;
+    const reqProgram = typeof params?.program === 'string' && params.program.trim() ? params.program.trim().toLowerCase() : null;
+    const reqCourse = typeof params?.course === 'string' && params.course.trim() ? params.course.trim().toLowerCase() : null;
     const reqSchool = typeof params?.school === 'string' && params.school.trim() ? params.school.trim().toLowerCase() : null;
     const reqSubject = typeof params?.subject === 'string' && params.subject.trim() ? params.subject.trim().toLowerCase() : null;
     const reqTopic = typeof params?.topic === 'string' && params.topic.trim() ? params.topic.trim().toLowerCase() : null;
@@ -798,6 +800,8 @@ export const nurviaApi = {
     const hasLocalFilter = Boolean(
       reqPathway ||
       reqCategory ||
+      reqProgram ||
+      reqCourse ||
       reqSchool ||
       reqSubject ||
       reqTopic ||
@@ -849,13 +853,36 @@ export const nurviaApi = {
           const itemCat = String(item.category ?? item.type ?? item.assessmentName ?? '').trim().toLowerCase();
           if (inferredCat !== reqCategory && !itemCat.includes(reqCategory)) return false;
         }
+        if (reqProgram) {
+          const itemProg = String(item.program ?? item.programName ?? item.programId ?? '').trim().toLowerCase();
+          if (itemProg !== reqProgram && !itemProg.includes(reqProgram)) return false;
+        }
+        if (reqCourse) {
+          const itemCourse = String(item.course ?? item.courseName ?? item.courseId ?? '').trim().toLowerCase();
+          if (itemCourse !== reqCourse && !itemCourse.includes(reqCourse)) return false;
+        }
         if (reqSchool) {
           const itemSchool = String(item.school ?? item.schoolName ?? '').trim().toLowerCase();
-          if (itemSchool !== reqSchool) return false;
+          const itemTitle = String(item.title ?? '').toLowerCase();
+          const itemDesc = String(item.description ?? '').toLowerCase();
+          if (itemSchool !== reqSchool && !itemTitle.includes(reqSchool) && !itemDesc.includes(reqSchool)) {
+            return false;
+          }
         }
         if (reqSubject) {
           const itemSubject = String(item.subject ?? item.subjectName ?? '').trim().toLowerCase();
-          if (itemSubject !== reqSubject) return false;
+          const itemTitle = String(item.title ?? '').toLowerCase();
+          const itemDesc = String(item.description ?? '').toLowerCase();
+          const itemAssess = String(item.assessmentName ?? '').toLowerCase();
+          const text = `${itemSubject} ${itemTitle} ${itemDesc} ${itemAssess}`;
+
+          const cleanSubject = reqSubject.replace(/\([^)]*\)/g, '').replace(/[-–—]/g, ' ').trim().toLowerCase();
+          const subjectTokens = cleanSubject.split(/\s+/).filter((t) => t.length > 2);
+
+          const directMatch = itemSubject.length > 0 && (itemSubject === reqSubject || itemSubject.includes(cleanSubject));
+          const textMatch = text.includes(cleanSubject) || (subjectTokens.length > 0 && subjectTokens.every((tok) => text.includes(tok)));
+
+          if (!directMatch && !textMatch) return false;
         }
         if (reqTopic) {
           const itemTopic = String(item.topic ?? item.topicName ?? '').trim().toLowerCase();
@@ -875,34 +902,40 @@ export const nurviaApi = {
         }
         return true;
       })
-      .map((item) => ({
-        id: String(item.guidId ?? item.id ?? ''),
-        code: String(item.code ?? item.guidId ?? item.id ?? ''),
-        title: String(item.title ?? item.name ?? 'Untitled Study Set'),
-        description: String(item.description ?? ''),
-        pathway: inferExamPathway(item),
-        category: inferExamCategory(item),
-        totalQuestions: Number(item.totalQuestions ?? item.questionsCount ?? 0),
-        timeLimitMinutes: Number(item.timeLimitMinutes ?? item.duration ?? 60),
-        modeAllowed: inferExamDeliveryMode(item),
-        passingScorePercentage: Number(item.passingScorePercentage ?? item.passMark ?? 75),
-        allowedLayouts: (typeof item.allowedLayouts === 'string' && item.allowedLayouts && item.allowedLayouts !== 'Any'
-          ? item.allowedLayouts
-          : 'Both') as import('./api-types').ExamLayoutPolicy,
-        defaultLayout: (typeof item.defaultLayout === 'string' && item.defaultLayout && item.defaultLayout !== 'Classic'
-          ? item.defaultLayout
-          : 'Sequential') as ExamLayout,
-        school: typeof item.school === 'string' ? item.school : typeof item.schoolName === 'string' ? item.schoolName : null,
-        academicYear: typeof item.academicYear === 'number' ? item.academicYear : typeof item.year === 'number' ? item.year : null,
-        subject: typeof item.subject === 'string' ? item.subject : typeof item.subjectName === 'string' ? item.subjectName : null,
-        season: typeof item.season === 'string' ? item.season : null,
-        topic: typeof item.topic === 'string' ? item.topic : null,
-        difficulty: (typeof item.difficulty === 'string' ? item.difficulty : null) as import('./api-types').DifficultyLevel | null,
-        averageRating: typeof item.averageRating === 'number' ? item.averageRating : typeof item.rating === 'number' ? item.rating : null,
-        reviewCount: Number(item.reviewCount ?? 0),
-        featuredTestimonial: typeof item.featuredTestimonial === 'string' ? item.featuredTestimonial : null,
-        isSaved: false,
-      }))
+      .map((item) => {
+        let resolvedTitle = String(item.title ?? item.name ?? 'Untitled Study Set').trim();
+        if (/^(Easy|Moderate|Hard)\s*(Level|Mode)[.,]?$/i.test(resolvedTitle) && item.description) {
+          resolvedTitle = `${resolvedTitle.replace(/[,.]/g, '')} — ${item.description.trim()}`;
+        }
+        return {
+          id: String(item.guidId ?? item.id ?? ''),
+          code: String(item.code ?? item.guidId ?? item.id ?? ''),
+          title: resolvedTitle,
+          description: String(item.description ?? ''),
+          pathway: inferExamPathway(item),
+          category: inferExamCategory(item),
+          totalQuestions: Number(item.totalQuestions ?? item.questionsCount ?? 0),
+          timeLimitMinutes: Number(item.timeLimitMinutes ?? item.duration ?? 60),
+          modeAllowed: inferExamDeliveryMode(item),
+          passingScorePercentage: Number(item.passingScorePercentage ?? item.passMark ?? 75),
+          allowedLayouts: (typeof item.allowedLayouts === 'string' && item.allowedLayouts && item.allowedLayouts !== 'Any'
+            ? item.allowedLayouts
+            : 'Both') as import('./api-types').ExamLayoutPolicy,
+          defaultLayout: (typeof item.defaultLayout === 'string' && item.defaultLayout && item.defaultLayout !== 'Classic'
+            ? item.defaultLayout
+            : 'Sequential') as ExamLayout,
+          school: typeof item.school === 'string' ? item.school : typeof item.schoolName === 'string' ? item.schoolName : null,
+          academicYear: typeof item.academicYear === 'number' ? item.academicYear : typeof item.year === 'number' ? item.year : null,
+          subject: typeof item.subject === 'string' ? item.subject : typeof item.subjectName === 'string' ? item.subjectName : null,
+          season: typeof item.season === 'string' ? item.season : null,
+          topic: typeof item.topic === 'string' ? item.topic : null,
+          difficulty: (typeof item.difficulty === 'string' ? item.difficulty : null) as import('./api-types').DifficultyLevel | null,
+          averageRating: typeof item.averageRating === 'number' ? item.averageRating : typeof item.rating === 'number' ? item.rating : null,
+          reviewCount: Number(item.reviewCount ?? 0),
+          featuredTestimonial: typeof item.featuredTestimonial === 'string' ? item.featuredTestimonial : null,
+          isSaved: false,
+        };
+      })
       .filter((item) => Boolean(item.id));
 
     const pagedItems = hasLocalFilter
@@ -932,13 +965,218 @@ export const nurviaApi = {
     };
   },
 
+  // Subject-First Study Library Catalog
+  async getStudyLibrarySubjects(
+    params?: Record<string, string | number | boolean | undefined>
+  ): Promise<ApiResponse<PagedResult<import('./api-types').SubjectCardDto>>> {
+    const pageNumber = Math.max(1, Number(params?.pageNumber ?? params?.page ?? 1) || 1);
+    const pageSize = Math.max(1, Math.min(100, Number(params?.pageSize ?? params?.perPage ?? 12) || 12));
+    const search = typeof params?.searchTerm === 'string' && params.searchTerm.trim()
+      ? params.searchTerm.trim().toLowerCase()
+      : typeof params?.search === 'string' && params.search.trim()
+        ? params.search.trim().toLowerCase()
+        : undefined;
+
+    const reqPathway = typeof params?.pathway === 'string' && params.pathway.trim() ? params.pathway.trim().toLowerCase() : null;
+    const reqCategory = typeof params?.category === 'string' && params.category.trim() ? params.category.trim().toLowerCase() : null;
+    const reqProgram = typeof params?.program === 'string' && params.program.trim() ? params.program.trim().toLowerCase() : null;
+    const reqCourse = typeof params?.course === 'string' && params.course.trim() ? params.course.trim().toLowerCase() : null;
+    const reqSchool = typeof params?.school === 'string' && params.school.trim() ? params.school.trim().toLowerCase() : null;
+    const reqYear = params?.academicYear ? Number(params.academicYear) : null;
+    const reqSeason = typeof params?.season === 'string' && params.season.trim() ? params.season.trim().toLowerCase() : null;
+    const reqDifficulty = typeof params?.difficulty === 'string' && params.difficulty.trim() ? params.difficulty.trim().toLowerCase() : null;
+
+    const [subjectsRes, coursesRes, programsRes, examsRes] = await Promise.all([
+      this.getStrata<Record<string, any>>('subjects', { fetchtype: 'absolute', page: 1, perPage: 250 }),
+      this.getStrata<Record<string, any>>('courses', { fetchtype: 'absolute', page: 1, perPage: 100 }),
+      this.getStrata<Record<string, any>>('programs', { fetchtype: 'absolute', page: 1, perPage: 100 }),
+      this.getStrata<Record<string, any>>('exams', { fetchtype: 'absolute', page: 1, perPage: 250 }),
+    ]);
+
+    const rawSubjects = subjectsRes.success && subjectsRes.data ? subjectsRes.data.items : [];
+    const rawCourses = coursesRes.success && coursesRes.data ? coursesRes.data.items : [];
+    const rawPrograms = programsRes.success && programsRes.data ? programsRes.data.items : [];
+    const rawExams = examsRes.success && examsRes.data ? examsRes.data.items : [];
+
+    const coursesMap = new Map<string, Record<string, any>>();
+    for (const c of rawCourses) {
+      const id = String(c.id ?? c.guidId ?? '').trim();
+      if (id) coursesMap.set(id, c);
+      if (c.name) coursesMap.set(String(c.name).toLowerCase().trim(), c);
+    }
+
+    const programsMap = new Map<string, Record<string, any>>();
+    for (const p of rawPrograms) {
+      const id = String(p.id ?? p.guidId ?? '').trim();
+      if (id) programsMap.set(id, p);
+      if (p.name) programsMap.set(String(p.name).toLowerCase().trim(), p);
+    }
+
+    const fallbackSubjects: Array<Record<string, any>> = [
+      { id: 'subj-pharm', name: 'Pharmacology & Parenteral Therapies', pathway: 'RN', category: 'ATI', courseName: 'Pharmacology', programName: 'RN Nursing Exams', year: 2026, season: 'Fall', difficulty: 'Intermediate', description: 'High-yield drug classifications, therapeutic ranges, critical adverse reactions, toxicities, and antidotes.' },
+      { id: 'subj-medsurg', name: 'Medical-Surgical Nursing', pathway: 'RN', category: 'CORE SERIES', courseName: 'Adult Health', programName: 'RN Nursing Exams', year: 2026, season: 'Fall', difficulty: 'Advanced', description: 'Comprehensive medical-surgical clinical priorities, acid-base disorders, heart failure, and surgical complications.' },
+      { id: 'subj-fund', name: 'Fundamentals of Nursing', pathway: 'RN', category: 'FUNDAMENTALS', courseName: 'Foundations of Nursing', programName: 'RN Nursing Exams', year: 2026, season: 'Fall', difficulty: 'Foundation', description: 'Core nursing concepts, safety and infection control, nursing process, and ethical-legal guidelines.' },
+      { id: 'subj-peds', name: 'Pediatric Nursing', pathway: 'RN', category: 'SPECIALTIES', courseName: 'Family Health', programName: 'RN Nursing Exams', year: 2026, season: 'Spring', difficulty: 'Intermediate', description: 'Developmental milestones, pediatric medication dosing, congenital disorders, and acute illnesses.' },
+      { id: 'subj-ob', name: 'Maternal & Newborn Nursing (OB)', pathway: 'RN', category: 'SPECIALTIES', courseName: 'Maternal-Newborn', programName: 'RN Nursing Exams', year: 2026, season: 'Spring', difficulty: 'Intermediate', description: 'Antepartum, intrapartum, postpartum care, fetal heart rate monitoring, and neonatal assessment.' },
+      { id: 'subj-mh', name: 'Mental Health & Psychiatric Nursing', pathway: 'RN', category: 'SPECIALTIES', courseName: 'Psychiatric Nursing', programName: 'RN Nursing Exams', year: 2026, season: 'Fall', difficulty: 'Intermediate', description: 'Therapeutic communication, psychiatric pharmacology, crisis intervention, and board exam traps.' },
+      { id: 'subj-crit', name: 'Critical Care & Emergency Nursing', pathway: 'RN', category: 'SPECIALTIES', courseName: 'Complex Care', programName: 'RN Nursing Exams', year: 2026, season: 'Fall', difficulty: 'Advanced', description: 'Shock syndromes, mechanical ventilation, hemodynamic monitoring, and acute resuscitation.' },
+      { id: 'subj-lead', name: 'Leadership, Delegation & Priority Setting', pathway: 'RN', category: 'CORE SERIES', courseName: 'Nursing Leadership', programName: 'RN Nursing Exams', year: 2026, season: 'Fall', difficulty: 'Intermediate', description: 'NCSBN Five Rights of Delegation, priority triage, assignment supervision, and scope of practice.' },
+      { id: 'subj-math', name: 'Dosage Calculations & Pharmacology Math', pathway: 'NursingMath', category: 'NURSING MATH', courseName: 'Clinical Calculations', programName: 'RN Nursing Exams', year: 2026, season: 'Fall', difficulty: 'Foundation', description: 'Safe medication calculations, IV flow rates (gtt/min & mL/hr), pediatric weight-based math, and reconstituted solutions.' },
+      { id: 'subj-pn-psycho', name: 'Psychosocial Integrity (NCLEX PN)', pathway: 'PN_LPN', category: 'Certification', courseName: 'Client Needs.', programName: 'NCLEX PN', year: 2026, season: 'Fall', difficulty: 'Beginner', description: 'Mental health concepts, coping mechanisms, behavioral interventions, and psychosocial nursing support.' },
+      { id: 'subj-pn-physio', name: 'Physiological Integrity (NCLEX PN)', pathway: 'PN_LPN', category: 'Certification', courseName: 'Client Needs.', programName: 'NCLEX PN', year: 2026, season: 'Fall', difficulty: 'Beginner', description: 'Basic care and comfort, pharmacological therapies, risk reduction, and physiological adaptation.' },
+      { id: 'subj-pn-health', name: 'Health Promotion and Maintenance (NCLEX PN)', pathway: 'PN_LPN', category: 'Certification', courseName: 'Client Needs.', programName: 'NCLEX PN', year: 2026, season: 'Fall', difficulty: 'Beginner', description: 'Growth and development through the lifespan, prevention and early detection of disease.' },
+    ];
+
+    const sourceSubjects = rawSubjects.length > 0 ? rawSubjects : fallbackSubjects;
+
+    const mappedSubjects: import('./api-types').SubjectCardDto[] = sourceSubjects.map((sub, idx) => {
+      const subjectName = String(sub.name ?? sub.title ?? `Subject ${idx + 1}`).trim();
+      const courseId = sub.courseId ? String(sub.courseId) : undefined;
+      const courseData = courseId ? coursesMap.get(courseId) : undefined;
+      const courseName = sub.courseName ?? courseData?.name ?? null;
+      const programId = sub.programId ?? courseData?.programId ?? undefined;
+      const programData = programId ? programsMap.get(String(programId)) : undefined;
+      const programName = sub.programName ?? programData?.name ?? null;
+
+      const cleanSub = subjectName.replace(/\([^)]*\)/g, '').replace(/[-–—]/g, ' ').trim().toLowerCase();
+      const subTokens = cleanSub.split(/\s+/).filter((t: string) => t.length > 2);
+
+      const matchingExams = rawExams.filter((ex) => {
+        const itemSub = String(ex.subject ?? ex.subjectName ?? '').toLowerCase();
+        const itemTitle = String(ex.title ?? '').toLowerCase();
+        const itemDesc = String(ex.description ?? '').toLowerCase();
+        const itemAssess = String(ex.assessmentName ?? '').toLowerCase();
+        const text = `${itemSub} ${itemTitle} ${itemDesc} ${itemAssess}`;
+
+        return itemSub.includes(cleanSub) || text.includes(cleanSub) || (subTokens.length > 0 && subTokens.every((tok: string) => text.includes(tok)));
+      });
+
+      const totalExams = matchingExams.length > 0 ? matchingExams.length : (sub.unitsCount || 4);
+      const totalQuestions = matchingExams.reduce((sum, e) => sum + Number(e.questionsCount ?? 50), 0) || (totalExams * 50);
+
+      const featuredExams = matchingExams.slice(0, 2).map((e) => {
+        let t = String(e.title ?? e.name ?? 'Practice Exam').trim();
+        if (/^(Easy|Moderate|Hard)\s*(Level|Mode)[.,]?$/i.test(t) && e.description) {
+          t = `${t.replace(/[,.]/g, '')} — ${e.description.trim()}`;
+        }
+        return {
+          id: String(e.guidId ?? e.id ?? ''),
+          title: t,
+          totalQuestions: Number(e.questionsCount ?? 50),
+          modeAllowed: inferExamDeliveryMode(e),
+        };
+      });
+
+      let pathway: string = inferExamPathway(sub);
+      if (pathway === 'RN' && (subjectName.includes('NCLEX-PN') || subjectName.includes('NCLEX PN') || String(programName).includes('PN'))) {
+        pathway = 'PN_LPN';
+      }
+      if (subjectName.toLowerCase().includes('exit') || subjectName.toLowerCase().includes('predictor')) {
+        pathway = pathway === 'PN_LPN' ? 'PN_Exit' : 'RN_Exit';
+      }
+      if (subjectName.toLowerCase().includes('dosage') || subjectName.toLowerCase().includes('math')) {
+        pathway = 'NursingMath';
+      }
+
+      let category: string = inferExamCategory(sub);
+      if (subjectName.toLowerCase().includes('fundamentals')) category = 'FUNDAMENTALS';
+      if (subjectName.toLowerCase().includes('math') || subjectName.toLowerCase().includes('calculation')) category = 'NURSING MATH';
+      if (subjectName.toLowerCase().includes('exit') || subjectName.toLowerCase().includes('predictor')) category = 'ExitPredictor';
+
+      return {
+        id: String(sub.guidId ?? sub.id ?? `subj-${idx}`),
+        guidId: String(sub.guidId ?? sub.id ?? ''),
+        code: String(sub.code ?? sub.id ?? ''),
+        name: subjectName,
+        title: subjectName,
+        description: typeof sub.description === 'string' && sub.description.trim()
+          ? sub.description.trim()
+          : typeof sub.objectives === 'string' && sub.objectives.trim()
+            ? sub.objectives.trim()
+            : 'Comprehensive clinical subject content and examination prep.',
+        pathway,
+        category,
+        programId: programId ? String(programId) : null,
+        programName: programName ? String(programName) : null,
+        courseId: courseId ? String(courseId) : null,
+        courseName: courseName ? String(courseName) : null,
+        school: typeof sub.school === 'string' ? sub.school : typeof sub.schoolName === 'string' ? sub.schoolName : null,
+        academicYear: typeof sub.year === 'number' ? sub.year : typeof sub.academicYear === 'number' ? sub.academicYear : 2026,
+        season: typeof sub.season === 'string' && sub.season.trim() ? sub.season.trim() : 'Fall',
+        difficulty: (typeof sub.difficulty === 'string' ? sub.difficulty : 'Intermediate') as import('./api-types').DifficultyLevel,
+        totalExams,
+        totalQuestions,
+        featuredExams,
+      };
+    });
+
+    const filteredSubjects = mappedSubjects.filter((item) => {
+      if (reqPathway && reqPathway !== 'all') {
+        const p = item.pathway.toLowerCase();
+        if (p !== reqPathway && !p.includes(reqPathway)) return false;
+      }
+      if (reqCategory && reqCategory !== 'all') {
+        const c = item.category.toLowerCase();
+        if (c !== reqCategory && !c.includes(reqCategory)) return false;
+      }
+      if (reqProgram && reqProgram !== 'all') {
+        const pr = String(item.programName ?? item.programId ?? '').toLowerCase();
+        if (pr !== reqProgram && !pr.includes(reqProgram)) return false;
+      }
+      if (reqCourse && reqCourse !== 'all') {
+        const cr = String(item.courseName ?? item.courseId ?? '').toLowerCase();
+        if (cr !== reqCourse && !cr.includes(reqCourse)) return false;
+      }
+      if (reqSchool) {
+        const sc = String(item.school ?? '').toLowerCase();
+        if (sc !== reqSchool && !sc.includes(reqSchool)) return false;
+      }
+      if (reqYear) {
+        if (item.academicYear !== reqYear) return false;
+      }
+      if (reqSeason) {
+        const se = String(item.season ?? '').toLowerCase();
+        if (se !== reqSeason) return false;
+      }
+      if (reqDifficulty) {
+        const diff = String(item.difficulty ?? '').toLowerCase();
+        if (diff !== reqDifficulty) return false;
+      }
+      if (search) {
+        const hay = `${item.title} ${item.description} ${item.courseName ?? ''} ${item.programName ?? ''}`.toLowerCase();
+        if (!hay.includes(search)) return false;
+      }
+      return true;
+    });
+
+    const totalCount = filteredSubjects.length;
+    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+    const pagedItems = filteredSubjects.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
+
+    return {
+      success: true,
+      message: 'OK',
+      data: {
+        items: pagedItems,
+        totalCount,
+        pageNumber,
+        pageSize,
+        totalPages,
+        hasNextPage: pageNumber < totalPages,
+        hasPreviousPage: pageNumber > 1,
+      },
+    };
+  },
+
   async getStudyLibraryFilters(): Promise<ApiResponse<import('./api-types').StudyLibraryFiltersDto>> {
-    const [schoolsRes, subjectsRes, topicsRes, examsRes, sectionsRes] = await Promise.all([
-      this.getStrata<Record<string, any>>('schools', { fetchtype: 'absolute', page: 1, perPage: 100 }),
-      this.getStrata<Record<string, any>>('subjects', { fetchtype: 'absolute', page: 1, perPage: 100 }),
+    const [schoolsRes, subjectsRes, topicsRes, examsRes, sectionsRes, programsRes, coursesRes] = await Promise.all([
+      this.getStrata<Record<string, any>>('schools', { fetchtype: 'absolute', page: 1, perPage: 250 }),
+      this.getStrata<Record<string, any>>('subjects', { fetchtype: 'absolute', page: 1, perPage: 250 }),
       this.getStrata<Record<string, any>>('topics', { fetchtype: 'absolute', page: 1, perPage: 100 }),
-      this.getStrata<Record<string, any>>('exams', { fetchtype: 'absolute', page: 1, perPage: 100 }),
+      this.getStrata<Record<string, any>>('exams', { fetchtype: 'absolute', page: 1, perPage: 250 }),
       this.getStrata<Record<string, any>>('sections', { fetchtype: 'absolute', page: 1, perPage: 100 }),
+      this.getStrata<Record<string, any>>('programs', { fetchtype: 'absolute', page: 1, perPage: 100 }),
+      this.getStrata<Record<string, any>>('courses', { fetchtype: 'absolute', page: 1, perPage: 100 }),
     ]);
 
     if (!schoolsRes.success && !subjectsRes.success && !topicsRes.success && !examsRes.success && !sectionsRes.success) {
@@ -956,6 +1194,20 @@ export const nurviaApi = {
 
     const examItems = examsRes.success && examsRes.data ? examsRes.data.items : [];
     const sectionItems = sectionsRes.success && sectionsRes.data ? sectionsRes.data.items : [];
+    const programItems = programsRes.success && programsRes.data && programsRes.data.items.length > 0
+      ? programsRes.data.items
+      : [
+          { id: '9', name: 'RN Nursing Exams', code: 'A7F47B58' },
+          { id: '8', name: 'NCLEX RN', code: '673F28AB' },
+          { id: '7', name: 'NCLEX PN', code: '25877FAE' },
+          { id: '6', name: 'LPN Nursing Exams', code: '34FB84C5' },
+          { id: '5', name: 'HESI A2', code: '07EF3938' },
+          { id: '3', name: 'ATI TEAS', code: 'F5C8D157' },
+          { id: '13', name: 'EXPLICIT DYNAMIC SOLUTIONS', code: '843CBB06' },
+        ];
+    const courseItems = coursesRes.success && coursesRes.data && coursesRes.data.items.length > 0
+      ? coursesRes.data.items
+      : [];
 
     const pathwaySet = new Set<import('./api-types').NursingPathway>();
     const categorySet = new Set<import('./api-types').ExamCategory>();
@@ -966,7 +1218,7 @@ export const nurviaApi = {
       pathwaySet.add(inferExamPathway(rec));
       categorySet.add(inferExamCategory(rec));
     }
-    for (const rec of [...examItems, ...sectionItems]) {
+    for (const rec of [...examItems, ...sectionItems, ...(subjectsRes.data?.items ?? [])]) {
       const y = rec.academicYear ?? rec.year;
       if (typeof y === 'number' && Number.isFinite(y)) yearSet.add(y);
       else if (typeof y === 'string' && /^\d{4}$/.test(y.trim())) yearSet.add(Number(y.trim()));
@@ -975,15 +1227,80 @@ export const nurviaApi = {
       if (typeof rec.difficulty === 'string' && rec.difficulty.trim()) difficultySet.add(rec.difficulty.trim());
     }
 
+    // Default authoritative years & seasons if DB is sparse
+    [2027, 2026, 2025, 2023].forEach((y) => yearSet.add(y));
+    ['Fall', 'Spring', 'Summer', 'Winter'].forEach((s) => seasonSet.add(s));
+    ['Beginner', 'Foundation', 'Intermediate', 'Advanced'].forEach((d) => difficultySet.add(d));
+
+    const programs = programItems
+      .map((p) => ({
+        id: pickId(p),
+        name: pickName(p),
+        code: typeof p.code === 'string' && p.code.trim() ? p.code.trim() : undefined,
+      }))
+      .filter((p, idx, arr) => p.id && p.name && arr.findIndex((x) => x.id === p.id) === idx);
+
+    const courses = courseItems
+      .map((c) => ({
+        id: pickId(c),
+        name: pickName(c),
+        code: typeof c.code === 'string' && c.code.trim() ? c.code.trim() : undefined,
+        programId: typeof c.programId === 'string' && c.programId.trim()
+          ? c.programId.trim()
+          : typeof c.program_id === 'string' && c.program_id.trim()
+            ? c.program_id.trim()
+            : undefined,
+      }))
+      .filter((c, idx, arr) => c.id && c.name && arr.findIndex((x) => x.id === c.id) === idx);
+
+    // Build authoritative school list from DB, exam metadata, and recognized institutions
+    const schoolSet = new Set<string>();
+    for (const s of (schoolsRes.data?.items ?? []).map(pickName).filter(Boolean)) {
+      schoolSet.add(s);
+    }
+    for (const ex of examItems) {
+      if (typeof ex.school === 'string' && ex.school.trim()) schoolSet.add(ex.school.trim());
+      if (typeof ex.schoolName === 'string' && ex.schoolName.trim()) schoolSet.add(ex.schoolName.trim());
+      const hay = `${ex.title ?? ''} ${ex.description ?? ''}`;
+      if (/\bWGU\b/i.test(hay)) schoolSet.add('WGU');
+      if (/\bChamberlain\b/i.test(hay)) schoolSet.add('Chamberlain');
+      if (/\bGalen\b/i.test(hay)) schoolSet.add('Galen');
+      if (/\bRasmussen\b/i.test(hay)) schoolSet.add('Rasmussen');
+      if (/\bGrand Canyon\b/i.test(hay)) schoolSet.add('Grand Canyon');
+    }
+    if (schoolSet.size === 0) {
+      ['WGU', 'Chamberlain', 'Galen', 'Rasmussen', 'Grand Canyon'].forEach((s) => schoolSet.add(s));
+    }
+
+    // Authoritative subjects: all 185 subjects from backend, or curated catalogue if backend offline
+    const rawSubjects = (subjectsRes.data?.items ?? []).map(pickName).filter(Boolean);
+    const fallbackSubjectNames = [
+      'Pharmacology & Parenteral Therapies',
+      'Medical-Surgical Nursing',
+      'Fundamentals of Nursing',
+      'Pediatric Nursing',
+      'Maternal & Newborn Nursing (OB)',
+      'Mental Health & Psychiatric Nursing',
+      'Critical Care & Emergency Nursing',
+      'Leadership, Delegation & Priority Setting',
+      'Dosage Calculations & Pharmacology Math',
+      'Physiological Integrity (NCLEX PN)',
+      'Psychosocial Integrity (NCLEX PN)',
+      'Health Promotion and Maintenance (NCLEX PN)',
+    ];
+    const resolvedSubjects = rawSubjects.length > 0
+      ? Array.from(new Set(rawSubjects)).sort((a, b) => a.localeCompare(b))
+      : fallbackSubjectNames;
+
     return {
       success: true,
       message: 'OK',
       data: {
         pathways: Array.from(pathwaySet),
         categories: Array.from(categorySet),
-        schools: (schoolsRes.data?.items ?? []).map(pickName).filter(Boolean),
+        schools: Array.from(schoolSet).sort((a, b) => a.localeCompare(b)),
         academicYears: Array.from(yearSet).sort((a, b) => b - a),
-        subjects: (subjectsRes.data?.items ?? []).map(pickName).filter(Boolean),
+        subjects: resolvedSubjects,
         seasons: Array.from(seasonSet),
         exams: examItems
           .map((ex) => ({
@@ -993,10 +1310,12 @@ export const nurviaApi = {
             pathway: inferExamPathway(ex),
             category: inferExamCategory(ex),
           }))
-          .filter((ex) => ex.id && ex.title),
-        topics: (topicsRes.data?.items ?? []).map(pickName).filter(Boolean),
+          .filter((ex, idx, arr) => ex.id && ex.title && arr.findIndex((x) => x.id === ex.id) === idx),
+        topics: Array.from(new Set((topicsRes.data?.items ?? []).map(pickName).filter(Boolean))),
         difficulties: Array.from(difficultySet) as import('./api-types').DifficultyLevel[],
         questionTypes: [],
+        programs,
+        courses,
       },
     };
   },

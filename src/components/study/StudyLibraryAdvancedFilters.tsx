@@ -15,6 +15,8 @@ export interface AdvancedFilterState {
   difficulty: string;
   questionType: string;
   savedOnly: boolean;
+  program: string;
+  course: string;
 }
 
 interface StudyLibraryAdvancedFiltersProps {
@@ -51,9 +53,35 @@ export function StudyLibraryAdvancedFilters({
         const c = String(ex.category ?? "").trim().toLowerCase();
         if (c && !c.includes(selectedCategory.toLowerCase())) return false;
       }
+      if (value.program && value.program !== "All" && (ex as { program?: string }).program) {
+        const pr = String((ex as { program?: string }).program ?? "").trim().toLowerCase();
+        if (pr && !pr.includes(value.program.toLowerCase())) return false;
+      }
+      if (value.course && value.course !== "All" && (ex as { course?: string }).course) {
+        const cr = String((ex as { course?: string }).course ?? "").trim().toLowerCase();
+        if (cr && !cr.includes(value.course.toLowerCase())) return false;
+      }
       return true;
     });
-  }, [filtersData?.exams, selectedPathway, selectedCategory]);
+  }, [filtersData?.exams, selectedPathway, selectedCategory, value.program, value.course]);
+
+  const programOptions = React.useMemo(
+    () => (filtersData?.programs ?? []).map((p) => p.name).filter(Boolean),
+    [filtersData?.programs]
+  );
+
+  // Cascade: when a program is selected, only offer courses that belong to it
+  // (courses without a programId link remain available).
+  const courseOptions = React.useMemo(() => {
+    const courses = filtersData?.courses ?? [];
+    const selected = value.program
+      ? (filtersData?.programs ?? []).find((p) => p.name === value.program)
+      : undefined;
+    return courses
+      .filter((c) => !selected || !c.programId || c.programId === selected.id)
+      .map((c) => c.name)
+      .filter(Boolean);
+  }, [filtersData?.courses, filtersData?.programs, value.program]);
 
   const activeEntries: Array<{ key: keyof AdvancedFilterState; label: string; display: string }> = [];
   if (value.school) activeEntries.push({ key: "school", label: "School", display: value.school });
@@ -74,6 +102,8 @@ export function StudyLibraryAdvancedFilters({
     });
   }
   if (value.savedOnly) activeEntries.push({ key: "savedOnly", label: "Library", display: "Saved Only" });
+  if (value.program) activeEntries.push({ key: "program", label: "Program", display: value.program });
+  if (value.course) activeEntries.push({ key: "course", label: "Course", display: value.course });
 
   return (
     <div className="rounded-xl border border-border bg-surface">
@@ -126,13 +156,31 @@ export function StudyLibraryAdvancedFilters({
       {expanded && (
         <div className="grid gap-3 border-t border-border p-4 sm:grid-cols-2 lg:grid-cols-4">
           <FilterSelect
-            id="filter-school"
-            label="School"
-            value={value.school}
-            options={filtersData?.schools ?? []}
+            id="filter-program"
+            label="Program"
+            value={value.program}
+            options={programOptions}
             loading={filtersLoading}
-            placeholder="All schools"
-            onChange={(school) => onChange({ school, examId: "" })}
+            placeholder="All programs"
+            onChange={(program) => onChange({ program })}
+          />
+          <FilterSelect
+            id="filter-course"
+            label="Course"
+            value={value.course}
+            options={courseOptions}
+            loading={filtersLoading}
+            placeholder="All courses"
+            onChange={(course) => onChange({ course })}
+          />
+          <FilterSelect
+            id="filter-subject"
+            label="Subject"
+            value={value.subject}
+            options={filtersData?.subjects ?? []}
+            loading={filtersLoading}
+            placeholder="All subjects"
+            onChange={(subject) => onChange({ subject })}
           />
           <FilterSelect
             id="filter-year"
@@ -144,15 +192,6 @@ export function StudyLibraryAdvancedFilters({
             onChange={(academicYear) => onChange({ academicYear })}
           />
           <FilterSelect
-            id="filter-subject"
-            label="Subject"
-            value={value.subject}
-            options={filtersData?.subjects ?? []}
-            loading={filtersLoading}
-            placeholder="All subjects"
-            onChange={(subject) => onChange({ subject, topic: "", examId: "" })}
-          />
-          <FilterSelect
             id="filter-season"
             label="Season"
             value={value.season}
@@ -160,6 +199,15 @@ export function StudyLibraryAdvancedFilters({
             loading={filtersLoading}
             placeholder={filtersData && filtersData.seasons.length === 0 ? "Unavailable" : "All seasons"}
             onChange={(season) => onChange({ season })}
+          />
+          <FilterSelect
+            id="filter-school"
+            label="School"
+            value={value.school}
+            options={filtersData?.schools ?? []}
+            loading={filtersLoading}
+            placeholder="All schools"
+            onChange={(school) => onChange({ school })}
           />
           <div className="space-y-1">
             <label htmlFor="filter-exam" className="block text-xs font-medium text-foreground-secondary">
@@ -252,6 +300,10 @@ function FilterSelect({
   formatOption?: (v: string) => string;
   onChange: (next: string) => void;
 }) {
+  const uniqueOptions = React.useMemo(() => {
+    return Array.from(new Set(options.filter(Boolean)));
+  }, [options]);
+
   return (
     <div className="space-y-1">
       <label htmlFor={id} className="block text-xs font-medium text-foreground-secondary">
@@ -261,13 +313,13 @@ function FilterSelect({
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        disabled={loading || options.length === 0}
+        disabled={loading || uniqueOptions.length === 0}
         className="h-9 w-full rounded-lg border border-border bg-background px-3 text-xs text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal"
       >
         <option value="">
-          {loading ? "Loading..." : options.length === 0 ? "No data available" : placeholder}
+          {loading ? "Loading..." : uniqueOptions.length === 0 ? "No data available" : placeholder}
         </option>
-        {options.map((opt) => (
+        {uniqueOptions.map((opt) => (
           <option key={opt} value={opt}>
             {formatOption ? formatOption(opt) : opt}
           </option>
