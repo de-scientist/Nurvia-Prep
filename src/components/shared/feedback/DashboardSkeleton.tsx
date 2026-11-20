@@ -1,5 +1,4 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import { SkeletonCard } from "@/components/shared/feedback/SkeletonCard";
 import { cn } from "@/lib/utils";
 
@@ -7,18 +6,13 @@ export function DashboardSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn("space-y-6", className)}>
       {/* Header Skeleton */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-      >
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="space-y-2">
           <div className="h-8 w-48 bg-surface-muted rounded animate-pulse"></div>
           <div className="h-4 w-32 bg-surface-muted rounded animate-pulse"></div>
         </div>
         <div className="h-10 w-32 bg-surface-muted rounded animate-pulse"></div>
-      </motion.div>
+      </div>
 
       {/* Stats Cards Skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

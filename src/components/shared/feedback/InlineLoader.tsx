@@ -4,33 +4,38 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-interface InlineLoaderProps {
+export interface InlineLoaderProps {
   message?: string;
   className?: string;
 }
 
 export function InlineLoader({
   message = "Loading...",
-  className
+  className,
 }: InlineLoaderProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className={cn("inline-flex items-center gap-2", className)}
+    <span
+      role="status"
+      aria-live="polite"
+      className={cn("inline-flex items-center gap-2 align-middle", className)}
     >
-      <div className="flex items-center gap-1">
-        <div className="h-2 w-2 rounded-full bg-brand-teal animate-bounce"></div>
-        <div className="h-2 w-2 rounded-full bg-brand-teal animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-        <div className="h-2 w-2 rounded-full bg-brand-teal animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-      </div>
+      <span className="inline-flex items-center gap-1" aria-hidden="true">
+        <span className="h-1.5 w-1.5 rounded-full bg-brand-teal animate-bounce motion-reduce:animate-none" />
+        <span
+          className="h-1.5 w-1.5 rounded-full bg-brand-teal animate-bounce motion-reduce:animate-none"
+          style={{ animationDelay: "0.1s" }}
+        />
+        <span
+          className="h-1.5 w-1.5 rounded-full bg-brand-teal animate-bounce motion-reduce:animate-none"
+          style={{ animationDelay: "0.2s" }}
+        />
+      </span>
 
       {message && (
-        <span className="text-xs text-foreground-secondary">
+        <span className="text-xs font-medium text-foreground-secondary">
           {message}
         </span>
       )}
-    </motion.div>
+    </span>
   );
 }

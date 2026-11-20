@@ -5,7 +5,7 @@ import { Logo } from "@/components/brand/logo";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
-interface RedirectScreenProps {
+export interface RedirectScreenProps {
   heading?: string;
   description?: string;
   destination?: string;
@@ -16,28 +16,35 @@ export function RedirectScreen({
   heading = "Preparing your workspace",
   description = "Securely redirecting you to your NURVIA dashboard.",
   destination,
-  showProgress = true
+  showProgress = true,
 }: RedirectScreenProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label={`${heading}. ${description}`}
+      className="min-h-screen flex items-center justify-center bg-background p-4"
+    >
       <div className="flex flex-col items-center gap-6 text-center max-w-md">
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0, scale: 0.85 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.25 }}
+          className="motion-reduce:transform-none"
         >
           <Logo size="md" variant="compact" withLink={false} />
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.3 }}
+          transition={{ delay: 0.15, duration: 0.25 }}
+          className="motion-reduce:transform-none"
         >
-          <h1 className="font-brand text-xl font-bold text-foreground">
+          <h1 className="font-brand text-xl font-bold text-foreground sm:text-2xl">
             {heading}
           </h1>
-          <p className="mt-2 text-sm text-foreground-secondary">
+          <p className="mt-2 text-sm text-foreground-secondary leading-relaxed">
             {description}
           </p>
         </motion.div>
@@ -45,15 +52,15 @@ export function RedirectScreen({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.3 }}
           className="flex items-center gap-2"
         >
           {showProgress ? (
-            <Loader2 className="h-5 w-5 animate-spin text-brand-teal" />
+            <Loader2 className="h-5 w-5 animate-spin text-brand-teal motion-reduce:animate-none" />
           ) : (
-            <div className="h-5 w-5 rounded-full bg-brand-teal"></div>
+            <div className="h-5 w-5 rounded-full bg-brand-teal" />
           )}
-          <span className="text-xs text-foreground-muted">
+          <span className="text-xs font-medium text-foreground-muted">
             {destination ? `To: ${destination}` : "Please wait..."}
           </span>
         </motion.div>

@@ -1,5 +1,4 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface TableSkeletonProps {
@@ -23,11 +22,8 @@ export function TableSkeleton({ rows = 5, columns = 4, className }: TableSkeleto
         </thead>
         <tbody>
           {Array.from({ length: rows }).map((_, rowIndex) => (
-            <motion.tr
+            <tr
               key={rowIndex}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: rowIndex * 0.05 }}
               className="border-b border-border last:border-b-0"
             >
               {Array.from({ length: columns }).map((_, colIndex) => (
@@ -35,7 +31,7 @@ export function TableSkeleton({ rows = 5, columns = 4, className }: TableSkeleto
                   <div className="h-4 w-full bg-surface-muted rounded animate-pulse"></div>
                 </td>
               ))}
-            </motion.tr>
+            </tr>
           ))}
         </tbody>
       </table>

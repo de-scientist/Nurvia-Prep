@@ -164,7 +164,7 @@ export function ExamLoadingScreen({
                         isDone
                           ? "bg-brand-teal"
                           : isCurrent
-                          ? "bg-brand-teal animate-pulse"
+                          ? "bg-brand-teal animate-pulse motion-reduce:animate-none"
                           : "bg-surface-muted"
                       )}
                       title={s.label}
