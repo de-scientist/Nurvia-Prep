@@ -22,11 +22,25 @@ export async function GET(
     `/api/attempts/${attemptId}`
   );
 
-  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta);
+  const modeParam = request.nextUrl.searchParams.get('mode');
+  const preferredMode = modeParam === 'Tutor' ? 'Tutor' : modeParam === 'Exam' ? 'Exam' : undefined;
+  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta, preferredMode);
   if (!loaded.ok) {
     return NextResponse.json(
       { success: false, message: loaded.message, errorCode: loaded.errorCode },
       { status: loaded.status, headers: NO_STORE_HEADERS }
+    );
+  }
+
+  // Submitted attempts cannot be resumed as active test sessions; callers load review
+  if (loaded.attempt.status === 'Submitted' || loaded.attempt.status === 'Graded') {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'This examination attempt has already been submitted and graded.',
+        errorCode: 'ATTEMPT_ALREADY_SUBMITTED',
+      },
+      { status: 409, headers: NO_STORE_HEADERS }
     );
   }
 

@@ -34,7 +34,7 @@ export async function POST(
     `/api/attempts/${attemptId}/tutor/hint`
   );
 
-  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta);
+  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta, 'Tutor');
   if (!loaded.ok) {
     return NextResponse.json(
       { success: false, message: loaded.message, errorCode: loaded.errorCode },

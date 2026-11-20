@@ -18,199 +18,228 @@ async function handleAutosave(
   request: NextRequest,
   context: { params: Promise<{ attemptId: string }> }
 ) {
-  const csrf = validateSameOriginRequest(request);
-  if (!csrf.ok) {
-    return NextResponse.json(
-      { success: false, message: csrf.reason, errorCode: 'CSRF_REJECTED' },
-      { status: 403, headers: NO_STORE_HEADERS }
+  try {
+    const csrf = validateSameOriginRequest(request);
+    if (!csrf.ok) {
+      return NextResponse.json(
+        { success: false, message: csrf.reason, errorCode: 'CSRF_REJECTED' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
+    }
+
+    const learner = await resolveAttemptLearner(request);
+    if (!learner) {
+      return NextResponse.json(
+        { success: false, message: 'Authentication is required.', errorCode: 'UNAUTHORIZED' },
+        { status: 401, headers: NO_STORE_HEADERS }
+      );
+    }
+
+    const { attemptId } = await context.params;
+    const siteMeta = extractSiteMetadataFromRequestHeaders(
+      request.headers,
+      `/api/attempts/${attemptId}/responses`
     );
-  }
 
-  const learner = await resolveAttemptLearner(request);
-  if (!learner) {
-    return NextResponse.json(
-      { success: false, message: 'Authentication is required.', errorCode: 'UNAUTHORIZED' },
-      { status: 401, headers: NO_STORE_HEADERS }
-    );
-  }
+    const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta);
+    if (!loaded.ok) {
+      return NextResponse.json(
+        { success: false, message: loaded.message, errorCode: loaded.errorCode },
+        { status: loaded.status, headers: NO_STORE_HEADERS }
+      );
+    }
 
-  const { attemptId } = await context.params;
-  const siteMeta = extractSiteMetadataFromRequestHeaders(
-    request.headers,
-    `/api/attempts/${attemptId}/responses`
-  );
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body.questionId !== 'string') {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'questionId is required in the payload.',
+          errorCode: 'VALIDATION_ERROR',
+        },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
+    }
 
-  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta);
-  if (!loaded.ok) {
-    return NextResponse.json(
-      { success: false, message: loaded.message, errorCode: loaded.errorCode },
-      { status: loaded.status, headers: NO_STORE_HEADERS }
-    );
-  }
+    const questionId = body.questionId.trim();
+    const raw = loaded.attempt;
+    const q = raw.questions.find((item) => item.id === questionId);
+    if (!q) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Question does not belong to this exam attempt.',
+          errorCode: 'INVALID_QUESTION',
+        },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
+    }
 
-  const body = await request.json().catch(() => null);
-  if (!body || typeof body.questionId !== 'string') {
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'questionId is required in the payload.',
-        errorCode: 'VALIDATION_ERROR',
-      },
-      { status: 400, headers: NO_STORE_HEADERS }
-    );
-  }
+    const responseJson =
+      body.responseJson !== undefined ? (body.responseJson as string | null) : null;
+    const isFlagged = Boolean(body.isFlagged);
+    const layoutMode: ExamLayout | null | undefined =
+      body.layoutMode === 'AllInOne' || body.layoutMode === 'Sequential'
+        ? body.layoutMode
+        : undefined;
 
-  const questionId = body.questionId.trim();
-  const responseJson =
-    body.responseJson !== undefined ? (body.responseJson as string | null) : null;
-  const isFlagged = Boolean(body.isFlagged);
-  const layoutMode: ExamLayout | null | undefined =
-    body.layoutMode === 'AllInOne' || body.layoutMode === 'Sequential'
-      ? body.layoutMode
-      : undefined;
+    const previousFlagged = Boolean(loaded.attempt.savedResponses[questionId]?.isFlagged);
+    const previousLayout = loaded.attempt.layoutMode;
 
-  const previousFlagged = Boolean(loaded.attempt.savedResponses[questionId]?.isFlagged);
-  const previousLayout = loaded.attempt.layoutMode;
+    const result = attemptStore.autosaveResponse(learner.userId, attemptId, {
+      questionId,
+      responseJson,
+      isFlagged,
+      layoutMode,
+    });
 
-  const result = attemptStore.autosaveResponse(learner.userId, attemptId, {
-    questionId,
-    responseJson,
-    isFlagged,
-    layoutMode,
-  });
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: result.error,
+          errorCode:
+            result.status === 403
+              ? 'FORBIDDEN'
+              : result.status === 404
+                ? 'NOT_FOUND'
+                : 'CONFLICT',
+        },
+        { status: result.status, headers: NO_STORE_HEADERS }
+      );
+    }
 
-  if (!result.success) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: result.error,
-        errorCode:
-          result.status === 403
-            ? 'FORBIDDEN'
-            : result.status === 404
-              ? 'NOT_FOUND'
-              : 'CONFLICT',
-      },
-      { status: result.status, headers: NO_STORE_HEADERS }
-    );
-  }
+    // Sync response, flag state, and layout changes durably to explicitbackend.com
+    let backendSynced = false;
+    let syncWarning: string | undefined;
 
-  // Sync response, flag state, and layout changes durably to explicitbackend.com
-  const raw = loaded.attempt;
-  const q = raw.questions.find((item) => item.id === questionId);
-  let backendSynced = false;
-  let syncWarning: string | undefined;
+    if (raw.examNumericId) {
+      const syncTasks: Array<Promise<{ ok: boolean; status: number; message?: string }>> = [];
 
-  if (raw.examNumericId) {
-    const syncTasks: Array<Promise<{ ok: boolean; status: number; message?: string }>> = [];
+      const sectionGuidId =
+        q.sectionGuidId ||
+        raw.questions.find((item) => item.sectionGuidId)?.sectionGuidId ||
+        '';
+      const sectionId =
+        q.sectionId ??
+        raw.questions.find((item) => item.sectionId)?.sectionId ??
+        0;
 
-    if (q?.numericId && body.responseJson !== undefined) {
-      const answerVal = toStrataAnswerPayload(q, responseJson);
-      if (answerVal !== null) {
-        const submissionType = getStrataSubmissionType(q.questionType);
+      if (q.numericId && body.responseJson !== undefined) {
+        const answerVal = toStrataAnswerPayload(q, responseJson);
+        if (answerVal !== null) {
+          const submissionType = getStrataSubmissionType(q.questionType);
+          syncTasks.push(
+            lexmaCastoRequest(buildExamUpsertPath('user/answers'), {
+              method: 'POST',
+              session: learner.session,
+              siteMeta,
+              body: {
+                examId: raw.examNumericId,
+                examGuidId: raw.examId,
+                sectionId,
+                sectionGuidId,
+                questionId: q.numericId,
+                questionGuidId: q.guidId ?? q.id,
+                answer: answerVal,
+                submissionType,
+                actionGroup: 'ExamAnswers',
+                isDiy: false,
+              },
+            })
+          );
+        }
+      }
+
+      if (q.numericId && isFlagged !== previousFlagged) {
         syncTasks.push(
-          lexmaCastoRequest(buildExamUpsertPath('user/answers'), {
+          lexmaCastoRequest(buildExamUpsertPath('question/actions'), {
             method: 'POST',
             session: learner.session,
             siteMeta,
             body: {
               examId: raw.examNumericId,
               examGuidId: raw.examId,
-              sectionId: q.sectionId ?? 0,
-              sectionGuidId: q.sectionGuidId ?? '',
+              sectionId,
+              sectionGuidId,
               questionId: q.numericId,
               questionGuidId: q.guidId ?? q.id,
-              answer: answerVal,
-              submissionType,
-              actionGroup: 'ExamAnswers',
+              actionValue: isFlagged ? 'flagged' : 'unflagged',
+              value: isFlagged,
+              submissionType: 'ActionQuestionFlag',
+              actionGroup: 'QuestionActions',
               isDiy: false,
             },
           })
         );
       }
-    }
 
-    if (q?.numericId && isFlagged !== previousFlagged) {
-      syncTasks.push(
-        lexmaCastoRequest(buildExamUpsertPath('question/actions'), {
-          method: 'POST',
-          session: learner.session,
-          siteMeta,
-          body: {
-            examId: raw.examNumericId,
-            examGuidId: raw.examId,
-            sectionId: q.sectionId ?? 0,
-            sectionGuidId: q.sectionGuidId ?? '',
-            questionId: q.numericId,
-            questionGuidId: q.guidId ?? q.id,
-            actionValue: isFlagged ? 'flagged' : 'unflagged',
-            value: isFlagged,
-            submissionType: 'ActionQuestionFlag',
-            actionGroup: 'QuestionActions',
-            isDiy: false,
-          },
-        })
-      );
-    }
-
-    if (layoutMode && layoutMode !== previousLayout) {
-      syncTasks.push(
-        lexmaCastoRequest(buildExamUpsertPath('preferences'), {
-          method: 'POST',
-          session: learner.session,
-          siteMeta,
-          body: {
-            examId: raw.examNumericId,
-            examGuidId: raw.examId,
-            value: layoutMode,
-            submissionType: 'ActionExamLayout',
-            actionGroup: 'ExamPreferences',
-            isDiy: false,
-          },
-        })
-      );
-    }
-
-    if (syncTasks.length > 0) {
-      const settled = await Promise.allSettled(syncTasks);
-      const authFailure = settled.find(
-        (s) => s.status === 'fulfilled' && (s.value.status === 401 || s.value.status === 403)
-      );
-      if (authFailure && authFailure.status === 'fulfilled') {
-        return NextResponse.json(
-          {
-            success: false,
-            message: authFailure.value.message || 'Backend session unauthorized for autosave.',
-            errorCode: authFailure.value.status === 401 ? 'UNAUTHORIZED' : 'FORBIDDEN',
-          },
-          { status: authFailure.value.status, headers: NO_STORE_HEADERS }
+      if (layoutMode && layoutMode !== previousLayout) {
+        syncTasks.push(
+          lexmaCastoRequest(buildExamUpsertPath('preferences'), {
+            method: 'POST',
+            session: learner.session,
+            siteMeta,
+            body: {
+              examId: raw.examNumericId,
+              examGuidId: raw.examId,
+              value: layoutMode,
+              submissionType: 'ActionExamLayout',
+              actionGroup: 'ExamPreferences',
+              isDiy: false,
+            },
+          })
         );
       }
-      backendSynced = settled.some((s) => s.status === 'fulfilled' && s.value.ok);
-      if (!backendSynced) {
-        syncWarning = 'Response saved in active session, but backend sync encountered a transient error.';
+
+      if (syncTasks.length > 0) {
+        const settled = await Promise.allSettled(syncTasks);
+        const authFailure = settled.find(
+          (s) => s.status === 'fulfilled' && (s.value.status === 401 || s.value.status === 403)
+        );
+        if (authFailure && authFailure.status === 'fulfilled') {
+          return NextResponse.json(
+            {
+              success: false,
+              message: authFailure.value.message || 'Backend session unauthorized for autosave.',
+              errorCode: authFailure.value.status === 401 ? 'UNAUTHORIZED' : 'FORBIDDEN',
+            },
+            { status: authFailure.value.status, headers: NO_STORE_HEADERS }
+          );
+        }
+        backendSynced = settled.some((s) => s.status === 'fulfilled' && s.value.ok);
+        if (!backendSynced) {
+          syncWarning = 'Response saved in active session, but backend sync encountered a transient error.';
+        }
+      } else {
+        backendSynced = true;
       }
     } else {
-      backendSynced = true;
+      syncWarning = 'Exam lacks numeric backend identifier; response stored in active session cache only.';
     }
-  } else {
-    syncWarning = 'Exam lacks numeric backend identifier; response stored in active session cache only.';
-  }
 
-  raw.isDurableBackendSynced = raw.isDurableBackendSynced || backendSynced;
+    raw.isDurableBackendSynced = raw.isDurableBackendSynced || backendSynced;
 
-  return NextResponse.json(
-    {
-      success: true,
-      message: 'Response autosaved.',
-      data: {
-        ...result.data,
-        backendSynced,
-        ...(syncWarning ? { syncWarning } : {}),
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Response autosaved.',
+        data: {
+          ...result.data,
+          backendSynced,
+          ...(syncWarning ? { syncWarning } : {}),
+        },
       },
-    },
-    { headers: NO_STORE_HEADERS }
-  );
+      { headers: NO_STORE_HEADERS }
+    );
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal error autosaving response.';
+    console.error('Autosave unhandled error:', err);
+    return NextResponse.json(
+      { success: false, message, errorCode: 'AUTOSAVE_FAILED' },
+      { status: 500, headers: NO_STORE_HEADERS }
+    );
+  }
 }
 
 export async function PUT(
