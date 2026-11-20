@@ -2,7 +2,7 @@
 
 > **Status**: COMPLETE LOCALLY — **PUSH BLOCKED BY GITHUB PUSH PROTECTION (GH013)**
 > **Execution Engine**: Reusable Modular Git Automation Engine (`tools/git/Invoke-IncrementalGitIntegration.ps1`)
-> **Report Timestamp**: 2026-11-20 16:55 UTC+03
+> **Report Timestamp**: 2026-11-20 16:55 UTC+03 (last updated 17:15 UTC+03 with the final push re-verification)
 > **Target Branch**: `main`
 
 ---
@@ -346,6 +346,8 @@ remote:           path: tools/git/Test-FeatureWorkflow.ps1:229
 error: failed to push some refs to 'https://github.com/de-scientist/Nurvia-Prep.git'
 ```
 
+**Re-verification (2026-11-20 17:11:06):** after this report was committed (local state then 18 commits ahead), one final non-force `git push origin main` was attempted to confirm the block still holds against the complete state. It was rejected with the **identical GH013 finding** — same commit `997435f`, same path `tools/git/Test-FeatureWorkflow.ps1:229`, exit code 1 — and **no remote reference moved**: `origin/main` and `upstream/main` both remain at `150ea9f`.
+
 ### Actions deliberately NOT taken
 
 Per the standing rules — *stop and report on branch/repository-rule violations*, *never expose credentials*, *never force-push*, *never discard work*, *failures are reported, not auto-fixed* — the following were **not** attempted:
@@ -387,7 +389,7 @@ Because the push was rejected, **no remote reference moved**. Verified state aft
 
 All 17 commits are intact, linear, and independently verifiable via `git log 150ea9f..HEAD`. Nothing was lost.
 
-> **Bookkeeping commits:** this report plus two supporting tooling edits (`tools/git/.gitignore`, `tools/git/Build-Wave3Manifest.ps1`) are committed immediately after `19af267` and are visible via `git log 19af267..HEAD`. They do not alter any engine-run figure above; the engine-run final HEAD remains `19af267`.
+> **Bookkeeping commits:** this report and its supporting tooling edits (`tools/git/.gitignore`, `tools/git/Build-Wave3Manifest.ps1`) are committed immediately after `19af267` and are visible via `git log 19af267..HEAD` (first bookkeeping commit: `3500a88`). They do not alter any engine-run figure above — the engine-run final HEAD remains `19af267`. At the final push re-verification (17:11:06, §12) local HEAD was `3500a88`, i.e. **18 commits ahead** of both remotes; later bookkeeping commits increment that count, and `git rev-list --count origin/main..HEAD` gives the live figure.
 
 ---
 
