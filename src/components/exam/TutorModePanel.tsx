@@ -35,23 +35,16 @@ export function TutorModePanel({
   const [error, setError] = React.useState<string | null>(null);
   const [pendingHintStage, setPendingHintStage] = React.useState<TutorStage | null>(null);
   const [isEvaluating, setIsEvaluating] = React.useState<boolean>(false);
-  const [storedResponse, setStoredResponse] = React.useState<string | null>(null);
+  const [lastEvaluatedAnswer, setLastEvaluatedAnswer] = React.useState<string | null>(responseJson || null);
 
-  // Reset per-question hint state and stored response whenever the active question changes
+  // Reset per-question hint state and evaluation loading state whenever the active question changes
   React.useEffect(() => {
     setHints([]);
     setLoadingStage(null);
     setError(null);
     setPendingHintStage(null);
-    setStoredResponse(null);
-  }, [questionId]);
-
-  // Restore stored response from session when component mounts
-  React.useEffect(() => {
-    if (responseJson) {
-      setStoredResponse(responseJson);
-    }
-  }, [responseJson]);
+    setLastEvaluatedAnswer(responseJson || null);
+  }, [questionId, responseJson]);
 
   const handleRequestHint = async (stage: TutorStage) => {
     // Prevent concurrent hint requests
@@ -78,8 +71,6 @@ export function TutorModePanel({
   };
 
   const handleEvaluate = async () => {
-    // If we already have a stored response, do not re-evaluate
-    if (storedResponse) return;
     if (!serializedAnswer) return;
     if (isEvaluating) return;
     setIsEvaluating(true);
@@ -92,8 +83,7 @@ export function TutorModePanel({
       });
       if (res.success && res.data) {
         onEvaluated(res.data);
-        // Store the newly evaluated response so it persists across renders
-        setStoredResponse(serializedAnswer);
+        setLastEvaluatedAnswer(serializedAnswer);
       } else {
         setError(res.message || "Unable to evaluate your answer.");
       }
@@ -105,73 +95,67 @@ export function TutorModePanel({
     }
   };
 
+  const isCurrentAnswerEvaluated = Boolean(evaluation && lastEvaluatedAnswer && serializedAnswer === lastEvaluatedAnswer);
+
   return (
     <div className="space-y-3 rounded-xl border border-brand-teal/25 bg-brand-teal/5 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-xs font-bold text-brand-teal">
           <Sparkles className="h-4 w-4" aria-hidden="true" />
           <span>Guided Tutor Mode</span>
+          {isCurrentAnswerEvaluated && (
+            <span className="text-[10px] font-normal px-2 py-0.5 rounded-full bg-brand-teal/15 text-brand-teal">
+              Evaluated
+            </span>
+          )}
         </div>
 
-        {/* Show stored response if available, otherwise show hint/evaluate controls */}
-        {storedResponse ? (
-          <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-foreground-secondary">
-            <span>Answer stored: {storedResponse.substring(0, 50)}{storedResponse.length > 50 ? '…' : ''}</span>
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              isLoading={loadingStage === "FirstHint"}
-              onClick={() => void handleRequestHint("FirstHint")}
-              className="h-8 text-xs"
-            >
-              <Lightbulb className="mr-1.5 h-3.5 w-3.5 text-amber-500" />
-              Ask for a Hint
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              isLoading={loadingStage === "GuidedReasoning"}
-              onClick={() => void handleRequestHint("GuidedReasoning")}
-              className="h-8 text-xs"
-            >
-              <HelpCircle className="mr-1.5 h-3.5 w-3.5 text-brand-teal" />
-              Help Me Understand
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              isLoading={loadingStage === "ExplainConcept"}
-              onClick={() => void handleRequestHint("ExplainConcept")}
-              className="h-8 text-xs"
-            >
-              <BookOpen className="mr-1.5 h-3.5 w-3.5 text-brand-teal" />
-              Explain the Concept
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={!hasSelectedAnswer}
-              isLoading={loadingStage === "evaluate"}
-              onClick={() => void handleEvaluate()}
-              className="h-8 text-xs"
-            >
-              Submit My Answer
-            </Button>
-          </div>
-        )}
-
-        {!storedResponse && evaluation && (
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-foreground-muted"> Previously evaluated</span>
-          </div>
-        )}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            isLoading={loadingStage === "FirstHint"}
+            onClick={() => void handleRequestHint("FirstHint")}
+            className="h-8 text-xs"
+          >
+            <Lightbulb className="mr-1.5 h-3.5 w-3.5 text-amber-500" />
+            Ask for a Hint
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            isLoading={loadingStage === "GuidedReasoning"}
+            onClick={() => void handleRequestHint("GuidedReasoning")}
+            className="h-8 text-xs"
+          >
+            <HelpCircle className="mr-1.5 h-3.5 w-3.5 text-brand-teal" />
+            Help Me Understand
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            isLoading={loadingStage === "ExplainConcept"}
+            onClick={() => void handleRequestHint("ExplainConcept")}
+            className="h-8 text-xs"
+          >
+            <BookOpen className="mr-1.5 h-3.5 w-3.5 text-brand-teal" />
+            Explain the Concept
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={isCurrentAnswerEvaluated ? "outline" : "primary"}
+            disabled={!hasSelectedAnswer || isCurrentAnswerEvaluated}
+            isLoading={loadingStage === "evaluate"}
+            onClick={() => void handleEvaluate()}
+            className="h-8 text-xs"
+          >
+            {isCurrentAnswerEvaluated ? "Answer Evaluated" : "Submit My Answer"}
+          </Button>
+        </div>
       </div>
 
       {error && (
