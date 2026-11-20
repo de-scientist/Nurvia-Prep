@@ -40,9 +40,11 @@ import {
   Headphones,
   BookOpen,
   Home,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/auth-provider";
+import { PageLoader, RedirectScreen } from "@/components/shared/feedback";
 import { UserAccountMenu } from "@/components/layout/user-account-menu";
 import { SuperadminSwitcher } from "@/components/layout/superadmin-switcher";
 interface NavSubItem {
@@ -56,6 +58,7 @@ interface NavItem {
   icon: React.ElementType;
   badge?: string;
   subItems?: NavSubItem[];
+  external?: boolean;
 }
 
 interface NavSection {
@@ -95,7 +98,7 @@ export const learnerNavigation: NavSection[] = [
           { name: "ATI Practical", href: "/learner/exams?track=PN_LPN&category=ATI" },
           { name: "HESI PN", href: "/learner/exams?track=PN_LPN&category=HESI" },
           { name: "Regular Courses", href: "/learner/exams?track=PN_LPN&category=RegularCourse" },
-          { name: "Certifications", href: "/learner/exams?track=PN_LPN&category=Certification" },
+          { name: "Core Series", href: "/learner/exams?track=PN_LPN&category=CORE%20SERIES" },
         ],
       },
       {
@@ -132,7 +135,7 @@ export const learnerNavigation: NavSection[] = [
     title: "RESOURCES",
     items: [
       { name: "Study Hub", href: "/learner/hub", icon: Layers },
-      { name: "NCLEX Prep Hub", href: "/nclex/study", icon: GraduationCap, badge: "Core" },
+      { name: "NCLEX Prep Hub", href: "https://www.prepford.com/", icon: GraduationCap, badge: "PrepFord", external: true },
       { name: "Study Guides", href: "/study-guides", icon: FileText },
       { name: "Flashcards", href: "/learner/flashcards", icon: Layers, badge: "SRS" },
       { name: "Care Plans", href: "/care-plans", icon: HeartHandshake },
@@ -177,7 +180,7 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
   const [topSearch, setTopSearch] = React.useState("");
   const router = useRouter();
   const pathname = usePathname();
-  const { status, user, error } = useAuth();
+  const { status, user, error, refresh } = useAuth();
   const avatarUrl = status === "authenticated" ? (user?.avatarUrl ?? null) : null;
 
   React.useEffect(() => {
@@ -214,23 +217,66 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
 
   // Superadmin is explicitly admitted to the learner experience with the same
   // authenticated identity; other staff roles are redirected to access-denied.
-  if (status === "loading" || status === "unauthenticated" ||
-      (status === "authenticated" &&
-        user?.role?.trim().toLowerCase() !== "learner" &&
-        user?.role?.trim().toLowerCase() !== "superadmin")) {
+  if (status === "loading") {
+    return <PageLoader fullscreen message="Verifying your learner session…" />;
+  }
+
+  if (status === "unauthenticated") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-6 text-sm text-foreground-secondary" aria-live="polite">
-        {status === "loading" ? "Checking your session…" : "Redirecting to the appropriate page…"}
-      </main>
+      <RedirectScreen
+        heading="Session Expired"
+        description="Redirecting you securely to the sign-in portal…"
+        destination="/sign-in"
+      />
+    );
+  }
+
+  if (
+    status === "authenticated" &&
+    user?.role?.trim().toLowerCase() !== "learner" &&
+    user?.role?.trim().toLowerCase() !== "superadmin"
+  ) {
+    return (
+      <RedirectScreen
+        heading="Access Restricted"
+        description="Redirecting to your authorized workspace…"
+        destination="/access-denied"
+      />
     );
   }
 
   if (status === "error") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-6">
-        <p role="alert" className="max-w-md text-center text-sm text-rose-700 dark:text-rose-300">
-          {error || "Unable to verify your sign-in. Refresh the page or try again."}
-        </p>
+      <main className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-md rounded-2xl border border-rose-300 dark:border-rose-900/60 bg-surface p-6 sm:p-8 shadow-sm space-y-4 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
+            <AlertTriangle className="h-6 w-6" />
+          </div>
+          <h2 className="font-brand text-lg font-bold text-foreground">
+            Session Verification Failed
+          </h2>
+          <p role="alert" className="text-xs text-foreground-secondary leading-relaxed">
+            {error || "Unable to verify your sign-in status. Check your connection and try again."}
+          </p>
+          <div className="pt-2 flex justify-center gap-3">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => void refresh()}
+              className="text-xs"
+            >
+              Retry Verification
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.replace("/sign-in")}
+              className="text-xs"
+            >
+              Sign In
+            </Button>
+          </div>
+        </div>
       </main>
     );
   }
@@ -302,38 +348,64 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
                 return (
                   <div key={item.name} className="space-y-1">
                     <div className="flex items-center">
-                      <Link
-                        href={item.href}
-                        onClick={() => setMobileOpen(false)}
-                        className={cn(
-                          "group flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
-                          isActive
-                            ? "bg-brand-navy text-white shadow-xs font-semibold dark:bg-brand-teal/20 dark:text-brand-teal"
-                            : "text-foreground-secondary hover:bg-surface-muted hover:text-foreground",
-                          collapsed && "justify-center px-2"
-                        )}
-                        title={collapsed ? item.name : undefined}
-                      >
-                        <Icon
+                      {item.external ? (
+                        <a
+                          href={item.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setMobileOpen(false)}
                           className={cn(
-                            "h-4 w-4 shrink-0 transition-transform group-hover:scale-110",
-                            isActive ? "text-brand-teal" : "text-foreground-muted"
+                            "group flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors text-foreground-secondary hover:bg-surface-muted hover:text-foreground",
+                            collapsed && "justify-center px-2"
                           )}
-                        />
-                        {!collapsed && <span className="flex-1 truncate">{item.name}</span>}
-                        {!collapsed && item.badge && (
-                          <span
+                          title={collapsed ? `${item.name} (PrepFord)` : undefined}
+                        >
+                          <Icon
+                            className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110 text-foreground-muted"
+                          />
+                          {!collapsed && <span className="flex-1 truncate">{item.name}</span>}
+                          {!collapsed && item.badge && (
+                            <span
+                              className="rounded-full px-1.5 py-0.2 text-[9px] font-bold uppercase bg-brand-teal/15 text-brand-teal dark:text-teal-300"
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                        </a>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          onClick={() => setMobileOpen(false)}
+                          className={cn(
+                            "group flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
+                            isActive
+                              ? "bg-brand-navy text-white shadow-xs font-semibold dark:bg-brand-teal/20 dark:text-brand-teal"
+                              : "text-foreground-secondary hover:bg-surface-muted hover:text-foreground",
+                            collapsed && "justify-center px-2"
+                          )}
+                          title={collapsed ? item.name : undefined}
+                        >
+                          <Icon
                             className={cn(
-                              "rounded-full px-1.5 py-0.2 text-[9px] font-bold uppercase",
-                              isActive
-                                ? "bg-white/20 text-white"
-                                : "bg-brand-teal/15 text-brand-teal dark:text-teal-300"
+                              "h-4 w-4 shrink-0 transition-transform group-hover:scale-110",
+                              isActive ? "text-brand-teal" : "text-foreground-muted"
                             )}
-                          >
-                            {item.badge}
-                          </span>
-                        )}
-                      </Link>
+                          />
+                          {!collapsed && <span className="flex-1 truncate">{item.name}</span>}
+                          {!collapsed && item.badge && (
+                            <span
+                              className={cn(
+                                "rounded-full px-1.5 py-0.2 text-[9px] font-bold uppercase",
+                                isActive
+                                ? "bg-white/20 text-white"
+                              : "bg-brand-teal/15 text-brand-teal dark:text-teal-300"
+                              )}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                        </Link>
+                      )}
 
                       {/* Expand Submenu Chevron if subitems exist */}
                       {!collapsed && item.subItems && (
@@ -427,7 +499,7 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
                 type="search"
                 value={topSearch}
                 onChange={(e) => setTopSearch(e.target.value)}
-                placeholder="Search study sets, topics, or keywords..."
+                placeholder="Search exams, subjects, or keywords..."
                 className="w-full rounded-full border border-border bg-background pl-9 pr-4 py-1.5 text-xs sm:text-sm placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-brand-teal"
               />
             </form>

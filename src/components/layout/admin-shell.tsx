@@ -24,9 +24,11 @@ import {
   HardDrive,
   FileText,
   Lock,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/auth-provider";
+import { PageLoader, RedirectScreen } from "@/components/shared/feedback";
 import { UserAccountMenu } from "@/components/layout/user-account-menu";
 import { SuperadminSwitcher } from "@/components/layout/superadmin-switcher";
 
@@ -82,7 +84,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { status, user, error } = useAuth();
+  const { status, user, error, refresh } = useAuth();
   const avatarUrl = status === "authenticated" ? (user?.avatarUrl ?? null) : null;
   const staffRoles = ["Author", "Reviewer", "Publisher", "Administrator", "Superadmin"];
 
@@ -94,21 +96,62 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     }
   }, [status, user, pathname, router]);
 
-  if (status === "loading" || status === "unauthenticated" ||
-      (status === "authenticated" && (!user || !staffRoles.includes(user.role)))) {
+  if (status === "loading") {
+    return <PageLoader fullscreen message="Verifying administrative credentials…" />;
+  }
+
+  if (status === "unauthenticated") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-6 text-sm text-foreground-secondary" aria-live="polite">
-        {status === "loading" ? "Checking your session..." : "Redirecting to the appropriate page..."}
-      </main>
+      <RedirectScreen
+        heading="Session Expired"
+        description="Redirecting you securely to the administrative login portal…"
+        destination="/sign-in"
+      />
+    );
+  }
+
+  if (status === "authenticated" && (!user || !staffRoles.includes(user.role))) {
+    return (
+      <RedirectScreen
+        heading="Access Restricted"
+        description="Redirecting to your authorized workspace…"
+        destination="/access-denied"
+      />
     );
   }
 
   if (status === "error") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-6">
-        <p role="alert" className="max-w-md text-center text-sm text-rose-700 dark:text-rose-300">
-          {error || "Unable to verify your sign-in. Refresh the page or try again."}
-        </p>
+      <main className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-md rounded-2xl border border-rose-300 dark:border-rose-900/60 bg-surface p-6 sm:p-8 shadow-sm space-y-4 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
+            <AlertTriangle className="h-6 w-6" />
+          </div>
+          <h2 className="font-brand text-lg font-bold text-foreground">
+            Administrative Session Error
+          </h2>
+          <p role="alert" className="text-xs text-foreground-secondary leading-relaxed">
+            {error || "Unable to verify administrative authorization. Check your connection and try again."}
+          </p>
+          <div className="pt-2 flex justify-center gap-3">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => void refresh()}
+              className="text-xs"
+            >
+              Retry Verification
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.replace("/sign-in")}
+              className="text-xs"
+            >
+              Sign In
+            </Button>
+          </div>
+        </div>
       </main>
     );
   }
