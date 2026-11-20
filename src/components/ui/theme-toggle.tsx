@@ -10,17 +10,17 @@ export function ThemeToggle({ className }: { className?: string }) {
 
   React.useEffect(() => {
     setMounted(true);
-    const storedTheme = localStorage.getItem("nurvia_theme");
-    const systemPrefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    const activeDark = storedTheme === "dark" || (!storedTheme && systemPrefersDark);
+    const storedTheme = localStorage.getItem("nurvia_theme") || localStorage.getItem("theme");
+    // Authoritative default is light mode; system dark preference does NOT override default
+    const activeDark = storedTheme === "dark" || (typeof storedTheme === "string" && storedTheme.includes('"global":"dark"'));
 
     setIsDark(activeDark);
     if (activeDark) {
       document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
     } else {
       document.documentElement.classList.remove("dark");
+      document.documentElement.classList.add("light");
     }
   }, []);
 
@@ -29,9 +29,11 @@ export function ThemeToggle({ className }: { className?: string }) {
     setIsDark(nextDark);
     if (nextDark) {
       document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
       localStorage.setItem("nurvia_theme", "dark");
     } else {
       document.documentElement.classList.remove("dark");
+      document.documentElement.classList.add("light");
       localStorage.setItem("nurvia_theme", "light");
     }
   };

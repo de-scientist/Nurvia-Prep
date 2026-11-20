@@ -68,10 +68,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || isLoading}
+        aria-busy={isLoading ? "true" : undefined}
         className={buttonVariants({ variant, size, className })}
         {...props}
       >
-        {isLoading && <Loader2 className="w-4 h-4 animate-spin shrink-0" />}
+        {isLoading && <Loader2 className="w-4 h-4 animate-spin shrink-0 motion-reduce:animate-none" />}
         {children}
       </button>
     );

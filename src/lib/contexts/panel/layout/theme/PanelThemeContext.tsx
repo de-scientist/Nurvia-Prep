@@ -202,7 +202,7 @@ const resetCustomColors = () => {
 
   const toggleTheme = (target: ThemeTarget) => {
     const current = theme[target];
-    const next = current === "dark" ? "light" : current === "light" ? "dark" : getSystemTheme();
+    const next = current === "dark" ? "light" : "dark";
     setTheme(target, next);
   };
 
