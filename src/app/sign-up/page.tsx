@@ -8,6 +8,7 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { PhoneCountryInput } from "@/components/auth/phone-country-input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth/auth-provider";
+import { RedirectScreen } from "@/components/shared/feedback";
 import { nurviaApi } from "@/lib/api-client";
 import { DEFAULT_PHONE_COUNTRY, normalizePhoneNumber, type CountryCode } from "@/lib/phone";
 import { cn } from "@/lib/utils";
@@ -187,6 +188,15 @@ export default function SignUpPage() {
 
   const usesPassword = loginMethod === "password" || loginMethod === "both";
   const usesPin = loginMethod === "pin" || loginMethod === "both";
+
+  if (status === "loading") {
+    return (
+      <RedirectScreen
+        heading="Verifying your access"
+        description="Please wait while we securely prepare your account."
+      />
+    );
+  }
 
   return (
     <AuthShell mode="sign-up">
@@ -561,7 +571,6 @@ export default function SignUpPage() {
             size="lg"
             className="w-full"
             isLoading={submitting}
-            disabled={submitting || status === "loading"}
           >
             Create learner account
           </Button>
