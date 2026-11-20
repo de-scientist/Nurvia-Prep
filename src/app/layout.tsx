@@ -7,6 +7,7 @@ import { RightSidebarProvider } from "@/lib/contexts/panel/layout/includes/sideb
 import { ThemeProvider } from "@/lib/contexts/panel/layout/theme/PanelThemeContext";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { FeedbackProvider } from "@/lib/feedback/feedback-context";
+import { AppInitializationSplash, RouteTransitionBar } from "@/components/shared/feedback";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -35,13 +36,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${plusJakartaSans.variable} ${inter.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`light ${plusJakartaSans.variable} ${inter.variable}`}>
       <body className="antialiased bg-background text-foreground selection:bg-[#0D9488] selection:text-white transition-colors duration-200">
         <ThemeProvider>
           <FeedbackProvider>
             <AuthProvider>
               <LeftSidebarProvider>
                 <RightSidebarProvider>
+                  <RouteTransitionBar />
+                  <AppInitializationSplash />
                   {children}
                 </RightSidebarProvider>
               </LeftSidebarProvider>

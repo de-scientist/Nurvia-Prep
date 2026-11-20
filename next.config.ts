@@ -102,6 +102,20 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/nclex",
+        destination: "https://www.prepford.com/",
+        permanent: false,
+      },
+      {
+        source: "/nclex/:path*",
+        destination: "https://www.prepford.com/",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
