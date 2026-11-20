@@ -30,16 +30,24 @@ export default function LearnerDashboardPage() {
     let active = true;
     async function loadDashboard() {
       const [attemptResponse, examResponse] = await Promise.all([
-        nurviaApi.getAttemptHistory(),
+        nurviaApi.getAttemptHistory().catch(() => ({
+          success: false,
+          data: [] as ExamAttemptSummaryDto[],
+          message: "Unable to load attempt history",
+        })),
         nurviaApi.getExams({ status: "Published", pageSize: 8 }),
       ]);
       if (!active) return;
 
-      if (!attemptResponse.success || !examResponse.success) {
-        setError(attemptResponse.message || examResponse.message || "Unable to load your learner dashboard.");
-      } else {
-        setAttempts(attemptResponse.data || []);
-        setExams(examResponse.data?.items || []);
+      if (attemptResponse.success && attemptResponse.data) {
+        setAttempts(attemptResponse.data);
+      }
+      if (examResponse.success && examResponse.data?.items) {
+        setExams(examResponse.data.items);
+      }
+
+      if (!examResponse.success && !attemptResponse.success) {
+        setError(examResponse.message || ("message" in attemptResponse ? attemptResponse.message : undefined) || "Unable to load your learner dashboard.");
       }
       setLoading(false);
     }

@@ -55,6 +55,9 @@ interface LexmaCastoExamResultRaw {
 function mapLexmaCastoResultToAttemptSummary(
   item: LexmaCastoExamResultRaw
 ): ExamAttemptSummaryDto | null {
+  if (!item || typeof item !== 'object') {
+    return null;
+  }
   const examId = String(item.examGuidId ?? item.examId ?? item.guidId ?? item.id ?? '').trim();
   if (!examId) {
     return null;
@@ -82,17 +85,24 @@ function mapLexmaCastoResultToAttemptSummary(
     status = 'InProgress';
   }
 
+  const sanitizeDate = (val: unknown): string | undefined => {
+    if (typeof val === 'string' && val.trim() && !val.trim().startsWith('0001')) {
+      return val.trim();
+    }
+    return undefined;
+  };
+
   const startedAtUtc =
-    (typeof item.attemptedAt === 'string' && item.attemptedAt) ||
-    (typeof item.createdAt === 'string' && item.createdAt) ||
+    sanitizeDate(item.attemptedAt) ||
+    sanitizeDate(item.createdAt) ||
     new Date().toISOString();
 
   const submittedAtUtc =
     status === 'InProgress'
       ? undefined
-      : (typeof item.reviewedAt === 'string' && item.reviewedAt) ||
-        (typeof item.attemptedAt === 'string' && item.attemptedAt) ||
-        (typeof item.updatedAt === 'string' && item.updatedAt) ||
+      : sanitizeDate(item.reviewedAt) ||
+        sanitizeDate(item.attemptedAt) ||
+        sanitizeDate(item.updatedAt) ||
         undefined;
 
   const scorePercentage =
@@ -158,133 +168,192 @@ function mapLexmaCastoResultToAttemptSummary(
 }
 
 export async function GET(request: NextRequest) {
-  const learner = await resolveAttemptLearner(request);
-  if (!learner) {
-    return NextResponse.json(
-      { success: false, message: 'Authentication is required.', errorCode: 'UNAUTHORIZED' },
-      { status: 401, headers: NO_STORE_HEADERS }
-    );
-  }
+  try {
+    const learner = await resolveAttemptLearner(request);
+    if (!learner) {
+      return NextResponse.json(
+        { success: false, message: 'Authentication is required.', errorCode: 'UNAUTHORIZED' },
+        { status: 401, headers: NO_STORE_HEADERS }
+      );
+    }
 
-  const pageParam = Number(request.nextUrl.searchParams.get('page') || '1');
-  const perPageParam = Number(request.nextUrl.searchParams.get('perPage') || '50');
-  const fetchAll = request.nextUrl.searchParams.get('fetchAll') === 'true';
+    const pageParam = Number(request.nextUrl.searchParams.get('page') || '1');
+    const perPageParam = Number(request.nextUrl.searchParams.get('perPage') || '50');
+    const fetchAll = request.nextUrl.searchParams.get('fetchAll') === 'true';
 
-  const startPage = Number.isInteger(pageParam) && pageParam >= 1 && pageParam <= 10_000 ? pageParam : 1;
-  const perPage = Number.isInteger(perPageParam) && perPageParam >= 1 && perPageParam <= 100 ? perPageParam : 50;
+    const startPage = Number.isInteger(pageParam) && pageParam >= 1 && pageParam <= 10_000 ? pageParam : 1;
+    const perPage = Number.isInteger(perPageParam) && perPageParam >= 1 && perPageParam <= 100 ? perPageParam : 50;
 
-  const siteMeta = extractSiteMetadataFromRequestHeaders(
-    request.headers,
-    '/api/attempts/history'
-  );
-
-  const collectedRaw: LexmaCastoExamResultRaw[] = [];
-  let page = startPage;
-  const maxPages = fetchAll ? 20 : startPage;
-  let totalPages = startPage;
-
-  while (page <= maxPages && page <= totalPages) {
-    const backendPath = buildStrataEndpointPath(
-      'examResults',
-      {
-        dynamicPage: page,
-        dynamicPerPage: fetchAll ? 100 : perPage,
-        page,
-        perPage: fetchAll ? 100 : perPage,
-      },
-      'relative'
+    const siteMeta = extractSiteMetadataFromRequestHeaders(
+      request.headers,
+      '/api/attempts/history'
     );
 
-    const result = await lexmaCastoRequest<{
-      data?: {
+    const collectedRaw: LexmaCastoExamResultRaw[] = [];
+    let page = startPage;
+    const maxPages = fetchAll ? 20 : startPage;
+    let totalPages = startPage;
+
+    while (page <= maxPages && page <= totalPages) {
+      const backendPath = buildStrataEndpointPath(
+        'examResults',
+        {
+          dynamicPage: page,
+          dynamicPerPage: fetchAll ? 100 : perPage,
+          page,
+          perPage: fetchAll ? 100 : perPage,
+        },
+        'relative'
+      );
+
+      const result = await lexmaCastoRequest<{
+        data?: {
+          results?: LexmaCastoExamResultRaw[];
+          items?: LexmaCastoExamResultRaw[];
+          totalPages?: number;
+          skewTotalPages?: number;
+        };
         results?: LexmaCastoExamResultRaw[];
         items?: LexmaCastoExamResultRaw[];
         totalPages?: number;
         skewTotalPages?: number;
-      };
-      results?: LexmaCastoExamResultRaw[];
-      items?: LexmaCastoExamResultRaw[];
-      totalPages?: number;
-      skewTotalPages?: number;
-    }>(backendPath, {
-      method: 'GET',
-      session: learner.session,
-      siteMeta,
+      }>(backendPath, {
+        method: 'GET',
+        session: learner.session,
+        siteMeta,
+      });
+
+      if (!result.ok) {
+        if (page === startPage) {
+          if (result.status === 401) {
+            return NextResponse.json(
+              {
+                success: false,
+                message: result.message,
+                errorCode: result.errorCode,
+                errors: result.errors,
+              },
+              { status: 401, headers: NO_STORE_HEADERS }
+            );
+          }
+          const localAttempts = attemptStore.getHistory(learner.userId);
+          if (localAttempts.length > 0) {
+            return NextResponse.json(
+              {
+                success: true,
+                message: 'OK',
+                data: localAttempts,
+              },
+              { headers: NO_STORE_HEADERS }
+            );
+          }
+          if (result.status === 404) {
+            return NextResponse.json(
+              {
+                success: true,
+                message: 'OK',
+                data: [],
+              },
+              { headers: NO_STORE_HEADERS }
+            );
+          }
+          return NextResponse.json(
+            {
+              success: false,
+              message: result.message,
+              errorCode: result.errorCode,
+              errors: result.errors,
+            },
+            { status: result.status, headers: NO_STORE_HEADERS }
+          );
+        }
+        break;
+      }
+
+      const rawList: unknown =
+        (Array.isArray(result.data) ? result.data : undefined) ??
+        result.data?.data?.results ??
+        result.data?.data?.items ??
+        result.data?.results ??
+        result.data?.items ??
+        [];
+
+      if (Array.isArray(rawList) && rawList.length > 0) {
+        collectedRaw.push(...(rawList as LexmaCastoExamResultRaw[]));
+      }
+
+      const reportedTotalPages = Number(
+        result.data?.data?.totalPages ??
+          result.data?.data?.skewTotalPages ??
+          result.data?.totalPages ??
+          result.data?.skewTotalPages ??
+          1
+      );
+      if (fetchAll && Number.isFinite(reportedTotalPages) && reportedTotalPages >= 1) {
+        totalPages = reportedTotalPages;
+      }
+
+      if (!fetchAll || !Array.isArray(rawList) || rawList.length === 0) {
+        break;
+      }
+      page++;
+    }
+
+    const backendMapped = collectedRaw
+      .map(mapLexmaCastoResultToAttemptSummary)
+      .filter((item): item is ExamAttemptSummaryDto => item !== null);
+
+    // Merge active in-session attempts not yet finalized in backend results, deduplicating by attemptId
+    const localAttempts = attemptStore.getHistory(learner.userId);
+    const byId = new Map<string, ExamAttemptSummaryDto>();
+    for (const item of backendMapped) {
+      byId.set(item.attemptId, item);
+    }
+    for (const local of localAttempts) {
+      const existing = byId.get(local.attemptId);
+      if (!existing) {
+        byId.set(local.attemptId, local);
+      } else if (existing.status === 'InProgress' && local.status === 'Graded') {
+        // Preserve freshly graded local result until backend replication catches up
+        byId.set(local.attemptId, local);
+      }
+    }
+
+    const merged = Array.from(byId.values()).sort((a, b) => {
+      const timeB = b.startedAtUtc ? new Date(b.startedAtUtc).getTime() : 0;
+      const timeA = a.startedAtUtc ? new Date(a.startedAtUtc).getTime() : 0;
+      return (Number.isFinite(timeB) ? timeB : 0) - (Number.isFinite(timeA) ? timeA : 0);
     });
 
-    if (!result.ok) {
-      if (page === startPage) {
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'OK',
+        data: merged,
+      },
+      { headers: NO_STORE_HEADERS }
+    );
+  } catch (error) {
+    console.error('Unhandled error in /api/attempts/history:', error);
+    try {
+      const learner = await resolveAttemptLearner(request);
+      if (learner) {
+        const localAttempts = attemptStore.getHistory(learner.userId);
         return NextResponse.json(
-          {
-            success: false,
-            message: result.message,
-            errorCode: result.errorCode,
-            errors: result.errors,
-          },
-          { status: result.status, headers: NO_STORE_HEADERS }
+          { success: true, message: 'OK', data: localAttempts },
+          { headers: NO_STORE_HEADERS }
         );
       }
-      break;
+    } catch {
+      // Ignore fallback resolution error
     }
-
-    const rawList =
-      result.data?.data?.results ??
-      result.data?.data?.items ??
-      result.data?.results ??
-      result.data?.items ??
-      [];
-
-    if (Array.isArray(rawList) && rawList.length > 0) {
-      collectedRaw.push(...rawList);
-    }
-
-    const reportedTotalPages = Number(
-      result.data?.data?.totalPages ??
-        result.data?.data?.skewTotalPages ??
-        result.data?.totalPages ??
-        result.data?.skewTotalPages ??
-        1
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Failed to retrieve attempt history.',
+        errorCode: 'INTERNAL_SERVER_ERROR',
+      },
+      { status: 500, headers: NO_STORE_HEADERS }
     );
-    if (fetchAll && Number.isFinite(reportedTotalPages) && reportedTotalPages >= 1) {
-      totalPages = reportedTotalPages;
-    }
-
-    if (!fetchAll || !Array.isArray(rawList) || rawList.length === 0) {
-      break;
-    }
-    page++;
   }
-
-  const backendMapped = collectedRaw
-    .map(mapLexmaCastoResultToAttemptSummary)
-    .filter((item): item is ExamAttemptSummaryDto => item !== null);
-
-  // Merge active in-session attempts not yet finalized in backend results, deduplicating by attemptId
-  const localAttempts = attemptStore.getHistory(learner.userId);
-  const byId = new Map<string, ExamAttemptSummaryDto>();
-  for (const item of backendMapped) {
-    byId.set(item.attemptId, item);
-  }
-  for (const local of localAttempts) {
-    const existing = byId.get(local.attemptId);
-    if (!existing) {
-      byId.set(local.attemptId, local);
-    } else if (existing.status === 'InProgress' && local.status === 'Graded') {
-      // Preserve freshly graded local result until backend replication catches up
-      byId.set(local.attemptId, local);
-    }
-  }
-
-  const merged = Array.from(byId.values()).sort(
-    (a, b) => new Date(b.startedAtUtc).getTime() - new Date(a.startedAtUtc).getTime()
-  );
-
-  return NextResponse.json(
-    {
-      success: true,
-      message: 'OK',
-      data: merged,
-    },
-    { headers: NO_STORE_HEADERS }
-  );
 }
