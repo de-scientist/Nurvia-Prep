@@ -12,6 +12,7 @@ import { nurviaApi } from "@/lib/api-client";
 import { UserProfileDto } from "@/lib/api-types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
+import { DetailSkeleton } from "@/components/shared/feedback";
 
 export default function ProfilePage() {
   const { user, refresh } = useAuth();
@@ -221,9 +222,7 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <LearnerShell>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
+        <DetailSkeleton fields={6} />
       </LearnerShell>
     );
   }

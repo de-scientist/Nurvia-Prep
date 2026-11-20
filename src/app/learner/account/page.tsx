@@ -11,6 +11,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { nurviaApi } from "@/lib/api-client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Shield, Trash2, UserCheck } from "lucide-react";
+import { DetailSkeleton } from "@/components/shared/feedback";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -78,9 +79,7 @@ export default function AccountPage() {
   if (status === "loading") {
     return (
       <LearnerShell>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
+        <DetailSkeleton fields={4} />
       </LearnerShell>
     );
   }

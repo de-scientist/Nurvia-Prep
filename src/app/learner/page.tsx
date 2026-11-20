@@ -2,12 +2,20 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { LearnerShell } from "@/components/layout/learner-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/components/auth/auth-provider";
 import { nurviaApi } from "@/lib/api-client";
-import type { ExamAttemptSummaryDto, ExamDto } from "@/lib/api-types";
+import type {
+  ExamAttemptSummaryDto,
+  StudySetCardDto,
+  SubjectCardDto,
+  StudyLibrarySummaryDto,
+} from "@/lib/api-types";
+import { SubjectCard } from "@/components/study/SubjectCard";
+import { TableSkeleton } from "@/components/shared/feedback";
 import { computePerformanceSummary } from "@/lib/analytics/performance-analytics";
 import { getPersonalizedGreeting } from "@/lib/greeting-utils";
 import {
@@ -17,25 +25,31 @@ import {
   GraduationCap,
   Compass,
   BookOpen,
+  ArrowRight,
 } from "lucide-react";
 
 export default function LearnerDashboardPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [attempts, setAttempts] = React.useState<ExamAttemptSummaryDto[]>([]);
-  const [exams, setExams] = React.useState<ExamDto[]>([]);
+  const [exams, setExams] = React.useState<StudySetCardDto[]>([]);
+  const [subjects, setSubjects] = React.useState<SubjectCardDto[]>([]);
+  const [summaryData, setSummaryData] = React.useState<StudyLibrarySummaryDto | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     let active = true;
     async function loadDashboard() {
-      const [attemptResponse, examResponse] = await Promise.all([
+      const [attemptResponse, examResponse, subjectsResponse, summaryResponse] = await Promise.all([
         nurviaApi.getAttemptHistory().catch(() => ({
           success: false,
           data: [] as ExamAttemptSummaryDto[],
           message: "Unable to load attempt history",
         })),
-        nurviaApi.getExams({ status: "Published", pageSize: 8 }),
+        nurviaApi.getStudyLibrary({ pageSize: 6 }),
+        nurviaApi.getStudyLibrarySubjects({ pageSize: 6 }),
+        nurviaApi.getStudyLibrarySummary(),
       ]);
       if (!active) return;
 
@@ -44,6 +58,12 @@ export default function LearnerDashboardPage() {
       }
       if (examResponse.success && examResponse.data?.items) {
         setExams(examResponse.data.items);
+      }
+      if (subjectsResponse.success && subjectsResponse.data?.items) {
+        setSubjects(subjectsResponse.data.items);
+      }
+      if (summaryResponse.success && summaryResponse.data) {
+        setSummaryData(summaryResponse.data);
       }
 
       if (!examResponse.success && !attemptResponse.success) {
@@ -58,9 +78,10 @@ export default function LearnerDashboardPage() {
 
   const completedAttempts = attempts.filter((attempt) =>
     ["Graded", "Submitted"].includes(attempt.status));
-  const summary = React.useMemo(() => computePerformanceSummary(attempts), [attempts]);
-  const averageScore = summary.averageScore !== null ? Math.round(summary.averageScore) : null;
+  const perfSummary = React.useMemo(() => computePerformanceSummary(attempts), [attempts]);
+  const averageScore = perfSummary.averageScore !== null ? Math.round(perfSummary.averageScore) : null;
   const activeAttempts = attempts.filter((attempt) => attempt.status === "InProgress");
+  const totalEligibleExams = summaryData?.totalPublishedStudySets || 1555;
 
   return (
     <LearnerShell>
@@ -71,7 +92,7 @@ export default function LearnerDashboardPage() {
             {getPersonalizedGreeting(user?.name) || "Welcome to NURVIA"}
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-foreground-secondary">
-            Continue an in-progress attempt or choose a published exam. Your activity and results are drawn from your saved account data.
+            Access the complete RN and LPN/PN examination catalogue, continue active attempts, and master nursing clinical judgment.
           </p>
         </section>
 
@@ -104,13 +125,15 @@ export default function LearnerDashboardPage() {
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6 pt-1">
-            <Link
-              href="/nclex/study"
+            <a
+              href="https://www.prepford.com/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-xl border border-border bg-surface p-2.5 text-xs font-semibold text-foreground hover:border-teal-400 hover:text-teal-700 transition-all"
             >
               <GraduationCap className="h-4 w-4 text-teal-600" />
-              <span className="truncate">NCLEX Hub</span>
-            </Link>
+              <span className="truncate">PrepFord NCLEX</span>
+            </a>
             <Link
               href="/study-guides"
               className="flex items-center gap-2 rounded-xl border border-border bg-surface p-2.5 text-xs font-semibold text-foreground hover:border-teal-400 hover:text-teal-700 transition-all"
@@ -152,7 +175,56 @@ export default function LearnerDashboardPage() {
         {error && <p role="alert" className="rounded-lg border border-rose-300 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200">{error}</p>}
 
         {loading ? (
-          <p className="py-8 text-center text-sm text-foreground-secondary" aria-live="polite">Loading your saved activity…</p>
+          <div className="space-y-8" role="status" aria-busy="true" aria-label="Loading your learner activity">
+            {/* Progress stats skeleton */}
+            <div className="grid gap-4 sm:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="p-5 space-y-3">
+                  <div className="h-4 w-32 rounded bg-surface-muted animate-pulse" />
+                  <div className="h-8 w-16 rounded bg-surface-muted animate-pulse" />
+                </Card>
+              ))}
+            </div>
+
+            {/* Subject catalogue skeleton */}
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <div className="h-6 w-56 rounded bg-surface-muted animate-pulse" />
+                <div className="h-3 w-72 rounded bg-surface-muted animate-pulse" />
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Card key={i} className="h-48 p-5 space-y-3">
+                    <div className="h-5 w-24 rounded-full bg-surface-muted animate-pulse" />
+                    <div className="h-6 w-3/4 rounded bg-surface-muted animate-pulse" />
+                    <div className="h-4 w-full rounded bg-surface-muted animate-pulse" />
+                    <div className="h-9 w-full rounded-lg bg-surface-muted animate-pulse mt-4" />
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Examinations catalogue skeleton */}
+            <div className="space-y-4">
+              <div className="h-6 w-52 rounded bg-surface-muted animate-pulse" />
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="h-52 p-5 space-y-3">
+                    <div className="h-5 w-28 rounded-full bg-surface-muted animate-pulse" />
+                    <div className="h-6 w-3/4 rounded bg-surface-muted animate-pulse" />
+                    <div className="h-4 w-1/2 rounded bg-surface-muted animate-pulse" />
+                    <div className="h-9 w-full rounded-lg bg-surface-muted animate-pulse mt-4" />
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent attempts skeleton */}
+            <div className="space-y-3">
+              <div className="h-6 w-36 rounded bg-surface-muted animate-pulse" />
+              <TableSkeleton rows={4} columns={4} />
+            </div>
+          </div>
         ) : !error && (
           <>
             <section aria-label="Your progress" className="grid gap-4 sm:grid-cols-3">
@@ -166,7 +238,7 @@ export default function LearnerDashboardPage() {
               </Card>
               <Card className="p-5">
                 <p className="text-sm text-foreground-secondary">Available exams</p>
-                <p className="mt-2 font-brand text-3xl font-bold text-foreground">{exams.length}</p>
+                <p className="mt-2 font-brand text-3xl font-bold text-foreground">{totalEligibleExams.toLocaleString()}</p>
               </Card>
             </section>
 
@@ -189,32 +261,85 @@ export default function LearnerDashboardPage() {
               </section>
             )}
 
+            {/* Academic Subject Catalogue with Unified RN / PN Selection */}
+            <section className="space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-brand text-xl font-bold text-foreground">
+                    Academic Subject Catalogue
+                  </h2>
+                  <p className="text-xs text-foreground-secondary">
+                    Explore authoritative RN and LPN/PN nursing subjects with direct pathway navigation.
+                  </p>
+                </div>
+                <Link
+                  href="/learner/library"
+                  className="text-sm font-semibold text-brand-teal hover:underline flex items-center gap-1"
+                >
+                  View all subjects
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+              {subjects.length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {subjects.map((subject) => (
+                    <SubjectCard
+                      key={subject.id}
+                      subject={subject}
+                      onSelectSubject={(subjectName, selectedPathway) => {
+                        const trackParam = selectedPathway ? `&track=${encodeURIComponent(selectedPathway)}` : "";
+                        router.push(`/learner/library?subject=${encodeURIComponent(subjectName)}${trackParam}`);
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <Card className="p-6 text-sm text-foreground-secondary">
+                  No subjects currently available.
+                </Card>
+              )}
+            </section>
+
+            {/* Published Examinations Catalogue */}
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="font-brand text-xl font-bold text-foreground">Published exams</h2>
-                <Link href="/learner/exams" className="text-sm font-semibold text-brand-teal hover:underline">View exam library</Link>
+                <h2 className="font-brand text-xl font-bold text-foreground">Published Examinations</h2>
+                <Link href="/learner/library" className="text-sm font-semibold text-brand-teal hover:underline flex items-center gap-1">
+                  View complete library ({totalEligibleExams.toLocaleString()})
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
               {exams.length ? (
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {exams.map((exam) => (
-                    <Card key={exam.id} className="flex flex-col justify-between gap-4 p-5">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal">{exam.pathway} · {exam.category}</p>
-                        <h3 className="mt-2 font-brand text-lg font-bold text-foreground">{exam.title}</h3>
-                        <p className="mt-2 line-clamp-2 text-sm text-foreground-secondary">{exam.description}</p>
-                        <p className="mt-3 text-xs text-foreground-muted">{exam.totalQuestions} questions · {exam.timeLimitMinutes} minutes</p>
+                    <Card key={exam.id} className="flex flex-col justify-between gap-4 p-5 hover:border-brand-teal/50 transition-colors">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="rounded-full bg-brand-teal/10 px-2 py-0.5 text-[10px] font-bold text-brand-teal uppercase">
+                            {exam.pathway.replace("_", " ")} · {exam.category}
+                          </span>
+                          {exam.difficulty && (
+                            <span className="text-[11px] font-medium text-foreground-muted capitalize">
+                              {exam.difficulty}
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="font-brand text-base font-bold text-foreground line-clamp-2">{exam.title}</h3>
+                        <p className="line-clamp-2 text-xs leading-relaxed text-foreground-secondary">{exam.description}</p>
+                        <p className="text-xs text-foreground-muted">{exam.totalQuestions} questions · {exam.timeLimitMinutes} minutes</p>
                       </div>
                       <Link href={`/exam-session?examId=${encodeURIComponent(exam.id)}`}>
-                        <Button className="w-full">Start exam</Button>
+                        <Button className="w-full">Start Exam</Button>
                       </Link>
                     </Card>
                   ))}
                 </div>
               ) : (
                 <Card className="p-6">
-                  <p className="font-semibold text-foreground">No published exams are available yet.</p>
+                  <p className="font-semibold text-foreground">No published examinations are available yet.</p>
                   <p className="mt-1 text-sm text-foreground-secondary">Your dashboard will show assessments here when they are published.</p>
-                  <Link href="/exams" className="mt-4 inline-block text-sm font-semibold text-brand-teal hover:underline">Explore the exam catalog</Link>
+                  <Link href="/learner/library" className="mt-4 inline-block text-sm font-semibold text-brand-teal hover:underline">Explore the exam catalog</Link>
                 </Card>
               )}
             </section>

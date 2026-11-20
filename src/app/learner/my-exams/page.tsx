@@ -77,7 +77,12 @@ export default function MyExamsPage() {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div
+            role="status"
+            aria-busy="true"
+            aria-label="Loading library examinations"
+            className="grid grid-cols-1 md:grid-cols-2 gap-5"
+          >
             {[0, 1, 2, 3].map((i) => (
               <Card key={i} className="p-5 space-y-3">
                 <div className="h-4 w-24 rounded bg-surface-muted animate-pulse" />
@@ -95,7 +100,7 @@ export default function MyExamsPage() {
             <p className="text-xs text-foreground-secondary">
               {loadFailed
                 ? "Please try again later."
-                : "Save study sets or start an examination from the Study Library to see them here."}
+                : "Save exams or start an examination from the Study Library to see them here."}
             </p>
             <Link href="/learner/library">
               <Button size="sm" className="text-xs bg-brand-teal hover:bg-brand-tealDark text-white">
@@ -108,7 +113,7 @@ export default function MyExamsPage() {
             {savedSets.length > 0 && (
               <section aria-labelledby="saved-sets-heading" className="space-y-4">
                 <h2 id="saved-sets-heading" className="font-brand text-base font-bold text-foreground flex items-center gap-2">
-                  <BookMarked className="w-4 h-4 text-brand-teal" /> Saved Study Sets
+                  <BookMarked className="w-4 h-4 text-brand-teal" /> Saved Exams
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {savedSets.map((studySet) => (
