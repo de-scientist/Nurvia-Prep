@@ -39,6 +39,7 @@ import {
   Compass,
   Headphones,
   BookOpen,
+  Home,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -436,6 +437,14 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
   <SuperadminSwitcher />
   <ThemeToggle />
   <UserAccountMenu avatarUrl={avatarUrl} />
+  <Link
+    href="/"
+    className="ml-4 flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground-secondary hover:bg-surface-muted hover:text-foreground transition-colors"
+    aria-label="Back to homepage"
+  >
+    <Home className="h-4 w-4" />
+    <span>Homepage</span>
+  </Link>
 </div>
         </header>
 
