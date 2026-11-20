@@ -148,17 +148,28 @@ function ExamSessionContent() {
         setLoadError(null);
         if (modeParam === "Review") {
           const reviewRes = await nurviaApi.getAttemptReview(attemptIdParam);
-          if (!cancelled && reviewRes.success && reviewRes.data) {
+          if (cancelled) return;
+          if (reviewRes.success && reviewRes.data) {
             setLoadingStage(4);
             hydrateFromReview(reviewRes.data);
             setLoadingStage(5);
+            setIsLoading(false);
+            return;
+          } else {
+            // NEVER silently fall back to Exam mode when the learner explicitly requested Review mode!
+            setLoadError(
+              reviewRes.message ||
+                "Review mode is not available for this attempt until it has been submitted and graded."
+            );
             setIsLoading(false);
             return;
           }
         }
 
         setLoadingStage(3);
-        const res = await nurviaApi.getActiveAttempt(attemptIdParam);
+        const res = await nurviaApi.getActiveAttempt(attemptIdParam, {
+          mode: (modeParam as "Exam" | "Tutor" | "Review") ?? undefined,
+        });
         if (!cancelled && res.success && res.data) {
           setLoadingStage(4);
           hydrateFromAttempt(res.data);
@@ -216,6 +227,10 @@ function ExamSessionContent() {
         setAttemptId(res.data.attemptId);
         hydrateFromAttempt(res.data);
         setLoadingStage(5);
+        if (typeof window !== "undefined") {
+          const canonicalUrl = `/exam-session?attemptId=${encodeURIComponent(res.data.attemptId)}&examId=${encodeURIComponent(examIdParam!)}&mode=${encodeURIComponent(res.data.deliveryMode)}&layout=${encodeURIComponent(chosenLayout)}`;
+          window.history.replaceState(null, "", canonicalUrl);
+        }
       } else {
         setLoadError(res.message || "Unable to start this exam. Please choose another published exam.");
       }
@@ -224,6 +239,7 @@ function ExamSessionContent() {
 
     loadSession();
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attemptIdParam, examIdParam, modeParam, layoutParam]);
 
   // Cancel pending autosaves when the exam session is unmounted.
@@ -356,7 +372,13 @@ function ExamSessionContent() {
     setSecondsRemaining(data.remainingSeconds);
     setLayoutPolicy(data.allowedLayouts);
     setLayout(data.layoutMode || "Sequential");
-    setDeliveryMode(data.deliveryMode === "Tutor" ? "Tutor" : "Exam");
+    const effectiveDeliveryMode: DeliveryMode =
+      (data.deliveryMode as string) === "Tutor" || modeParam === "Tutor"
+        ? "Tutor"
+        : (data.deliveryMode as string) === "Review" || modeParam === "Review"
+        ? "Review"
+        : "Exam";
+    setDeliveryMode(effectiveDeliveryMode);
     if (data.modePermissions) setModePermissions(data.modePermissions);
     if (data.configuredQuestionCount) setConfiguredQuestionCount(data.configuredQuestionCount);
     if (Array.isArray(data.integrityWarnings)) setIntegrityWarnings(data.integrityWarnings);
@@ -419,7 +441,7 @@ function ExamSessionContent() {
     // the published configuration permits Tutor access. The backend only returns
     // evaluation content for questions whose own answer was already evaluated
     // (stage >= 4) — no premature answer disclosure.
-    if (modePermissions?.canTutor) {
+    if (data.modePermissions?.canTutor) {
       void (async () => {
         try {
           const res = await nurviaApi.getTutorSessionState(data.attemptId);
@@ -1447,18 +1469,11 @@ function ExamSessionContent() {
               <Button
                 variant="primary"
                 size="sm"
-                disabled={isSubmitting}
+                isLoading={isSubmitting}
                 onClick={handleSubmitExam}
                 className="text-xs flex items-center gap-1.5"
               >
-                {isSubmitting ? (
-                  <>
-                    <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                    Submitting & Grading...
-                  </>
-                ) : (
-                  "Confirm & Submit"
-                )}
+                {isSubmitting ? "Submitting & Grading..." : "Confirm & Submit"}
               </Button>
             </div>
           </div>
