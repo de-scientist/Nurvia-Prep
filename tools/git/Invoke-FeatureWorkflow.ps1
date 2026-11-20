@@ -133,12 +133,12 @@ function Get-GitWorkingTreeStatus {
     $unstaged = [System.Collections.Generic.List[PSCustomObject]]::new()
     $untracked = [System.Collections.Generic.List[string]]::new()
 
-    $joined = ($gitRes.Output -join "`n")
-    $tokens = $joined -split [char]0 | Where-Object { $_ -ne "" }
+    $joined = $gitRes.Text
+    $tokens = @($joined.Split([char]0) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { $_.Trim() })
 
     $i = 0
     while ($i -lt $tokens.Count) {
-        $token = $tokens[$i]
+        $token = [string]$tokens[$i]
         if ($token.Length -lt 3) {
             $i++
             continue
@@ -149,7 +149,7 @@ function Get-GitWorkingTreeStatus {
 
         if ($statusCode[0] -in @('R', 'C') -and ($i + 1) -lt $tokens.Count) {
             $i++
-            $origPath = $tokens[$i]
+            $origPath = [string]$tokens[$i]
         }
 
         $x = $statusCode[0]
@@ -820,8 +820,8 @@ function Invoke-FeatureWorkflow {
         # Inspect staged changes after selective staging
         if (-not $DryRun) {
             $stagedRes = Invoke-GitCommand -RepoRoot $RepoRoot -Arguments @('diff', '--cached', '--name-only', '-z')
-            $stagedFiles = if ($stagedRes.Success) {
-                ($stagedRes.Output -join "`n") -split [char]0 | Where-Object { $_ -ne "" }
+            $stagedFiles = if ($stagedRes.Success -and -not [string]::IsNullOrEmpty($stagedRes.Text)) {
+                @($stagedRes.Text.Split([char]0) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { $_.Trim() })
             } else { @() }
 
             if ($stagedFiles.Count -eq 0) {
@@ -848,6 +848,7 @@ function Invoke-FeatureWorkflow {
 
             # Enforce that NO staged file is outside approved scope
             foreach ($sf in $stagedFiles) {
+                if ([string]::IsNullOrWhiteSpace($sf)) { continue }
                 $normSf = Normalize-GitPath $sf
                 if (-not $normalizedApproved.Contains($normSf)) {
                     Write-Host "   [SECURITY BREACH] File '$sf' is staged but not in approved paths. Aborting." -ForegroundColor Red
@@ -933,7 +934,7 @@ function Invoke-FeatureWorkflow {
     Write-Host "4. CONTENT-BASED SECRET SCANNING" -ForegroundColor Cyan
 
     if ($filesToCommit.Count -gt 0 -and -not $DryRun) {
-        $secretFindings = Invoke-StagedSecretScan -RepoRoot $RepoRoot -StagedFiles $filesToCommit.ToArray()
+        $secretFindings = @(Invoke-StagedSecretScan -RepoRoot $RepoRoot -StagedFiles $filesToCommit.ToArray() | Where-Object { $null -ne $_ -and -not [string]::IsNullOrEmpty($_.RuleId) })
         if ($secretFindings.Count -gt 0) {
             Write-Host "   [SECURITY ALERT] Credential or secret patterns detected in staged changes:" -ForegroundColor Red
             foreach ($finding in $secretFindings) {
@@ -1271,7 +1272,7 @@ function Invoke-FeatureWorkflow {
                 Write-Host "   [DIVERGENCE DETECTED] Secondary remote '$secondaryRemote' has diverged from local HEAD." -ForegroundColor Red
                 $secDiv = Invoke-GitCommand -RepoRoot $RepoRoot -Arguments @('log', '--oneline', "$secondaryRemote/$activeBranch..HEAD")
                 $secDivRemote = Invoke-GitCommand -RepoRoot $RepoRoot -Arguments @('log', '--oneline', "HEAD..$secondaryRemote/$activeBranch")
-                Write-Host "   Local commits absent on $secondaryRemote:`n$($secDiv.Text)" -ForegroundColor Yellow
+                Write-Host "   Local commits absent on ${secondaryRemote}:`n$($secDiv.Text)" -ForegroundColor Yellow
                 Write-Host "   $secondaryRemote commits absent locally:`n$($secDivRemote.Text)" -ForegroundColor Red
                 return [PSCustomObject]@{
                     FeatureName                 = $FeatureName
@@ -1316,8 +1317,8 @@ function Invoke-FeatureWorkflow {
     $finalLocalHead = (Invoke-GitCommand -RepoRoot $RepoRoot -Arguments @('rev-parse', 'HEAD')).Stdout[0].Trim()
 
     Write-Host "   Local HEAD:            $finalLocalHead" -ForegroundColor White
-    Write-Host "   origin/$activeBranch:   $(if ($finalOriginHash) { $finalOriginHash } else { 'N/A' })" -ForegroundColor White
-    Write-Host "   upstream/$activeBranch: $(if ($finalUpstreamHash) { $finalUpstreamHash } else { 'N/A' })" -ForegroundColor White
+    Write-Host "   origin/${activeBranch}:   $(if ($finalOriginHash) { $finalOriginHash } else { 'N/A' })" -ForegroundColor White
+    Write-Host "   upstream/${activeBranch}: $(if ($finalUpstreamHash) { $finalUpstreamHash } else { 'N/A' })" -ForegroundColor White
 
     # Determine final outcome
     $outcome = ""

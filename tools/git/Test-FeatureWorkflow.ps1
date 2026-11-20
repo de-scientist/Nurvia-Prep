@@ -120,7 +120,15 @@ function New-TestEnv {
 
         # Create initial commit on main
         Set-Content -LiteralPath (Join-Path $clientDir "README.md") -Value "# Test Repository"
-        & git -C $clientDir add README.md
+
+        # Copy workflow tools into client
+        $toolsDir = Join-Path $clientDir "tools\git"
+        New-Item -ItemType Directory -Path $toolsDir -Force | Out-Null
+        Copy-Item -LiteralPath $EngineSourcePath -Destination (Join-Path $toolsDir "Invoke-FeatureWorkflow.ps1") -Force
+        Copy-Item -LiteralPath $WrapperSourcePath -Destination (Join-Path $toolsDir "Feature-WorkFlow.ps1") -Force
+
+        # Commit initial state including tools so working tree is clean
+        & git -C $clientDir add .
         & git -C $clientDir commit -m "chore: initial commit" 2>$null | Out-Null
 
         # Push main to both bare remotes
@@ -129,12 +137,6 @@ function New-TestEnv {
     } finally {
         $ErrorActionPreference = $prevEap
     }
-
-    # Copy workflow tools into client
-    $toolsDir = Join-Path $clientDir "tools\git"
-    New-Item -ItemType Directory -Path $toolsDir -Force | Out-Null
-    Copy-Item -LiteralPath $EngineSourcePath -Destination (Join-Path $toolsDir "Invoke-FeatureWorkflow.ps1") -Force
-    Copy-Item -LiteralPath $WrapperSourcePath -Destination (Join-Path $toolsDir "Feature-WorkFlow.ps1") -Force
 
     return [PSCustomObject]@{
         EnvPath      = $envPath
@@ -216,6 +218,7 @@ Run-Scenario -Id 5 -Name "Selective staging of approved files only" -Action {
     . $env.EnginePath
     $res = Invoke-FeatureWorkflow -FeatureName "Implement selective" -ApprovedPaths @("feat.txt") -ApproveCommit -RepoPath $env.ClientDir -RunTests:$false
     $statusRes = Invoke-TestGit -Dir $env.ClientDir -Args @('status', '--porcelain')
+    # other.txt must still be uncommitted (untracked '?? other.txt')
     $otherUntouched = ($statusRes.Text -match 'other\.txt')
     return ($res.ExitCode -eq 0 -and $res.FinalOutcome -eq "IMPLEMENTED_TESTED_COMMITTED_AND_FULLY_SYNCHRONIZED" -and $otherUntouched)
 }
@@ -333,7 +336,7 @@ Run-Scenario -Id 12 -Name "Origin-only commit divergence protection" -Action {
 
     # Push a rogue commit to origin using another client
     $otherClient = Join-Path $env.EnvPath "otherClient"
-    & git clone $env.OriginBare $otherClient 2>$null | Out-Null
+    Invoke-TestGit -Dir $env.EnvPath -Args @('clone', $env.OriginBare, $otherClient) | Out-Null
     Invoke-TestGit -Dir $otherClient -Args @('config', 'user.name', 'Other') | Out-Null
     Invoke-TestGit -Dir $otherClient -Args @('config', 'user.email', 'other@test.local') | Out-Null
     Invoke-TestGit -Dir $otherClient -Args @('config', 'commit.gpgsign', 'false') | Out-Null
@@ -362,7 +365,7 @@ Run-Scenario -Id 13 -Name "Upstream-only commit divergence protection" -Action {
 
     # Push a rogue commit to upstream
     $otherClient = Join-Path $env.EnvPath "otherClient"
-    & git clone $env.UpstreamBare $otherClient 2>$null | Out-Null
+    Invoke-TestGit -Dir $env.EnvPath -Args @('clone', $env.UpstreamBare, $otherClient) | Out-Null
     Invoke-TestGit -Dir $otherClient -Args @('config', 'user.name', 'Other') | Out-Null
     Invoke-TestGit -Dir $otherClient -Args @('config', 'user.email', 'other@test.local') | Out-Null
     Invoke-TestGit -Dir $otherClient -Args @('config', 'commit.gpgsign', 'false') | Out-Null
@@ -391,7 +394,7 @@ Run-Scenario -Id 14 -Name "Divergent remote histories resolution requirement" -A
 
     # Push commit 1 to origin
     $clientA = Join-Path $env.EnvPath "clientA"
-    & git clone $env.OriginBare $clientA 2>$null | Out-Null
+    Invoke-TestGit -Dir $env.EnvPath -Args @('clone', $env.OriginBare, $clientA) | Out-Null
     Invoke-TestGit -Dir $clientA -Args @('config', 'user.name', 'ClientA') | Out-Null
     Invoke-TestGit -Dir $clientA -Args @('config', 'user.email', 'a@test.local') | Out-Null
     Invoke-TestGit -Dir $clientA -Args @('config', 'commit.gpgsign', 'false') | Out-Null
@@ -403,7 +406,7 @@ Run-Scenario -Id 14 -Name "Divergent remote histories resolution requirement" -A
 
     # Push commit 2 to upstream
     $clientB = Join-Path $env.EnvPath "clientB"
-    & git clone $env.UpstreamBare $clientB 2>$null | Out-Null
+    Invoke-TestGit -Dir $env.EnvPath -Args @('clone', $env.UpstreamBare, $clientB) | Out-Null
     Invoke-TestGit -Dir $clientB -Args @('config', 'user.name', 'ClientB') | Out-Null
     Invoke-TestGit -Dir $clientB -Args @('config', 'user.email', 'b@test.local') | Out-Null
     Invoke-TestGit -Dir $clientB -Args @('config', 'commit.gpgsign', 'false') | Out-Null
@@ -432,7 +435,7 @@ Run-Scenario -Id 15 -Name "Missing remote branch blocks creation without explici
 }
 
 # ------------------------------------------------------------------------------
-# Test 16: Incorrect branch tracking
+# Test 16: Branch parameter mismatch rejected
 # ------------------------------------------------------------------------------
 Run-Scenario -Id 16 -Name "Branch parameter mismatch rejected" -Action {
     $env = New-TestEnv "test16"
@@ -527,7 +530,7 @@ Run-Scenario -Id 21 -Name "Wrapper invocation from outside repo directory" -Acti
     try {
         Set-Location $TestDir
         $wrapper = $env.WrapperPath
-        $output = & powershell.exe -ExecutionPolicy Bypass -File $wrapper -FeatureName "Outside Execution" -RunTests:$false
+        $output = & powershell.exe -ExecutionPolicy Bypass -File $wrapper -FeatureName "Outside Execution" -RunTests 0
         $code = $LASTEXITCODE
         $matched = ($output -join "`n") -match 'IMPLEMENTED_TESTED_COMMITTED_AND_FULLY_SYNCHRONIZED'
         return ($code -eq 0 -and $matched)

@@ -24,7 +24,7 @@ param(
     [string]$PushTo = "",
 
     [Parameter(HelpMessage="Execute validation checks (tests, linter, typecheck).")]
-    [bool]$RunTests = $true,
+    $RunTests = $true,
 
     [Parameter(HelpMessage="Explicitly approve creating a Git commit for staged changes.")]
     [switch]$ApproveCommit,
@@ -133,10 +133,27 @@ if ([string]::IsNullOrWhiteSpace($FeatureName)) {
 }
 
 # 4. Invoke Invoke-FeatureWorkflow
+$runTestsBool = $true
+if ($PSBoundParameters.ContainsKey('RunTests')) {
+    if ($RunTests -is [bool]) {
+        $runTestsBool = $RunTests
+    } elseif ($RunTests -is [switch]) {
+        $runTestsBool = $RunTests.IsPresent
+    } elseif ($RunTests -is [string]) {
+        if ($RunTests -in @('$false', 'false', '0', 'no', 'off')) {
+            $runTestsBool = $false
+        } else {
+            $runTestsBool = $true
+        }
+    } elseif ($RunTests -eq 0) {
+        $runTestsBool = $false
+    }
+}
+
 $engineArgs = @{
     FeatureName              = $FeatureName
     RepoPath                 = $RepoRoot
-    RunTests                 = $RunTests
+    RunTests                 = $runTestsBool
     DryRun                   = $DryRun.IsPresent
     ApproveCommit            = $ApproveCommit.IsPresent
     AllowMainBranch          = $AllowMainBranch.IsPresent
