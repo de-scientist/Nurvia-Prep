@@ -637,6 +637,9 @@ export interface SubjectCardDto {
   difficulty?: DifficultyLevel | null;
   totalExams: number;
   totalQuestions: number;
+  availablePathways?: string[];
+  rnExamCount?: number;
+  pnExamCount?: number;
   featuredExams?: Array<{
     id: string;
     title: string;

@@ -16,13 +16,12 @@ import {
   type OptionalSiteMetadata,
 } from './headers';
 import type {
-  LexmaCastoAuthUserRaw,
   LexmaCastoLoginResponseRaw,
   StrataEnvelope,
   StrataRecord,
 } from './contracts';
 
-const DEFAULT_TIMEOUT_MS = 20_000;
+const DEFAULT_TIMEOUT_MS = 45_000;
 
 export type NormalizedBackendErrorCode =
   | 'CONFIGURATION_ERROR'
