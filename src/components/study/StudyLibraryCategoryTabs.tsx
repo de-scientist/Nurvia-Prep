@@ -14,12 +14,11 @@ interface StudyLibraryCategoryTabsProps {
 }
 
 const PATHWAY_LABELS: Record<string, string> = {
-  All: "All",
-  RN: "RN Exams",
-  PN_LPN: "LPN Exams",
-  RN_Exit: "NCLEX",
+  All: "All Pathways",
+  RN: "RN",
+  PN_LPN: "LPN/PN",
+  RN_Exit: "RN Exit",
   PN_Exit: "LPN Exit",
-  NursingMath: "Dosage Calculations",
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -31,8 +30,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   "EXIT EXAM": "Exit Exam",
   ATI: "ATI",
   HESI: "HESI",
-  RegularCourse: "Regular Course",
-  Certification: "Certification",
+  RegularCourse: "Course Exams",
   ExitPredictor: "Exit Predictor",
 };
 
@@ -48,7 +46,6 @@ export function StudyLibraryCategoryTabs({
     "PN_LPN",
     "RN_Exit",
     "PN_Exit",
-    "NursingMath",
   ];
 
   const categoryOptions: string[] = [
@@ -61,7 +58,7 @@ export function StudyLibraryCategoryTabs({
     "ATI",
     "HESI",
     "RegularCourse",
-    "Certification",
+    "ExitPredictor",
   ];
 
   return (

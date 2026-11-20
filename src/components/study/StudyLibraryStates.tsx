@@ -4,10 +4,11 @@ import * as React from "react";
 import { ChevronLeft, ChevronRight, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { InlineLoader } from "@/components/shared/feedback";
 
 export function StudyLibraryLoadingState() {
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-busy="true" aria-label="Loading study sets">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-busy="true" aria-label="Loading exams">
       {Array.from({ length: 6 }).map((_, idx) => (
         <Card key={idx} className="flex h-72 flex-col justify-between p-5">
           <div className="space-y-3">
@@ -32,7 +33,7 @@ export function StudyLibraryLoadingState() {
 export function StudyLibraryEmptyState({
   hasActiveFilters,
   onClearFilters,
-  itemLabel = "study sets",
+  itemLabel = "exams",
 }: {
   hasActiveFilters: boolean;
   onClearFilters: () => void;
@@ -63,22 +64,27 @@ export function StudyLibraryResultsHeader({
   totalCount,
   pageNumber,
   totalPages,
-  itemLabel = "study set",
+  itemLabel = "exam",
+  isUpdating = false,
 }: {
   shownCount: number;
   totalCount: number;
   pageNumber: number;
   totalPages: number;
   itemLabel?: string;
+  isUpdating?: boolean;
 }) {
   const plural = totalCount === 1 ? itemLabel : `${itemLabel}s`;
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-foreground-muted" aria-live="polite">
-      <p>
-        Showing <span className="font-semibold text-foreground">{shownCount}</span> of{" "}
-        <span className="font-semibold text-foreground">{totalCount}</span> published{" "}
-        {plural}
-      </p>
+      <div className="flex items-center gap-3">
+        <p>
+          Showing <span className="font-semibold text-foreground">{shownCount}</span> of{" "}
+          <span className="font-semibold text-foreground">{totalCount}</span> published{" "}
+          {plural}
+        </p>
+        {isUpdating && <InlineLoader message="Updating results…" />}
+      </div>
       {totalPages > 1 && (
         <p>
           Page <span className="font-semibold text-foreground">{pageNumber}</span> of {totalPages}

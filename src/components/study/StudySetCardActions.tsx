@@ -145,7 +145,7 @@ export function StudySetOverflowMenu({
     try {
       const url = `${window.location.origin}${detailHref}`;
       await navigator.clipboard.writeText(url);
-      onNotify?.("Study set link copied to clipboard.");
+      onNotify?.("Exam link copied to clipboard.");
     } catch {
       onNotify?.("Unable to copy link.");
     }

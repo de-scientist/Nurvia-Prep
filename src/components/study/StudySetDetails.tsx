@@ -42,7 +42,7 @@ export function StudySetDetails({ examId, isPublic = false }: StudySetDetailsPro
     setError(null);
     const res = await nurviaApi.getStudySetDetail(examId);
     if (!res.success || !res.data) {
-      setError(res.message || "Unable to load study set details.");
+      setError(res.message || "Unable to load exam details.");
     } else {
       setDetail(res.data);
       if (res.data.learnerReview) {
@@ -99,7 +99,7 @@ export function StudySetDetails({ examId, isPublic = false }: StudySetDetailsPro
     return (
       <Card className="space-y-4 p-6">
         <p className="text-sm font-semibold text-rose-600 dark:text-rose-400">
-          {error || "Study set not found."}
+          {error || "Exam not found."}
         </p>
         <Link href={backHref}>
           <Button variant="outline" size="sm">
@@ -300,7 +300,7 @@ export function StudySetDetails({ examId, isPublic = false }: StudySetDetailsPro
         {!isPublic && detail.canReview && (
           <form onSubmit={(e) => void handleSubmitReview(e)} className="space-y-3 rounded-xl border border-border bg-background/60 p-4">
             <p className="text-xs font-semibold text-foreground">
-              {detail.learnerReview ? "Update your review" : "Rate this study set"}
+              {detail.learnerReview ? "Update your review" : "Rate this exam"}
             </p>
             <div className="flex items-center gap-1" role="radiogroup" aria-label="Star rating">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -322,7 +322,7 @@ export function StudySetDetails({ examId, isPublic = false }: StudySetDetailsPro
             <Textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Share how this study set helped your clinical preparation (optional)..."
+              placeholder="Share how this exam helped your clinical preparation (optional)..."
               rows={3}
               maxLength={1000}
             />

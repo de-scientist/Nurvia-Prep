@@ -17,14 +17,14 @@ export function StudyLibrarySearch({ value, onChange, isSearching = false }: Stu
         aria-hidden="true"
       />
       <label htmlFor="study-library-search" className="sr-only">
-        Search study sets, subjects, examinations or keywords
+        Search exams, subjects, or keywords
       </label>
       <input
         id="study-library-search"
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Search study sets, subjects, examinations or keywords..."
+        placeholder="Search exams, subjects, or keywords..."
         className="h-12 w-full rounded-xl border border-border bg-surface pl-11 pr-20 text-sm text-foreground shadow-sm transition-colors placeholder:text-foreground-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal"
       />
       <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2">

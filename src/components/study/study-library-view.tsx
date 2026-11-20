@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { nurviaApi } from "@/lib/api-client";
 import type {
   StudyLibraryFiltersDto,
@@ -93,9 +94,13 @@ export function StudyLibraryView({
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [retryCount, setRetryCount] = React.useState(0);
+  const hasLoadedOnceRef = React.useRef(false);
+  const latestRequestIdRef = React.useRef(0);
   const { showSuccess, showError, showInfo } = useFeedback();
 
   const isExamView = Boolean(advanced.subject || advanced.examId);
+  const isInitialLoading = loading && !hasLoadedOnceRef.current;
+  const isUpdating = loading && hasLoadedOnceRef.current;
 
   // Debounce search input
   React.useEffect(() => {
@@ -163,6 +168,7 @@ export function StudyLibraryView({
   // Fetch paginated subjects (subject-first catalogue) or examinations
   React.useEffect(() => {
     let active = true;
+    const currentRequestId = ++latestRequestIdRef.current;
     setLoading(true);
     setError(null);
 
@@ -189,13 +195,14 @@ export function StudyLibraryView({
       void nurviaApi
         .getStudyLibrary(queryParams)
         .then((response) => {
-          if (!active) return;
+          if (!active || currentRequestId !== latestRequestIdRef.current) return;
           if (!response.success || !response.data) {
             setError(response.message || "Unable to load examinations for this subject.");
           } else {
             setStudySets(response.data.items);
             setTotalCount(response.data.totalCount);
             setTotalPages(Math.max(1, response.data.totalPages || Math.ceil(response.data.totalCount / PAGE_SIZE)));
+            hasLoadedOnceRef.current = true;
           }
           setLoading(false);
         });
@@ -203,13 +210,14 @@ export function StudyLibraryView({
       void nurviaApi
         .getStudyLibrarySubjects(queryParams)
         .then((response) => {
-          if (!active) return;
+          if (!active || currentRequestId !== latestRequestIdRef.current) return;
           if (!response.success || !response.data) {
             setError(response.message || "Unable to load published subjects.");
           } else {
             setSubjects(response.data.items);
             setTotalCount(response.data.totalCount);
             setTotalPages(Math.max(1, response.data.totalPages || Math.ceil(response.data.totalCount / PAGE_SIZE)));
+            hasLoadedOnceRef.current = true;
           }
           setLoading(false);
         });
@@ -394,17 +402,18 @@ export function StudyLibraryView({
         </div>
       )}
 
-      {!loading && !error && (
+      {!isInitialLoading && !error && (
         <StudyLibraryResultsHeader
           shownCount={isExamView ? studySets.length : subjects.length}
           totalCount={totalCount}
           pageNumber={pageNumber}
           totalPages={totalPages}
           itemLabel={isExamView ? "examination" : "subject"}
+          isUpdating={isUpdating}
         />
       )}
 
-      {loading && <StudyLibraryLoadingState />}
+      {isInitialLoading && <StudyLibraryLoadingState />}
 
       {error && (
         <div
@@ -434,9 +443,9 @@ export function StudyLibraryView({
         />
       )}
 
-      {!loading && !error && isExamView && studySets.length > 0 && (
+      {!isInitialLoading && !error && isExamView && studySets.length > 0 && (
         <>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className={cn("grid gap-4 md:grid-cols-2 xl:grid-cols-3 transition-opacity duration-200", isUpdating && "opacity-60 pointer-events-none")}>
             {studySets.map((studySet) => (
               <StudySetCard
                 key={studySet.id}
@@ -456,15 +465,18 @@ export function StudyLibraryView({
         </>
       )}
 
-      {!loading && !error && !isExamView && subjects.length > 0 && (
+      {!isInitialLoading && !error && !isExamView && subjects.length > 0 && (
         <>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className={cn("grid gap-4 md:grid-cols-2 xl:grid-cols-3 transition-opacity duration-200", isUpdating && "opacity-60 pointer-events-none")}>
             {subjects.map((subject) => (
               <SubjectCard
                 key={subject.id}
                 subject={subject}
                 isPublic={isPublic}
-                onSelectSubject={(subjectName) => {
+                onSelectSubject={(subjectName, selectedPathway) => {
+                  if (selectedPathway) {
+                    setPathway(selectedPathway as any);
+                  }
                   setAdvanced((prev) => ({ ...prev, subject: subjectName, examId: "" }));
                   setPageNumber(1);
                 }}

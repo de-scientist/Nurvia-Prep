@@ -38,6 +38,11 @@ export function StudySetCard({
             <Badge variant="teal" className="text-[11px] font-semibold">
               {formatCategoryBadge(studySet.pathway, studySet.category)}
             </Badge>
+            {studySet.difficulty && (
+              <Badge variant="outline" className="text-[11px] font-medium border-border/80">
+                {studySet.difficulty}
+              </Badge>
+            )}
             {studySet.isSaved && (
               <span
                 className="inline-flex items-center gap-1 rounded-full bg-brand-teal/10 px-2 py-0.5 text-[11px] font-medium text-brand-teal"
@@ -70,6 +75,9 @@ export function StudySetCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-foreground-muted">
+          {studySet.subject && (
+            <span className="font-medium text-foreground-secondary">{studySet.subject}</span>
+          )}
           <span className="inline-flex items-center gap-1 font-medium text-foreground-secondary">
             <HelpCircle className="h-3.5 w-3.5 text-brand-teal" aria-hidden="true" />
             {studySet.totalQuestions} {studySet.totalQuestions === 1 ? "Question" : "Questions"}
