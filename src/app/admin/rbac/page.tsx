@@ -261,7 +261,17 @@ export default function AdminRbacPage() {
           )}
 
           {loading ? (
-            <div className="p-6 text-sm text-foreground-secondary">Loading user accounts...</div>
+            <div className="divide-y divide-border" role="status" aria-busy="true" aria-label="Loading user accounts">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="p-4 flex items-center justify-between gap-3 animate-pulse">
+                  <div className="space-y-2">
+                    <div className="h-4 w-36 rounded bg-surface-muted" />
+                    <div className="h-3 w-48 rounded bg-surface-muted" />
+                  </div>
+                  <div className="h-8 w-32 rounded bg-surface-muted" />
+                </div>
+              ))}
+            </div>
           ) : users.length === 0 ? (
             <div className="p-6 text-sm text-foreground-secondary">No matching user accounts found.</div>
           ) : (

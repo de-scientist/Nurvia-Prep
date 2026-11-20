@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/components/auth/auth-provider";
 import { getPersonalizedGreeting } from "@/lib/greeting-utils";
 import { nurviaApi } from "@/lib/api-client";
+import { DashboardSkeleton } from "@/components/shared/feedback";
 
 interface OverviewData {
   totalQuestions: number;
@@ -107,9 +108,7 @@ export default function AdminDashboardPage() {
         )}
 
         {loading ? (
-          <p className="py-10 text-center text-sm text-foreground-secondary" aria-live="polite">
-            Loading live studio metrics…
-          </p>
+          <DashboardSkeleton />
         ) : data && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -226,7 +226,11 @@ export default function AdminPlansPage() {
         <Card className="p-5 space-y-4">
           <h2 className="font-brand text-base font-bold text-foreground">Active &amp; Historical Entitlements</h2>
           {loading ? (
-            <p className="text-xs text-foreground-secondary">Loading entitlements…</p>
+            <div className="space-y-2 animate-pulse py-2" role="status" aria-busy="true" aria-label="Loading entitlements">
+              <div className="h-4 w-full rounded bg-surface-muted" />
+              <div className="h-4 w-full rounded bg-surface-muted" />
+              <div className="h-4 w-full rounded bg-surface-muted" />
+            </div>
           ) : subscriptions.length === 0 ? (
             <p className="text-xs text-foreground-secondary">No learner entitlements granted yet.</p>
           ) : (

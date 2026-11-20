@@ -145,7 +145,17 @@ export default function ReviewApprovalQueuePage() {
             </div>
 
             {loading ? (
-              <div className="p-8 text-center text-sm text-foreground-muted">Loading queue...</div>
+              <div className="divide-y divide-border" role="status" aria-busy="true" aria-label="Loading review queue">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="p-5 space-y-2 animate-pulse">
+                    <div className="flex items-center justify-between">
+                      <div className="h-4 w-24 rounded bg-surface-muted" />
+                      <div className="h-4 w-16 rounded bg-surface-muted" />
+                    </div>
+                    <div className="h-4 w-3/4 rounded bg-surface-muted" />
+                  </div>
+                ))}
+              </div>
             ) : questions.length === 0 ? (
               <div className="p-12 text-center space-y-2">
                 <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
@@ -211,7 +221,17 @@ export default function ReviewApprovalQueuePage() {
             </div>
 
             {loading ? (
-              <div className="p-8 text-center text-sm text-foreground-muted">Loading exams...</div>
+              <div className="divide-y divide-border" role="status" aria-busy="true" aria-label="Loading exams queue">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="p-5 space-y-2 animate-pulse">
+                    <div className="flex items-center justify-between">
+                      <div className="h-4 w-24 rounded bg-surface-muted" />
+                      <div className="h-4 w-16 rounded bg-surface-muted" />
+                    </div>
+                    <div className="h-4 w-3/4 rounded bg-surface-muted" />
+                  </div>
+                ))}
+              </div>
             ) : exams.length === 0 ? (
               <div className="p-12 text-center space-y-2">
                 <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />

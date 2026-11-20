@@ -60,9 +60,18 @@ export default function AdminCasesPage() {
         )}
 
         {loading ? (
-          <p className="py-10 text-center text-sm text-foreground-secondary" aria-live="polite">
-            Loading clinical case studies…
-          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4" role="status" aria-busy="true" aria-label="Loading clinical case studies">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} className="p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="h-4 w-20 rounded bg-surface-muted animate-pulse" />
+                  <div className="h-5 w-16 rounded-full bg-surface-muted animate-pulse" />
+                </div>
+                <div className="h-5 w-3/4 rounded bg-surface-muted animate-pulse" />
+                <div className="h-3.5 w-full rounded bg-surface-muted animate-pulse" />
+              </Card>
+            ))}
+          </div>
         ) : cases.length === 0 ? (
           <Card className="p-8 text-center space-y-3">
             <p className="text-sm font-semibold text-foreground">No ClinicalCaseStudy items authored yet.</p>

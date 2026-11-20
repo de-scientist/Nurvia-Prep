@@ -7,6 +7,7 @@ import { AdminShell } from "@/components/layout/admin-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DetailSkeleton } from "@/components/shared/feedback";
 import {
   CheckCircle2,
   AlertCircle,
@@ -165,7 +166,7 @@ export default function EditQuestionPage() {
   if (loading) {
     return (
       <AdminShell>
-        <div className="p-8 text-center text-sm text-foreground-muted">Loading question details...</div>
+        <DetailSkeleton fields={6} />
       </AdminShell>
     );
   }
@@ -219,7 +220,7 @@ export default function EditQuestionPage() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  disabled={isSubmitting}
+                  isLoading={isSubmitting}
                   onClick={() => handleSave(false)}
                   className="gap-1.5 text-xs"
                 >
@@ -228,7 +229,7 @@ export default function EditQuestionPage() {
                 <Button
                   variant="primary"
                   size="sm"
-                  disabled={isSubmitting}
+                  isLoading={isSubmitting}
                   onClick={() => handleSave(true)}
                   className="gap-1.5 text-xs bg-brand-teal hover:bg-brand-teal/90 text-white"
                 >

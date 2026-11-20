@@ -62,9 +62,14 @@ export default function AdminTaxonomyPage() {
         )}
 
         {loading ? (
-          <p className="py-10 text-center text-sm text-foreground-secondary" aria-live="polite">
-            Loading taxonomy metadata…
-          </p>
+          <div className="space-y-4" role="status" aria-busy="true" aria-label="Loading taxonomy metadata">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="p-5 space-y-3 animate-pulse">
+                <div className="h-5 w-48 rounded bg-surface-muted" />
+                <div className="h-4 w-3/4 rounded bg-surface-muted" />
+              </Card>
+            ))}
+          </div>
         ) : data && (
           <div className="space-y-4">
             {data.clientNeedsCategories.map((node) => (

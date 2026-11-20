@@ -185,7 +185,17 @@ export default function AdminAuditPage() {
               {error}
             </div>
           ) : loading ? (
-            <div className="p-6 text-sm text-foreground-secondary">Loading audit records...</div>
+            <div className="divide-y divide-border" role="status" aria-busy="true" aria-label="Loading audit records">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="p-4 flex items-center justify-between gap-3 animate-pulse">
+                  <div className="space-y-2">
+                    <div className="h-4 w-32 rounded bg-surface-muted" />
+                    <div className="h-3 w-48 rounded bg-surface-muted" />
+                  </div>
+                  <div className="h-5 w-24 rounded bg-surface-muted" />
+                </div>
+              ))}
+            </div>
           ) : filteredItems.length === 0 ? (
             <div className="p-6 text-sm text-foreground-secondary">
               No audit log entries found for the selected filter.

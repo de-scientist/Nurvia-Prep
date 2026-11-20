@@ -123,9 +123,17 @@ export default function AdminLearnersPage() {
           </div>
 
           {loading ? (
-            <p className="p-8 text-center text-xs text-foreground-secondary" aria-live="polite">
-              Loading learners…
-            </p>
+            <div className="divide-y divide-border" role="status" aria-busy="true" aria-label="Loading learners">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="p-4 flex items-center justify-between gap-3 animate-pulse">
+                  <div className="space-y-2">
+                    <div className="h-4 w-36 rounded bg-surface-muted" />
+                    <div className="h-3 w-48 rounded bg-surface-muted" />
+                  </div>
+                  <div className="h-6 w-16 rounded-full bg-surface-muted" />
+                </div>
+              ))}
+            </div>
           ) : learners.length === 0 ? (
             <p className="p-8 text-center text-xs text-foreground-secondary">
               No learner accounts match the current filter.

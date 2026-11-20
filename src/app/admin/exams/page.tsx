@@ -298,8 +298,20 @@ export default function ExamStudioPage() {
         {/* Exams Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {loading ? (
-            <div className="col-span-2 p-12 text-center text-sm text-foreground-muted">
-              Loading examination catalogue...
+            <div className="col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-4" role="status" aria-busy="true" aria-label="Loading examination catalogue">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={i} className="p-5 flex flex-col justify-between space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="h-4 w-20 rounded bg-surface-muted animate-pulse" />
+                      <div className="h-5 w-16 rounded-full bg-surface-muted animate-pulse" />
+                    </div>
+                    <div className="h-5 w-3/4 rounded bg-surface-muted animate-pulse" />
+                    <div className="h-3.5 w-full rounded bg-surface-muted animate-pulse" />
+                  </div>
+                  <div className="h-10 w-full rounded-lg bg-surface-muted animate-pulse" />
+                </Card>
+              ))}
             </div>
           ) : exams.length === 0 ? (
             <div className="col-span-2 p-12 text-center text-sm text-foreground-muted" role={loadError ? "alert" : undefined}>

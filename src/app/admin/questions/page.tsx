@@ -279,11 +279,17 @@ export default function QuestionBankPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {loading ? (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-foreground-muted">
-                      Loading question repository...
-                    </td>
-                  </tr>
+                  Array.from({ length: 5 }).map((_, rIdx) => (
+                    <tr key={rIdx} className="animate-pulse">
+                      <td className="px-4 py-3.5"><div className="h-4 w-24 bg-surface-muted rounded" /></td>
+                      <td className="px-4 py-3.5"><div className="h-4 w-48 bg-surface-muted rounded" /></td>
+                      <td className="px-4 py-3.5"><div className="h-4 w-20 bg-surface-muted rounded" /></td>
+                      <td className="px-4 py-3.5"><div className="h-4 w-16 bg-surface-muted rounded" /></td>
+                      <td className="px-4 py-3.5"><div className="h-4 w-16 bg-surface-muted rounded-full" /></td>
+                      <td className="px-4 py-3.5"><div className="h-4 w-12 bg-surface-muted rounded" /></td>
+                      <td className="px-4 py-3.5 text-right"><div className="h-4 w-16 bg-surface-muted rounded ml-auto" /></td>
+                    </tr>
+                  ))
                 ) : questions.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-4 py-8 text-center text-foreground-muted">

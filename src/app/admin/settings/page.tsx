@@ -68,9 +68,17 @@ export default function AdminSettingsPage() {
         )}
 
         {loading ? (
-          <p className="py-10 text-center text-sm text-foreground-secondary" aria-live="polite">
-            Checking runtime diagnostics…
-          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6" role="status" aria-busy="true" aria-label="Checking runtime diagnostics">
+            {[1, 2].map((i) => (
+              <Card key={i} className="p-6 space-y-4 animate-pulse">
+                <div className="h-5 w-48 rounded bg-surface-muted" />
+                <div className="space-y-2">
+                  <div className="h-4 w-full rounded bg-surface-muted" />
+                  <div className="h-4 w-3/4 rounded bg-surface-muted" />
+                </div>
+              </Card>
+            ))}
+          </div>
         ) : status && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="p-6 space-y-4">

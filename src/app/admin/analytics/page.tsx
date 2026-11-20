@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { nurviaApi } from "@/lib/api-client";
+import { DashboardSkeleton } from "@/components/shared/feedback";
 
 interface AnalyticsData {
   totalAttempts: number;
@@ -91,9 +92,7 @@ export default function AdminAnalyticsPage() {
         )}
 
         {loading ? (
-          <p className="py-10 text-center text-sm text-foreground-secondary" aria-live="polite">
-            Loading persisted analytics…
-          </p>
+          <DashboardSkeleton />
         ) : data && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
