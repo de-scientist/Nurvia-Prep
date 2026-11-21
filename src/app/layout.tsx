@@ -2,6 +2,7 @@
 import "./globals.css";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { LeftSidebarProvider } from "@/lib/contexts/panel/layout/includes/sidebar/LeftSidebarContext";
 import { RightSidebarProvider } from "@/lib/contexts/panel/layout/includes/sidebar/RightSidebarContext";
 import { ThemeProvider } from "@/lib/contexts/panel/layout/theme/PanelThemeContext";
@@ -43,7 +44,9 @@ export default function RootLayout({
             <AuthProvider>
               <LeftSidebarProvider>
                 <RightSidebarProvider>
-                  <RouteTransitionBar />
+                  <Suspense fallback={null}>
+                    <RouteTransitionBar />
+                  </Suspense>
                   <AppInitializationSplash />
                   {children}
                 </RightSidebarProvider>
