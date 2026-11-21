@@ -134,7 +134,7 @@ function Get-GitWorkingTreeStatus {
     $untracked = [System.Collections.Generic.List[string]]::new()
 
     $joined = $gitRes.Text
-    $tokens = @($joined.Split([char]0) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { $_.Trim() })
+    $tokens = @($joined.Split([char]0) | Where-Object { -not [string]::IsNullOrEmpty($_) })
 
     $i = 0
     while ($i -lt $tokens.Count) {
