@@ -19,8 +19,11 @@ export interface UseAsyncOperationOptions<T> {
   onError?: (error: string) => void;
 }
 
-export function useAsyncOperation<T = unknown>(
-  asyncFn: (...args: any[]) => Promise<T>,
+export function useAsyncOperation<
+  T = unknown,
+  Args extends unknown[] = []
+>(
+  asyncFn: (...args: Args) => Promise<T>,
   options: UseAsyncOperationOptions<T> = {}
 ) {
   const { initialData = null, onSuccess, onError } = options;
@@ -49,7 +52,7 @@ export function useAsyncOperation<T = unknown>(
   }, []);
 
   const execute = React.useCallback(
-    async (...args: any[]): Promise<T | null> => {
+    async (...args: Args): Promise<T | null> => {
       // Abort any existing in-flight controller
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
