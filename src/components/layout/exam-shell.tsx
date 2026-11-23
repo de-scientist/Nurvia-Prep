@@ -50,6 +50,11 @@ interface ExamShellProps {
   showSubmitExam?: boolean;
   showFlag?: boolean;
   modeBadge?: string;
+  pathway?: string;
+  examCategory?: string;
+  isTimed?: boolean;
+  elapsedSeconds?: number;
+  stageBar?: React.ReactNode;
 }
 
 export function ExamShell({
@@ -77,11 +82,17 @@ export function ExamShell({
   showSubmitExam = true,
   showFlag = true,
   modeBadge,
+  pathway,
+  examCategory,
+  isTimed = true,
+  elapsedSeconds: propElapsedSeconds = 0,
+  stageBar,
 }: ExamShellProps) {
   const auth = useOptionalAuth();
   const user = auth?.user;
   const [internalSeconds, setInternalSeconds] = React.useState(propSecondsRemaining ?? 5400);
   const [isPaused, setIsPaused] = React.useState(false);
+  const [internalElapsed, setInternalElapsed] = React.useState(propElapsedSeconds);
   const [showCalculator, setShowCalculator] = React.useState(false);
   const [modeNotice, setModeNotice] = React.useState<string | null>(null);
 
@@ -102,6 +113,12 @@ export function ExamShell({
 
   React.useEffect(() => {
     if (isPaused || !showTimer) return;
+    if (!isTimed) {
+      const elapsedInterval = setInterval(() => {
+        setInternalElapsed((prev) => prev + 1);
+      }, 1000);
+      return () => clearInterval(elapsedInterval);
+    }
     const interval = setInterval(() => {
       setInternalSeconds((prev) => {
         if (prev <= 1) {
@@ -113,7 +130,11 @@ export function ExamShell({
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [isPaused, onTimerExpired, showTimer]);
+  }, [isPaused, isTimed, onTimerExpired, showTimer]);
+
+  React.useEffect(() => {
+    setInternalElapsed(propElapsedSeconds);
+  }, [propElapsedSeconds]);
 
   const secondsRemaining = internalSeconds;
 
@@ -128,7 +149,7 @@ export function ExamShell({
 
   const progressPct =
     totalQuestions > 0
-      ? Math.min(100, Math.max(0, (currentQuestion / totalQuestions) * 100))
+      ? Math.min(100, Math.max(0, (((answeredCount !== undefined ? answeredCount : currentQuestion) / totalQuestions) * 100)))
       : 0;
 
   const dosageResult = React.useMemo(() => {
@@ -220,6 +241,16 @@ export function ExamShell({
                 >
                   {modeBadge || `${mode} Mode`}
                 </Badge>
+                {pathway && (
+                  <Badge variant="outline" className="text-[10px] py-0 px-2">
+                    {pathway}
+                  </Badge>
+                )}
+                {examCategory && (
+                  <Badge variant="outline" className="hidden sm:inline-flex text-[10px] py-0 px-2">
+                    {examCategory}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -316,7 +347,7 @@ export function ExamShell({
             {showTimer && (
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-muted border border-border font-mono text-xs font-bold text-foreground">
                 <Clock className="w-3.5 h-3.5 text-brand-teal" />
-                <span>{formatTime(secondsRemaining)}</span>
+                <span>{isTimed ? formatTime(secondsRemaining) : `Elapsed ${formatTime(internalElapsed)}`}</span>
                 <button
                   type="button"
                   onClick={() => setIsPaused(!isPaused)}
@@ -330,17 +361,17 @@ export function ExamShell({
             )}
 
             {autosaveStatus !== "idle" && (
-              <div className="hidden lg:flex items-center gap-1 px-1.5 py-1 rounded text-[11px] font-medium">
+              <div role="status" aria-live="polite" className="flex items-center gap-1 px-1.5 py-1 rounded text-[11px] font-medium whitespace-nowrap">
                 {autosaveStatus === "saving" && (
                   <span className="flex items-center gap-1 text-amber-500 animate-pulse">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Saving
+                    Saving...
                   </span>
                 )}
                 {autosaveStatus === "saved" && (
                   <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    Saved
+                    Answer saved.
                   </span>
                 )}
                 {autosaveStatus === "error" && (
@@ -352,7 +383,7 @@ export function ExamShell({
                     aria-label="Retry saving your latest answer"
                   >
                     <AlertTriangle className="w-3.5 h-3.5" />
-                    Retry save
+                    Save failed — retry
                   </button>
                 )}
               </div>
@@ -445,6 +476,7 @@ export function ExamShell({
             </button>
           </div>
         )}
+        {stageBar}
       </header>
 
       {/* Live Working Clinical Calculator Widget */}

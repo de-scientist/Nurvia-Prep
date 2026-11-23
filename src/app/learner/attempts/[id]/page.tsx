@@ -1,26 +1,45 @@
 "use client";
 
 import * as React from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { LearnerShell } from "@/components/layout/learner-shell";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { StageProgressBar } from "@/components/exam/StageProgressBar";
+import { AssessmentResultsDashboard } from "@/components/exam/AssessmentResultsDashboard";
+import { ReviewWorkspace } from "@/components/exam/ReviewWorkspace";
+import { ContextualTutorWorkspace } from "@/components/exam/ContextualTutorWorkspace";
 import { nurviaApi } from "@/lib/api-client";
-import type { SubmittedExamResultDto } from "@/lib/api-types";
-import { QuestionRendererRegistry, type RendererQuestion } from "@/components/exam/renderers";
+import type { ExamLayout, SubmittedExamResultDto } from "@/lib/api-types";
+import {
+  canTransitionStage,
+  getStageAvailability,
+  resolveAttemptLifecycleStatus,
+  type ExamExperienceStage,
+  type ReviewFilterKey,
+} from "@/lib/attempts/exam-experience-state";
 import { Sparkles } from "lucide-react";
-
-function isUnanswered(response?: string) {
-  return !response || ["null", '""', "[]", "{}"].includes(response.trim());
-}
 
 export default function AttemptResultPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const attemptId = params.id;
+
   const [result, setResult] = React.useState<SubmittedExamResultDto | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+
+  const [stage, setStage] = React.useState<ExamExperienceStage>("results");
+  const [reviewFilter, setReviewFilter] = React.useState<ReviewFilterKey>("All");
+  const [reviewLayout, setReviewLayout] = React.useState<ExamLayout>("Sequential");
+  const [currentQuestionId, setCurrentQuestionId] = React.useState<string>("");
+  const [tutorQuestionId, setTutorQuestionId] = React.useState<string>("");
+  const [returnContext, setReturnContext] = React.useState<{
+    questionId: string;
+    filter: ReviewFilterKey;
+    layout: ExamLayout;
+  } | null>(null);
+  const [stageNotice, setStageNotice] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     let active = true;
@@ -28,6 +47,18 @@ export default function AttemptResultPage() {
       if (!active) return;
       if (response.success && response.data) {
         setResult(response.data);
+        const firstId = response.data.reviewQuestions?.[0]?.questionId || "";
+        setCurrentQuestionId(firstId);
+        setTutorQuestionId(firstId);
+        if (typeof window !== "undefined" && response.data.reviewReleased) {
+          const sp = new URLSearchParams(window.location.search);
+          const requestedStage = (sp.get("stage") || sp.get("mode") || "").toLowerCase();
+          if (requestedStage === "review") {
+            setStage("review");
+          } else if (requestedStage === "tutor") {
+            setStage("tutor");
+          }
+        }
       } else {
         setError(response.message || "Unable to load this saved result.");
       }
@@ -38,29 +69,99 @@ export default function AttemptResultPage() {
     };
   }, [attemptId]);
 
+  const lifecycleStatus = resolveAttemptLifecycleStatus(result?.status);
   const reviewWithheld = result ? !result.reviewReleased : false;
-  const hasQuestionBreakdown = Boolean(result && result.reviewQuestions.length > 0);
-  const unanswered = hasQuestionBreakdown
-    ? result!.reviewQuestions.filter((q) => isUnanswered(q.learnerResponse)).length
-    : Math.max(0, (result?.totalQuestions || 0) - (result?.totalAnswered ?? result?.totalQuestions ?? 0));
-  const correct = result?.correctQuestions || 0;
-  const incorrect = hasQuestionBreakdown
-    ? Math.max(0, result!.reviewQuestions.length - correct - unanswered)
-    : Math.max(0, (result?.totalWrong ?? (result?.totalQuestions || 0) - correct - unanswered));
+  const canAskTutor = Boolean(result?.reviewReleased);
 
-  const distribution = [
-    { label: "Correct", value: correct, color: "bg-emerald-500" },
-    { label: "Incorrect", value: incorrect, color: "bg-rose-500" },
-    { label: "Unanswered", value: unanswered, color: "bg-slate-400" },
-  ];
+  const availability = React.useMemo(
+    () =>
+      getStageAvailability({
+        lifecycleStatus,
+        deliveryMode: "Exam",
+        reviewReleased: Boolean(result?.reviewReleased),
+        modePermissions: result?.modePermissions,
+        hasAttemptId: Boolean(attemptId),
+      }),
+    [lifecycleStatus, result?.reviewReleased, result?.modePermissions, attemptId]
+  );
+
+  const handleSelectStage = (target: ExamExperienceStage) => {
+    const check = canTransitionStage(stage, target, {
+      lifecycleStatus,
+      deliveryMode: "Exam",
+      reviewReleased: Boolean(result?.reviewReleased),
+      modePermissions: result?.modePermissions,
+      hasAttemptId: Boolean(attemptId),
+    });
+    if (!check.allowed) {
+      setStageNotice(check.reason || "That stage is unavailable for this attempt.");
+      return;
+    }
+    setStageNotice(null);
+    if (target === "tutor" && !tutorQuestionId && result?.reviewQuestions?.[0]) {
+      setTutorQuestionId(result.reviewQuestions[0].questionId);
+    }
+    setStage(target);
+  };
+
+  const handleOpenTutorForQuestion = (questionId?: string) => {
+    const fallbackId =
+      questionId ||
+      currentQuestionId ||
+      result?.reviewQuestions?.[0]?.questionId ||
+      "";
+    if (!fallbackId) return;
+    setReturnContext({
+      questionId: currentQuestionId || fallbackId,
+      filter: reviewFilter,
+      layout: reviewLayout,
+    });
+    setTutorQuestionId(fallbackId);
+    setStage("tutor");
+    setStageNotice(null);
+  };
+
+  const handleReturnToReview = () => {
+    if (returnContext) {
+      setCurrentQuestionId(returnContext.questionId);
+      setReviewFilter(returnContext.filter);
+      setReviewLayout(returnContext.layout);
+    }
+    setStage("review");
+  };
+
+  const flaggedMap = React.useMemo(() => {
+    const map: Record<string, boolean> = {};
+    result?.reviewQuestions?.forEach((q) => {
+      if (q.isFlagged) map[q.questionId] = true;
+    });
+    result?.flaggedQuestionIds?.forEach((id) => {
+      map[id] = true;
+    });
+    return map;
+  }, [result]);
+
+  const activeTutorQuestion = React.useMemo(() => {
+    if (!result?.reviewQuestions?.length) return null;
+    const idx = result.reviewQuestions.findIndex((q) => q.questionId === tutorQuestionId);
+    const resolvedIdx = idx >= 0 ? idx : 0;
+    return {
+      question: result.reviewQuestions[resolvedIdx],
+      questionNumber: resolvedIdx + 1,
+    };
+  }, [result, tutorQuestionId]);
 
   return (
     <LearnerShell>
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className="mx-auto max-w-6xl space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="space-y-1">
-            <p className="text-xs font-bold uppercase tracking-wider text-brand-teal">Persisted exam result</p>
-            <h1 className="font-brand text-2xl font-bold text-foreground sm:text-3xl">Result and review</h1>
+            <p className="text-xs font-bold uppercase tracking-wider text-brand-teal">
+              Persisted exam result
+            </p>
+            <h1 className="font-brand text-2xl font-bold text-foreground sm:text-3xl">
+              Result and review
+            </h1>
           </div>
           <div className="flex items-center gap-2">
             {!reviewWithheld && (
@@ -70,153 +171,92 @@ export default function AttemptResultPage() {
                 </Button>
               </Link>
             )}
-            <Link href="/learner"><Button variant="outline">Back to dashboard</Button></Link>
+            <Link href="/learner">
+              <Button variant="outline">Back to dashboard</Button>
+            </Link>
           </div>
         </div>
 
-        {loading && <p className="py-8 text-center text-sm text-foreground-secondary" aria-live="polite">Loading saved result…</p>}
-        {error && <p role="alert" className="rounded-lg border border-rose-300 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200">{error}</p>}
+        {loading && (
+          <p className="py-8 text-center text-sm text-foreground-secondary" aria-live="polite">
+            Loading saved result…
+          </p>
+        )}
+
+        {error && (
+          <p
+            role="alert"
+            className="rounded-lg border border-rose-300 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200"
+          >
+            {error}
+          </p>
+        )}
 
         {result && (
           <>
-            <Card className="space-y-5 p-6 sm:p-8">
-              <div>
-                <h2 className="font-brand text-xl font-bold text-foreground">{result.examTitle}</h2>
-                <p className="mt-1 text-sm text-foreground-secondary">
-                  Started {new Date(result.startedAtUtc).toLocaleString()} · Submitted {new Date(result.submittedAtUtc).toLocaleString()}
-                </p>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="rounded-xl bg-surface-muted p-4">
-                  <p className="text-xs text-foreground-secondary">Score</p>
-                  <p className="mt-1 text-2xl font-bold text-foreground">{result.scorePercentage}%</p>
-                  {result.passed !== null && (
-                    <p className="mt-1 text-xs text-foreground-secondary">
-                      {result.passed ? "Met" : "Did not meet"} configured passing score ({result.passingScorePercentage}%).
-                    </p>
-                  )}
-                </div>
-                <div className="rounded-xl bg-surface-muted p-4">
-                  <p className="text-xs text-foreground-secondary">Questions correct</p>
-                  <p className="mt-1 text-2xl font-bold text-foreground">{result.correctQuestions} / {result.totalQuestions}</p>
-                </div>
-                <div className="rounded-xl bg-surface-muted p-4">
-                  <p className="text-xs text-foreground-secondary">Time used</p>
-                  <p className="mt-1 text-2xl font-bold text-foreground">{Math.max(0, Math.round(result.timeSpentSeconds / 60))} min</p>
-                  {(result.timeLimitMinutes ?? 0) > 0 && (
-                    <p className="mt-1 text-xs text-foreground-secondary">
-                      of {result.timeLimitMinutes} min allocated ({Math.round((result.timeSpentSeconds / ((result.timeLimitMinutes ?? 0) * 60)) * 100)}%)
-                    </p>
-                  )}
-                </div>
-              </div>
-            </Card>
+            <div className="rounded-2xl border border-border bg-surface px-4 pb-3 pt-1">
+              <StageProgressBar
+                currentStage={stage}
+                availability={availability}
+                onSelectStage={handleSelectStage}
+                tutorQuestionNumber={activeTutorQuestion?.questionNumber}
+              />
+            </div>
 
-            <Card className="space-y-5 p-6">
-              <div>
-                <h2 className="font-brand text-lg font-bold text-foreground">Question outcome distribution</h2>
-                <p className="mt-1 text-sm text-foreground-secondary">
-                  {correct} correct, {incorrect} incorrect, and {unanswered} unanswered out of {result.totalQuestions} questions.
-                </p>
+            {stageNotice && (
+              <div
+                role="status"
+                className="rounded-xl border border-amber-500/40 bg-amber-50/90 dark:bg-amber-950/40 px-4 py-2.5 text-xs text-amber-950 dark:text-amber-100"
+              >
+                {stageNotice}
               </div>
-              <div className="space-y-4" aria-label="Question outcome counts">
-                {distribution.map((item) => {
-                  const percentage = result.totalQuestions > 0
-                    ? (item.value / result.totalQuestions) * 100
-                    : 0;
-                  return (
-                    <div key={item.label} className="space-y-1.5">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-foreground-secondary">{item.label}</span>
-                        <span className="font-semibold text-foreground">{item.value}</span>
-                      </div>
-                      <div
-                        className="h-3 overflow-hidden rounded-full bg-surface-muted"
-                        role="img"
-                        aria-label={`${item.label}: ${item.value} of ${result.totalQuestions}`}
-                      >
-                        <div className={`h-full ${item.color}`} style={{ width: `${percentage}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </Card>
+            )}
 
-            <section className="space-y-4">
-              <h2 className="font-brand text-xl font-bold text-foreground">Question review</h2>
-              {reviewWithheld ? (
-                <p
-                  role="status"
-                  className="rounded-lg border border-brand-teal/30 bg-brand-teal/5 p-4 text-sm text-foreground-secondary"
-                >
-                  Answer keys and rationales are withheld for this examination because backend policy sets allowReview to false. Your graded score summary above is final.
-                </p>
-              ) : (
-                result.reviewQuestions.map((question) => {
-                  const rq: RendererQuestion = {
-                    id: question.questionId,
-                    numericId: question.numericId,
-                    guidId: question.guidId,
-                    sectionId: question.sectionId,
-                    sectionGuidId: question.sectionGuidId,
-                    sectionName: question.sectionName,
-                    orderIndex: question.orderIndex,
-                    stem: question.stem,
-                    metaStem: question.metaStem,
-                    instructions: question.instructions,
-                    questionType: question.questionType,
-                    cognitiveSkill: question.cognitiveSkill,
-                    clientNeedCategory: question.clientNeedCategory,
-                    generalRationale: question.generalRationale,
-                    isCorrect: question.isCorrect,
-                    learnerResponse: question.learnerResponse,
-                    options: question.options.map((o) => ({
-                      ...o,
-                      displayOrder: o.optionIndex,
-                    })),
-                    exhibits: question.exhibits,
-                    media: question.media,
-                    matrix: question.matrix,
-                    blankSelectPassage: question.blankSelectPassage,
-                    highlightPassage: question.highlightPassage,
-                    correctAnswerMeta: question.correctAnswerMeta,
-                    contentIntegrityError: question.contentIntegrityError,
-                  };
+            {stage === "results" && (
+              <AssessmentResultsDashboard
+                result={result}
+                canAskTutor={canAskTutor && result.reviewQuestions.length > 0}
+                onEnterReview={(initialFilter) => {
+                  setReviewFilter(initialFilter || "All");
+                  setStage("review");
+                }}
+                onEnterTutor={(qId) => handleOpenTutorForQuestion(qId)}
+                onViewPerformance={() => router.push("/learner/performance")}
+                onBackToDashboard={() => router.push("/learner")}
+              />
+            )}
 
-                  return (
-                    <Card key={question.questionId} className="space-y-4 p-5">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">
-                          Question {question.orderIndex}
-                        </p>
-                        <span
-                          className={
-                            isUnanswered(question.learnerResponse)
-                              ? "text-xs font-semibold text-foreground-muted"
-                              : question.isCorrect
-                                ? "text-xs font-semibold text-emerald-700 dark:text-emerald-300"
-                                : "text-xs font-semibold text-rose-700 dark:text-rose-300"
-                          }
-                        >
-                          {isUnanswered(question.learnerResponse)
-                            ? "Unanswered"
-                            : question.isCorrect
-                              ? "Correct"
-                              : "Incorrect"}
-                        </span>
-                      </div>
-                      <QuestionRendererRegistry
-                        question={rq}
-                        value={question.learnerResponse ?? null}
-                        disabled
-                        isReview
-                      />
-                    </Card>
-                  );
-                })
-              )}
-            </section>
+            {stage === "review" && (
+              <ReviewWorkspace
+                questions={result.reviewQuestions}
+                activeFilter={reviewFilter}
+                onFilterChange={setReviewFilter}
+                layout={reviewLayout}
+                allowLayoutSwitching
+                onLayoutChange={setReviewLayout}
+                currentQuestionId={currentQuestionId}
+                onSelectQuestion={setCurrentQuestionId}
+                flaggedMap={flaggedMap}
+                canAskTutor={canAskTutor}
+                onAskTutor={(qId) => handleOpenTutorForQuestion(qId)}
+                onBackToResults={() => setStage("results")}
+              />
+            )}
+
+            {stage === "tutor" && activeTutorQuestion && (
+              <ContextualTutorWorkspace
+                attemptId={result.attemptId}
+                examTitle={result.examTitle}
+                pathway={result.pathway ? String(result.pathway) : undefined}
+                question={activeTutorQuestion.question}
+                questionNumber={activeTutorQuestion.questionNumber}
+                totalQuestions={result.reviewQuestions.length}
+                keysReleased={result.reviewReleased}
+                returnLabel={`Return to Question #${activeTutorQuestion.questionNumber} in Review`}
+                onReturnToReview={handleReturnToReview}
+                onBackToResults={() => setStage("results")}
+              />
+            )}
           </>
         )}
       </div>

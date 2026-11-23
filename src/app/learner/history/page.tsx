@@ -6,7 +6,7 @@ import { LearnerShell } from "@/components/layout/learner-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RotateCcw, Play, FileBarChart, Lock } from "lucide-react";
+import { RotateCcw, Play, FileBarChart, Lock, Sparkles } from "lucide-react";
 import { nurviaApi } from "@/lib/api-client";
 import { ExamAttemptSummaryDto } from "@/lib/api-types";
 
@@ -20,7 +20,7 @@ interface DisplayAttempt {
   mode: string;
   duration: string;
   status: string;
-  passed?: boolean;
+  passed?: boolean | null;
   canReview: boolean;
 }
 
@@ -163,16 +163,28 @@ export default function AttemptHistoryPage() {
                               </Button>
                             </Link>
                             {a.canReview ? (
-                              <Link href={`/exam-session?attemptId=${encodeURIComponent(a.id)}&mode=Review`}>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 text-xs gap-1 hover:text-brand-teal"
-                                >
-                                  <RotateCcw className="w-3 h-3" />
-                                  <span>Review</span>
-                                </Button>
-                              </Link>
+                              <>
+                                <Link href={`/exam-session?attemptId=${encodeURIComponent(a.id)}&mode=Review`}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-xs gap-1 hover:text-brand-teal"
+                                  >
+                                    <RotateCcw className="w-3 h-3" />
+                                    <span>Review</span>
+                                  </Button>
+                                </Link>
+                                <Link href={`/exam-session?attemptId=${encodeURIComponent(a.id)}&mode=Tutor`}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-xs gap-1 text-brand-teal hover:bg-brand-teal/10"
+                                  >
+                                    <Sparkles className="w-3 h-3" />
+                                    <span>Tutor</span>
+                                  </Button>
+                                </Link>
+                              </>
                             ) : (
                               <Button
                                 type="button"
