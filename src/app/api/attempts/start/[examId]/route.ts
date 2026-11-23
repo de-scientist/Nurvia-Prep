@@ -158,10 +158,14 @@ export async function POST(
     examTitle: loaded.examTitle,
     pathway: loaded.pathway,
     examCategory: loaded.examCategory,
+    subjectName: loaded.subjectName,
+    topicName: loaded.topicName,
+    learningObjectives: loaded.learningObjectives,
     userId: learner.userId,
     deliveryMode: requestedDeliveryMode,
     layoutMode,
     allowedLayouts: loaded.allowedLayouts,
+    isTimed: loaded.isTimed,
     timeLimitMinutes: loaded.timeLimitMinutes,
     remainingSeconds: loaded.timeLimitMinutes * 60,
     startedAtUtc,
@@ -176,6 +180,8 @@ export async function POST(
     questions: loaded.questions,
     savedResponses: loaded.savedResponses,
     tutorProgression: {},
+    tutorConversations: {},
+    tutorPracticeChecks: {},
   };
 
   attemptStore.setAttempt(storedAttempt);

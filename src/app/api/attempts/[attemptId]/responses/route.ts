@@ -209,7 +209,20 @@ async function handleAutosave(
         }
         backendSynced = settled.some((s) => s.status === 'fulfilled' && s.value.ok);
         if (!backendSynced) {
-          syncWarning = 'Response saved in active session, but backend sync encountered a transient error.';
+          syncWarning = 'Backend persistence did not confirm save. Please retry.';
+          return NextResponse.json(
+            {
+              success: false,
+              message: syncWarning,
+              errorCode: 'BACKEND_SYNC_FAILED',
+              data: {
+                ...result.data,
+                backendSynced: false,
+                syncWarning,
+              },
+            },
+            { status: 502, headers: NO_STORE_HEADERS }
+          );
         }
       } else {
         backendSynced = true;

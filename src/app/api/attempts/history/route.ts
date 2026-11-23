@@ -117,7 +117,7 @@ function mapLexmaCastoResultToAttemptSummary(
   const passingScorePercentage =
     typeof item.passMark === 'number' && item.passMark > 0 && item.passMark <= 100
       ? item.passMark
-      : 75;
+      : null;
 
   const totalQuestions =
     typeof item.questionsCount === 'number' && item.questionsCount > 0
@@ -147,10 +147,10 @@ function mapLexmaCastoResultToAttemptSummary(
     startedAtUtc,
     ...(submittedAtUtc ? { submittedAtUtc } : {}),
     ...(scorePercentage !== undefined ? { scorePercentage } : {}),
-    passingScorePercentage,
+    ...(passingScorePercentage !== null ? { passingScorePercentage } : {}),
     ...(typeof item.passed === 'boolean'
       ? { passed: item.passed }
-      : scorePercentage !== undefined
+      : scorePercentage !== undefined && passingScorePercentage !== null
         ? { passed: scorePercentage >= passingScorePercentage }
         : {}),
     totalQuestions,
@@ -159,7 +159,8 @@ function mapLexmaCastoResultToAttemptSummary(
     ...(typeof item.totalAnswered === 'number' ? { totalAnswered: item.totalAnswered } : {}),
     ...(typeof item.timeTaken === 'number' ? { timeSpentSeconds: item.timeTaken } : {}),
     attemptNumber,
-    ...(allowReview !== undefined ? { allowReview, canReview: allowReview } : { canReview: false }),
+    allowReview: allowReview ?? true,
+    canReview: status !== 'InProgress' ? allowReview !== false : false,
     canTutor,
     ...(typeof item.subjectName === 'string' && item.subjectName ? { subjectName: item.subjectName } : {}),
     ...(typeof item.topicName === 'string' && item.topicName ? { topicName: item.topicName } : {}),

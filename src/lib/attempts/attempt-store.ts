@@ -14,6 +14,7 @@ import type {
   AutosaveResultDto,
   SubmittedExamResultDto,
   ReviewQuestionDto,
+  AttemptCategoryPerformanceDto,
   ExamAttemptSummaryDto,
   ExamLayout,
   ExamLayoutPolicy,
@@ -29,9 +30,13 @@ import type {
   TutorHintResponseDto,
   TutorEvaluateResponseDto,
   TutorSessionStateDto,
+  TutorConversationMessageDto,
+  TutorPracticeCheckResponseDto,
 } from '../api-types';
 import {
   evaluateCanonicalQuestion,
+  isResponseAnswered,
+  scoreCanonicalQuestion,
   wasCanonicalOptionSelected,
 } from './strata-answer-core.mjs';
 
@@ -50,6 +55,10 @@ export interface StoredAttemptQuestion {
   questionType: QuestionType;
   cognitiveSkill: CognitiveSkill;
   clientNeedCategory: ClientNeedCategory;
+  difficulty?: string;
+  learningObjectives?: string[];
+  resources?: string;
+  prerequisites?: string;
   options: Array<{
     id: string;
     numericId?: number;
@@ -83,18 +92,22 @@ export interface StoredAttempt {
   examTitle: string;
   pathway?: string;
   examCategory?: string;
+  subjectName?: string;
+  topicName?: string;
+  learningObjectives?: string[];
   userId: string;
   deliveryMode: 'Exam' | 'Tutor';
   layoutMode: ExamLayout;
   allowedLayouts: ExamLayoutPolicy;
+  isTimed?: boolean;
   timeLimitMinutes: number;
   remainingSeconds: number;
   startedAtUtc: string;
   submittedAtUtc?: string;
-  status: 'InProgress' | 'Submitted' | 'Graded';
+  status: 'Created' | 'InProgress' | 'Submitted' | 'Graded' | 'Expired';
   allowReview?: boolean;
   configuredQuestionCount?: number;
-  passingScorePercentage?: number;
+  passingScorePercentage?: number | null;
   attemptNumber?: number;
   modePermissions?: ExamModePermissionsDto;
   isDurableBackendSynced?: boolean;
@@ -118,6 +131,8 @@ export interface StoredAttempt {
       responseJson?: string;
     }
   >;
+  tutorConversations?: Record<string, TutorConversationMessageDto[]>;
+  tutorPracticeChecks?: Record<string, TutorPracticeCheckResponseDto[]>;
 }
 
 const globalAttemptCache = globalThis as typeof globalThis & {
@@ -223,6 +238,10 @@ class AttemptStore {
         questionType: q.questionType,
         cognitiveSkill: q.cognitiveSkill,
         clientNeedCategory: q.clientNeedCategory,
+        difficulty: q.difficulty,
+        learningObjectives: q.learningObjectives,
+        resources: q.resources,
+        prerequisites: q.prerequisites,
         contentJsonData: q.contentJsonData,
         // Rationales and answer metadata are strictly withheld in active Exam mode
         generalRationale: isTutor ? q.generalRationale : undefined,
@@ -255,11 +274,7 @@ class AttemptStore {
     for (const [qid, state] of Object.entries(attempt.savedResponses)) {
       mappedSavedResponses[qid] = {
         responseJson: state.responseJson ?? undefined,
-        isAnswered: Boolean(
-          state.responseJson &&
-            state.responseJson !== 'null' &&
-            state.responseJson !== '""'
-        ),
+        isAnswered: isResponseAnswered(state.responseJson),
         isFlagged: state.isFlagged,
         savedAtUtc: state.savedAtUtc,
         tutorStageReached: attempt.tutorProgression[qid]?.stage ?? 0,
@@ -271,6 +286,13 @@ class AttemptStore {
       examId: attempt.examId,
       examNumericId: attempt.examNumericId,
       examTitle: attempt.examTitle,
+      pathway: attempt.pathway,
+      examCategory: attempt.examCategory,
+      isTimed: attempt.isTimed,
+      passingScorePercentage: attempt.passingScorePercentage ?? null,
+      subjectName: attempt.subjectName,
+      topicName: attempt.topicName,
+      learningObjectives: attempt.learningObjectives,
       timeLimitMinutes: attempt.timeLimitMinutes,
       remainingSeconds: attempt.remainingSeconds,
       startedAtUtc: attempt.startedAtUtc,
@@ -307,7 +329,7 @@ class AttemptStore {
     if (raw.userId !== userId && userId !== 'system' && userId !== 'superadmin') {
       return { success: false, error: 'Forbidden. You do not own this attempt.', status: 403 };
     }
-    if (raw.status === 'Submitted' || raw.status === 'Graded') {
+    if (raw.status === 'Submitted' || raw.status === 'Graded' || raw.status === 'Expired') {
       return { success: false, error: 'Exam attempt has already been submitted.', status: 409 };
     }
 
@@ -318,8 +340,12 @@ class AttemptStore {
       savedAtUtc,
     };
 
-    if (payload.layoutMode) {
+    if (payload.layoutMode && raw.allowedLayouts === 'Both') {
       raw.layoutMode = payload.layoutMode;
+    } else if (raw.allowedLayouts === 'AllInOneOnly') {
+      raw.layoutMode = 'AllInOne';
+    } else if (raw.allowedLayouts === 'SequentialOnly') {
+      raw.layoutMode = 'Sequential';
     }
 
     return {
@@ -327,7 +353,7 @@ class AttemptStore {
       status: 200,
       data: {
         questionId: payload.questionId,
-        isAnswered: Boolean(payload.responseJson),
+        isAnswered: isResponseAnswered(payload.responseJson),
         isFlagged: Boolean(payload.isFlagged),
         savedAtUtc,
       },
@@ -350,27 +376,87 @@ class AttemptStore {
       return { success: false, error: 'Forbidden. You do not own this attempt.', status: 403 };
     }
 
-    // Idempotent: if already graded, return the cached authoritative result
-    if (raw.status === 'Graded' && raw.result) {
+    // Idempotent: if already graded or submitted, return the cached authoritative result
+    if ((raw.status === 'Graded' || raw.status === 'Submitted') && raw.result) {
       return { success: true, status: 200, data: raw.result };
     }
 
     const submittedAtUtc = new Date().toISOString();
     let correctQuestions = 0;
+    let partiallyCorrectQuestions = 0;
+    let incorrectQuestions = 0;
+    let unansweredQuestions = 0;
     let totalAnswered = 0;
+    let rawScoreEarned = 0;
+    let rawScoreMax = 0;
+    const flaggedQuestionIds: string[] = [];
+
+    const sectionBuckets = new Map<
+      string,
+      {
+        total: number;
+        answered: number;
+        correct: number;
+        partiallyCorrect: number;
+        incorrect: number;
+        unanswered: number;
+        pointsAwarded: number;
+        maxPoints: number;
+        questionIds: string[];
+      }
+    >();
 
     const reviewQuestions: ReviewQuestionDto[] = raw.questions.map((q) => {
       const saved = raw.savedResponses[q.id];
       const learnerResponse = saved?.responseJson ?? undefined;
-      if (
-        learnerResponse &&
-        !['null', '""', '[]', '{}', ''].includes(learnerResponse.trim())
-      ) {
-        totalAnswered++;
-      }
-      const isCorrect = evaluateCanonicalQuestion(q, learnerResponse);
+      const isFlagged = Boolean(saved?.isFlagged);
+      if (isFlagged) flaggedQuestionIds.push(q.id);
 
-      if (isCorrect) correctQuestions++;
+      const scored = scoreCanonicalQuestion(q, learnerResponse);
+      rawScoreEarned += scored.pointsAwarded;
+      rawScoreMax += scored.maxPoints;
+
+      if (scored.isAnswered) {
+        totalAnswered += 1;
+        if (scored.isCorrect) {
+          correctQuestions += 1;
+        } else if (scored.isPartiallyCorrect) {
+          partiallyCorrectQuestions += 1;
+        } else {
+          incorrectQuestions += 1;
+        }
+      } else {
+        unansweredQuestions += 1;
+      }
+
+      const sectionKey =
+        (q.sectionName && q.sectionName.trim()) ||
+        (raw.subjectName && raw.subjectName.trim()) ||
+        'Examination Items';
+      const bucket = sectionBuckets.get(sectionKey) ?? {
+        total: 0,
+        answered: 0,
+        correct: 0,
+        partiallyCorrect: 0,
+        incorrect: 0,
+        unanswered: 0,
+        pointsAwarded: 0,
+        maxPoints: 0,
+        questionIds: [],
+      };
+      bucket.total += 1;
+      bucket.pointsAwarded += scored.pointsAwarded;
+      bucket.maxPoints += scored.maxPoints;
+      bucket.questionIds.push(q.id);
+      if (scored.isAnswered) {
+        bucket.answered += 1;
+        if (scored.isCorrect) bucket.correct += 1;
+        else if (scored.isPartiallyCorrect) bucket.partiallyCorrect += 1;
+        else bucket.incorrect += 1;
+      } else {
+        bucket.unanswered += 1;
+      }
+      sectionBuckets.set(sectionKey, bucket);
 
       // Map options with wasSelected flags
       const mappedOptions = q.options.map((opt) => {
@@ -405,11 +491,20 @@ class AttemptStore {
         questionType: q.questionType,
         cognitiveSkill: q.cognitiveSkill,
         clientNeedCategory: q.clientNeedCategory,
+        difficulty: q.difficulty,
+        learningObjectives: q.learningObjectives,
+        resources: q.resources,
+        prerequisites: q.prerequisites,
         generalRationale: q.generalRationale,
         learnerResponse,
-        isCorrect,
-        pointsAwarded: isCorrect ? 1 : 0,
-        maxPoints: 1,
+        isCorrect: scored.isCorrect,
+        isPartiallyCorrect: scored.isPartiallyCorrect,
+        isUnanswered: !scored.isAnswered,
+        isFlagged,
+        allowPartialCredit: scored.allowPartialCredit,
+        scoringRule: scored.scoringRule,
+        pointsAwarded: scored.pointsAwarded,
+        maxPoints: scored.maxPoints,
         options: mappedOptions,
         exhibits: q.exhibits,
         media: q.media,
@@ -423,14 +518,36 @@ class AttemptStore {
 
     const totalQuestions = raw.questions.length;
     const scorePercentage =
-      totalQuestions > 0 ? Math.round((correctQuestions / totalQuestions) * 100) : 0;
-    const passingScorePercentage = raw.passingScorePercentage ?? 75;
-    const passed = scorePercentage >= passingScorePercentage;
+      rawScoreMax > 0 ? Math.round((rawScoreEarned / rawScoreMax) * 100) : 0;
+    const validThreshold =
+      typeof raw.passingScorePercentage === 'number' &&
+      Number.isFinite(raw.passingScorePercentage) &&
+      raw.passingScorePercentage > 0 &&
+      raw.passingScorePercentage <= 100
+        ? raw.passingScorePercentage
+        : null;
+    const passed = validThreshold !== null ? scorePercentage >= validThreshold : null;
     const timeSpentSeconds = Math.max(
-      15,
+      1,
       Math.floor((new Date(submittedAtUtc).getTime() - new Date(raw.startedAtUtc).getTime()) / 1000)
     );
     const reviewReleased = raw.allowReview !== false;
+
+    const sectionBreakdown: AttemptCategoryPerformanceDto[] = Array.from(sectionBuckets.entries()).map(
+      ([name, b]) => ({
+        name,
+        total: b.total,
+        answered: b.answered,
+        correct: b.correct,
+        partiallyCorrect: b.partiallyCorrect,
+        incorrect: b.incorrect,
+        unanswered: b.unanswered,
+        pointsAwarded: b.pointsAwarded,
+        maxPoints: b.maxPoints,
+        accuracyPercentage: b.maxPoints > 0 ? Math.round((b.pointsAwarded / b.maxPoints) * 100) : 0,
+        questionIds: reviewReleased ? b.questionIds : [],
+      })
+    );
 
     const result: SubmittedExamResultDto = {
       attemptId: raw.attemptId,
@@ -438,20 +555,31 @@ class AttemptStore {
       examTitle: raw.examTitle,
       pathway: raw.pathway,
       examCategory: raw.examCategory,
+      subjectName: raw.subjectName,
+      topicName: raw.topicName,
+      learningObjectives: raw.learningObjectives,
       status: 'Graded',
       scorePercentage,
-      passingScorePercentage,
+      passingScorePercentage: validThreshold,
       passed,
       totalQuestions,
       totalAnswered,
       correctQuestions,
-      totalWrong: Math.max(0, totalQuestions - correctQuestions),
+      partiallyCorrectQuestions,
+      incorrectQuestions,
+      unansweredQuestions,
+      totalWrong: incorrectQuestions + unansweredQuestions,
+      rawScoreEarned,
+      rawScoreMax,
       timeSpentSeconds,
       timeLimitMinutes: raw.timeLimitMinutes,
+      isTimed: raw.isTimed,
       startedAtUtc: raw.startedAtUtc,
       submittedAtUtc,
       reviewReleased,
       modePermissions: raw.modePermissions,
+      sectionBreakdown,
+      flaggedQuestionIds: reviewReleased ? flaggedQuestionIds : [],
       reviewQuestions: reviewReleased ? reviewQuestions : [],
     };
 
@@ -532,18 +660,23 @@ class AttemptStore {
 
     if (stage === 'FirstHint') {
       title = 'Clinical Decision Clue (Stage 2)';
+      const sectionHint = q.sectionName ? ` within ${q.sectionName}` : '';
       content =
         q.hint ||
         (q.options.find((o) => o.isCorrect)?.specificRationale
-          ? `Pay close attention to key signs: ${q.options.find((o) => o.isCorrect)?.specificRationale?.slice(0, 100)}...`
-          : 'Identify the priority nursing assessment or intervention according to the ABCs (Airway, Breathing, Circulation).');
+          ? `Focus on the core safety cue${sectionHint}: ${q.options.find((o) => o.isCorrect)?.specificRationale?.slice(0, 140)}`
+          : `Focus on the primary clinical priority asked in the stem${sectionHint} and eliminate choices that delay urgent assessment or safe care.`);
     } else if (stage === 'GuidedReasoning') {
       title = 'Guided Clinical Reasoning (Stage 3)';
-      content =
-        'Evaluate each assessment finding against normal physiological parameters. Ask: which complication poses the most acute threat to patient stability?';
+      const firstDistractor = q.options.find((o) => !o.isCorrect && o.specificRationale);
+      content = firstDistractor?.specificRationale
+        ? `Compare each choice against the clinical cues in the stem. Watch for distractors like "${firstDistractor.optionText}": ${firstDistractor.specificRationale}`
+        : `Evaluate each option against the cues in the question stem. Determine which option directly addresses the priority finding rather than a secondary detail.`;
     } else if (stage === 'ExplainConcept') {
       title = 'Core Nursing Concept';
-      content = q.generalRationale || 'Adheres to standard clinical judgment and evidence-based nursing protocols.';
+      content =
+        q.generalRationale ||
+        'Review the underlying physiological principle and patient safety priority referenced in this question.';
     }
 
     if (!raw.tutorProgression[questionId]) {
@@ -584,20 +717,32 @@ class AttemptStore {
     const q = raw.questions.find((item) => item.id === questionId);
     if (!q) return { success: false, error: 'Question not found.', status: 404 };
 
-    const isCorrect = evaluateCanonicalQuestion(q, responseJson);
+    const scored = scoreCanonicalQuestion(q, responseJson);
+    const isCorrect = scored.isCorrect;
     const correctOpt = q.options.find((o) => o.isCorrect);
 
     const explanation = isCorrect
-      ? (correctOpt?.specificRationale || q.generalRationale || 'Correct! Your critical reasoning aligns with clinical safety protocols.')
+      ? (correctOpt?.specificRationale || q.generalRationale || 'Correct! Your reasoning matches the authoritative rationale for this item.')
       : (correctOpt?.specificRationale
-          ? `Incorrect. The correct option is supported by: ${correctOpt.specificRationale}`
-          : q.generalRationale || 'Review physiological principles for this clinical scenario.');
+          ? `Incorrect. The authoritative answer is supported by: ${correctOpt.specificRationale}`
+          : q.generalRationale || 'Compare your selected answer against the official rationale and option breakdown below.');
+
+    const clinicalConcept =
+      (q.sectionName && q.sectionName.trim()) ||
+      (raw.subjectName && raw.subjectName.trim()) ||
+      String(q.cognitiveSkill || 'Clinical Judgment');
+    const nursingPrinciple =
+      (q.learningObjectives && q.learningObjectives[0]) ||
+      String(q.clientNeedCategory || 'Evidence-Based Clinical Reasoning');
+    const takeaway = q.generalRationale
+      ? `Key takeaway (${clinicalConcept}): ${q.generalRationale.slice(0, 220)}${q.generalRationale.length > 220 ? '...' : ''}`
+      : `Key takeaway (${clinicalConcept}): Review why the correct response best addresses the priority cues in this item.`;
 
     const result: TutorEvaluateResponseDto = {
       questionId,
       isCorrect,
-      pointsAwarded: isCorrect ? 1 : 0,
-      maxPoints: 1,
+      pointsAwarded: scored.pointsAwarded,
+      maxPoints: scored.maxPoints,
       generalRationale: q.generalRationale || explanation,
       optionRationales: q.options.map((o) => ({
         optionId: o.id,
@@ -606,9 +751,9 @@ class AttemptStore {
         isCorrect: o.isCorrect,
         specificRationale: o.specificRationale,
       })),
-      clinicalConcept: 'Clinical Judgment & Decision Making',
-      nursingPrinciple: 'Client Safety & Immediate Priority Setting',
-      takeaway: 'Key takeaway: Assess physiological stability before administering pharmacological interventions, and monitor for adverse indicators.',
+      clinicalConcept,
+      nursingPrinciple,
+      takeaway,
       isAiGenerated: false,
     };
 
@@ -682,8 +827,8 @@ class AttemptStore {
           startedAtUtc: a.startedAtUtc,
           submittedAtUtc: a.submittedAtUtc,
           scorePercentage: a.result?.scorePercentage,
-          passingScorePercentage: a.result?.passingScorePercentage ?? a.passingScorePercentage,
-          passed: a.result?.passed,
+          passingScorePercentage: a.result?.passingScorePercentage ?? a.passingScorePercentage ?? null,
+          passed: a.result?.passed ?? null,
           totalQuestions: a.questions?.length ?? 0,
           totalCorrect: a.result?.correctQuestions,
           totalWrong: a.result?.totalWrong,
@@ -693,6 +838,8 @@ class AttemptStore {
           allowReview: a.allowReview,
           canReview: a.modePermissions?.canReview ?? a.allowReview !== false,
           canTutor: a.modePermissions?.canTutor ?? false,
+          subjectName: a.subjectName,
+          topicName: a.topicName,
         });
       }
     }

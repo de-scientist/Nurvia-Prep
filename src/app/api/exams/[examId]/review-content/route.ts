@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { NO_STORE_HEADERS, resolveAttemptLearner } from '@/lib/attempts/auth-helper';
 import { fetchLiveExamFromBackend } from '@/lib/attempts/live-exam-loader';
-import { wasCanonicalOptionSelected } from '@/lib/attempts/strata-answer-adapter';
+import {
+  isResponseAnswered,
+  scoreCanonicalQuestion,
+  wasCanonicalOptionSelected,
+} from '@/lib/attempts/strata-answer-adapter';
 import { extractSiteMetadataFromRequestHeaders } from '@/lib/lexmacasto/client';
 import type { ExamReviewContentDto, ReviewQuestionDto } from '@/lib/api-types';
 
@@ -67,6 +71,8 @@ export async function GET(
   const reviewQuestions: ReviewQuestionDto[] = loaded.questions.map((q) => {
     const saved = loaded.savedResponses[q.id];
     const learnerResponse = saved?.responseJson ?? undefined;
+    const isAnswered = isResponseAnswered(learnerResponse);
+    const scored = scoreCanonicalQuestion(q, learnerResponse);
     return {
       questionId: q.id,
       numericId: q.numericId,
@@ -83,9 +89,11 @@ export async function GET(
       clientNeedCategory: q.clientNeedCategory,
       generalRationale: q.generalRationale,
       learnerResponse,
-      isCorrect: false,
-      pointsAwarded: 0,
-      maxPoints: 1,
+      isCorrect: isAnswered ? scored.isCorrect : false,
+      isPartiallyCorrect: isAnswered ? scored.isPartiallyCorrect : false,
+      isUnanswered: !isAnswered,
+      pointsAwarded: isAnswered ? scored.pointsAwarded : 0,
+      maxPoints: scored.maxPoints,
       options: q.options.map((opt) => ({
         id: opt.id,
         numericId: opt.numericId,
@@ -98,7 +106,10 @@ export async function GET(
         link: opt.link,
         isCorrect: opt.isCorrect,
         specificRationale: opt.specificRationale,
-        wasSelected: wasCanonicalOptionSelected(opt.id, learnerResponse),
+        wasSelected:
+          wasCanonicalOptionSelected(opt.id, learnerResponse) ||
+          (opt.numericId !== undefined &&
+            wasCanonicalOptionSelected(String(opt.numericId), learnerResponse)),
       })),
       exhibits: q.exhibits,
       media: q.media,

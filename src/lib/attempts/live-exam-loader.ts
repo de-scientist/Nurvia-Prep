@@ -80,9 +80,13 @@ export interface LiveExamLoadSuccess {
   examTitle: string;
   pathway: NursingPathway;
   examCategory: ExamCategory;
+  subjectName?: string;
+  topicName?: string;
+  learningObjectives: string[];
   instructions: string;
+  isTimed: boolean;
   timeLimitMinutes: number;
-  passingScorePercentage: number;
+  passingScorePercentage: number | null;
   configuredQuestionCount: number;
   loadedQuestionCount: number;
   pagesFetched: number;
@@ -171,13 +175,30 @@ export function resolveExamModePermissions(
   const selectedMode = String((exam as Record<string, unknown>)?.selectedMode ?? '').toLowerCase();
   const hasModeRestrictions = Array.isArray(modes) && modes.length > 0;
 
+  const explicitReviewDisabled =
+    exam?.allowReview === false ||
+    design?.reviewable === false ||
+    (Array.isArray(modes) &&
+      modes.some(
+        (m) =>
+          m &&
+          /review/i.test(String(m.mode ?? '')) &&
+          m.isEnabled === false
+      ) &&
+      !hasExplicitReviewMode);
+
   const canExam = hasModeRestrictions
     ? enabledModes.some((m) => /exam/i.test(String(m.mode ?? '')))
     : (inferredDelivery === 'All' || inferredDelivery === 'Both' || inferredDelivery === 'Exam');
 
-  const canReview = hasModeRestrictions
-    ? (hasExplicitReviewMode || exam?.allowReview === true || design?.reviewable === true)
-    : (selectedMode === 'review' || inferredDelivery === 'All' || inferredDelivery === 'Both' || inferredDelivery === 'Review');
+  const canReview = !explicitReviewDisabled && (
+    hasExplicitReviewMode ||
+    exam?.allowReview !== false && design?.reviewable !== false ||
+    selectedMode === 'review' ||
+    inferredDelivery === 'All' ||
+    inferredDelivery === 'Both' ||
+    inferredDelivery === 'Review'
+  );
 
   const canTutor = hasModeRestrictions
     ? (hasExplicitTutorMode || inferredDelivery === 'Tutor' || inferredDelivery === 'All')
@@ -506,6 +527,17 @@ function mapStrataQuestion(
     (q.questionCorrectAnswers ?? []).find((a) => a.hint && a.hint.trim())?.hint?.trim() ||
     undefined;
 
+  const difficulty =
+    (typeof q.difficulty === 'string' && q.difficulty.trim()) ||
+    (typeof q.level === 'string' && q.level.trim()) ||
+    undefined;
+  const resources = q.resources && q.resources.trim() ? cleanWordHtml(q.resources) : undefined;
+  const prerequisites =
+    q.prerequisites && q.prerequisites.trim() ? cleanWordHtml(q.prerequisites) : undefined;
+  const learningObjectives = [q.segment, q.fragment, prerequisites]
+    .map((item) => (typeof item === 'string' ? cleanWordHtml(item).trim() : ''))
+    .filter(Boolean);
+
   const storedQuestion: StoredAttemptQuestion = {
     id: questionId,
     numericId: typeof q.id === 'number' ? q.id : undefined,
@@ -521,6 +553,10 @@ function mapStrataQuestion(
     questionType,
     cognitiveSkill: 'ClinicalJudgment' as CognitiveSkill,
     clientNeedCategory: 'PhysiologicalAdaptation' as ClientNeedCategory,
+    difficulty,
+    resources,
+    prerequisites,
+    ...(learningObjectives.length > 0 ? { learningObjectives } : {}),
     options,
     exhibits,
     media,
@@ -727,12 +763,30 @@ export async function fetchLiveExamFromBackend(
       ? opts.attemptNumber
       : Math.max(1, Number(latestActionWithAttempt?.attemptCount ?? 1));
 
-  const timeLimitMinutes =
-    Number(exam.duration ?? 0) > 0 ? Number(exam.duration) : 90;
+  const rawDuration = Number(exam.duration ?? 0);
+  const timeLimitMinutes = Number.isFinite(rawDuration) && rawDuration > 0 ? rawDuration : 0;
+  const isTimed = exam.isTimed !== false && timeLimitMinutes > 0;
+  const rawPassMark = Number(exam.passMark ?? 0);
   const passingScorePercentage =
-    Number(exam.passMark ?? 0) > 0 && Number(exam.passMark) <= 100
-      ? Number(exam.passMark)
-      : 75;
+    Number.isFinite(rawPassMark) && rawPassMark > 0 && rawPassMark <= 100
+      ? rawPassMark
+      : null;
+
+  const subjectName =
+    typeof exam.subjectName === 'string' && exam.subjectName.trim()
+      ? exam.subjectName.trim()
+      : undefined;
+  const topicName =
+    typeof exam.topicName === 'string' && exam.topicName.trim()
+      ? exam.topicName.trim()
+      : undefined;
+  const learningObjectives =
+    typeof exam.objectives === 'string' && exam.objectives.trim()
+      ? exam.objectives
+          .split(/\r?\n|;/)
+          .map((s) => cleanWordHtml(s).trim())
+          .filter(Boolean)
+      : [];
 
   const examRecord = exam as unknown as Record<string, unknown>;
   const titleInfo = resolveAuthoritativeExamTitleAndDifficulty(examRecord);
@@ -750,9 +804,13 @@ export async function fetchLiveExamFromBackend(
     examTitle: cleanWordHtml(String(titleInfo.title || exam.title || 'NURVIA Examination')),
     pathway: inferExamPathway(examRecord),
     examCategory: inferExamCategory(examRecord),
+    subjectName,
+    topicName,
+    learningObjectives,
     instructions: cleanWordHtml(
       String(exam.instructions || firstSession.design?.instructions || '')
     ),
+    isTimed,
     timeLimitMinutes,
     passingScorePercentage,
     configuredQuestionCount,
@@ -780,7 +838,7 @@ export async function ensureAttemptLoaded(
   learner: { userId: string; session: CastoSessionCredentials },
   attemptId: string,
   siteMeta?: LexmaCastoRequestOptions['siteMeta'],
-  preferredMode?: 'Exam' | 'Tutor'
+  preferredMode?: 'Exam' | 'Tutor' | 'Review'
 ): Promise<
   | { ok: true; attempt: StoredAttempt }
   | { ok: false; status: number; message: string; errorCode: string }
@@ -846,22 +904,84 @@ export async function ensureAttemptLoaded(
         res.data?.data?.results ??
         res.data?.items ??
         [];
-      if (Array.isArray(items)) {
-        completedResultRecord = items.find(
-          (item) => Number(item.attemptNumber ?? 1) === parsed.attemptNumber
-        );
+      if (Array.isArray(items) && items.length > 0) {
+        completedResultRecord =
+          items.find(
+            (item) => Number(item.attemptNumber ?? 1) === parsed.attemptNumber
+          ) ?? (items.length === 1 ? items[0] : undefined);
       }
     }
   } catch {
     // Non-blocking fallback
   }
 
+  if (!completedResultRecord) {
+    try {
+      const relPath = buildStrataEndpointPath(
+        'examResults',
+        { dynamicPage: 1, dynamicPerPage: 50, page: 1, perPage: 50 },
+        'relative'
+      );
+      const relRes = await lexmaCastoRequest<{
+        data?: { items?: Record<string, unknown>[]; results?: Record<string, unknown>[] };
+        items?: Record<string, unknown>[];
+      }>(relPath, {
+        method: 'GET',
+        session: learner.session,
+        siteMeta,
+      });
+      if (relRes.ok) {
+        const relItems =
+          relRes.data?.data?.items ??
+          relRes.data?.data?.results ??
+          relRes.data?.items ??
+          [];
+        if (Array.isArray(relItems)) {
+          completedResultRecord = relItems.find((item) => {
+            const detail = item.examDetail as Record<string, unknown> | undefined;
+            const itemGuid = String(
+              item.examGuidId ?? detail?.guidId ?? item.guidId ?? ''
+            ).trim();
+            const itemAttempt = Number(item.attemptNumber ?? 1);
+            return (
+              itemGuid.toLowerCase() === parsed.examGuidId.toLowerCase() &&
+              (itemAttempt === parsed.attemptNumber || relItems.length === 1)
+            );
+          });
+        }
+      }
+    } catch {
+      // Non-blocking fallback
+    }
+  }
+
+  const earliestActionStart = loaded.examActions
+    .map((a) => a.createdAt)
+    .filter((d): d is string => typeof d === 'string' && d.trim().length > 0 && !d.startsWith('0001'))
+    .sort()[0];
+
   const startedAtUtc =
     typeof completedResultRecord?.attemptedAt === 'string' && completedResultRecord.attemptedAt
       ? completedResultRecord.attemptedAt
       : typeof completedResultRecord?.createdAt === 'string' && completedResultRecord.createdAt
         ? completedResultRecord.createdAt
-        : new Date().toISOString();
+        : earliestActionStart || new Date().toISOString();
+
+  const totalSecondsAllocated = loaded.timeLimitMinutes * 60;
+  const elapsedSeconds = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(startedAtUtc).getTime()) / 1000)
+  );
+  const residualFromAction = loaded.examActions.find(
+    (a) => typeof a.residualDuration === 'number' && a.residualDuration > 0
+  )?.residualDuration;
+  const remainingSeconds = loaded.isTimed
+    ? typeof residualFromAction === 'number'
+      ? residualFromAction
+      : Number.isFinite(elapsedSeconds)
+        ? Math.max(0, totalSecondsAllocated - elapsedSeconds)
+        : totalSecondsAllocated
+    : totalSecondsAllocated;
 
   const inferredDelivery = inferExamDeliveryMode(loaded.exam as unknown as Record<string, unknown>);
   const deliveryMode: 'Exam' | 'Tutor' =
@@ -874,13 +994,17 @@ export async function ensureAttemptLoaded(
     examTitle: loaded.examTitle,
     pathway: loaded.pathway,
     examCategory: loaded.examCategory,
+    subjectName: loaded.subjectName,
+    topicName: loaded.topicName,
+    learningObjectives: loaded.learningObjectives,
     userId: learner.userId,
     deliveryMode,
     layoutMode:
       loaded.allowedLayouts === 'AllInOneOnly' ? 'AllInOne' : 'Sequential',
     allowedLayouts: loaded.allowedLayouts,
+    isTimed: loaded.isTimed,
     timeLimitMinutes: loaded.timeLimitMinutes,
-    remainingSeconds: loaded.timeLimitMinutes * 60,
+    remainingSeconds,
     startedAtUtc,
     status: 'InProgress',
     allowReview: loaded.modePermissions.canReview,
@@ -893,25 +1017,69 @@ export async function ensureAttemptLoaded(
     questions: loaded.questions,
     savedResponses: loaded.savedResponses,
     tutorProgression: {},
+    tutorConversations: {},
+    tutorPracticeChecks: {},
   };
 
   attemptStore.setAttempt(storedAttempt);
 
-  const isBackendCompleted =
-    completedResultRecord != null &&
-    (
-      Boolean(completedResultRecord.reviewedAt) ||
-      Boolean(completedResultRecord.submittedAt) ||
-      completedResultRecord.isAttempted === true ||
-      typeof completedResultRecord.score === 'number' ||
-      typeof completedResultRecord.percentageScore === 'number' ||
-      typeof completedResultRecord.scorePercentage === 'number' ||
-      typeof completedResultRecord.passed === 'boolean' ||
-      /complet|grad|submit|finish|pass|attempt|done/i.test(String(completedResultRecord.status ?? ''))
+  const hasCompletedAction = loaded.examActions.some((a) => {
+    const rec = a as unknown as Record<string, unknown>;
+    return (
+      /complet|grad|submit|finish|review/i.test(
+        String(rec.action ?? rec.status ?? rec.state ?? '')
+      ) ||
+      Boolean(rec.submittedAt) ||
+      Boolean(rec.completedAt)
     );
+  });
+
+  const isBackendCompleted =
+    (completedResultRecord != null &&
+      (
+        Boolean(completedResultRecord.reviewedAt) ||
+        Boolean(completedResultRecord.submittedAt) ||
+        completedResultRecord.isAttempted === true ||
+        typeof completedResultRecord.score === 'number' ||
+        typeof completedResultRecord.percentageScore === 'number' ||
+        typeof completedResultRecord.scorePercentage === 'number' ||
+        typeof completedResultRecord.passed === 'boolean' ||
+        /complet|grad|submit|finish|pass|attempt|done/i.test(String(completedResultRecord.status ?? ''))
+      )) ||
+    hasCompletedAction ||
+    (preferredMode === 'Review' && Object.keys(loaded.savedResponses).length > 0);
 
   if (isBackendCompleted) {
-    attemptStore.submitAttempt(learner.userId, attemptId);
+    const submitted = attemptStore.submitAttempt(learner.userId, attemptId);
+    if (submitted.success && submitted.data && completedResultRecord) {
+      const graded = submitted.data;
+      if (typeof completedResultRecord.percentageScore === 'number') {
+        graded.scorePercentage = Math.round(completedResultRecord.percentageScore);
+      }
+      if (typeof completedResultRecord.passed === 'boolean') {
+        graded.passed = completedResultRecord.passed;
+      }
+      if (typeof completedResultRecord.totalCorrect === 'number') {
+        graded.correctQuestions = completedResultRecord.totalCorrect;
+      }
+      if (typeof completedResultRecord.totalWrong === 'number') {
+        graded.totalWrong = completedResultRecord.totalWrong;
+      }
+      if (typeof completedResultRecord.totalAnswered === 'number') {
+        graded.totalAnswered = completedResultRecord.totalAnswered;
+      }
+      if (typeof completedResultRecord.timeTaken === 'number' && completedResultRecord.timeTaken > 0) {
+        graded.timeSpentSeconds = completedResultRecord.timeTaken;
+      }
+      if (typeof completedResultRecord.grade === 'string' && completedResultRecord.grade) {
+        graded.grade = completedResultRecord.grade;
+      }
+      if (typeof completedResultRecord.reviewedAt === 'string' && completedResultRecord.reviewedAt) {
+        graded.submittedAtUtc = completedResultRecord.reviewedAt;
+        storedAttempt.submittedAtUtc = completedResultRecord.reviewedAt;
+      }
+      storedAttempt.result = graded;
+    }
   }
 
   return { ok: true, attempt: storedAttempt };

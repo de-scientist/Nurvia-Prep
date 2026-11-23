@@ -111,7 +111,15 @@ export async function POST(
 
             if (matching && typeof matching.percentageScore === 'number') {
               graded.scorePercentage = Math.round(matching.percentageScore);
-              if (typeof matching.passed === 'boolean') graded.passed = matching.passed;
+              if (typeof matching.passed === 'boolean') {
+                graded.passed = matching.passed;
+              }
+              if (typeof matching.passMark === 'number' && matching.passMark > 0 && matching.passMark <= 100) {
+                graded.passingScorePercentage = matching.passMark;
+                if (typeof matching.passed !== 'boolean') {
+                  graded.passed = graded.scorePercentage >= matching.passMark;
+                }
+              }
               if (typeof matching.totalCorrect === 'number') graded.correctQuestions = matching.totalCorrect;
               if (typeof matching.totalWrong === 'number') graded.totalWrong = matching.totalWrong;
               if (typeof matching.totalAnswered === 'number') graded.totalAnswered = matching.totalAnswered;
