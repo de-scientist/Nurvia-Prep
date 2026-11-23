@@ -17,12 +17,17 @@ export interface SampleQuestion {
 export interface StudentTestimonial {
   id: string;
   displayName: string;
-  examTrack: "NCLEX-RN" | "NCLEX-PN" | "ATI" | "HESI";
+  examTrack: "RN" | "LPN / PN";
+  pathway: "RN" | "PN_LPN";
+  programId: 9 | 6;
   resultStatus: string;
   testimonial: string;
   examDate?: string;
   avatarUrl?: string;
   scoreOrLevel?: string;
+  roleOrQualification?: string;
+  source: "verified_backend";
+  isSample: false;
 }
 
 export interface StudySetItem {
@@ -150,46 +155,9 @@ export const heroPracticeQuestions: SampleQuestion[] = [
   },
 ];
 
-// Practice spotlights describe platform features without attributing statements to
-// real students. No fabricated student names, results, or verified-student badges.
-export const sampleStudentTestimonials: StudentTestimonial[] = [
-  {
-    id: "spotlight-ngn-case-studies",
-    displayName: "NGN case study practice",
-    examTrack: "NCLEX-RN",
-    resultStatus: "Practice focus",
-    scoreOrLevel: "Unfolding case studies",
-    testimonial:
-      "Work through unfolding NGN case studies built on the clinical judgment model, with rationales that explain every option.",
-  },
-  {
-    id: "spotlight-prioritization",
-    displayName: "Prioritization and delegation",
-    examTrack: "NCLEX-PN",
-    resultStatus: "Practice focus",
-    scoreOrLevel: "Decision-first drills",
-    testimonial:
-      "Practice prioritization, delegation, and safety questions that mirror the decision patterns tested on licensure exams.",
-  },
-  {
-    id: "spotlight-pharmacology",
-    displayName: "Pharmacology rationale library",
-    examTrack: "ATI",
-    resultStatus: "Practice focus",
-    scoreOrLevel: "Mechanism-based rationales",
-    testimonial:
-      "Study high-risk medication classes with mechanism-based rationales that connect adverse effects to monitoring priorities.",
-  },
-  {
-    id: "spotlight-dosage",
-    displayName: "Dosage calculation practice",
-    examTrack: "HESI",
-    resultStatus: "Practice focus",
-    scoreOrLevel: "Step-by-step math",
-    testimonial:
-      "Build calculation confidence with step-by-step dosage math practice, from basic conversions to weight-based infusions.",
-  },
-];
+// Genuine learner testimonials are retrieved exclusively from the authoritative backend.
+// No synthetic or placeholder testimonials are stored locally.
+export const sampleStudentTestimonials: StudentTestimonial[] = [];
 
 
 // Study-Set Cards for Homepage & Study Library

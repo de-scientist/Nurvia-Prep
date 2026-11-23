@@ -3,35 +3,165 @@
 import * as React from "react";
 import {
   CheckCircle2,
-  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  Pause,
+  Play,
+  Quote,
 } from "lucide-react";
-import { StudentTestimonial, sampleStudentTestimonials } from "@/lib/study-sets-data";
+import { nurviaApi } from "@/lib/api-client";
+import type {
+  ApprovedTestimonialPathway,
+  NormalizedTestimonial,
+  TestimonialsCollectionResult,
+} from "@/lib/api-types";
+import type { StudentTestimonial } from "@/lib/study-sets-data";
+import {
+  normalizeAndFilterBackendTestimonials,
+  resolveTestimonialsCollection,
+} from "@/lib/testimonials/testimonial-service";
 import { cn } from "@/lib/utils";
 
 interface StudentTestimonialCarouselProps {
   testimonials?: StudentTestimonial[];
+  initialData?: TestimonialsCollectionResult;
   autoPlayIntervalMs?: number;
   className?: string;
 }
 
+type PathwayFilter = "All" | ApprovedTestimonialPathway;
+
+function createEmptyTestimonialsCollection(): TestimonialsCollectionResult {
+  return {
+    items: [],
+    source: "none",
+    backendStatus: "empty",
+    totalReceivedFromBackend: 0,
+    eligibleBackendCount: 0,
+    rejectedBackendCount: 0,
+    endpointChecked: false,
+  };
+}
+
+function normalizeProvidedTestimonials(
+  provided: StudentTestimonial[]
+): TestimonialsCollectionResult {
+  const mappedCandidates = provided.map((item) => ({
+    id: item.id,
+    content: item.testimonial,
+    attribution: item.displayName,
+    pathway: item.pathway,
+    programId: item.programId,
+    examTrack: item.examTrack,
+    roleOrQualification: item.roleOrQualification,
+    examFocus: item.scoreOrLevel,
+    source: item.source,
+    isSample: item.isSample,
+    status: "published",
+    visibility: "public",
+  }));
+
+  const validated = normalizeAndFilterBackendTestimonials(mappedCandidates);
+  if (validated.eligible.length === 0) {
+    return resolveTestimonialsCollection({
+      backendAttempted: true,
+      backendOk: true,
+      backendPayload: mappedCandidates,
+    });
+  }
+
+  return {
+    items: validated.eligible,
+    source: "verified_backend",
+    backendStatus: "available_with_records",
+    totalReceivedFromBackend: provided.length,
+    eligibleBackendCount: validated.eligible.length,
+    rejectedBackendCount: validated.rejectedCount,
+    endpointChecked: false,
+  };
+}
+
 export function StudentTestimonialCarousel({
-  testimonials = sampleStudentTestimonials,
-  autoPlayIntervalMs = 5500,
+  testimonials,
+  initialData,
+  autoPlayIntervalMs = 8000,
   className,
 }: StudentTestimonialCarouselProps) {
+  const hasExplicitOverride = Boolean(testimonials);
+  const [collection, setCollection] = React.useState<TestimonialsCollectionResult>(() => {
+    if (testimonials) {
+      return normalizeProvidedTestimonials(testimonials);
+    }
+    if (initialData) {
+      return resolveTestimonialsCollection({
+        backendAttempted: Boolean(initialData.endpointChecked),
+        backendOk: initialData.backendStatus !== "upstream_error",
+        backendStatusOverride: initialData.backendStatus,
+        backendPayload: initialData.items,
+      });
+    }
+    return createEmptyTestimonialsCollection();
+  });
+  const [isLoading, setIsLoading] = React.useState(!hasExplicitOverride && !initialData);
+  const [pathwayFilter, setPathwayFilter] = React.useState<PathwayFilter>("All");
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [isHovered, setIsHovered] = React.useState(false);
   const [isFocused, setIsFocused] = React.useState(false);
-  const [isPausedManually, setIsPausedManually] = React.useState(false);
+  const [isPausedByUser, setIsPausedByUser] = React.useState(false);
+  const [isPausedTemporarily, setIsPausedTemporarily] = React.useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
   const [visibleCount, setVisibleCount] = React.useState(3);
 
-  // Touch gesture state
   const touchStartX = React.useRef<number | null>(null);
   const touchEndX = React.useRef<number | null>(null);
-  const resumeTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const resumeTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Detect screen size for responsive cards-per-view
+  // Fetch authoritative backend testimonials on mount
+  React.useEffect(() => {
+    if (testimonials) {
+      setCollection(normalizeProvidedTestimonials(testimonials));
+      setIsLoading(false);
+      return;
+    }
+    if (initialData) {
+      setCollection(
+        resolveTestimonialsCollection({
+          backendAttempted: Boolean(initialData.endpointChecked),
+          backendOk: initialData.backendStatus !== "upstream_error",
+          backendStatusOverride: initialData.backendStatus,
+          backendPayload: initialData.items,
+        })
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    let active = true;
+    setIsLoading(true);
+    void nurviaApi
+      .getTestimonials()
+      .then((res) => {
+        if (!active) return;
+        if (res.success && res.data) {
+          setCollection(res.data);
+        } else {
+          setCollection(createEmptyTestimonialsCollection());
+        }
+        setIsLoading(false);
+      })
+      .catch(() => {
+        if (!active) return;
+        setCollection(createEmptyTestimonialsCollection());
+        setIsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [testimonials, initialData]);
+
+  // Responsive cards-per-view: 1 mobile, 2 tablet, 3 desktop
   React.useEffect(() => {
     function updateLayout() {
       if (typeof window === "undefined") return;
@@ -50,7 +180,7 @@ export function StudentTestimonialCarousel({
     return () => window.removeEventListener("resize", updateLayout);
   }, []);
 
-  // Detect user preference for reduced motion
+  // Respect user reduced-motion preference
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -61,30 +191,55 @@ export function StudentTestimonialCarousel({
     return () => mediaQuery.removeEventListener("change", handler);
   }, []);
 
-  const totalItems = testimonials.length;
+  const allItems = collection.items;
+  const rnCount = React.useMemo(
+    () => allItems.filter((i) => i.pathway === "RN").length,
+    [allItems]
+  );
+  const lpnCount = React.useMemo(
+    () => allItems.filter((i) => i.pathway === "PN_LPN").length,
+    [allItems]
+  );
+
+  const visibleItems: NormalizedTestimonial[] = React.useMemo(() => {
+    if (pathwayFilter === "All") return allItems;
+    return allItems.filter((item) => item.pathway === pathwayFilter);
+  }, [allItems, pathwayFilter]);
+
+  const totalItems = visibleItems.length;
   const maxIndex = Math.max(0, totalItems - visibleCount);
 
-  // Automatic advancement
   React.useEffect(() => {
-    if (totalItems <= visibleCount) return;
-    if (prefersReducedMotion || isHovered || isFocused || isPausedManually) return;
+    setCurrentIndex((prev) => Math.min(prev, maxIndex));
+  }, [maxIndex]);
+
+  const isAutoRotationPaused =
+    prefersReducedMotion ||
+    isHovered ||
+    isFocused ||
+    isPausedByUser ||
+    isPausedTemporarily ||
+    totalItems <= visibleCount;
+
+  // Calm automatic advancement (pauses on hover, focus, reduced motion, or user control)
+  React.useEffect(() => {
+    if (isAutoRotationPaused) return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
     }, autoPlayIntervalMs);
 
     return () => clearInterval(interval);
-  }, [totalItems, visibleCount, prefersReducedMotion, isHovered, isFocused, isPausedManually, maxIndex, autoPlayIntervalMs]);
+  }, [isAutoRotationPaused, maxIndex, autoPlayIntervalMs]);
 
-  // Handle manual interaction pause with auto-resume after 8 seconds
-  const registerManualInteraction = React.useCallback(() => {
-    setIsPausedManually(true);
+  const registerManualNavigation = React.useCallback(() => {
+    setIsPausedTemporarily(true);
     if (resumeTimerRef.current) {
       clearTimeout(resumeTimerRef.current);
     }
     resumeTimerRef.current = setTimeout(() => {
-      setIsPausedManually(false);
-    }, 8000);
+      setIsPausedTemporarily(false);
+    }, 10000);
   }, []);
 
   React.useEffect(() => {
@@ -94,16 +249,15 @@ export function StudentTestimonialCarousel({
   }, []);
 
   const handlePrev = () => {
-    registerManualInteraction();
+    registerManualNavigation();
     setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
   };
 
   const handleNext = () => {
-    registerManualInteraction();
+    registerManualNavigation();
     setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
   };
 
-  // Touch handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.targetTouches[0].clientX;
     touchEndX.current = null;
@@ -127,152 +281,333 @@ export function StudentTestimonialCarousel({
     touchEndX.current = null;
   };
 
-  if (!testimonials || testimonials.length === 0) {
-    return (
-      <div className="w-full border-y border-border/80 bg-surface/60 py-8 text-center">
-        <p className="text-xs text-foreground-muted">
-          Verified student exam outcome reports are temporarily updating. Check back shortly.
-        </p>
-      </div>
-    );
-  }
+  const hasPublishedTestimonials = allItems.length > 0;
+  const hasAuthoritativelyVerifiedItems = allItems.some((item) => item.isVerified === true);
 
   return (
     <section
       role="region"
       aria-roledescription="carousel"
-      aria-label="Student exam outcomes and testimonials"
+      aria-label="RN and LPN learner testimonials"
+      data-testid="testimonial-carousel"
+      data-testimonial-source={collection.source}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onFocus={() => setIsFocused(true)}
       onBlur={() => setIsFocused(false)}
       className={cn(
-        "w-full border-y border-border/80 bg-surface/50 py-8 sm:py-10 transition-colors relative overflow-hidden",
+        "relative w-full overflow-hidden border-y border-border/80 bg-surface/60 py-8 sm:py-10 transition-colors",
         className
       )}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
-              <CheckCircle2 className="w-4 h-4" />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-5">
+        {/* Header & Pathway Controls */}
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-3">
+            <div
+              className={cn(
+                "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                hasAuthoritativelyVerifiedItems
+                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : "bg-brand-teal/10 text-brand-teal"
+              )}
+            >
+              {hasAuthoritativelyVerifiedItems ? (
+                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Quote className="h-4 w-4" aria-hidden="true" />
+              )}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xs font-bold tracking-widest uppercase text-foreground">
-                  SHARED BY STUDENTS AFTER EXAM DAY
+
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-brand text-xs font-bold uppercase tracking-widest text-foreground">
+                  LEARNER TESTIMONIALS
                 </h2>
-                <span className="hidden md:inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-brand-teal/10 text-brand-teal font-semibold">
-                  <Sparkles className="w-3 h-3" /> Live Carousel
-                </span>
+
+                {hasAuthoritativelyVerifiedItems ? (
+                  <span
+                    data-testid="testimonial-source-badge"
+                    className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300"
+                  >
+                    <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                    Verified Learner
+                  </span>
+                ) : (
+                  <span
+                    data-testid="testimonial-source-badge"
+                    className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-surface-muted px-2.5 py-0.5 text-[11px] font-semibold text-foreground-secondary"
+                  >
+                    <Info className="h-3 w-3 text-brand-teal" aria-hidden="true" />
+                    RN &amp; LPN Pathways
+                  </span>
+                )}
               </div>
-              <p className="text-[11px] text-foreground-muted">
-                Student-submitted licensure & exit exam outcomes Â· Updated continuously
+
+              <p className="text-xs text-foreground-muted">
+                Published learner feedback across RN and LPN / PN nursing study tracks.
               </p>
             </div>
           </div>
 
-          {/* Automatic Rotation Status Indicator */}
-          <div className="flex items-center gap-2 self-end sm:self-auto">
-            <span className="text-xs text-foreground-muted font-medium flex items-center gap-1.5">
-              <span className={cn(
-                "w-2 h-2 rounded-full",
-                isHovered || isFocused ? "bg-amber-500" : "bg-brand-teal animate-pulse"
-              )} />
-              <span>{isHovered || isFocused ? "Paused on Hover" : "Auto Rotating"}</span>
-              <span className="text-border mx-1">•</span>
-              <span>{currentIndex + 1} of {totalItems}</span>
-            </span>
-          </div>
-        </div>
+          {/* Pathway Filter + Accessible Carousel Controls */}
+          <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
+            <div
+              role="group"
+              aria-label="Filter testimonials by pathway"
+              className="inline-flex items-center rounded-lg border border-border bg-background p-0.5 text-xs"
+            >
+              {(
+                [
+                  { id: "All" as const, label: `All (${allItems.length})` },
+                  { id: "RN" as const, label: `RN (${rnCount})` },
+                  { id: "PN_LPN" as const, label: `LPN / PN (${lpnCount})` },
+                ] as const
+              ).map((tab) => {
+                const active = pathwayFilter === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => {
+                      setPathwayFilter(tab.id);
+                      setCurrentIndex(0);
+                    }}
+                    className={cn(
+                      "min-h-[34px] rounded-md px-2.5 py-1 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal",
+                      active
+                        ? "bg-brand-teal text-white shadow-2xs"
+                        : "text-foreground-secondary hover:text-foreground"
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
 
-        {/* Carousel Viewport */}
-        <div
-          className="relative overflow-hidden"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          <div
-            className={cn(
-              "flex gap-4",
-              prefersReducedMotion
-                ? "transition-none"
-                : "transition-transform duration-500 ease-in-out"
-            )}
-            style={{
-              transform: `translateX(-${currentIndex * (100 / visibleCount)}%)`,
-            }}
-          >
-            {testimonials.map((item) => {
-              const initials = item.displayName
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .substring(0, 2);
-
-              return (
-                <div
-                  key={item.id}
-                  className={cn(
-                    "shrink-0 rounded-2xl border border-border/90 bg-background/95 p-5 shadow-xs hover:border-brand-teal/50 hover:shadow-md transition-all flex flex-col justify-between",
-                    visibleCount === 1 && "w-full",
-                    visibleCount === 2 && "w-[calc(50%-0.5rem)]",
-                    visibleCount === 3 && "w-[calc(33.333%-0.67rem)]"
-                  )}
+            {totalItems > visibleCount && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  aria-label="Show previous testimonials"
+                  onClick={handlePrev}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-foreground-secondary transition-colors hover:border-brand-teal/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal"
                 >
-                  <div className="space-y-3.5">
-                    {/* Top Row: Track Badge, Status Badge & Score */}
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-brand font-bold text-xs px-2.5 py-0.5 rounded-md bg-brand-navy/10 dark:bg-brand-teal/15 text-brand-navy dark:text-teal-300 border border-brand-navy/20 dark:border-brand-teal/30">
-                          {item.examTrack}
-                        </span>
-                        {item.scoreOrLevel && (
-                          <span className="text-[11px] font-semibold text-foreground-secondary">
-                            {item.scoreOrLevel}
-                          </span>
-                        )}
-                      </div>
+                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                </button>
 
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                        {item.resultStatus.toUpperCase()}
-                      </span>
-                    </div>
+                <button
+                  type="button"
+                  aria-label={
+                    isPausedByUser
+                      ? "Resume testimonial rotation"
+                      : "Pause testimonial rotation"
+                  }
+                  aria-pressed={isPausedByUser}
+                  onClick={() => setIsPausedByUser((prev) => !prev)}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-xs font-medium text-foreground-secondary transition-colors hover:border-brand-teal/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal"
+                >
+                  {isPausedByUser || prefersReducedMotion ? (
+                    <Play className="h-3.5 w-3.5 text-brand-teal" aria-hidden="true" />
+                  ) : (
+                    <Pause className="h-3.5 w-3.5 text-brand-teal" aria-hidden="true" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {isPausedByUser ? "Paused" : "Pause"}
+                  </span>
+                </button>
 
-                    {/* Testimonial Quote */}
-                    <div className="relative pt-1">
-                      <p className="text-xs sm:text-[13px] text-foreground leading-relaxed italic line-clamp-3">
-                        &ldquo;{item.testimonial}&rdquo;
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Card Footer: Student Info & Verification */}
-                  <div className="pt-4 mt-3 border-t border-border/70 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-navy to-brand-teal text-white flex items-center justify-center font-bold text-xs shadow-2xs">
-                        {initials}
-                      </div>
-                      <div>
-                        <span className="font-semibold text-xs text-foreground block leading-tight">
-                          {item.displayName}
-                        </span>
-                        {item.examDate && (
-                          <span className="text-[10px] text-foreground-muted font-mono block">
-                            Exam: {item.examDate}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                <button
+                  type="button"
+                  aria-label="Show next testimonials"
+                  onClick={handleNext}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-foreground-secondary transition-colors hover:border-brand-teal/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal"
+                >
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Loading State */}
+        {isLoading ? (
+          <div
+            role="status"
+            aria-busy="true"
+            aria-label="Loading RN and LPN testimonials"
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {[1, 2, 3].map((idx) => (
+              <div
+                key={idx}
+                className="h-44 rounded-2xl border border-border bg-background p-5 space-y-3 animate-pulse"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="h-5 w-16 rounded-full bg-surface-muted" />
+                  <div className="h-5 w-20 rounded-full bg-surface-muted" />
+                </div>
+                <div className="h-4 w-full rounded bg-surface-muted" />
+                <div className="h-4 w-5/6 rounded bg-surface-muted" />
+                <div className="h-4 w-2/3 rounded bg-surface-muted" />
+              </div>
+            ))}
+          </div>
+        ) : totalItems === 0 ? (
+          <div
+            data-testid="testimonial-empty-state"
+            className="rounded-2xl border border-border/90 bg-background p-6 sm:p-8"
+          >
+            <div className="mx-auto max-w-2xl text-center space-y-2">
+              <p className="text-sm font-semibold text-foreground">
+                {hasPublishedTestimonials
+                  ? `No published ${pathwayFilter === "RN" ? "RN" : "LPN / PN"} learner testimonials are currently listed.`
+                  : "Published learner testimonials will appear here as approved submissions become available."}
+              </p>
+              <p className="text-xs leading-relaxed text-foreground-muted">
+                NURVIA displays only authorized, published learner feedback for the RN (Program 9) and LPN / PN (Program 6) nursing study pathways.
+              </p>
+            </div>
+          </div>
+        ) : (
+          /* Carousel Viewport with Exact Gutter Alignment */
+          <div
+            className="-mx-1.5 overflow-hidden"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <div
+              className={cn(
+                "flex",
+                prefersReducedMotion
+                  ? "transition-none"
+                  : "transition-transform duration-500 ease-out"
+              )}
+              style={{
+                transform: `translateX(-${currentIndex * (100 / visibleCount)}%)`,
+              }}
+            >
+              {visibleItems.map((item) => {
+                const isLpn = item.pathway === "PN_LPN";
+                const monogram = item.attribution
+                  .split(/\s+/)
+                  .map((part) => part[0])
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase();
+
+                return (
+                  <div
+                    key={item.id}
+                    className="shrink-0 px-1.5"
+                    style={{ width: `${100 / visibleCount}%` }}
+                  >
+                    <article
+                      data-testid="testimonial-card"
+                      data-pathway={item.pathway}
+                      data-verified={item.isVerified ? "true" : "false"}
+                      className="flex h-full flex-col justify-between rounded-2xl border border-border/90 bg-background p-5 shadow-xs transition-colors hover:border-brand-teal/50"
+                    >
+                      <div className="space-y-3">
+                        {/* Top Row: Authoritative Pathway + Focus + Authoritative Verification Status */}
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={cn(
+                                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-bold",
+                                isLpn
+                                  ? "border-purple-500/30 bg-purple-500/10 text-purple-800 dark:border-purple-400/35 dark:bg-purple-500/15 dark:text-purple-200"
+                                  : "border-brand-teal/30 bg-brand-teal/10 text-brand-tealDark dark:border-teal-400/35 dark:bg-brand-teal/15 dark:text-teal-200"
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  "h-1.5 w-1.5 rounded-full",
+                                  isLpn ? "bg-purple-500" : "bg-brand-teal"
+                                )}
+                                aria-hidden="true"
+                              />
+                              {item.pathwayLabel}
+                            </span>
+
+                            {item.examFocus && (
+                              <span className="text-[11px] font-semibold text-foreground-secondary">
+                                {item.examFocus}
+                              </span>
+                            )}
+                          </div>
+
+                          {item.isVerified && (
+                            <span
+                              data-testid="testimonial-verified-badge"
+                              className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300"
+                            >
+                              <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                              Verified
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Quote */}
+                        <blockquote className="text-xs sm:text-[13px] leading-relaxed text-foreground">
+                          &ldquo;{item.content}&rdquo;
+                        </blockquote>
+                      </div>
+
+                      {/* Attribution Footer */}
+                      <div className="mt-4 flex items-center gap-2.5 border-t border-border/70 pt-3.5">
+                        <div
+                          className={cn(
+                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold",
+                            isLpn
+                              ? "bg-purple-500/15 text-purple-800 dark:text-purple-200"
+                              : "bg-brand-teal/15 text-brand-tealDark dark:text-teal-200"
+                          )}
+                          aria-hidden="true"
+                        >
+                          {monogram}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-semibold text-foreground">
+                            {item.attribution}
+                          </p>
+                          {item.roleOrQualification && (
+                            <p className="truncate text-[11px] text-foreground-muted">
+                              {item.roleOrQualification}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Footer Range Counter */}
+        {!isLoading && totalItems > 0 && (
+          <div className="flex items-center justify-between text-[11px] text-foreground-muted">
+            <span>
+              Showing {Math.min(visibleCount, totalItems)} of {totalItems}{" "}
+              {pathwayFilter === "All"
+                ? "RN & LPN"
+                : pathwayFilter === "RN"
+                  ? "RN"
+                  : "LPN / PN"}{" "}
+              learner testimonials
+            </span>
+            {totalItems > visibleCount && (
+              <span>
+                Slide {currentIndex + 1} of {maxIndex + 1}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );

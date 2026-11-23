@@ -19,6 +19,7 @@ export const DEDICATED_APP_ROUTES = new Set([
   '/api/auth/account/destroy',
   '/api/auth/validate',
   '/api/system/debug/routes',
+  '/api/testimonials',
 ]);
 
 export function getApiBase() {
