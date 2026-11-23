@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { normalizeMediaUrl } from "@/lib/content/html-normalizer";
 import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 import { ContentIntegrityAlert } from "./ContentIntegrityAlert";
+import { ReviewRationaleBox } from "./ReviewRationaleBox";
 
 /**
  * Interactive Hotspot renderer.
@@ -20,6 +21,7 @@ export function HotspotRenderer({
   onChange,
   disabled = false,
   isReview = false,
+  hideRationaleBox = false,
 }: QuestionRendererProps) {
   const selectedIds = React.useMemo<string[]>(() => {
     if (!value) return [];
@@ -60,11 +62,20 @@ export function HotspotRenderer({
     );
   }
 
+  const hasAnySelection =
+    selectedIds.length > 0 || question.options.some((opt) => opt.wasSelected === true);
+
   return (
     <div className="space-y-4">
       <div className="text-xs text-foreground-secondary">
         Inspect the clinical visual exhibit and select the designated anatomical or diagnostic hotspot(s):
       </div>
+
+      {isReview && !hasAnySelection && (
+        <div className="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900/60 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
+          Your Submitted Answer: Unanswered
+        </div>
+      )}
 
       {imageUrl ? (
         <div className="relative rounded-2xl border border-border bg-slate-950/5 dark:bg-slate-900 p-3 flex justify-center overflow-hidden">
@@ -104,6 +115,7 @@ export function HotspotRenderer({
                 <button
                   type="button"
                   disabled={disabled}
+                  aria-pressed={isSelected}
                   onClick={() => handleToggle(opt.id)}
                   className={cn(
                     "w-full p-3.5 rounded-xl border text-left text-xs transition-all flex items-center gap-3",
@@ -132,11 +144,17 @@ export function HotspotRenderer({
                     <RichQuestionContent content={opt.optionText} as="span" />
                   </div>
                   {isReview && (
-                    <span className="shrink-0">
+                    <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold">
                       {opt.isCorrect ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          {isSelected ? "Your Answer · Correct" : "Correct Hotspot"}
+                        </span>
                       ) : isSelected ? (
-                        <XCircle className="w-4 h-4 text-rose-500" />
+                        <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-300">
+                          <XCircle className="w-4 h-4 text-rose-500" />
+                          Your Answer · Incorrect
+                        </span>
                       ) : null}
                     </span>
                   )}
@@ -156,6 +174,10 @@ export function HotspotRenderer({
           questionType={question.questionType}
           message="No hotspot target regions or options were supplied by the examination bank for this item."
         />
+      )}
+
+      {isReview && !hideRationaleBox && (
+        <ReviewRationaleBox question={question} value={value} includeOptionRationales />
       )}
     </div>
   );

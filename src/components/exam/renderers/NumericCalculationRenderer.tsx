@@ -3,7 +3,7 @@
 import * as React from "react";
 import { QuestionRendererProps } from "./types";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, Info } from "lucide-react";
+import { CheckCircle2, Info, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
@@ -62,18 +62,22 @@ export function NumericCalculationRenderer({
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-foreground-secondary flex items-center justify-between">
+          <label
+            htmlFor={`numeric-${question.id}`}
+            className="text-xs font-semibold text-foreground-secondary flex items-center justify-between"
+          >
             <span>Calculated Dosage / Value:</span>
             <Badge variant="outline" className="text-[10px] font-mono">Precision: ±0.01</Badge>
           </label>
           <div className="relative">
             <Input
+              id={`numeric-${question.id}`}
               type="number"
               step="any"
               value={currentNum}
               onChange={handleChange}
               disabled={disabled}
-              placeholder="e.g. 25.5"
+              placeholder={isReview ? "No value submitted" : "e.g. 25.5"}
               className={cn(
                 "h-12 text-lg font-mono font-bold pr-14",
                 isReview &&
@@ -87,6 +91,25 @@ export function NumericCalculationRenderer({
               Value
             </div>
           </div>
+          {isReview && (
+            <div className="text-xs font-semibold">
+              {!currentNum.trim() ? (
+                <span className="text-foreground-secondary font-medium">
+                  Your Submitted Answer: <span className="italic">Unanswered</span>
+                </span>
+              ) : isMatched || question.isCorrect === true ? (
+                <span className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Your Answer ({currentNum.trim()}) · Correct
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-rose-700 dark:text-rose-300">
+                  <XCircle className="w-4 h-4" />
+                  Your Answer ({currentNum.trim()}) · Incorrect
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {isReview && expectedTarget && (

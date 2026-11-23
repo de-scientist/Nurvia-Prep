@@ -89,15 +89,27 @@ export function MultipleTrueFalseRenderer({
                   <td className="p-3 text-foreground font-medium">
                     <RichQuestionContent content={opt.optionText} />
                     {isReview && (
-                      <div className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold">
-                        {isRowWrong ? (
-                          <span className="text-rose-600 dark:text-rose-400 inline-flex items-center gap-1">
-                            <XCircle className="w-3.5 h-3.5" /> Correct answer: {expected}
-                          </span>
-                        ) : (
+                      <div className="mt-1 inline-flex flex-wrap items-center gap-2 text-[11px] font-semibold">
+                        {isRowCorrect ? (
                           <span className="text-emerald-700 dark:text-emerald-300 inline-flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Correct: {expected}
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Your Answer ({selectedVal}) · Correct
                           </span>
+                        ) : isRowWrong ? (
+                          <>
+                            <span className="text-rose-600 dark:text-rose-400 inline-flex items-center gap-1">
+                              <XCircle className="w-3.5 h-3.5" /> Your Answer ({selectedVal}) · Incorrect
+                            </span>
+                            <span className="text-emerald-700 dark:text-emerald-300 inline-flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Correct Answer: {expected}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-foreground-muted italic">Unanswered</span>
+                            <span className="text-emerald-700 dark:text-emerald-300 inline-flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Correct Answer: {expected}
+                            </span>
+                          </>
                         )}
                       </div>
                     )}

@@ -10,9 +10,18 @@ import {
   getStrataSubmissionType as coreGetSubType,
   toStrataAnswerPayload as coreToPayload,
   fromStrataSavedUserAnswer as coreFromSaved,
+  isResponseAnswered as coreIsAnswered,
   evaluateCanonicalQuestion as coreEvaluate,
+  scoreCanonicalQuestion as coreScore,
   wasCanonicalOptionSelected as coreWasSelected,
 } from './strata-answer-core.mjs';
+
+export interface CanonicalQuestionScoreResult {
+  isCorrect: boolean;
+  isPartiallyCorrect?: boolean;
+  pointsAwarded: number;
+  maxPoints: number;
+}
 
 export interface CanonicalOptionLike {
   id: string;
@@ -77,11 +86,22 @@ export function fromStrataSavedUserAnswer(
   return coreFromSaved(q, savedUserAnswer);
 }
 
+export function isResponseAnswered(responseJson?: string | null): boolean {
+  return coreIsAnswered(responseJson);
+}
+
 export function evaluateCanonicalQuestion(
   q: CanonicalQuestionLike,
   responseJson?: string | null
 ): boolean {
   return coreEvaluate(q, responseJson);
+}
+
+export function scoreCanonicalQuestion(
+  q: CanonicalQuestionLike,
+  responseJson?: string | null
+): CanonicalQuestionScoreResult {
+  return coreScore(q, responseJson);
 }
 
 export function wasCanonicalOptionSelected(

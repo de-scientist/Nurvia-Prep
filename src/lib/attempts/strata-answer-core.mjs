@@ -493,6 +493,121 @@ function sameStringSet(a, b) {
   return true;
 }
 
+function splitBowTieOptionGroups(options) {
+  const safeOptions = Array.isArray(options) ? options : [];
+  const taggedActions = safeOptions.filter((o) =>
+    /action/i.test(`${o.data ?? ''} ${o.label ?? ''}`)
+  );
+  const taggedConditions = safeOptions.filter((o) =>
+    /condit|diag/i.test(`${o.data ?? ''} ${o.label ?? ''}`)
+  );
+  const taggedParams = safeOptions.filter((o) =>
+    /param|monitor/i.test(`${o.data ?? ''} ${o.label ?? ''}`)
+  );
+  const hasExplicitGroups =
+    taggedActions.length > 0 && taggedConditions.length > 0 && taggedParams.length > 0;
+  const third = Math.max(1, Math.ceil(safeOptions.length / 3));
+  return {
+    actionOptions: hasExplicitGroups ? taggedActions : safeOptions.slice(0, third),
+    conditionOptions: hasExplicitGroups ? taggedConditions : safeOptions.slice(third, third * 2),
+    paramOptions: hasExplicitGroups ? taggedParams : safeOptions.slice(third * 2),
+  };
+}
+
+function hasAnyNonEmptyValue(obj) {
+  if (!obj || typeof obj !== 'object') return false;
+  return Object.values(obj).some((val) => {
+    if (val === undefined || val === null) return false;
+    if (typeof val === 'string') return val.trim().length > 0;
+    if (typeof val === 'number' || typeof val === 'boolean') return true;
+    if (Array.isArray(val)) return val.length > 0;
+    return hasAnyNonEmptyValue(val);
+  });
+}
+
+export function isResponseAnswered(responseJson) {
+  if (responseJson === undefined || responseJson === null) return false;
+  const raw = String(responseJson).trim();
+  if (!raw || ['null', '""', '[]', '{}'].includes(raw)) return false;
+
+  const parsed = tryParseJson(raw);
+  if (parsed === null || parsed === undefined) return false;
+  if (typeof parsed === 'string') return parsed.trim().length > 0;
+  if (typeof parsed === 'number' || typeof parsed === 'boolean') return true;
+  if (Array.isArray(parsed)) return parsed.length > 0;
+
+  if (typeof parsed === 'object') {
+    if ('SelectedOptionId' in parsed || 'selectedOptionId' in parsed || 'SelectedCellId' in parsed) {
+      const scalar = parsed.SelectedOptionId ?? parsed.selectedOptionId ?? parsed.SelectedCellId;
+      return Boolean(scalar && String(scalar).trim().length > 0);
+    }
+    if ('value' in parsed && Object.keys(parsed).length === 1) {
+      return parsed.value !== null && parsed.value !== undefined && String(parsed.value).trim().length > 0;
+    }
+    for (const arrKey of [
+      'SelectedOptionIds',
+      'selectedOptionIds',
+      'SelectedMediaIds',
+      'SelectedCellIds',
+      'OrderedOptionIds',
+      'orderedOptionIds',
+    ]) {
+      if (Array.isArray(parsed[arrKey])) {
+        return parsed[arrKey].some((item) => String(item ?? '').trim().length > 0);
+      }
+    }
+    for (const strKey of [
+      'NumericResponse',
+      'numericResponse',
+      'NumericValue',
+      'TextResponse',
+      'textResponse',
+      'EssayResponse',
+      'essayResponse',
+      'ShortAnswer',
+      'shortAnswer',
+      'text',
+    ]) {
+      if (strKey in parsed && typeof parsed[strKey] === 'string') {
+        return parsed[strKey].trim().length > 0;
+      }
+    }
+    for (const mapKey of [
+      'Pairs',
+      'pairs',
+      'BlankSelections',
+      'blankSelections',
+      'BlankFills',
+      'blankFills',
+      'OrderingNumbers',
+      'orderingNumbers',
+      'TrueFalseMap',
+      'trueFalseMap',
+      'Buckets',
+      'buckets',
+      'MatrixSelections',
+      'matrixSelections',
+    ]) {
+      if (mapKey in parsed && typeof parsed[mapKey] === 'object') {
+        return hasAnyNonEmptyValue(parsed[mapKey]);
+      }
+    }
+    if ('Actions' in parsed || 'Condition' in parsed || 'Parameters' in parsed || 'actions' in parsed || 'condition' in parsed || 'parameters' in parsed) {
+      const actions = parsed.Actions ?? parsed.actions ?? [];
+      const condition = parsed.Condition ?? parsed.condition ?? null;
+      const parameters = parsed.Parameters ?? parsed.parameters ?? [];
+      return (
+        (Array.isArray(actions) && actions.length > 0) ||
+        Boolean(condition && String(condition).trim().length > 0) ||
+        (Array.isArray(parameters) && parameters.length > 0)
+      );
+    }
+    return hasAnyNonEmptyValue(parsed);
+  }
+
+  return false;
+}
+
 export function evaluateCanonicalQuestion(q, responseJson) {
   if (!responseJson || ['null', '""', '[]', '{}', ''].includes(String(responseJson).trim())) {
     return false;
@@ -646,10 +761,33 @@ export function evaluateCanonicalQuestion(q, responseJson) {
     const obj = typeof parsed === 'object' && parsed !== null ? parsed : null;
     const selections = obj?.BlankSelections ?? obj ?? {};
     if (meta?.correctBlanks && Object.keys(meta.correctBlanks).length > 0) {
-      return Object.entries(meta.correctBlanks).every(([blankNum, expectedOptId]) => {
+      return Object.entries(meta.correctBlanks).every(([blankNum, expectedVal]) => {
         const stripped = blankNum.replace(/^blank/i, '').trim();
-        const candidate = selections[blankNum] ?? selections[stripped] ?? selections[`blank${stripped}`] ?? '';
-        return String(candidate) === String(expectedOptId);
+        const candidate = String(
+          selections[blankNum] ?? selections[stripped] ?? selections[`blank${stripped}`] ?? ''
+        ).trim();
+        if (!candidate) return false;
+        if (candidate === String(expectedVal).trim()) return true;
+        const chosenOpt = options.find((o) => o.id === candidate || String(o.numericId) === candidate);
+        return Boolean(
+          chosenOpt &&
+            chosenOpt.optionText.trim().toLowerCase() === String(expectedVal).trim().toLowerCase()
+        );
+      });
+    }
+    const correctByBlank = new Map();
+    for (const o of options) {
+      if (o.isCorrect) {
+        const key = (o.label || '1').replace(/^blank/i, '').trim() || '1';
+        correctByBlank.set(key, o.id);
+      }
+    }
+    if (correctByBlank.size > 0) {
+      return Array.from(correctByBlank.entries()).every(([key, expectedId]) => {
+        const candidate = String(
+          selections[key] ?? selections[`blank${key}`] ?? ''
+        ).trim();
+        return candidate === String(expectedId);
       });
     }
     return false;
@@ -706,6 +844,52 @@ export function evaluateCanonicalQuestion(q, responseJson) {
     return expectedOrder.every((id, idx) => userOrder[idx] === String(id));
   }
 
+  // 10b. MultipleTrueFalse
+  if (baseType === 'multipletruefalse') {
+    if (options.length === 0 || typeof parsed !== 'object' || parsed === null) return false;
+    const tfMap = parsed.TrueFalseMap ?? parsed.trueFalseMap ?? {};
+    return options.every((o) => {
+      const expected = o.isCorrect ? 'True' : 'False';
+      return String(tfMap[o.id] ?? '').trim().toLowerCase() === expected.toLowerCase();
+    });
+  }
+
+  // 10c. BowTie / DynamicLabBowTie
+  if (baseType === 'bowtie' || baseType === 'dynamiclabbowtie') {
+    if (options.length === 0 || typeof parsed !== 'object' || parsed === null) return false;
+    const { actionOptions, conditionOptions, paramOptions } = splitBowTieOptionGroups(options);
+    const expectedActions = actionOptions.filter((o) => o.isCorrect).map((o) => o.id);
+    const expectedConditions = conditionOptions.filter((o) => o.isCorrect).map((o) => o.id);
+    const expectedParams = paramOptions.filter((o) => o.isCorrect).map((o) => o.id);
+
+    const userActions = Array.isArray(parsed.Actions || parsed.actions)
+      ? (parsed.Actions || parsed.actions).map(String)
+      : [];
+    const userCondition = parsed.Condition ?? parsed.condition ?? null;
+    const userParams = Array.isArray(parsed.Parameters || parsed.parameters)
+      ? (parsed.Parameters || parsed.parameters).map(String)
+      : [];
+
+    const actionsOk = expectedActions.length > 0 ? sameStringSet(userActions, expectedActions) : true;
+    const condOk =
+      expectedConditions.length > 0
+        ? Boolean(userCondition && expectedConditions.includes(String(userCondition)))
+        : true;
+    const paramsOk = expectedParams.length > 0 ? sameStringSet(userParams, expectedParams) : true;
+    return actionsOk && condOk && paramsOk && (expectedActions.length + expectedConditions.length + expectedParams.length > 0);
+  }
+
+  // 10d. DragAndDrop (Buckets)
+  if (baseType === 'draganddrop') {
+    if (options.length === 0 || typeof parsed !== 'object' || parsed === null) return false;
+    const buckets = parsed.Buckets ?? parsed.buckets ?? {};
+    return options.every((o) => {
+      const expectedBucket = String(o.data || (o.isCorrect ? 'A' : 'B')).trim().toUpperCase();
+      const userBucket = String(buckets[o.id] ?? '').trim().toUpperCase();
+      return userBucket.length > 0 && userBucket === expectedBucket;
+    });
+  }
+
   // 11. OpenEnded / ShortAnswer / ExtendedResponse
   if (baseType === 'openended' || baseType === 'shortanswer' || baseType === 'extendedresponse') {
     const obj = typeof parsed === 'object' && parsed !== null ? parsed : null;
@@ -737,6 +921,314 @@ export function evaluateCanonicalQuestion(q, responseJson) {
   return Boolean(directOpt?.isCorrect);
 }
 
+function computePlusMinusScore(selectedIds, expectedIds) {
+  const expectedSet = new Set(expectedIds.map(String));
+  const uniqueSelected = Array.from(new Set(selectedIds.map(String).filter(Boolean)));
+  const maxPoints = Math.max(1, expectedSet.size);
+  let earned = 0;
+  for (const id of uniqueSelected) {
+    earned += expectedSet.has(id) ? 1 : -1;
+  }
+  return {
+    pointsAwarded: Math.max(0, Math.min(maxPoints, earned)),
+    maxPoints,
+    scoringRule: 'partial_credit_plus_minus',
+  };
+}
+
+export function scoreCanonicalQuestion(q, responseJson) {
+  const isAnswered = isResponseAnswered(responseJson);
+  const { baseType } = resolveNormalizedQuestionType(q.questionType);
+  const meta = q.correctAnswerMeta;
+  const options = q.options || [];
+  const allowPartialCredit = Boolean(q.matrix?.allowPartialCredit || meta?.allowPartialCredit);
+
+  if (!isAnswered) {
+    return {
+      isAnswered: false,
+      isCorrect: false,
+      isPartiallyCorrect: false,
+      pointsAwarded: 0,
+      maxPoints: 1,
+      allowPartialCredit,
+      scoringRule: allowPartialCredit ? 'partial_credit_proportional' : 'all_or_nothing',
+    };
+  }
+
+  if (!allowPartialCredit) {
+    const isCorrect = evaluateCanonicalQuestion(q, responseJson);
+    return {
+      isAnswered: true,
+      isCorrect,
+      isPartiallyCorrect: false,
+      pointsAwarded: isCorrect ? 1 : 0,
+      maxPoints: 1,
+      allowPartialCredit: false,
+      scoringRule: 'all_or_nothing',
+    };
+  }
+
+  const parsed = tryParseJson(responseJson);
+
+  // Plus/Minus partial credit for SATA, Highlight, DynamicImage, Hotspot
+  if (
+    baseType === 'multipleselect' ||
+    baseType === 'multipleresponse' ||
+    baseType === 'selectallthatapply' ||
+    baseType === 'sata' ||
+    baseType === 'dynamicimage' ||
+    baseType === 'hotspot' ||
+    baseType === 'highlight'
+  ) {
+    const obj = typeof parsed === 'object' && parsed !== null ? parsed : null;
+    const selectedIds = Array.isArray(parsed)
+      ? parsed.map(String)
+      : Array.isArray(obj?.SelectedOptionIds)
+        ? obj.SelectedOptionIds.map(String)
+        : Array.isArray(obj?.selectedOptionIds)
+          ? obj.selectedOptionIds.map(String)
+          : [];
+    const expectedIds =
+      meta?.correctOptionIds && meta.correctOptionIds.length > 0
+        ? meta.correctOptionIds
+        : options.filter((o) => o.isCorrect).map((o) => o.id);
+    if (expectedIds.length > 1) {
+      const res = computePlusMinusScore(selectedIds, expectedIds);
+      return {
+        isAnswered: true,
+        isCorrect: res.pointsAwarded === res.maxPoints,
+        isPartiallyCorrect: res.pointsAwarded > 0 && res.pointsAwarded < res.maxPoints,
+        ...res,
+        allowPartialCredit: true,
+      };
+    }
+  }
+
+  if (baseType === 'multipleimage' || baseType === 'multipleimageselection') {
+    const obj = typeof parsed === 'object' && parsed !== null ? parsed : null;
+    const selectedIds = Array.isArray(parsed)
+      ? parsed.map(String)
+      : Array.isArray(obj?.SelectedMediaIds)
+        ? obj.SelectedMediaIds.map(String)
+        : Array.isArray(obj?.SelectedOptionIds)
+          ? obj.SelectedOptionIds.map(String)
+          : [];
+    const expectedIds =
+      meta?.correctMediaIds && meta.correctMediaIds.length > 0
+        ? meta.correctMediaIds
+        : meta?.correctOptionIds && meta.correctOptionIds.length > 0
+          ? meta.correctOptionIds
+          : options.filter((o) => o.isCorrect).map((o) => o.id);
+    if (expectedIds.length > 1) {
+      const res = computePlusMinusScore(selectedIds, expectedIds);
+      return {
+        isAnswered: true,
+        isCorrect: res.pointsAwarded === res.maxPoints,
+        isPartiallyCorrect: res.pointsAwarded > 0 && res.pointsAwarded < res.maxPoints,
+        ...res,
+        allowPartialCredit: true,
+      };
+    }
+  }
+
+  if (baseType === 'matrixmultipleselect') {
+    const selectedCellIds =
+      typeof parsed === 'object' && parsed !== null && Array.isArray(parsed.SelectedCellIds)
+        ? parsed.SelectedCellIds.map(String)
+        : Array.isArray(parsed)
+          ? parsed.map(String)
+          : [];
+    const expectedIds =
+      meta?.correctCellIds && meta.correctCellIds.length > 0
+        ? meta.correctCellIds
+        : (q.matrix?.cells ?? []).filter((c) => c.isCorrect).map((c) => c.id);
+    if (expectedIds.length > 1) {
+      const res = computePlusMinusScore(selectedCellIds, expectedIds);
+      return {
+        isAnswered: true,
+        isCorrect: res.pointsAwarded === res.maxPoints,
+        isPartiallyCorrect: res.pointsAwarded > 0 && res.pointsAwarded < res.maxPoints,
+        ...res,
+        allowPartialCredit: true,
+      };
+    }
+  }
+
+  if (baseType === 'bowtie' || baseType === 'dynamiclabbowtie') {
+    const { actionOptions, conditionOptions, paramOptions } = splitBowTieOptionGroups(options);
+    const expectedActions = actionOptions.filter((o) => o.isCorrect).map((o) => o.id);
+    const expectedConditions = conditionOptions.filter((o) => o.isCorrect).map((o) => o.id);
+    const expectedParams = paramOptions.filter((o) => o.isCorrect).map((o) => o.id);
+    const maxPoints =
+      expectedActions.length + (expectedConditions.length > 0 ? 1 : 0) + expectedParams.length;
+    if (maxPoints > 0 && typeof parsed === 'object' && parsed !== null) {
+      const userActions = Array.isArray(parsed.Actions || parsed.actions)
+        ? Array.from(new Set((parsed.Actions || parsed.actions).map(String)))
+        : [];
+      const userCondition = parsed.Condition ?? parsed.condition ?? null;
+      const userParams = Array.isArray(parsed.Parameters || parsed.parameters)
+        ? Array.from(new Set((parsed.Parameters || parsed.parameters).map(String)))
+        : [];
+      let earned = 0;
+      for (const a of userActions) {
+        if (expectedActions.includes(a)) earned += 1;
+      }
+      if (userCondition && expectedConditions.includes(String(userCondition))) {
+        earned += 1;
+      }
+      for (const p of userParams) {
+        if (expectedParams.includes(p)) earned += 1;
+      }
+      const pointsAwarded = Math.max(0, Math.min(maxPoints, earned));
+      return {
+        isAnswered: true,
+        isCorrect: pointsAwarded === maxPoints,
+        isPartiallyCorrect: pointsAwarded > 0 && pointsAwarded < maxPoints,
+        pointsAwarded,
+        maxPoints,
+        allowPartialCredit: true,
+        scoringRule: 'partial_credit_proportional',
+      };
+    }
+  }
+
+  if (baseType === 'multipletruefalse' && options.length > 0 && typeof parsed === 'object' && parsed !== null) {
+    const tfMap = parsed.TrueFalseMap ?? parsed.trueFalseMap ?? {};
+    const maxPoints = options.length;
+    let earned = 0;
+    for (const o of options) {
+      const expected = o.isCorrect ? 'true' : 'false';
+      if (String(tfMap[o.id] ?? '').trim().toLowerCase() === expected) earned += 1;
+    }
+    return {
+      isAnswered: true,
+      isCorrect: earned === maxPoints,
+      isPartiallyCorrect: earned > 0 && earned < maxPoints,
+      pointsAwarded: earned,
+      maxPoints,
+      allowPartialCredit: true,
+      scoringRule: 'partial_credit_proportional',
+    };
+  }
+
+  if (baseType === 'matching' && typeof parsed === 'object' && parsed !== null) {
+    const pairs = parsed.Pairs ?? parsed ?? {};
+    const expectedEntries =
+      meta?.correctMatches && Object.keys(meta.correctMatches).length > 0
+        ? Object.entries(meta.correctMatches)
+        : options.filter((o) => o.description).map((o) => [o.id, o.description]);
+    if (expectedEntries.length > 1) {
+      let earned = 0;
+      for (const [optId, expectedDesc] of expectedEntries) {
+        const userVal = String(pairs[optId] ?? '').trim();
+        const chosenOpt = options.find((o) => o.id === userVal);
+        const normalizedUser = (chosenOpt?.optionText ?? userVal).trim().toLowerCase();
+        if (normalizedUser && normalizedUser === String(expectedDesc).trim().toLowerCase()) {
+          earned += 1;
+        }
+      }
+      const maxPoints = expectedEntries.length;
+      return {
+        isAnswered: true,
+        isCorrect: earned === maxPoints,
+        isPartiallyCorrect: earned > 0 && earned < maxPoints,
+        pointsAwarded: earned,
+        maxPoints,
+        allowPartialCredit: true,
+        scoringRule: 'partial_credit_proportional',
+      };
+    }
+  }
+
+  if (baseType === 'blankselect' && meta?.correctBlanks && typeof parsed === 'object' && parsed !== null) {
+    const selections = parsed.BlankSelections ?? parsed ?? {};
+    const entries = Object.entries(meta.correctBlanks);
+    if (entries.length > 1) {
+      let earned = 0;
+      for (const [blankNum, expectedVal] of entries) {
+        const stripped = blankNum.replace(/^blank/i, '').trim();
+        const candidate = String(
+          selections[blankNum] ?? selections[stripped] ?? selections[`blank${stripped}`] ?? ''
+        ).trim();
+        if (!candidate) continue;
+        if (candidate === String(expectedVal).trim()) {
+          earned += 1;
+        } else {
+          const chosenOpt = options.find((o) => o.id === candidate || String(o.numericId) === candidate);
+          if (chosenOpt && chosenOpt.optionText.trim().toLowerCase() === String(expectedVal).trim().toLowerCase()) {
+            earned += 1;
+          }
+        }
+      }
+      const maxPoints = entries.length;
+      return {
+        isAnswered: true,
+        isCorrect: earned === maxPoints,
+        isPartiallyCorrect: earned > 0 && earned < maxPoints,
+        pointsAwarded: earned,
+        maxPoints,
+        allowPartialCredit: true,
+        scoringRule: 'partial_credit_proportional',
+      };
+    }
+  }
+
+  if ((baseType === 'blankfill' || baseType === 'fillintheblank' || baseType === 'cloze') && meta?.correctBlanks && typeof parsed === 'object' && parsed !== null) {
+    const entries = Object.entries(meta.correctBlanks);
+    if (entries.length > 1) {
+      const userBlanks = parsed.BlankFills && typeof parsed.BlankFills === 'object'
+        ? parsed.BlankFills
+        : { blank1: String(parsed.TextResponse ?? '') };
+      let earned = 0;
+      for (const [key, expected] of entries) {
+        const actual = String(userBlanks[key] ?? '').trim().toLowerCase();
+        if (actual && actual === String(expected).trim().toLowerCase()) earned += 1;
+      }
+      const maxPoints = entries.length;
+      return {
+        isAnswered: true,
+        isCorrect: earned === maxPoints,
+        isPartiallyCorrect: earned > 0 && earned < maxPoints,
+        pointsAwarded: earned,
+        maxPoints,
+        allowPartialCredit: true,
+        scoringRule: 'partial_credit_proportional',
+      };
+    }
+  }
+
+  if (baseType === 'draganddrop' && options.length > 1 && typeof parsed === 'object' && parsed !== null) {
+    const buckets = parsed.Buckets ?? parsed.buckets ?? {};
+    let earned = 0;
+    for (const o of options) {
+      const expectedBucket = String(o.data || (o.isCorrect ? 'A' : 'B')).trim().toUpperCase();
+      const userBucket = String(buckets[o.id] ?? '').trim().toUpperCase();
+      if (userBucket && userBucket === expectedBucket) earned += 1;
+    }
+    const maxPoints = options.length;
+    return {
+      isAnswered: true,
+      isCorrect: earned === maxPoints,
+      isPartiallyCorrect: earned > 0 && earned < maxPoints,
+      pointsAwarded: earned,
+      maxPoints,
+      allowPartialCredit: true,
+      scoringRule: 'partial_credit_proportional',
+    };
+  }
+
+  const isCorrect = evaluateCanonicalQuestion(q, responseJson);
+  return {
+    isAnswered: true,
+    isCorrect,
+    isPartiallyCorrect: false,
+    pointsAwarded: isCorrect ? 1 : 0,
+    maxPoints: 1,
+    allowPartialCredit: false,
+    scoringRule: 'all_or_nothing',
+  };
+}
+
 export function wasCanonicalOptionSelected(optionId, responseJson) {
   if (!responseJson) return false;
   const parsed = tryParseJson(responseJson);
@@ -751,9 +1243,38 @@ export function wasCanonicalOptionSelected(optionId, responseJson) {
     if (parsed.value !== undefined) {
       return String(parsed.value) === optionId;
     }
-    const list = parsed.SelectedOptionIds ?? parsed.selectedOptionIds ?? parsed.SelectedMediaIds;
+    const list =
+      parsed.SelectedOptionIds ??
+      parsed.selectedOptionIds ??
+      parsed.SelectedMediaIds ??
+      parsed.OrderedOptionIds ??
+      parsed.orderedOptionIds;
     if (Array.isArray(list)) {
       return list.map(String).includes(optionId);
+    }
+    if (parsed.BlankSelections || parsed.blankSelections) {
+      const blanks = parsed.BlankSelections || parsed.blankSelections;
+      if (blanks && typeof blanks === 'object') {
+        return Object.values(blanks).map(String).includes(optionId);
+      }
+    }
+    if ('Actions' in parsed || 'Condition' in parsed || 'Parameters' in parsed || 'actions' in parsed || 'condition' in parsed || 'parameters' in parsed) {
+      const actions = Array.isArray(parsed.Actions || parsed.actions) ? (parsed.Actions || parsed.actions).map(String) : [];
+      const condition = parsed.Condition ?? parsed.condition;
+      const params = Array.isArray(parsed.Parameters || parsed.parameters) ? (parsed.Parameters || parsed.parameters).map(String) : [];
+      return actions.includes(optionId) || (condition !== null && condition !== undefined && String(condition) === optionId) || params.includes(optionId);
+    }
+    if (parsed.TrueFalseMap || parsed.trueFalseMap) {
+      const tf = parsed.TrueFalseMap || parsed.trueFalseMap;
+      if (tf && typeof tf === 'object' && optionId in tf) {
+        return Boolean(String(tf[optionId] ?? '').trim());
+      }
+    }
+    if (parsed.Buckets || parsed.buckets) {
+      const buckets = parsed.Buckets || parsed.buckets;
+      if (buckets && typeof buckets === 'object' && optionId in buckets) {
+        return Boolean(String(buckets[optionId] ?? '').trim());
+      }
     }
   }
   return String(parsed).trim() === optionId;

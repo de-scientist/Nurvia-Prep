@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { ArrowUp, ArrowDown, CheckCircle2, GripVertical, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
-import { resolveNormalizedQuestionType } from "@/lib/attempts/strata-answer-adapter";
+import { isResponseAnswered, resolveNormalizedQuestionType } from "@/lib/attempts/strata-answer-adapter";
 import { ContentIntegrityAlert } from "./ContentIntegrityAlert";
 import { ReviewRationaleBox } from "./ReviewRationaleBox";
 
@@ -159,8 +159,23 @@ export function OrderedResponseRenderer({
                       </option>
                     ))}
                   </select>
-                  {isReview && isCorrectPos && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-                  {isReview && isWrongPos && <XCircle className="w-4 h-4 text-rose-500" />}
+                  {isReview && isCorrectPos && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      Correct
+                    </span>
+                  )}
+                  {isReview && isWrongPos && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-700 dark:text-rose-300">
+                      <XCircle className="w-4 h-4 text-rose-500" />
+                      Incorrect
+                    </span>
+                  )}
+                  {isReview && !selectedRank && (
+                    <span className="text-[11px] font-medium text-foreground-muted italic">
+                      Unanswered
+                    </span>
+                  )}
                 </div>
               </div>
             );
@@ -174,17 +189,25 @@ export function OrderedResponseRenderer({
     );
   }
 
+  const hasSubmittedOrder = isResponseAnswered(value);
+
   return (
     <div className="space-y-4">
       <div className="text-xs text-foreground-secondary">
         Drag items or use the Up / Down controls to arrange steps in the correct priority sequence (1 = first):
       </div>
 
+      {isReview && !hasSubmittedOrder && (
+        <div className="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900/60 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
+          Your Submitted Answer: Unanswered
+        </div>
+      )}
+
       <div className="space-y-2.5">
         {items.map((item, index) => {
           const expectedIndex = expectedOrderIds.indexOf(item.id);
-          const isPositionCorrect = isReview && expectedIndex === index;
-          const isPositionWrong = isReview && expectedIndex >= 0 && expectedIndex !== index;
+          const isPositionCorrect = isReview && hasSubmittedOrder && expectedIndex === index;
+          const isPositionWrong = isReview && hasSubmittedOrder && expectedIndex >= 0 && expectedIndex !== index;
 
           return (
             <div
@@ -235,11 +258,17 @@ export function OrderedResponseRenderer({
               </div>
 
               {isReview && (
-                <span className="shrink-0">
+                <span className="shrink-0 flex items-center gap-1 text-[11px] font-semibold">
                   {isPositionCorrect ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      Correct Position
+                    </span>
                   ) : isPositionWrong ? (
-                    <XCircle className="w-4 h-4 text-rose-500" />
+                    <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-300">
+                      <XCircle className="w-4 h-4 text-rose-500" />
+                      Incorrect Position
+                    </span>
                   ) : null}
                 </span>
               )}

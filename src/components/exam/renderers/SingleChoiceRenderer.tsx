@@ -49,10 +49,30 @@ export function SingleChoiceRenderer({
     );
   }
 
+  const correctIds = question.correctAnswerMeta?.correctOptionIds ?? [];
+  const hasAnySelection = question.options.some(
+    (opt) =>
+      selectedId === opt.id ||
+      (opt.numericId !== undefined && selectedId === String(opt.numericId)) ||
+      opt.wasSelected === true
+  );
+
   return (
     <div className="space-y-3">
+      {isReview && !hasAnySelection && (
+        <div className="rounded-xl border border-border bg-surface-muted/70 px-3.5 py-2.5 text-xs font-medium text-foreground-secondary">
+          Your Submitted Answer: <span className="font-semibold italic">Unanswered</span> — Authoritative Correct Answer is highlighted in green below.
+        </div>
+      )}
       {question.options.map((opt, idx) => {
-        const isSelected = selectedId === opt.id || opt.wasSelected === true;
+        const isSelected =
+          selectedId === opt.id ||
+          (opt.numericId !== undefined && selectedId === String(opt.numericId)) ||
+          opt.wasSelected === true;
+        const isOptCorrect =
+          opt.isCorrect === true ||
+          correctIds.includes(opt.id) ||
+          (opt.numericId !== undefined && correctIds.includes(String(opt.numericId)));
         let borderClass = "border-border bg-background hover:bg-surface-muted text-foreground";
 
         if (isSelected) {
@@ -60,10 +80,10 @@ export function SingleChoiceRenderer({
         }
 
         if (isReview) {
-          if (opt.isCorrect) {
+          if (isOptCorrect) {
             borderClass =
               "border-emerald-500 bg-emerald-50/90 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 ring-1 ring-emerald-500 font-medium";
-          } else if (isSelected && !opt.isCorrect) {
+          } else if (isSelected && !isOptCorrect) {
             borderClass =
               "border-rose-500 bg-rose-50/90 dark:bg-rose-950/40 text-rose-950 dark:text-rose-100 ring-1 ring-rose-500 font-medium";
           }
@@ -88,13 +108,13 @@ export function SingleChoiceRenderer({
               <RichQuestionContent content={opt.optionText} as="span" className="flex-1 leading-relaxed" />
               {isReview && (
                 <span className="shrink-0 pt-0.5 flex items-center gap-1.5">
-                  {opt.isCorrect && (
+                  {isOptCorrect && (
                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
                       <CheckCircle2 className="w-4 h-4" />
                       {isSelected ? "Your Answer · Correct" : "Correct Answer"}
                     </span>
                   )}
-                  {isSelected && !opt.isCorrect && (
+                  {isSelected && !isOptCorrect && (
                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-700 dark:text-rose-300">
                       <XCircle className="w-4 h-4" />
                       Your Answer · Incorrect

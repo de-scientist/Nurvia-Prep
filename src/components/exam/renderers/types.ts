@@ -42,6 +42,10 @@ export interface RendererQuestion {
   questionType: string | number;
   cognitiveSkill?: string | number;
   clientNeedCategory?: string | number;
+  difficulty?: string;
+  learningObjectives?: string[];
+  resources?: string;
+  prerequisites?: string;
   options: RendererOption[];
   exhibits?: RendererExhibit[];
   media?: QuestionMediaDto[];
@@ -53,6 +57,11 @@ export interface RendererQuestion {
   contentJsonData?: string;
   generalRationale?: string;
   isCorrect?: boolean;
+  isPartiallyCorrect?: boolean;
+  allowPartialCredit?: boolean;
+  pointsAwarded?: number;
+  maxPoints?: number;
+  isFlagged?: boolean;
   learnerResponse?: string;
 }
 
@@ -63,4 +72,6 @@ export interface QuestionRendererProps {
   disabled?: boolean;
   isReview?: boolean;
   hideRationaleBox?: boolean;
+  onAskTutor?: (questionId: string) => void;
+  canAskTutor?: boolean;
 }

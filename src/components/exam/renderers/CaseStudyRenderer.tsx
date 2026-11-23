@@ -95,7 +95,12 @@ export function CaseStudyRenderer(props: CaseStudyRendererProps) {
       </div>
 
       {isReview && !hideRationaleBox && (
-        <ReviewRationaleBox question={question} value={value} />
+        <ReviewRationaleBox
+          question={question}
+          value={value}
+          onAskTutor={props.onAskTutor}
+          canAskTutor={props.canAskTutor}
+        />
       )}
     </div>
   );

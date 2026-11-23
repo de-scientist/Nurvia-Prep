@@ -6,6 +6,7 @@ import type { QuestionRendererProps } from "./types";
 import { cn } from "@/lib/utils";
 import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 import { ContentIntegrityAlert } from "./ContentIntegrityAlert";
+import { ReviewRationaleBox } from "./ReviewRationaleBox";
 
 /**
  * Interactive BlankSelect (Cloze Dropdown) renderer.
@@ -18,6 +19,7 @@ export function BlankSelectRenderer({
   onChange,
   disabled = false,
   isReview = false,
+  hideRationaleBox = false,
 }: QuestionRendererProps) {
   const selections = React.useMemo<Record<string, string>>(() => {
     if (!value) return {};
@@ -90,11 +92,16 @@ export function BlankSelectRenderer({
               )}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <label className="text-xs font-semibold text-foreground-secondary">
+                <label
+                  htmlFor={`blank-${question.id}-${blankKey}`}
+                  className="text-xs font-semibold text-foreground-secondary"
+                >
                   Blank {blankKey} — Select the most accurate clinical completion:
                 </label>
 
                 <select
+                  id={`blank-${question.id}-${blankKey}`}
+                  aria-label={`Blank ${blankKey} completion choice`}
                   disabled={disabled}
                   value={selectedOptId || (selectedOpt?.id ?? "")}
                   onChange={(e) => handleSelect(blankKey, e.target.value)}
@@ -120,16 +127,25 @@ export function BlankSelectRenderer({
 
               {isReview && (
                 <div className="flex flex-wrap items-center gap-3 text-xs pt-1">
-                  {selectedOpt && !isBlankCorrect && (
-                    <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-300 font-medium">
-                      <XCircle className="h-3.5 w-3.5" />
-                      Your choice: {selectedOpt.optionText}
+                  {selectedOpt && isBlankCorrect ? (
+                    <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300 font-semibold">
+                      <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      Your Answer ({selectedOpt.optionText}) · Correct
+                    </span>
+                  ) : selectedOpt && !isBlankCorrect ? (
+                    <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-300 font-semibold">
+                      <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                      Your Answer ({selectedOpt.optionText}) · Incorrect
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400 font-medium">
+                      Your Answer: Unanswered
                     </span>
                   )}
-                  {correctOpt && (
+                  {correctOpt && !isBlankCorrect && (
                     <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300 font-semibold">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      Correct: {correctOpt.optionText}
+                      <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      Correct Answer: {correctOpt.optionText}
                     </span>
                   )}
                 </div>
@@ -138,6 +154,10 @@ export function BlankSelectRenderer({
           );
         })}
       </div>
+
+      {isReview && !hideRationaleBox && (
+        <ReviewRationaleBox question={question} value={value} includeOptionRationales />
+      )}
     </div>
   );
 }

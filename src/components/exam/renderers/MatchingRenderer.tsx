@@ -152,10 +152,21 @@ export function MatchingRenderer({
                       ))}
                 </select>
                 {isReview && isMatchCorrect && (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 shrink-0">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    Correct
+                  </span>
                 )}
                 {isReview && isMatchWrong && (
-                  <XCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-700 dark:text-rose-300 shrink-0">
+                    <XCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                    Incorrect
+                  </span>
+                )}
+                {isReview && !currentVal && (
+                  <span className="text-[11px] font-medium text-foreground-muted italic shrink-0">
+                    Unanswered
+                  </span>
                 )}
               </div>
             </div>

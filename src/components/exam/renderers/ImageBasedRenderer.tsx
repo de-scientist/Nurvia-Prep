@@ -36,8 +36,21 @@ export function ImageBasedRenderer({
     }
   }, [value]);
 
+  const parsedMultiMode = React.useMemo(() => {
+    if (!value) return false;
+    try {
+      const p = JSON.parse(value);
+      return Array.isArray(p?.SelectedOptionIds) || Array.isArray(p?.selectedOptionIds);
+    } catch {
+      return false;
+    }
+  }, [value]);
+
   const correctCount = question.options.filter((o) => o.isCorrect).length;
-  const allowMultiple = correctCount > 1;
+  const allowMultiple =
+    parsedMultiMode ||
+    (question.correctAnswerMeta?.correctOptionIds?.length ?? 0) > 1 ||
+    correctCount > 1;
 
   const handleSelect = (id: string) => {
     if (disabled) return;
@@ -67,9 +80,17 @@ export function ImageBasedRenderer({
   }
 
   const imageMedias = (question.media ?? []).filter((m) => Boolean(m.url));
+  const hasAnySelection =
+    selectedIds.length > 0 || question.options.some((opt) => opt.wasSelected === true);
 
   return (
     <div className="space-y-4">
+      {isReview && !hasAnySelection && (
+        <div className="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900/60 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
+          Your Submitted Answer: Unanswered
+        </div>
+      )}
+
       {imageMedias.length > 0 ? (
         <div className="grid grid-cols-1 gap-3">
           {imageMedias.map((m, idx) => {
@@ -120,6 +141,7 @@ export function ImageBasedRenderer({
               <button
                 type="button"
                 disabled={disabled}
+                aria-pressed={isSelected}
                 onClick={() => handleSelect(opt.id)}
                 className={cn(
                   "w-full p-3.5 rounded-xl border text-left text-xs transition-all flex items-center gap-3",
@@ -132,11 +154,17 @@ export function ImageBasedRenderer({
                 </div>
                 <RichQuestionContent content={opt.optionText} as="span" className="flex-1 leading-snug" />
                 {isReview && (
-                  <span className="shrink-0">
+                  <span className="shrink-0 flex items-center gap-1 text-[11px] font-semibold">
                     {opt.isCorrect ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        {isSelected ? "Your Answer · Correct" : "Correct Answer"}
+                      </span>
                     ) : isSelected ? (
-                      <XCircle className="w-4 h-4 text-rose-500" />
+                      <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-300">
+                        <XCircle className="w-4 h-4 text-rose-500" />
+                        Your Answer · Incorrect
+                      </span>
                     ) : null}
                   </span>
                 )}

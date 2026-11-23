@@ -2,10 +2,11 @@
 
 import * as React from "react";
 import { QuestionRendererProps } from "./types";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 import { ReviewRationaleBox } from "./ReviewRationaleBox";
+import { cn } from "@/lib/utils";
 
 export function FillInTheBlankRenderer({
   question,
@@ -40,21 +41,60 @@ export function FillInTheBlankRenderer({
     correctOption?.optionText ||
     "";
 
+  const trimmedCurrent = currentText.trim();
+  const plainExpected = expectedTerm.replace(/<[^>]*>/g, "").trim();
+  const isTextCorrect =
+    Boolean(trimmedCurrent) &&
+    (question.isCorrect === true ||
+      (Boolean(plainExpected) &&
+        trimmedCurrent.toLowerCase() === plainExpected.toLowerCase()));
+
   return (
     <div className="space-y-4">
       <div className="max-w-xl space-y-2">
-        <label className="text-xs font-semibold text-foreground-secondary">
+        <label
+          htmlFor={`fill-blank-${question.id}`}
+          className="text-xs font-semibold text-foreground-secondary"
+        >
           Enter Clinical Response:
         </label>
         <Input
+          id={`fill-blank-${question.id}`}
           type="text"
           value={currentText}
           onChange={handleChange}
           disabled={disabled}
-          placeholder="Type accurate clinical term or value..."
-          className="h-12 text-base font-medium"
+          placeholder={isReview ? "No answer submitted" : "Type accurate clinical term or value..."}
+          className={cn(
+            "h-12 text-base font-medium",
+            isReview &&
+              trimmedCurrent &&
+              (isTextCorrect
+                ? "border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/30"
+                : "border-rose-500 bg-rose-50/70 dark:bg-rose-950/30")
+          )}
         />
       </div>
+
+      {isReview && (
+        <div className="text-xs font-semibold">
+          {!trimmedCurrent ? (
+            <span className="text-foreground-secondary">
+              Your Submitted Answer: <span className="italic">Unanswered</span>
+            </span>
+          ) : isTextCorrect ? (
+            <span className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+              <CheckCircle2 className="w-4 h-4" />
+              Your Answer ({trimmedCurrent}) · Correct
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-rose-700 dark:text-rose-300">
+              <XCircle className="w-4 h-4" />
+              Your Answer ({trimmedCurrent}) · Incorrect
+            </span>
+          )}
+        </div>
+      )}
 
       {isReview && expectedTerm && (
         <div className="max-w-xl p-3.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-500/40 text-xs space-y-1">

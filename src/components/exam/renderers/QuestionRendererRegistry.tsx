@@ -179,6 +179,8 @@ export const QuestionRendererRegistry: React.FC<QuestionRendererProps> = (props)
           question={question}
           value={props.value}
           includeOptionRationales={OPTION_RATIONALE_BASE_TYPES.has(resolved.baseType)}
+          onAskTutor={props.onAskTutor}
+          canAskTutor={props.canAskTutor}
         />
       )}
     </div>

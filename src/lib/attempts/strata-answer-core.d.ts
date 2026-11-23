@@ -16,10 +16,27 @@ export function fromStrataSavedUserAnswer(
   savedUserAnswer?: Record<string, unknown> | object | null
 ): string | undefined;
 
+export interface CanonicalQuestionScoreResult {
+  isAnswered: boolean;
+  isCorrect: boolean;
+  isPartiallyCorrect: boolean;
+  pointsAwarded: number;
+  maxPoints: number;
+  allowPartialCredit: boolean;
+  scoringRule: 'all_or_nothing' | 'partial_credit_plus_minus' | 'partial_credit_proportional';
+}
+
+export function isResponseAnswered(responseJson?: string | null): boolean;
+
 export function evaluateCanonicalQuestion(
   q: Record<string, unknown> | object,
   responseJson?: string | null
 ): boolean;
+
+export function scoreCanonicalQuestion(
+  q: Record<string, unknown> | object,
+  responseJson?: string | null
+): CanonicalQuestionScoreResult;
 
 export function wasCanonicalOptionSelected(
   optionId: string,

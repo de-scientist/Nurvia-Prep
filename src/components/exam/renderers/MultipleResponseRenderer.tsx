@@ -63,8 +63,27 @@ export function MultipleResponseRenderer({
       </div>
 
       <div className="space-y-3">
+        {isReview &&
+          !question.options.some(
+            (opt) =>
+              selectedIds.includes(opt.id) ||
+              (opt.numericId !== undefined && selectedIds.includes(String(opt.numericId))) ||
+              opt.wasSelected === true
+          ) && (
+            <div className="rounded-xl border border-border bg-surface-muted/70 px-3.5 py-2.5 text-xs font-medium text-foreground-secondary">
+              Your Submitted Answer: <span className="font-semibold italic">Unanswered</span> — Authoritative Correct Answers are highlighted in green below.
+            </div>
+          )}
         {question.options.map((opt) => {
-          const isSelected = selectedIds.includes(opt.id) || opt.wasSelected === true;
+          const correctIds = question.correctAnswerMeta?.correctOptionIds ?? [];
+          const isSelected =
+            selectedIds.includes(opt.id) ||
+            (opt.numericId !== undefined && selectedIds.includes(String(opt.numericId))) ||
+            opt.wasSelected === true;
+          const isOptCorrect =
+            opt.isCorrect === true ||
+            correctIds.includes(opt.id) ||
+            (opt.numericId !== undefined && correctIds.includes(String(opt.numericId)));
           let borderClass = "border-border bg-background hover:bg-surface-muted text-foreground";
 
           if (isSelected) {
@@ -72,10 +91,10 @@ export function MultipleResponseRenderer({
           }
 
           if (isReview) {
-            if (opt.isCorrect) {
+            if (isOptCorrect) {
               borderClass =
                 "border-emerald-500 bg-emerald-50/90 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 ring-1 ring-emerald-500 font-medium";
-            } else if (isSelected && !opt.isCorrect) {
+            } else if (isSelected && !isOptCorrect) {
               borderClass =
                 "border-rose-500 bg-rose-50/90 dark:bg-rose-950/40 text-rose-950 dark:text-rose-100 ring-1 ring-rose-500 font-medium";
             }
@@ -104,15 +123,15 @@ export function MultipleResponseRenderer({
                 <RichQuestionContent content={opt.optionText} as="span" className="flex-1 leading-relaxed" />
                 {isReview && (
                   <span className="shrink-0 pt-0.5 flex items-center gap-1.5">
-                    {opt.isCorrect ? (
+                    {isOptCorrect ? (
                       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
                         <CheckCircle2 className="w-4 h-4" />
-                        {isSelected ? "Correct" : "Missed Correct"}
+                        {isSelected ? "Your Answer · Correct" : "Correct Answer (Not Selected)"}
                       </span>
                     ) : isSelected ? (
                       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-700 dark:text-rose-300">
                         <XCircle className="w-4 h-4" />
-                        Incorrect
+                        Your Answer · Incorrect
                       </span>
                     ) : null}
                   </span>

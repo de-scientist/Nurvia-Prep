@@ -60,8 +60,18 @@ export function TrueFalseRenderer({
       wasSelected: undefined as boolean | undefined,
     };
 
+  const hasSelection =
+    Boolean(selectedChoice && selectedChoice.trim()) ||
+    [trueOpt, falseOpt].some((o) => o.wasSelected === true);
+
   return (
     <div className="space-y-4">
+      {isReview && !hasSelection && (
+        <div className="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-900/60 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
+          Your Submitted Answer: Unanswered
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {[trueOpt, falseOpt].map((opt) => {
           const isTrue = opt.optionText.toLowerCase().includes("true");
@@ -111,7 +121,8 @@ export function TrueFalseRenderer({
               <RichQuestionContent content={opt.optionText} as="span" />
               {isReview && opt.isCorrect && (
                 <span className="text-xs font-sans text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1 mt-1">
-                  <CheckCircle2 className="w-4 h-4" /> Correct Answer
+                  <CheckCircle2 className="w-4 h-4" />
+                  {isSelected ? "Your Answer · Correct" : "Correct Answer"}
                 </span>
               )}
               {isReview && isSelected && opt.isCorrect === false && (
