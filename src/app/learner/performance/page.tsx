@@ -48,7 +48,7 @@ export default function PerformancePage() {
   }, []);
 
   const availableTracks = React.useMemo(() => {
-    const tracks = new Set<string>(["All"]);
+    const tracks = new Set<string>(["All", "RN Track", "PN / LPN Track"]);
     for (const a of attempts) {
       tracks.add(normalizeTrackLabel(a.pathway, a.examTitle));
     }
@@ -57,9 +57,16 @@ export default function PerformancePage() {
 
   const filteredAttempts = React.useMemo(() => {
     if (selectedTrack === "All") return attempts;
-    return attempts.filter(
-      (a) => normalizeTrackLabel(a.pathway, a.examTitle) === selectedTrack
-    );
+    return attempts.filter((a) => {
+      const normalized = normalizeTrackLabel(a.pathway, a.examTitle);
+      if (selectedTrack === "RN Track") {
+        return normalized === "RN Track" || normalized === "RN Exit" || a.pathway === "RN";
+      }
+      if (selectedTrack === "PN / LPN Track") {
+        return normalized === "PN / LPN Track" || normalized === "PN / LPN Exit" || a.pathway === "PN_LPN";
+      }
+      return normalized === selectedTrack;
+    });
   }, [attempts, selectedTrack]);
 
   const summary = React.useMemo(
@@ -82,33 +89,32 @@ export default function PerformancePage() {
       <div className="space-y-8">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="space-y-2">
-            <Badge variant="teal">Performance Intelligence</Badge>
+            <Badge variant="teal">RN &amp; PN / LPN Performance Intelligence</Badge>
             <h1 className="font-brand text-2xl font-bold text-foreground sm:text-3xl">
-              Clinical Performance & Analytics
+              Clinical Performance &amp; Analytics
             </h1>
             <p className="max-w-2xl text-sm text-foreground-secondary">
-              Every score, pass rate, and domain metric below is calculated strictly from your authoritative backend examination records.
+              Every score, pass rate, and domain metric below is calculated strictly from your authoritative RN and PN / LPN examination records.
             </p>
           </div>
 
-          {availableTracks.length > 1 && (
-            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by Nursing Track">
-              {availableTracks.map((track) => (
-                <button
-                  key={track}
-                  type="button"
-                  onClick={() => setSelectedTrack(track)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold border transition-colors ${
-                    selectedTrack === track
-                      ? "border-brand-teal bg-brand-teal text-white"
-                      : "border-border bg-surface text-foreground-secondary hover:bg-surface-muted"
-                  }`}
-                >
-                  {track}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by Nursing Pathway">
+            {availableTracks.map((track) => (
+              <button
+                key={track}
+                type="button"
+                aria-pressed={selectedTrack === track}
+                onClick={() => setSelectedTrack(track)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold border transition-colors ${
+                  selectedTrack === track
+                    ? "border-brand-teal bg-brand-teal text-white"
+                    : "border-border bg-surface text-foreground-secondary hover:bg-surface-muted"
+                }`}
+              >
+                {track === "All" ? "All Pathways (RN & PN/LPN)" : track}
+              </button>
+            ))}
+          </div>
         </header>
 
         {error && (

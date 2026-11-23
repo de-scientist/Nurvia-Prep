@@ -64,30 +64,47 @@ export interface PerformanceSummary {
 
 export function normalizeTrackLabel(pathway?: string | null, examTitle?: string | null): string {
   const raw = `${pathway ?? ''} ${examTitle ?? ''}`.toLowerCase();
-  if (raw.includes('rn_exit') || raw.includes('nclex-rn') || raw.includes('nclex rn') || (raw.includes('exit') && raw.includes('rn'))) {
-    return 'RN Exit / NCLEX';
-  }
-  if (raw.includes('pn_exit') || raw.includes('nclex-pn') || raw.includes('nclex pn') || (raw.includes('exit') && (raw.includes('pn') || raw.includes('lpn')))) {
+  const isPnLpn =
+    raw.includes('pn_lpn') ||
+    raw.includes('pn_exit') ||
+    raw.includes('lpn') ||
+    raw.includes('practical nurse') ||
+    /\bpn\b/.test(raw);
+  const isRn =
+    raw.includes('rn_exit') ||
+    raw.includes('registered nurse') ||
+    /\brn\b/.test(raw);
+
+  if (isPnLpn && raw.includes('exit')) {
     return 'PN / LPN Exit';
   }
-  if (raw.includes('pn_lpn') || raw.includes('lpn') || raw.includes('practical nurse') || /\bpn\b/.test(raw)) {
-    return 'PN / LPN Track';
+  if (isRn && raw.includes('exit')) {
+    return 'RN Exit';
   }
-  if (raw.includes('teas') || raw.includes('hesi a2')) {
-    return 'TEAS / Admissions';
+  if (isPnLpn) {
+    return 'PN / LPN Track';
   }
   if (raw.includes('nursingmath') || raw.includes('dosage')) {
     return 'Dosage Calculations';
   }
-  if (raw.includes('rn') || raw.includes('registered nurse')) {
+  if (isRn) {
     return 'RN Track';
   }
-  return pathway ? String(pathway).replace(/_/g, ' ') : 'General Track';
+  const cleanedPathway = pathway
+    ? String(pathway)
+        .replace(/nclex[-_\s]*/gi, '')
+        .replace(/_/g, ' ')
+        .trim()
+    : '';
+  return cleanedPathway || 'General Track';
 }
 
 export function formatCategoryLabel(raw?: string | null): string {
   if (!raw || !raw.trim()) return 'General Assessment';
-  const cleaned = raw.trim();
+  const cleaned = raw
+    .replace(/nclex[-_\s]*/gi, '')
+    .trim();
+  if (!cleaned) return 'General Assessment';
   if (cleaned === 'NursingMath' || cleaned === 'NURSING MATH') return 'Nursing Math & Dosage';
   if (cleaned === 'RegularCourse') return 'Core Nursing Course';
   if (cleaned === 'ExitPredictor') return 'Exit & Readiness Predictor';
@@ -203,7 +220,7 @@ export function computePerformanceSummary(attempts: ExamAttemptSummaryDto[]): Pe
     })
     .sort((a, b) => a.averageScore - b.averageScore);
 
-  // Group by track (RN vs PN/LPN vs TEAS)
+  // Group by pathway track (RN vs PN / LPN)
   const trackMap = new Map<string, ExamAttemptSummaryDto[]>();
   for (const a of scoredList) {
     const track = normalizeTrackLabel(a.pathway, a.examTitle);

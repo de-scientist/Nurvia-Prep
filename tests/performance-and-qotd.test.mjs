@@ -1,20 +1,89 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { registerHooks } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { computePerformanceSummary } from '../src/lib/analytics/performance-analytics.ts';
-import {
+import ts from 'typescript';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const readRel = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+
+registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier === 'server-only') {
+      return {
+        url: 'data:text/javascript,export default {};',
+        shortCircuit: true,
+      };
+    }
+
+    if (specifier.startsWith('@/')) {
+      const base = path.resolve(ROOT, 'src', specifier.slice(2));
+      for (const ext of ['', '.ts', '.tsx', '.mjs', '.js']) {
+        const candidate = ext ? `${base}${ext}` : base;
+        if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+          return {
+            url: new URL(`file:///${candidate.replace(/\\/g, '/')}`).href,
+            shortCircuit: true,
+          };
+        }
+      }
+    }
+
+    if (
+      (specifier.startsWith('./') || specifier.startsWith('../')) &&
+      context.parentURL?.startsWith('file://')
+    ) {
+      const parentDir = path.dirname(
+        new URL(context.parentURL).pathname.replace(/^\/([A-Za-z]:)/, '$1')
+      );
+      const base = path.resolve(parentDir, specifier);
+      for (const ext of ['.ts', '.tsx', '.mjs', '.js']) {
+        const candidate = base.endsWith(ext) ? base : `${base}${ext}`;
+        if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+          return {
+            url: new URL(`file:///${candidate.replace(/\\/g, '/')}`).href,
+            shortCircuit: true,
+          };
+        }
+      }
+    }
+
+    return nextResolve(specifier, context);
+  },
+  load(url, context, nextLoad) {
+    if (url.endsWith('.ts') || url.endsWith('.tsx')) {
+      const filePath = new URL(url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
+      const source = fs.readFileSync(filePath, 'utf8');
+      const compiled = ts.transpileModule(source, {
+        compilerOptions: {
+          module: ts.ModuleKind.ESNext,
+          target: ts.ScriptTarget.ES2022,
+          jsx: ts.JsxEmit.Preserve,
+          esModuleInterop: true,
+        },
+        fileName: filePath,
+      });
+      return { format: 'module', source: compiled.outputText, shortCircuit: true };
+    }
+    return nextLoad(url, context);
+  },
+});
+
+const {
+  computePerformanceSummary,
+  normalizeTrackLabel,
+  formatCategoryLabel,
+} = await import('../src/lib/analytics/performance-analytics.ts');
+const {
   QOTD_TIMEZONE,
   getUtcDateKey,
   selectDailyIndex,
   computeConsecutiveUtcStreak,
   sanitizeDailyQuestionForPreSubmit,
-} from '../src/lib/qotd/daily-question-core.mjs';
-import { qotdStore } from '../src/lib/qotd/qotd-store.ts';
-
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const readRel = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+} = await import('../src/lib/qotd/daily-question-core.mjs');
+const { qotdStore } = await import('../src/lib/qotd/qotd-store.ts');
 
 describe('Performance Intelligence & Question of the Day (QOTD)', () => {
   it('returns truthful empty metrics (null averageScore) when zero graded attempts exist', () => {
@@ -26,7 +95,7 @@ describe('Performance Intelligence & Question of the Day (QOTD)', () => {
     assert.ok(emptySummary.recommendations.length >= 1);
   });
 
-  it('computes authoritative average score, RN vs PN track comparison, and chronological progression', () => {
+  it('computes authoritative average score, RN vs PN track comparison, pathway isolation, and chronological progression', () => {
     const attempts = [
       {
         attemptId: 'att-active',
@@ -82,6 +151,36 @@ describe('Performance Intelligence & Question of the Day (QOTD)', () => {
     assert.ok(summary.byTrack.some((t) => t.track === 'RN Track'));
     assert.ok(summary.byTrack.some((t) => t.track === 'PN / LPN Track'));
     assert.equal(summary.byCategory[0].category, 'Med-Surg');
+
+    // Pathway isolation check: RN-only vs PN/LPN-only summaries must never cross-contaminate
+    const rnOnlyAttempts = attempts.filter((a) => normalizeTrackLabel(a.pathway, a.examTitle).startsWith('RN'));
+    const pnOnlyAttempts = attempts.filter((a) => normalizeTrackLabel(a.pathway, a.examTitle).startsWith('PN'));
+    const rnSummary = computePerformanceSummary(rnOnlyAttempts);
+    const pnSummary = computePerformanceSummary(pnOnlyAttempts);
+
+    assert.equal(rnSummary.averageScore, 65);
+    assert.equal(rnSummary.scoredAttempts, 1);
+    assert.equal(rnSummary.byTrack.every((t) => t.track.startsWith('RN')), true);
+
+    assert.equal(pnSummary.averageScore, 85);
+    assert.equal(pnSummary.scoredAttempts, 1);
+    assert.equal(pnSummary.byTrack.every((t) => t.track.startsWith('PN')), true);
+
+    // Objective 1: Verify zero NCLEX leakage in track normalization, category classification, and performance page
+    assert.equal(normalizeTrackLabel('RN', 'RN Exit Predictor'), 'RN Exit');
+    assert.equal(normalizeTrackLabel('RN_Exit', 'Comprehensive Predictor'), 'RN Exit');
+    assert.equal(normalizeTrackLabel('PN_LPN', 'LPN Exit Predictor'), 'PN / LPN Exit');
+    assert.equal(normalizeTrackLabel('PN_LPN', 'Practical Nursing Pharmacology'), 'PN / LPN Track');
+    assert.equal(normalizeTrackLabel('RN', 'Adult Health Nursing'), 'RN Track');
+    assert.equal(/nclex/i.test(normalizeTrackLabel('NCLEX-RN', 'NCLEX Exit Exam')), false);
+    assert.equal(/nclex/i.test(formatCategoryLabel('NCLEX Pharmacology')), false);
+    assert.equal(formatCategoryLabel('NCLEX RN Pharmacology'), 'RN Pharmacology');
+    assert.equal(formatCategoryLabel('NCLEX PN Foundations'), 'PN Foundations');
+
+    const perfPageSrc = readRel('src/app/learner/performance/page.tsx');
+    const chartSrc = readRel('src/components/analytics/ScoreProgressionChart.tsx');
+    assert.equal(/nclex/i.test(perfPageSrc), false, '/learner/performance must contain zero NCLEX references');
+    assert.equal(/nclex/i.test(chartSrc), false, 'ScoreProgressionChart must contain zero NCLEX references');
   });
 
   it('selects daily QOTD deterministically by UTC day, prevents pre-submit leaks, and computes consecutive streak', () => {
@@ -106,7 +205,7 @@ describe('Performance Intelligence & Question of the Day (QOTD)', () => {
       title: 'Test',
       stem: 'Stem?',
       category: 'Cat',
-      examContext: 'NCLEX',
+      examContext: 'RN',
       cognitiveSkill: 'TakeActions',
       clientNeedCategory: 'PhysiologicalIntegrity',
       totalAnswers: 10,

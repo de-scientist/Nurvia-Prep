@@ -81,7 +81,7 @@ export default function LearnerDashboardPage() {
   const perfSummary = React.useMemo(() => computePerformanceSummary(attempts), [attempts]);
   const averageScore = perfSummary.averageScore !== null ? Math.round(perfSummary.averageScore) : null;
   const activeAttempts = attempts.filter((attempt) => attempt.status === "InProgress");
-  const totalEligibleExams = summaryData?.totalPublishedStudySets || 1555;
+  const totalEligibleExams = summaryData?.totalPublishedStudySets ?? 0;
 
   return (
     <LearnerShell>
@@ -285,8 +285,22 @@ export default function LearnerDashboardPage() {
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {subjects.map((subject) => (
                     <SubjectCard
-                      key={subject.id}
+                      key={subject.presentationId ?? subject.id}
                       subject={subject}
+                      onSelectSubjectSource={(selection) => {
+                        const qs = new URLSearchParams({
+                          subject: selection.subjectName,
+                          track: selection.pathway,
+                          programId: String(selection.programId),
+                        });
+                        if (selection.subjectIds.length > 0) {
+                          qs.set("subjectIds", selection.subjectIds.join(","));
+                        }
+                        if (selection.examId) {
+                          qs.set("examId", selection.examId);
+                        }
+                        router.push(`/learner/library?${qs.toString()}`);
+                      }}
                       onSelectSubject={(subjectName, selectedPathway) => {
                         const trackParam = selectedPathway ? `&track=${encodeURIComponent(selectedPathway)}` : "";
                         router.push(`/learner/library?subject=${encodeURIComponent(subjectName)}${trackParam}`);
@@ -361,7 +375,12 @@ export default function LearnerDashboardPage() {
                           <td className="p-3 text-right font-semibold text-foreground">
                             {typeof attempt.scorePercentage === "number" ? `${attempt.scorePercentage}%` : "—"}
                             {completedAttempts.includes(attempt) && (
-                              <Link href={`/learner/attempts/${encodeURIComponent(attempt.attemptId)}`} className="ml-3 text-brand-teal hover:underline">Result</Link>
+                              <>
+                                <Link href={`/learner/attempts/${encodeURIComponent(attempt.attemptId)}`} className="ml-3 text-brand-teal hover:underline">Result</Link>
+                                {attempt.canReview !== false && attempt.allowReview !== false && (
+                                  <Link href={`/learner/attempts/${encodeURIComponent(attempt.attemptId)}?stage=review`} className="ml-3 text-brand-teal hover:underline">Review</Link>
+                                )}
+                              </>
                             )}
                           </td>
                         </tr>

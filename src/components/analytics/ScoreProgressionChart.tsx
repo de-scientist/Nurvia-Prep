@@ -57,7 +57,9 @@ export function ScoreProgressionChart({ data }: ScoreProgressionChartProps) {
               return (
                 <div className="rounded-xl border border-border bg-surface p-3 shadow-lg text-xs space-y-1 max-w-xs">
                   <p className="font-bold text-foreground line-clamp-2">{point.examTitle}</p>
-                  <p className="text-foreground-muted">{point.fullDate}</p>
+                  <p className="text-foreground-muted">
+                    {point.pathway} · {point.fullDate}
+                  </p>
                   <div className="flex items-center justify-between gap-4 pt-1 font-semibold">
                     <span className="text-brand-teal">Recorded Score: {point.score}%</span>
                     <span className={point.passed ? "text-emerald-600" : "text-rose-500"}>
