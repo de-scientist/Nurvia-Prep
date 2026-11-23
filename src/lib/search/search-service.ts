@@ -23,8 +23,11 @@ export async function searchGlobalContent(
 
   const results: GlobalSearchResultItemDto[] = [];
 
-  // 1. Search Study Sets & Exam Banks
+  // 1. Search Study Sets & Exam Banks (RN & LPN/PN only; exclude NCLEX/PrepFord)
   for (const set of initialStudySets) {
+    if (set.examTrack === 'NCLEX' || /nclex/i.test(set.category) || /nclex/i.test(set.title)) {
+      continue;
+    }
     if (
       set.title.toLowerCase().includes(q) ||
       set.description.toLowerCase().includes(q) ||

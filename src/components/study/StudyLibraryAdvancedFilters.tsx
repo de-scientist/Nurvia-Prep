@@ -4,6 +4,10 @@ import * as React from "react";
 import { ChevronDown, ChevronUp, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { StudyLibraryFiltersDto } from "@/lib/api-types";
+import {
+  isPathwayMatch,
+  programIdForPathway,
+} from "@/lib/study-library/curriculum-consolidation";
 
 export interface AdvancedFilterState {
   school: string;
@@ -46,8 +50,8 @@ export function StudyLibraryAdvancedFilters({
     const list = filtersData?.exams ?? [];
     return list.filter((ex) => {
       if (selectedPathway && selectedPathway !== "All") {
-        const p = String(ex.pathway ?? "").trim().toLowerCase();
-        if (p && !p.includes(selectedPathway.toLowerCase())) return false;
+        const p = String(ex.pathway ?? "").trim();
+        if (p && !isPathwayMatch(p, selectedPathway)) return false;
       }
       if (selectedCategory && selectedCategory !== "All") {
         const c = String(ex.category ?? "").trim().toLowerCase();
@@ -70,18 +74,30 @@ export function StudyLibraryAdvancedFilters({
     [filtersData?.programs]
   );
 
-  // Cascade: when a program is selected, only offer courses that belong to it
+  // Cascade: when a program or track is selected, only offer courses that belong to it
   // (courses without a programId link remain available).
   const courseOptions = React.useMemo(() => {
     const courses = filtersData?.courses ?? [];
     const selected = value.program
       ? (filtersData?.programs ?? []).find((p) => p.name === value.program)
       : undefined;
+    const trackProgramId =
+      !selected && selectedPathway && selectedPathway !== "All"
+        ? programIdForPathway(selectedPathway)
+        : null;
     return courses
-      .filter((c) => !selected || !c.programId || c.programId === selected.id)
+      .filter((c) => {
+        if (selected) {
+          return !c.programId || c.programId === selected.id;
+        }
+        if (trackProgramId !== null && c.programId) {
+          return Number(c.programId) === trackProgramId;
+        }
+        return true;
+      })
       .map((c) => c.name)
       .filter(Boolean);
-  }, [filtersData?.courses, filtersData?.programs, value.program]);
+  }, [filtersData?.courses, filtersData?.programs, value.program, selectedPathway]);
 
   const activeEntries: Array<{ key: keyof AdvancedFilterState; label: string; display: string }> = [];
   if (value.school) activeEntries.push({ key: "school", label: "School", display: value.school });

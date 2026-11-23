@@ -7,6 +7,7 @@ import { LearnerShell } from "@/components/layout/learner-shell";
 import { StudyLibraryView } from "@/components/study/study-library-view";
 import { Badge } from "@/components/ui/badge";
 import { GraduationCap, Stethoscope, Award } from "lucide-react";
+import { formatPathwayShortLabel } from "@/lib/study-library/curriculum-consolidation";
 
 function LearnerExamsContent() {
   const searchParams = useSearchParams();
@@ -16,7 +17,7 @@ function LearnerExamsContent() {
   const trackTitles: Record<string, { title: string; subtitle: string; icon: React.ElementType }> = {
     All: {
       title: "All Nursing & Clinical Examination Tracks",
-      subtitle: "Complete published catalogue across RN, PN/LPN, Exit Predictors, TEAS, and Dosage Math.",
+      subtitle: "Complete published catalogue across RN, PN/LPN, Exit Predictors, and Dosage Math.",
       icon: GraduationCap,
     },
     RN: {
@@ -53,7 +54,7 @@ function LearnerExamsContent() {
     <div className="space-y-6">
       <div className="rounded-2xl border border-border bg-gradient-to-r from-surface via-surface to-brand-teal/5 p-6 space-y-2">
         <div className="flex items-center gap-2">
-          <Badge variant="teal">Pathway Track: {track}</Badge>
+          <Badge variant="teal">Pathway Track: {formatPathwayShortLabel(track)}</Badge>
           {category && <Badge variant="outline">{category}</Badge>}
         </div>
         <div className="flex items-center gap-3">

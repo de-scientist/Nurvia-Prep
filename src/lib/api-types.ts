@@ -365,6 +365,10 @@ export interface ActiveExamQuestionDto {
   questionType: QuestionType;
   cognitiveSkill: CognitiveSkill;
   clientNeedCategory: ClientNeedCategory;
+  difficulty?: string;
+  learningObjectives?: string[];
+  resources?: string;
+  prerequisites?: string;
   contentJsonData?: string;
   /** Only populated for Tutor-mode attempts. */
   generalRationale?: string;
@@ -397,6 +401,13 @@ export interface StartAttemptResultDto {
   examId: string;
   examNumericId?: number;
   examTitle: string;
+  pathway?: NursingPathway | string;
+  examCategory?: ExamCategory | string;
+  isTimed?: boolean;
+  passingScorePercentage?: number | null;
+  subjectName?: string;
+  topicName?: string;
+  learningObjectives?: string[];
   timeLimitMinutes: number;
   remainingSeconds: number;
   startedAtUtc: string;
@@ -427,6 +438,8 @@ export interface AutosaveResultDto {
   isAnswered: boolean;
   isFlagged: boolean;
   savedAtUtc: string;
+  backendSynced?: boolean;
+  syncWarning?: string;
 }
 
 export interface ReviewOptionDto {
@@ -458,10 +471,19 @@ export interface ReviewQuestionDto {
   questionType: QuestionType;
   cognitiveSkill: CognitiveSkill;
   clientNeedCategory: ClientNeedCategory;
+  difficulty?: string;
+  learningObjectives?: string[];
+  resources?: string;
+  prerequisites?: string;
   /** Null when the exam's review-release policy withholds rationales. */
   generalRationale?: string;
   learnerResponse?: string;
   isCorrect: boolean;
+  isPartiallyCorrect?: boolean;
+  isUnanswered?: boolean;
+  isFlagged?: boolean;
+  allowPartialCredit?: boolean;
+  scoringRule?: string;
   pointsAwarded: number;
   maxPoints: number;
   options: ReviewOptionDto[];
@@ -472,6 +494,20 @@ export interface ReviewQuestionDto {
   highlightPassage?: string;
   correctAnswerMeta?: QuestionCorrectAnswerMetaDto;
   contentIntegrityError?: string;
+}
+
+export interface AttemptCategoryPerformanceDto {
+  name: string;
+  total: number;
+  answered: number;
+  correct: number;
+  partiallyCorrect: number;
+  incorrect: number;
+  unanswered: number;
+  pointsAwarded: number;
+  maxPoints: number;
+  accuracyPercentage: number;
+  questionIds: string[];
 }
 
 /** Review-mode study content for a published exam (answer keys + rationales, no graded attempt). */
@@ -500,16 +536,28 @@ export interface SubmittedExamResultDto {
   submittedAtUtc: string;
   timeSpentSeconds: number;
   timeLimitMinutes?: number;
+  isTimed?: boolean;
   totalQuestions: number;
   totalAnswered?: number;
   correctQuestions: number;
+  partiallyCorrectQuestions?: number;
+  incorrectQuestions?: number;
+  unansweredQuestions?: number;
   totalWrong?: number;
+  rawScoreEarned?: number;
+  rawScoreMax?: number;
   scorePercentage: number;
-  passingScorePercentage: number;
-  passed: boolean;
+  passingScorePercentage: number | null;
+  passed: boolean | null;
   grade?: string;
+  subjectName?: string;
+  topicName?: string;
+  learningObjectives?: string[];
   reviewReleased: boolean;
   modePermissions?: ExamModePermissionsDto;
+  sectionBreakdown?: AttemptCategoryPerformanceDto[];
+  categoryBreakdown?: AttemptCategoryPerformanceDto[];
+  flaggedQuestionIds?: string[];
   reviewQuestions: ReviewQuestionDto[];
 }
 
@@ -523,8 +571,8 @@ export interface ExamAttemptSummaryDto {
   startedAtUtc: string;
   submittedAtUtc?: string;
   scorePercentage?: number;
-  passingScorePercentage?: number;
-  passed?: boolean;
+  passingScorePercentage?: number | null;
+  passed?: boolean | null;
   totalQuestions: number;
   totalCorrect?: number;
   totalWrong?: number;
@@ -618,15 +666,49 @@ export interface ReviewLectureRequest {
   comments: string;
 }
 
+export interface SourceSubjectIdentityDto {
+  programId: 6 | 9;
+  programName: string;
+  courseId?: string | number | null;
+  courseGuidId?: string | null;
+  courseName?: string | null;
+  courseSeries?: string | null;
+  subjectId: string;
+  subjectGuidId?: string | null;
+  code?: string;
+  rawName: string;
+  pathway: NursingPathway;
+  examCount: number;
+  questionCount: number;
+  equivalenceId?: string | null;
+}
+
+export interface SubjectEquivalenceDto {
+  verified: boolean;
+  status: 'VERIFIED_COMMON' | 'PROGRAM_EXCLUSIVE' | 'AMBIGUOUS_SEPARATE' | 'UNVERIFIED_SEPARATE';
+  evidenceType:
+    | 'authoritative-equivalence-id'
+    | 'parallel-curriculum-series-and-metadata'
+    | 'single-program-exclusive'
+    | 'ambiguous-excluded-from-merge'
+    | 'insufficient-equivalence-evidence'
+    | 'exit-pathway-isolated';
+  evidenceReference?: string;
+  matchedSeries?: string[];
+  disciplineKey?: string;
+}
+
 export interface SubjectCardDto {
   id: string;
   guidId?: string;
+  presentationId?: string;
   code: string;
   name: string;
   title: string;
   description: string;
   pathway: string;
   category: string;
+  classification?: 'COMMON' | 'RN_ONLY' | 'LPN_ONLY';
   programId?: string | number | null;
   programName?: string | null;
   courseId?: string | number | null;
@@ -640,11 +722,22 @@ export interface SubjectCardDto {
   availablePathways?: string[];
   rnExamCount?: number;
   pnExamCount?: number;
+  sourceSubjects?: {
+    rn: SourceSubjectIdentityDto[];
+    lpn: SourceSubjectIdentityDto[];
+  };
+  sourceSubjectIds?: string[];
+  equivalence?: SubjectEquivalenceDto;
+  ambiguityNotes?: string[];
+  examCountsVerified?: boolean;
   featuredExams?: Array<{
     id: string;
     title: string;
     totalQuestions: number;
     modeAllowed?: ExamDeliveryMode;
+    pathway?: NursingPathway | string;
+    programId?: 6 | 9;
+    subjectGuidId?: string;
   }>;
 }
 
@@ -659,6 +752,12 @@ export interface StudySetCardDto {
   timeLimitMinutes: number;
   passingScorePercentage: number;
   totalQuestions: number;
+  programId?: number | null;
+  programName?: string | null;
+  courseId?: string | number | null;
+  courseName?: string | null;
+  subjectId?: string | number | null;
+  subjectGuidId?: string | null;
   school?: string | null;
   academicYear?: number | null;
   season?: string | null;
@@ -774,6 +873,80 @@ export interface TutorSessionStateDto {
   attemptId: string;
   deliveryMode: 'Exam' | 'Tutor';
   questions: TutorQuestionStateDto[];
+}
+
+export type TutorActionType =
+  | 'explain_question'
+  | 'why_my_answer_incorrect'
+  | 'why_correct_better'
+  | 'explain_each_option'
+  | 'teach_concept'
+  | 'similar_practice'
+  | 'summarize_takeaway'
+  | 'custom_question';
+
+export interface TutorStructuredSectionDto {
+  stepNumber?: number;
+  heading: string;
+  body: string;
+}
+
+export interface TutorPracticePromptDto {
+  practiceId: string;
+  sourceQuestionId: string;
+  stem: string;
+  questionType: QuestionType;
+  options: Array<{ id: string; optionText: string }>;
+  instructions?: string;
+  isIsolatedPractice: true;
+}
+
+export interface TutorConversationMessageDto {
+  id: string;
+  role: 'learner' | 'tutor';
+  action?: TutorActionType;
+  content: string;
+  sections?: TutorStructuredSectionDto[];
+  practicePrompt?: TutorPracticePromptDto | null;
+  source: 'ai_llm' | 'grounded_clinical_coach';
+  providerLabel: string;
+  isAiGenerated: boolean;
+  officialDisclaimer: string;
+  createdAtUtc: string;
+}
+
+export interface TutorAssistRequestDto {
+  questionId: string;
+  action: TutorActionType;
+  userMessage?: string;
+  learnerContextNote?: string;
+}
+
+export interface TutorAssistResponseDto {
+  attemptId: string;
+  questionId: string;
+  message: TutorConversationMessageDto;
+  conversation: TutorConversationMessageDto[];
+  aiProviderConfigured: boolean;
+  disclosureNotice: string;
+  remainingTurns: number;
+}
+
+export interface TutorPracticeCheckRequestDto {
+  questionId: string;
+  practiceQuestionId: string;
+  responseJson: string;
+}
+
+export interface TutorPracticeCheckResponseDto {
+  practiceQuestionId: string;
+  isCorrect: boolean;
+  pointsAwarded: number;
+  maxPoints: number;
+  feedback: string;
+  officialRationale?: string;
+  isolatedFromAttempt: true;
+  checkedAtUtc: string;
 }
 
 export interface FlashcardDto {
@@ -1159,3 +1332,12 @@ export interface GlobalSearchResponseDto {
   items: GlobalSearchResultItemDto[];
   facets: GlobalSearchFacetDto[];
 }
+
+export type {
+  ApprovedTestimonialPathway,
+  AuthorizedTestimonialProgramId,
+  NormalizedTestimonial,
+  TestimonialBackendStatus,
+  TestimonialsCollectionResult,
+  TestimonialSource,
+} from './testimonials/testimonial-service';

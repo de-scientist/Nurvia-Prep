@@ -17,6 +17,11 @@ import {
 } from '@/lib/lexmacasto/client';
 import { STAFF_ROLES } from '@/lib/lexmacasto/proxy-allowlist';
 import { getServerCastoSession, validateSameOriginRequest } from '@/lib/lexmacasto/session';
+import {
+  getAuthorizedStudyLibraryIndex,
+  verifyAuthorizedNominalTarget,
+} from '@/lib/lexmacasto/study-library-index';
+import { parseStrictProgramId } from '@/lib/study-library/curriculum-consolidation';
 
 const ALLOWED_STRATA_QUERY_PARAMS = new Set([
   'page',
@@ -30,7 +35,9 @@ const ALLOWED_STRATA_QUERY_PARAMS = new Set([
   'dynamicSearch',
   'dynamicSortColumn',
   'dynamicSortDirection',
+  'dynamicLearningStrataName',
   'identifier',
+  'scope',
   'dynamicExamLayout',
   'dynamicExamMode',
   'dynamicAttemptNumber',
@@ -62,7 +69,10 @@ const ALLOWED_FETCH_TYPES = new Set<StrataFetchType>([
   'relative',
   'current',
   'live',
+  'nominal',
 ]);
+
+const ALLOWED_NOMINAL_LEVELS = new Set(['program', 'course', 'subject']);
 
 const PAGINATION_PAGE_KEYS = new Set(['page', 'skewPage', 'dynamicPage']);
 const PAGINATION_SIZE_KEYS = new Set(['perPage', 'skewPerPage', 'dynamicPerPage', 'limit']);
@@ -103,7 +113,9 @@ export async function GET(
     resolvedFetchType = requestedFetchType as StrataFetchType;
   }
 
-  const requiresAuth = endpointDef.requiresAuth || resolvedFetchType !== 'absolute';
+  const isNominalExamRead = resource === 'exams' && resolvedFetchType === 'nominal';
+  const requiresAuth =
+    endpointDef.requiresAuth || (resolvedFetchType !== 'absolute' && !isNominalExamRead);
   const session = await getServerCastoSession();
 
   if (requiresAuth && !session) {
@@ -147,19 +159,152 @@ export async function GET(
     queryParams[key] = value.slice(0, 200);
   }
 
-  const backendPath = buildStrataEndpointPath(resource, queryParams, resolvedFetchType);
   const siteMeta = extractSiteMetadataFromRequestHeaders(
     request.headers,
     `/api/strata/${resource}`
   );
+  const cacheHeader = requiresAuth ? 'no-store' : 'private, no-store';
+
+  // Server-side {6, 9} allowlist enforcement for learner-scoped absolute strata reads
+  if (
+    queryParams.scope === 'learner' &&
+    resolvedFetchType === 'absolute' &&
+    (resource === 'programs' || resource === 'courses' || resource === 'subjects' || resource === 'exams')
+  ) {
+    if (queryParams.programId && parseStrictProgramId(queryParams.programId) === null) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Requested program is outside the authorized RN (9) and LPN (6) Study Library allowlist.',
+          errorCode: 'FORBIDDEN',
+        },
+        { status: 403, headers: { 'Cache-Control': cacheHeader } }
+      );
+    }
+
+    const index = await getAuthorizedStudyLibraryIndex(siteMeta, session);
+    if (!index.complete && index.programs.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Unable to retrieve authorized RN/LPN curriculum records.',
+          errorCode: 'BACKEND_ERROR',
+        },
+        { status: 502, headers: { 'Cache-Control': cacheHeader } }
+      );
+    }
+
+    const pool =
+      resource === 'programs'
+        ? index.programs
+        : resource === 'courses'
+          ? index.courses
+          : resource === 'subjects'
+            ? index.subjects
+            : index.allAuthorizedExams;
+
+    const requestedPid = queryParams.programId ? parseStrictProgramId(queryParams.programId) : null;
+    const filteredPool = requestedPid
+      ? pool.filter((item) => {
+          const itemPid =
+            resource === 'programs'
+              ? parseStrictProgramId(item.id)
+              : parseStrictProgramId(item.programId);
+          return itemPid === requestedPid;
+        })
+      : pool;
+
+    const page = Math.max(
+      1,
+      Number(queryParams.page ?? queryParams.skewPage ?? queryParams.dynamicPage ?? 1) || 1
+    );
+    const perPage = Math.max(
+      1,
+      Math.min(
+        250,
+        Number(
+          queryParams.perPage ??
+            queryParams.skewPerPage ??
+            queryParams.dynamicPerPage ??
+            queryParams.limit ??
+            250
+        ) || 250
+      )
+    );
+    const total = filteredPool.length;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+    const pagedItems = filteredPool.slice((page - 1) * perPage, page * perPage);
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'OK',
+        data: {
+          items: pagedItems,
+          skewPage: page,
+          skewPerPage: perPage,
+          skewTotal: total,
+          skewTotalPages: totalPages,
+        },
+      },
+      { headers: { 'Cache-Control': cacheHeader } }
+    );
+  }
+
+  // Server-side {6, 9} allowlist enforcement for nominal examination reads
+  let nominalTarget: {
+    programId: 6 | 9;
+    level: 'program' | 'course' | 'subject';
+    identifier: string;
+    subjectId?: string;
+    subjectGuidId?: string | null;
+  } | null = null;
+  if (isNominalExamRead) {
+    const levelRaw = (queryParams.dynamicLearningStrataName || '').trim().toLowerCase();
+    const identifier = (queryParams.identifier || '').trim();
+    if (!identifier || !ALLOWED_NOMINAL_LEVELS.has(levelRaw)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Nominal exam queries require a valid identifier and learning stratum (program, course, or subject).',
+          errorCode: 'VALIDATION_ERROR',
+        },
+        { status: 400, headers: { 'Cache-Control': cacheHeader } }
+      );
+    }
+
+    const level = levelRaw as 'program' | 'course' | 'subject';
+    const verification = await verifyAuthorizedNominalTarget(level, identifier, siteMeta, session);
+    if (!verification.authorized) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: verification.reason,
+          errorCode: 'FORBIDDEN',
+        },
+        { status: 403, headers: { 'Cache-Control': cacheHeader } }
+      );
+    }
+
+    nominalTarget = {
+      programId: verification.programId,
+      level,
+      identifier: verification.canonicalIdentifier,
+      subjectId: verification.subjectId,
+      subjectGuidId: verification.subjectGuidId,
+    };
+  }
+
+  const backendParams = { ...queryParams };
+  delete backendParams.scope;
+
+  const backendPath = buildStrataEndpointPath(resource, backendParams, resolvedFetchType);
 
   const result = await lexmaCastoRequest(backendPath, {
     method: 'GET',
     session,
     siteMeta,
   });
-
-  const cacheHeader = requiresAuth ? 'no-store' : 'private, no-store';
 
   if (!result.ok) {
     return NextResponse.json(
@@ -183,6 +328,47 @@ export async function GET(
       },
       { status: 502, headers: { 'Cache-Control': cacheHeader } }
     );
+  }
+
+  if (nominalTarget) {
+    const allowedItems = normalized.data.items.filter((item) => {
+      if (parseStrictProgramId(item.programId) !== nominalTarget.programId) {
+        return false;
+      }
+      if (nominalTarget.level === 'subject') {
+        const subGuid =
+          typeof item.subjectGuidId === 'string' ? item.subjectGuidId.trim().toLowerCase() : '';
+        const subId =
+          item.subjectId !== undefined && item.subjectId !== null ? String(item.subjectId).trim() : '';
+        const expectedGuid =
+          typeof nominalTarget.subjectGuidId === 'string' && nominalTarget.subjectGuidId.trim()
+            ? nominalTarget.subjectGuidId.trim().toLowerCase()
+            : null;
+        const expectedNumId = nominalTarget.subjectId?.trim() || null;
+        if (expectedGuid && subGuid && subGuid !== expectedGuid) {
+          return false;
+        }
+        if (expectedNumId && subId && subId !== expectedNumId) {
+          return false;
+        }
+        if (!expectedGuid && !expectedNumId) {
+          const targetLower = nominalTarget.identifier.toLowerCase();
+          if ((subGuid && subGuid !== targetLower) || (subId && subId !== nominalTarget.identifier)) {
+            return false;
+          }
+        }
+      }
+      return true;
+    });
+
+    if (allowedItems.length !== normalized.data.items.length) {
+      normalized.data = {
+        ...normalized.data,
+        items: allowedItems,
+        skewTotal: allowedItems.length,
+        skewTotalPages: 1,
+      };
+    }
   }
 
   return NextResponse.json(normalized, {

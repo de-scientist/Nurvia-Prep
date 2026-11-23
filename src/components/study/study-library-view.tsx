@@ -28,6 +28,10 @@ import {
 import { StudySetCard } from "./StudySetCard";
 import { SubjectCard } from "./SubjectCard";
 import { useFeedback } from "@/lib/feedback/feedback-context";
+import {
+  isPathwayMatch,
+  programIdForPathway,
+} from "@/lib/study-library/curriculum-consolidation";
 
 interface StudyLibraryViewProps {
   isPublic?: boolean;
@@ -67,6 +71,15 @@ export function StudyLibraryView({
   const [category, setCategory] = React.useState<string>(queryCategory);
   const [searchInput, setSearchInput] = React.useState(searchParams?.get("q") || "");
   const [debouncedSearch, setDebouncedSearch] = React.useState(searchInput);
+  const [selectedSubjectIds, setSelectedSubjectIds] = React.useState<string[]>(() =>
+    (searchParams?.get("subjectIds") || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+  );
+  const [selectedProgramId, setSelectedProgramId] = React.useState<string>(
+    () => searchParams?.get("programId")?.trim() || ""
+  );
   const [advanced, setAdvanced] = React.useState<AdvancedFilterState>({
     school: searchParams?.get("school") || "",
     academicYear: searchParams?.get("year") || "",
@@ -96,26 +109,68 @@ export function StudyLibraryView({
   const [retryCount, setRetryCount] = React.useState(0);
   const hasLoadedOnceRef = React.useRef(false);
   const latestRequestIdRef = React.useRef(0);
+  const selectedCardRef = React.useRef<SubjectCardDto | null>(null);
+  const lastKnownUrlQsRef = React.useRef<string | null>(null);
   const { showSuccess, showError, showInfo } = useFeedback();
 
-  const isExamView = Boolean(advanced.subject || advanced.examId);
+  const isExamView = Boolean(advanced.subject || advanced.examId || selectedSubjectIds.length > 0);
   const isInitialLoading = loading && !hasLoadedOnceRef.current;
   const isUpdating = loading && hasLoadedOnceRef.current;
 
   // Debounce search input
   React.useEffect(() => {
     const timer = window.setTimeout(() => {
-      setDebouncedSearch(searchInput);
-      setPageNumber(1);
+      setDebouncedSearch((prev) => {
+        if (prev !== searchInput) {
+          setPageNumber(1);
+        }
+        return searchInput;
+      });
     }, 300);
     return () => window.clearTimeout(timer);
   }, [searchInput]);
 
-  // Sync incoming route track/category props
+  // Sync external URL navigation (e.g., browser Back/Forward, route changes) cleanly
   React.useEffect(() => {
+    const currentQs = searchParams?.toString() ?? "";
+    if (lastKnownUrlQsRef.current === null) {
+      lastKnownUrlQsRef.current = currentQs;
+      setPathway(queryTrack);
+      setCategory(queryCategory);
+      return;
+    }
+    if (currentQs === lastKnownUrlQsRef.current) {
+      return;
+    }
+    lastKnownUrlQsRef.current = currentQs;
     setPathway(queryTrack);
     setCategory(queryCategory);
-  }, [queryTrack, queryCategory]);
+    const qSearch = searchParams?.get("q") || "";
+    setSearchInput(qSearch);
+    setDebouncedSearch(qSearch);
+    setSelectedSubjectIds(
+      (searchParams?.get("subjectIds") || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    );
+    setSelectedProgramId(searchParams?.get("programId")?.trim() || "");
+    selectedCardRef.current = null;
+    setAdvanced({
+      school: searchParams?.get("school") || "",
+      academicYear: searchParams?.get("year") || "",
+      subject: searchParams?.get("subject") || "",
+      season: searchParams?.get("season") || "",
+      examId: searchParams?.get("examId") || "",
+      topic: searchParams?.get("topic") || "",
+      difficulty: searchParams?.get("difficulty") || "",
+      questionType: searchParams?.get("questionType") || "",
+      savedOnly: searchParams?.get("saved") === "true",
+      program: searchParams?.get("program") || "",
+      course: searchParams?.get("course") || "",
+    });
+    setPageNumber(Math.max(1, Number(searchParams?.get("page") || "1") || 1));
+  }, [searchParams, queryTrack, queryCategory]);
 
   // Fetch data-driven filters & live catalog summary once
   React.useEffect(() => {
@@ -137,7 +192,7 @@ export function StudyLibraryView({
     };
   }, []);
 
-  // Sync URL query params
+  // Sync URL query params from committed filter/navigation state
   React.useEffect(() => {
     const params = new URLSearchParams();
     if (pathway !== "All") {
@@ -150,6 +205,8 @@ export function StudyLibraryView({
     if (advanced.school) params.set("school", advanced.school);
     if (advanced.academicYear) params.set("year", advanced.academicYear);
     if (advanced.subject) params.set("subject", advanced.subject);
+    if (selectedProgramId) params.set("programId", selectedProgramId);
+    if (selectedSubjectIds.length > 0) params.set("subjectIds", selectedSubjectIds.join(","));
     if (advanced.season) params.set("season", advanced.season);
     if (advanced.examId) params.set("examId", advanced.examId);
     if (advanced.topic) params.set("topic", advanced.topic);
@@ -161,9 +218,24 @@ export function StudyLibraryView({
     if (pageNumber > 1) params.set("page", String(pageNumber));
 
     const qs = params.toString();
+    if (lastKnownUrlQsRef.current === qs) {
+      return;
+    }
+    lastKnownUrlQsRef.current = qs;
     const nextUrl = qs ? `${pathname}?${qs}` : pathname;
     router.replace(nextUrl, { scroll: false });
-  }, [pathname, router, pathway, category, debouncedSearch, advanced, pageNumber, initialTrack]);
+  }, [
+    pathname,
+    router,
+    pathway,
+    category,
+    debouncedSearch,
+    advanced,
+    selectedProgramId,
+    selectedSubjectIds,
+    pageNumber,
+    initialTrack,
+  ]);
 
   // Fetch paginated subjects (subject-first catalogue) or examinations
   React.useEffect(() => {
@@ -179,6 +251,8 @@ export function StudyLibraryView({
       school: advanced.school || undefined,
       academicYear: advanced.academicYear ? Number(advanced.academicYear) : undefined,
       subject: advanced.subject || undefined,
+      subjectIds: selectedSubjectIds.length > 0 ? selectedSubjectIds.join(",") : undefined,
+      programId: selectedProgramId || undefined,
       season: advanced.season || undefined,
       examId: advanced.examId || undefined,
       topic: advanced.topic || undefined,
@@ -226,7 +300,7 @@ export function StudyLibraryView({
     return () => {
       active = false;
     };
-  }, [pathway, category, debouncedSearch, advanced, pageNumber, retryCount, isExamView]);
+  }, [pathway, category, debouncedSearch, advanced, selectedSubjectIds, selectedProgramId, pageNumber, retryCount, isExamView]);
 
   const handleToggleSave = async (studySet: StudySetCardDto) => {
     const nextSaved = !studySet.isSaved;
@@ -250,10 +324,13 @@ export function StudyLibraryView({
   };
 
   const handleClearAllFilters = () => {
+    selectedCardRef.current = null;
     setPathway("All");
     setCategory("All");
     setSearchInput("");
     setDebouncedSearch("");
+    setSelectedSubjectIds([]);
+    setSelectedProgramId("");
     setAdvanced({
       ...DEFAULT_ADVANCED,
       program: "",
@@ -266,6 +343,8 @@ export function StudyLibraryView({
     pathway !== "All" ||
     category !== "All" ||
     debouncedSearch.trim().length > 0 ||
+    selectedSubjectIds.length > 0 ||
+    Boolean(selectedProgramId) ||
     Object.values(advanced).some(Boolean);
 
   return (
@@ -288,9 +367,44 @@ export function StudyLibraryView({
           if (category === "ExitPredictor" && next !== "All" && next !== "RN_Exit" && next !== "PN_Exit") {
             setCategory("All");
           }
-          if (advanced.examId) {
+          if (isExamView) {
+            const activeCard =
+              selectedCardRef.current ??
+              subjects.find((s) => s.title === advanced.subject) ??
+              null;
+            if (next === "All") {
+              selectedCardRef.current = null;
+              setSelectedSubjectIds([]);
+              setSelectedProgramId("");
+              setAdvanced((prev) => ({ ...prev, subject: "", examId: "" }));
+            } else if (activeCard) {
+              const candidateSources = [
+                ...(activeCard.sourceSubjects?.rn ?? []),
+                ...(activeCard.sourceSubjects?.lpn ?? []),
+              ].filter((src) => isPathwayMatch(src.pathway, next));
+              if (candidateSources.length > 0) {
+                const nextProgId = candidateSources[0].programId;
+                const nextIds = candidateSources
+                  .map((s) => s.subjectGuidId ?? s.subjectId)
+                  .filter(Boolean);
+                setSelectedProgramId(String(nextProgId));
+                setSelectedSubjectIds(nextIds);
+                setAdvanced((prev) => ({ ...prev, examId: "" }));
+              } else {
+                selectedCardRef.current = null;
+                setSelectedSubjectIds([]);
+                setSelectedProgramId("");
+                setAdvanced((prev) => ({ ...prev, subject: "", examId: "" }));
+              }
+            } else {
+              const nextProgId = programIdForPathway(next);
+              setSelectedSubjectIds([]);
+              setSelectedProgramId(nextProgId ? String(nextProgId) : "");
+              setAdvanced((prev) => ({ ...prev, examId: "" }));
+            }
+          } else if (advanced.examId) {
             const selectedExam = filtersData?.exams.find((e) => e.id === advanced.examId);
-            if (!selectedExam || (next !== "All" && String(selectedExam.pathway ?? "").toLowerCase() !== next.toLowerCase())) {
+            if (!selectedExam || (next !== "All" && !isPathwayMatch(String(selectedExam.pathway ?? ""), next))) {
               setAdvanced((prev) => ({ ...prev, examId: "" }));
             }
           }
@@ -316,6 +430,11 @@ export function StudyLibraryView({
         value={advanced}
         isPublic={isPublic}
         onChange={(patch) => {
+          if ("program" in patch || "course" in patch || "subject" in patch) {
+            selectedCardRef.current = null;
+            setSelectedSubjectIds([]);
+            setSelectedProgramId("");
+          }
           setAdvanced((prev) => {
             const next = { ...prev, ...patch };
             // Cascading: clear downstream filters when upstream changes
@@ -368,6 +487,9 @@ export function StudyLibraryView({
               <button
                 type="button"
                 onClick={() => {
+                  selectedCardRef.current = null;
+                  setSelectedSubjectIds([]);
+                  setSelectedProgramId("");
                   setAdvanced((prev) => ({ ...prev, subject: "", examId: "" }));
                   setPageNumber(1);
                 }}
@@ -391,6 +513,9 @@ export function StudyLibraryView({
             variant="outline"
             size="sm"
             onClick={() => {
+              selectedCardRef.current = null;
+              setSelectedSubjectIds([]);
+              setSelectedProgramId("");
               setAdvanced((prev) => ({ ...prev, subject: "", examId: "" }));
               setPageNumber(1);
             }}
@@ -470,13 +595,29 @@ export function StudyLibraryView({
           <div className={cn("grid gap-4 md:grid-cols-2 xl:grid-cols-3 transition-opacity duration-200", isUpdating && "opacity-60 pointer-events-none")}>
             {subjects.map((subject) => (
               <SubjectCard
-                key={subject.id}
+                key={subject.presentationId ?? subject.id}
                 subject={subject}
                 isPublic={isPublic}
+                activePathway={pathway}
+                onSelectSubjectSource={(selection) => {
+                  selectedCardRef.current = selection.card;
+                  setPathway(selection.pathway);
+                  setSelectedProgramId(String(selection.programId));
+                  setSelectedSubjectIds(selection.subjectIds);
+                  setAdvanced((prev) => ({
+                    ...prev,
+                    subject: selection.subjectName,
+                    examId: selection.examId ?? "",
+                  }));
+                  setPageNumber(1);
+                }}
                 onSelectSubject={(subjectName, selectedPathway) => {
                   if (selectedPathway) {
-                    setPathway(selectedPathway as any);
+                    setPathway(selectedPathway);
+                    const pid = programIdForPathway(selectedPathway);
+                    setSelectedProgramId(pid ? String(pid) : "");
                   }
+                  setSelectedSubjectIds([]);
                   setAdvanced((prev) => ({ ...prev, subject: subjectName, examId: "" }));
                   setPageNumber(1);
                 }}

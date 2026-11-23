@@ -387,7 +387,7 @@ export function isStrataResourceKey(value: string): value is StrataResourceKey {
   return Object.prototype.hasOwnProperty.call(LEXMACASTO_STRATA_ENDPOINTS, value);
 }
 
-export type StrataFetchType = 'absolute' | 'distinct' | 'relative' | 'current' | 'live';
+export type StrataFetchType = 'absolute' | 'distinct' | 'relative' | 'current' | 'live' | 'nominal';
 export type StrataMutationAction = 'store' | 'update' | 'delete';
 
 /**

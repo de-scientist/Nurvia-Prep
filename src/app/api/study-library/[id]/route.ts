@@ -4,6 +4,10 @@ import { buildStrataEndpointPath } from '@/lib/lexmacasto/contracts';
 import { getServerCastoSession } from '@/lib/lexmacasto/session';
 import { inferExamCategory, inferExamDeliveryMode, inferExamPathway } from '@/lib/api-client';
 import type { StudySetDetailDto, StudySetCardDto, ExamLayoutPolicy, ExamLayout, DifficultyLevel } from '@/lib/api-types';
+import {
+  getAuthorizedStudyLibraryIndex,
+  verifyAuthorizedStudySetExam,
+} from '@/lib/lexmacasto/study-library-index';
 
 const NO_STORE_HEADERS = {
   'Cache-Control': 'no-store, no-cache, must-revalidate, private',
@@ -72,82 +76,113 @@ export async function GET(
     );
   }
 
-  const totalQuestions = Number(rawItem.questionsCount ?? rawItem.totalQuestions ?? 0);
-  const timeLimitMinutes = Number(rawItem.duration ?? rawItem.timeLimitMinutes ?? 0);
-  const passingScorePercentage = Number(rawItem.passMark ?? rawItem.passingScorePercentage ?? 75);
+  const index = await getAuthorizedStudyLibraryIndex(siteMeta, session);
+  const verification = verifyAuthorizedStudySetExam(rawItem, index);
+  if (!verification.authorized || !verification.enriched) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'This examination is not available in the published Study Library.',
+        errorCode: 'NOT_FOUND',
+      },
+      { status: 404, headers: NO_STORE_HEADERS }
+    );
+  }
+
+  const verifiedItem = verification.enriched;
+
+  const totalQuestions = Number(verifiedItem.questionsCount ?? verifiedItem.totalQuestions ?? 0);
+  const timeLimitMinutes = Number(verifiedItem.duration ?? verifiedItem.timeLimitMinutes ?? 0);
+  const passingScorePercentage = Number(verifiedItem.passMark ?? verifiedItem.passingScorePercentage ?? 75);
 
   const cardDto: StudySetCardDto = {
-    id: String(rawItem.guidId ?? rawItem.id ?? trimmedId),
-    code: String(rawItem.code ?? rawItem.guidId ?? trimmedId),
-    title: String(rawItem.title ?? rawItem.name ?? 'Published Examination Set'),
+    id: String(verifiedItem.guidId ?? verifiedItem.id ?? trimmedId),
+    code: String(verifiedItem.code ?? verifiedItem.guidId ?? trimmedId),
+    title: String(verifiedItem.title ?? verifiedItem.name ?? 'Published Examination Set'),
     description: String(
-      rawItem.description ??
+      verifiedItem.description ??
         'Published examination set retrieved directly from the authoritative assessment bank.'
     ),
-    pathway: inferExamPathway(rawItem),
-    category: inferExamCategory(rawItem),
-    modeAllowed: inferExamDeliveryMode(rawItem),
+    pathway: inferExamPathway(verifiedItem),
+    category: inferExamCategory(verifiedItem),
+    modeAllowed: inferExamDeliveryMode(verifiedItem),
     timeLimitMinutes: Number.isFinite(timeLimitMinutes) && timeLimitMinutes > 0 ? timeLimitMinutes : 60,
     passingScorePercentage: Number.isFinite(passingScorePercentage) ? passingScorePercentage : 75,
     totalQuestions: Number.isFinite(totalQuestions) && totalQuestions >= 0 ? totalQuestions : 0,
+    programId: typeof verifiedItem.programId === 'number' ? verifiedItem.programId : null,
+    programName: typeof verifiedItem.programName === 'string' ? verifiedItem.programName : null,
+    courseId:
+      typeof verifiedItem.courseId === 'number' || typeof verifiedItem.courseId === 'string'
+        ? verifiedItem.courseId
+        : null,
+    courseName: typeof verifiedItem.courseName === 'string' ? verifiedItem.courseName : null,
+    subjectId:
+      typeof verifiedItem.subjectId === 'number' || typeof verifiedItem.subjectId === 'string'
+        ? verifiedItem.subjectId
+        : null,
+    subjectGuidId:
+      typeof verifiedItem.subjectGuidId === 'string' ? verifiedItem.subjectGuidId : null,
     school:
-      typeof rawItem.schoolName === 'string' && rawItem.schoolName.trim()
-        ? rawItem.schoolName.trim()
-        : typeof rawItem.school === 'string' && rawItem.school.trim()
-          ? rawItem.school.trim()
+      typeof verifiedItem.schoolName === 'string' && verifiedItem.schoolName.trim()
+        ? verifiedItem.schoolName.trim()
+        : typeof verifiedItem.school === 'string' && verifiedItem.school.trim()
+          ? verifiedItem.school.trim()
           : null,
     academicYear:
-      typeof rawItem.year === 'number'
-        ? rawItem.year
-        : typeof rawItem.academicYear === 'number'
-          ? rawItem.academicYear
+      typeof verifiedItem.year === 'number'
+        ? verifiedItem.year
+        : typeof verifiedItem.academicYear === 'number'
+          ? verifiedItem.academicYear
           : null,
-    season: typeof rawItem.season === 'string' && rawItem.season.trim() ? rawItem.season.trim() : null,
+    season:
+      typeof verifiedItem.season === 'string' && verifiedItem.season.trim()
+        ? verifiedItem.season.trim()
+        : null,
     subject:
-      typeof rawItem.subjectName === 'string' && rawItem.subjectName.trim()
-        ? rawItem.subjectName.trim()
-        : typeof rawItem.subject === 'string' && rawItem.subject.trim()
-          ? rawItem.subject.trim()
+      typeof verifiedItem.subjectName === 'string' && verifiedItem.subjectName.trim()
+        ? verifiedItem.subjectName.trim()
+        : typeof verifiedItem.subject === 'string' && verifiedItem.subject.trim()
+          ? verifiedItem.subject.trim()
           : null,
     topic:
-      typeof rawItem.topicName === 'string' && rawItem.topicName.trim()
-        ? rawItem.topicName.trim()
-        : typeof rawItem.topic === 'string' && rawItem.topic.trim()
-          ? rawItem.topic.trim()
+      typeof verifiedItem.topicName === 'string' && verifiedItem.topicName.trim()
+        ? verifiedItem.topicName.trim()
+        : typeof verifiedItem.topic === 'string' && verifiedItem.topic.trim()
+          ? verifiedItem.topic.trim()
           : null,
-    difficulty: (typeof rawItem.difficulty === 'string' && rawItem.difficulty.trim()
-      ? rawItem.difficulty.trim()
+    difficulty: (typeof verifiedItem.difficulty === 'string' && verifiedItem.difficulty.trim()
+      ? verifiedItem.difficulty.trim()
       : null) as DifficultyLevel | null,
-    allowedLayouts: (typeof rawItem.allowedLayouts === 'string' && rawItem.allowedLayouts && rawItem.allowedLayouts !== 'Any'
-      ? rawItem.allowedLayouts
+    allowedLayouts: (typeof verifiedItem.allowedLayouts === 'string' && verifiedItem.allowedLayouts && verifiedItem.allowedLayouts !== 'Any'
+      ? verifiedItem.allowedLayouts
       : 'Both') as ExamLayoutPolicy,
-    defaultLayout: (typeof rawItem.defaultLayout === 'string' && rawItem.defaultLayout && rawItem.defaultLayout !== 'Classic'
-      ? rawItem.defaultLayout
+    defaultLayout: (typeof verifiedItem.defaultLayout === 'string' && verifiedItem.defaultLayout && verifiedItem.defaultLayout !== 'Classic'
+      ? verifiedItem.defaultLayout
       : 'Sequential') as ExamLayout,
     averageRating:
-      typeof rawItem.averageRating === 'number'
-        ? rawItem.averageRating
-        : typeof rawItem.rating === 'number' && rawItem.rating > 0
-          ? Number((rawItem.rating / 20).toFixed(1))
+      typeof verifiedItem.averageRating === 'number'
+        ? verifiedItem.averageRating
+        : typeof verifiedItem.rating === 'number' && verifiedItem.rating > 0
+          ? Number((verifiedItem.rating / 20).toFixed(1))
           : null,
-    reviewCount: Number(rawItem.reviewCount ?? 0),
+    reviewCount: Number(verifiedItem.reviewCount ?? 0),
     isSaved: false,
   };
 
-  const subjectsCovered = [rawItem.subjectName, rawItem.courseName, rawItem.programName]
+  const subjectsCovered = [verifiedItem.subjectName, verifiedItem.courseName, verifiedItem.programName]
     .filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
-  const topicsCovered = [rawItem.topicName, rawItem.unitName, rawItem.lessonName]
+  const topicsCovered = [verifiedItem.topicName, verifiedItem.unitName, verifiedItem.lessonName]
     .filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
 
   const detailDto: StudySetDetailDto = {
     ...cardDto,
     instructions:
-      typeof rawItem.instructions === 'string' && rawItem.instructions.trim()
-        ? rawItem.instructions.trim()
+      typeof verifiedItem.instructions === 'string' && verifiedItem.instructions.trim()
+        ? verifiedItem.instructions.trim()
         : 'Answer all questions carefully and within the allocated time using current clinical judgment standards.',
     learningObjectives:
-      typeof rawItem.objectives === 'string' && rawItem.objectives.trim()
-        ? rawItem.objectives
+      typeof verifiedItem.objectives === 'string' && verifiedItem.objectives.trim()
+        ? verifiedItem.objectives
             .split(/\r?\n|;/)
             .map((s: string) => s.trim())
             .filter(Boolean)

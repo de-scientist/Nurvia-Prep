@@ -3,6 +3,7 @@
 import * as React from "react";
 import { BookOpen, HelpCircle, Layers } from "lucide-react";
 import type { StudyLibrarySummaryDto } from "@/lib/api-types";
+import { formatPathwayLabel } from "@/lib/study-library/curriculum-consolidation";
 
 interface StudyLibraryHeaderProps {
   isPublic?: boolean;
@@ -33,7 +34,7 @@ export function StudyLibraryHeader({ isPublic = false, summary, selectedPathway,
           </h2>
           {selectedPathway && (
             <span className="text-xs font-medium text-brand-teal">
-              {selectedPathway.replace("_", " ")} (RN)
+              {formatPathwayLabel(selectedPathway)}
             </span>
           )}
         </div>
