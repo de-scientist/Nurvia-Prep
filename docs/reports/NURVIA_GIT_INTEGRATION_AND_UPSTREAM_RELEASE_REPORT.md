@@ -75,7 +75,7 @@ Four structured, conventional commits were created to encapsulate all working-tr
 - **Files Changed (3 files, +1044 / -0):**
   - `tests/nurvia-exam-experience-remediation.test.mjs`: 17 automated tests covering full lifecycle and normalization
   - `docs/reports/NURVIA_EXAMINATION_EXPERIENCE_REMEDIATION_REPORT.md`: Comprehensive engineering report
-  - `fix-implementation.md`: Root remediation mirror
+  - `remediation/fix-implementation.md`: Remediation report
 
 ### Excluded Files
 - No legitimate deliverables were excluded.
