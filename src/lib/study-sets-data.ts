@@ -17,7 +17,7 @@ export interface SampleQuestion {
 export interface StudentTestimonial {
   id: string;
   displayName: string;
-  examTrack: "RN" | "LPN / PN";
+  examTrack: string; // subject focus (e.g. "Pharmacology", "Pathophysiology", "Med-Surg Clinicals"); separate from pathway
   pathway: "RN" | "PN_LPN";
   programId: 9 | 6;
   resultStatus: string;
@@ -26,7 +26,7 @@ export interface StudentTestimonial {
   avatarUrl?: string;
   scoreOrLevel?: string;
   roleOrQualification?: string;
-  source: "verified_backend";
+  source: "verified_backend" | "approved_local";
   isSample: false;
 }
 

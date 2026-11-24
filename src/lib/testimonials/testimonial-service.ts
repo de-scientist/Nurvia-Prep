@@ -4,10 +4,11 @@ import {
   parseStrictProgramId,
   RN_PROGRAM_ID,
 } from '../study-library/curriculum-consolidation';
+import type { StudentTestimonial } from '../study-sets-data';
 
 export type ApprovedTestimonialPathway = 'RN' | 'PN_LPN';
 export type AuthorizedTestimonialProgramId = typeof LPN_PROGRAM_ID | typeof RN_PROGRAM_ID;
-export type TestimonialSource = 'verified_backend' | 'none';
+export type TestimonialSource = 'verified_backend' | 'approved_local' | 'none';
 export type TestimonialBackendStatus =
   | 'available_with_records'
   | 'empty'
@@ -28,7 +29,7 @@ export interface NormalizedTestimonial {
   publishedStatus: 'published';
   displayOrder?: number;
   createdAtUtc?: string;
-  source: 'verified_backend';
+  source: 'verified_backend' | 'approved_local';
   isVerified: boolean;
   isSample: false;
 }
@@ -41,6 +42,7 @@ export interface TestimonialsCollectionResult {
   eligibleBackendCount: number;
   rejectedBackendCount: number;
   endpointChecked: boolean;
+  localFallbackUsed: boolean;
 }
 
 const PROHIBITED_TESTIMONIAL_TEXT_PATTERN =
@@ -377,6 +379,14 @@ export function normalizeSingleTestimonial(
 
   const createdAtUtc = pickFirstNonEmptyString(raw, ['createdAtUtc', 'createdAt', 'publishedAt']);
 
+  // Determine source: preserve explicitly provided source, default to verified_backend for backend records
+  const rawSource = pickFirstNonEmptyString(raw, ['source']);
+  const normalizedSource: 'verified_backend' | 'approved_local' =
+    rawSource === 'approved_local' ? 'approved_local' : 'verified_backend';
+
+  // isVerified is authoritative only when source is verified_backend; local fallback is never backend-verified
+  const isVerified = normalizedSource === 'verified_backend' ? resolveAuthoritativeVerification(raw) : false;
+
   return {
     id,
     content,
@@ -389,8 +399,8 @@ export function normalizeSingleTestimonial(
     publishedStatus: 'published',
     displayOrder,
     createdAtUtc: createdAtUtc ?? undefined,
-    source: 'verified_backend',
-    isVerified: resolveAuthoritativeVerification(raw),
+    source: normalizedSource,
+    isVerified,
     isSample: false,
   };
 }
@@ -509,6 +519,7 @@ export function resolveTestimonialsCollection(params: {
   backendPayload?: unknown;
   backendStatusOverride?: TestimonialBackendStatus;
   pathwayFilter?: ApprovedTestimonialPathway;
+  localFallback?: StudentTestimonial[];
 }): TestimonialsCollectionResult {
   const {
     backendAttempted,
@@ -516,6 +527,7 @@ export function resolveTestimonialsCollection(params: {
     backendPayload,
     backendStatusOverride,
     pathwayFilter,
+    localFallback,
   } = params;
 
   if (!backendAttempted) {
@@ -527,23 +539,53 @@ export function resolveTestimonialsCollection(params: {
       eligibleBackendCount: 0,
       rejectedBackendCount: 0,
       endpointChecked: false,
+      localFallbackUsed: false,
     };
   }
 
   if (!backendOk) {
+    // Endpoint error — activate approved local fallback if available
+    if (localFallback && localFallback.length > 0) {
+      const filtered = normalizeAndFilterTestimonials(localFallback, pathwayFilter);
+      return {
+        items: filtered.eligible,
+        source: 'approved_local',
+        backendStatus: 'upstream_error',
+        totalReceivedFromBackend: 0,
+        eligibleBackendCount: 0,
+        rejectedBackendCount: filtered.rejectedCount,
+        endpointChecked: true,
+        localFallbackUsed: true,
+      };
+    }
     return {
       items: [],
       source: 'none',
-      backendStatus: backendStatusOverride ?? 'upstream_error',
+      backendStatus: 'upstream_error',
       totalReceivedFromBackend: 0,
       eligibleBackendCount: 0,
       rejectedBackendCount: 0,
       endpointChecked: true,
+      localFallbackUsed: false,
     };
   }
 
   const filtered = normalizeAndFilterBackendTestimonials(backendPayload, pathwayFilter);
   if (!filtered.validPayload) {
+    // Malformed response — activate approved local fallback if available
+    if (localFallback && localFallback.length > 0) {
+      const filtered = normalizeAndFilterTestimonials(localFallback, pathwayFilter);
+      return {
+        items: filtered.eligible,
+        source: 'approved_local',
+        backendStatus: 'malformed_response',
+        totalReceivedFromBackend: 0,
+        eligibleBackendCount: 0,
+        rejectedBackendCount: filtered.rejectedCount,
+        endpointChecked: true,
+        localFallbackUsed: true,
+      };
+    }
     return {
       items: [],
       source: 'none',
@@ -552,6 +594,7 @@ export function resolveTestimonialsCollection(params: {
       eligibleBackendCount: 0,
       rejectedBackendCount: 0,
       endpointChecked: true,
+      localFallbackUsed: false,
     };
   }
 
@@ -564,6 +607,22 @@ export function resolveTestimonialsCollection(params: {
       eligibleBackendCount: filtered.eligible.length,
       rejectedBackendCount: filtered.rejectedCount,
       endpointChecked: true,
+      localFallbackUsed: false,
+    };
+  }
+
+  // Backend returned zero eligible records — activate approved local fallback if available
+  if (localFallback && localFallback.length > 0) {
+    const filtered = normalizeAndFilterTestimonials(localFallback, pathwayFilter);
+    return {
+      items: filtered.eligible,
+      source: 'approved_local',
+      backendStatus: 'empty',
+      totalReceivedFromBackend: 0,
+      eligibleBackendCount: 0,
+      rejectedBackendCount: filtered.rejectedCount,
+      endpointChecked: true,
+      localFallbackUsed: true,
     };
   }
 
@@ -575,5 +634,6 @@ export function resolveTestimonialsCollection(params: {
     eligibleBackendCount: 0,
     rejectedBackendCount: filtered.rejectedCount,
     endpointChecked: true,
+    localFallbackUsed: false,
   };
 }

@@ -62,23 +62,35 @@ function normalizeProvidedTestimonials(
     visibility: "public",
   }));
 
+  // Validate using the service normalizer — this correctly handles both
+  // verified_backend (isVerified from backend) and approved_local (isVerified = false)
   const validated = normalizeAndFilterBackendTestimonials(mappedCandidates);
   if (validated.eligible.length === 0) {
+    // No eligible records from the provided collection — fall back to the
+    // approved local learner testimonials stored in the library.
     return resolveTestimonialsCollection({
       backendAttempted: true,
       backendOk: true,
       backendPayload: mappedCandidates,
+      localFallback: provided,
     });
   }
 
+  // Distinguish source: verified_backend records keep their authoritative
+  // verification badge; approved_local records never receive a verified badge.
+  const hasVerifiedBackend = validated.eligible.some(
+    (item) => item.source === 'verified_backend' && item.isVerified === true
+  );
+
   return {
     items: validated.eligible,
-    source: "verified_backend",
-    backendStatus: "available_with_records",
+    source: validated.eligible[0]?.source ?? 'verified_backend',
+    backendStatus: 'available_with_records',
     totalReceivedFromBackend: provided.length,
     eligibleBackendCount: validated.eligible.length,
     rejectedBackendCount: validated.rejectedCount,
     endpointChecked: false,
+    localFallbackUsed: false,
   };
 }
 
@@ -282,7 +294,11 @@ export function StudentTestimonialCarousel({
   };
 
   const hasPublishedTestimonials = allItems.length > 0;
-  const hasAuthoritativelyVerifiedItems = allItems.some((item) => item.isVerified === true);
+  // Only backend-verified records earn the "Verified Learner" badge.
+  // Local fallback records (source: "approved_local") must never be marked verified.
+  const hasAuthoritativelyVerifiedItems = allItems.some(
+    (item) => item.source === 'verified_backend' && item.isVerified === true
+  );
 
   return (
     <section

@@ -20,7 +20,9 @@ import type {
 import {
   canTransitionStage,
   getStageAvailability,
+  loadExamViewState,
   resolveAttemptLifecycleStatus,
+  saveExamViewState,
   type ExamExperienceStage,
   type ReviewFilterKey,
 } from "@/lib/attempts/exam-experience-state";
@@ -47,6 +49,7 @@ export default function LearnerAttemptWorkspacePage() {
     layout: ExamLayout;
   } | null>(null);
   const [stageNotice, setStageNotice] = React.useState<string | null>(null);
+  const hasHydratedAttemptRef = React.useRef<string>("");
 
   React.useEffect(() => {
     let active = true;
@@ -89,10 +92,30 @@ export default function LearnerAttemptWorkspacePage() {
     void nurviaApi.getAttemptReview(selectedAttemptId).then((response) => {
       if (!active) return;
       if (response.success && response.data) {
+        const savedView = loadExamViewState(selectedAttemptId);
         setResult(response.data);
         const firstId = response.data.reviewQuestions?.[0]?.questionId || "";
-        setCurrentQuestionId(firstId);
-        setTutorQuestionId(firstId);
+        const validCurrentId =
+          savedView?.currentQuestionId &&
+          response.data.reviewQuestions?.some((q) => q.questionId === savedView.currentQuestionId)
+            ? savedView.currentQuestionId
+            : firstId;
+        const validTutorId =
+          savedView?.tutorQuestionId &&
+          response.data.reviewQuestions?.some((q) => q.questionId === savedView.tutorQuestionId)
+            ? savedView.tutorQuestionId
+            : validCurrentId;
+        setCurrentQuestionId(validCurrentId);
+        setTutorQuestionId(validTutorId);
+        if (savedView?.reviewFilter) setReviewFilter(savedView.reviewFilter);
+        if (savedView?.reviewLayout) setReviewLayout(savedView.reviewLayout);
+        if (savedView?.returnQuestionId) {
+          setReturnContext({
+            questionId: savedView.returnQuestionId,
+            filter: savedView.returnFilter || savedView.reviewFilter || "All",
+            layout: savedView.returnLayout || savedView.reviewLayout || "Sequential",
+          });
+        }
 
         if (typeof window !== "undefined" && response.data.reviewReleased) {
           const sp = new URLSearchParams(window.location.search);
@@ -101,12 +124,15 @@ export default function LearnerAttemptWorkspacePage() {
             setStage("review");
           } else if (requestedStage === "tutor") {
             setStage("tutor");
+          } else if (savedView && savedView.stage !== "assessment") {
+            setStage(savedView.stage);
           } else {
             setStage("results");
           }
         } else {
           setStage("results");
         }
+        hasHydratedAttemptRef.current = selectedAttemptId;
       } else {
         setResult(null);
         setError(response.message || "Unable to load review content for this attempt.");
@@ -119,6 +145,20 @@ export default function LearnerAttemptWorkspacePage() {
     };
   }, [selectedAttemptId]);
 
+  React.useEffect(() => {
+    if (!selectedAttemptId || hasHydratedAttemptRef.current !== selectedAttemptId) return;
+    saveExamViewState(selectedAttemptId, {
+      stage,
+      currentQuestionId: currentQuestionId || undefined,
+      reviewFilter,
+      reviewLayout,
+      tutorQuestionId: tutorQuestionId || undefined,
+      returnQuestionId: returnContext?.questionId,
+      returnFilter: returnContext?.filter,
+      returnLayout: returnContext?.layout,
+    });
+  }, [selectedAttemptId, stage, currentQuestionId, reviewFilter, reviewLayout, tutorQuestionId, returnContext]);
+
   const completedAttempts = React.useMemo(
     () => history.filter((item) => item.status !== "InProgress"),
     [history]
@@ -129,8 +169,13 @@ export default function LearnerAttemptWorkspacePage() {
   );
 
   const lifecycleStatus = resolveAttemptLifecycleStatus(result?.status);
-  const reviewWithheld = result ? !result.reviewReleased : false;
-  const canAskTutor = Boolean(result?.reviewReleased);
+  // Derive review/tutor availability consistent with getStageAvailability:
+  // - Review is withheld only when backend explicitly sets modePermissions.reviewReleased = false.
+  // - Tutor is available for completed attempts where the backend policy permits.
+  const reviewWithheld =
+    result?.modePermissions?.reviewReleased === false ? true : result ? !result.reviewReleased : false;
+  const canAskTutor =
+    result?.modePermissions?.canTutor === true ? true : Boolean(result?.reviewReleased);
 
   const availability = React.useMemo(
     () =>

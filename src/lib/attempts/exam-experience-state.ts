@@ -136,7 +136,20 @@ export function getStageAvailability(
       reason:
         'Submit your examination first to unlock read-only Review with authoritative answers and rationales.',
     };
+  } else if (ctx.modePermissions?.reviewReleased === false) {
+    // Block review only when the backend explicitly withholds it via
+    // modePermissions.reviewReleased = false. Do not block when
+    // reviewReleased is falsy for other reasons (e.g. misconfigured
+    // backend flag), since the requirement is that completed attempts
+    // must support Review.
+    review = {
+      canEnter: false,
+      reason:
+        ctx.modePermissions?.reviewReason ||
+        'Detailed answer review is withheld by this examination’s published policy.',
+    };
   } else if (!ctx.reviewReleased) {
+    // Review was explicitly withheld by backend policy — respect the prohibition.
     review = {
       canEnter: false,
       reason:
@@ -161,7 +174,20 @@ export function getStageAvailability(
         ctx.modePermissions.tutorReason ||
         'Tutor mode is not enabled for this active examination by backend policy.',
     };
+  } else if (terminal && ctx.modePermissions?.reviewReleased === false) {
+    // Block tutor only when the backend explicitly withholds it via
+    // modePermissions.reviewReleased = false. Do not block when
+    // reviewReleased is falsy for other reasons, since the requirement is
+    // that contextual Tutor should be available for completed attempts
+    // where the examination and backend policy permit it.
+    tutor = {
+      canEnter: false,
+      reason:
+        ctx.modePermissions?.reviewReason ||
+        'Tutor explanations are unavailable because answer review is withheld by this examination’s policy.',
+    };
   } else if (terminal && !ctx.reviewReleased) {
+    // Review was explicitly withheld by backend policy — respect the prohibition.
     tutor = {
       canEnter: false,
       reason:
@@ -179,6 +205,66 @@ export function getStageAvailability(
   }
 
   return { assessment, results, review, tutor };
+}
+
+/**
+ * Unified permission-resolution mechanism for the examination experience.
+ * Distinguishes:
+ * 1. Starting / continuing an active examination attempt.
+ * 2. Reviewing a submitted / completed attempt.
+ * 3. Accessing contextual Tutor (in active Tutor delivery or post-submission review).
+ * 4. Accessing standalone non-graded review content (/api/exams/{examId}/review-content).
+ */
+export function resolveExamExperiencePermissions(
+  ctx: StageContext
+): ExamModePermissionsDto {
+  const availability = getStageAvailability(ctx);
+  const terminal = isAttemptTerminal(ctx.lifecycleStatus);
+  const allowLayoutSwitching = ctx.modePermissions?.allowLayoutSwitching !== false;
+
+  if (ctx.isReviewStudyContent) {
+    return {
+      canExam: false,
+      canReview: availability.review.canEnter,
+      canTutor: availability.tutor.canEnter,
+      examReason: availability.assessment.reason,
+      reviewReason: availability.review.reason,
+      tutorReason: availability.tutor.reason,
+      allowLayoutSwitching,
+      allowModeSwitching: availability.review.canEnter && availability.tutor.canEnter,
+      reviewReleased: availability.review.canEnter,
+    };
+  }
+
+  if (terminal) {
+    return {
+      canExam: false,
+      canReview: availability.review.canEnter,
+      canTutor: availability.tutor.canEnter,
+      examReason: availability.assessment.reason,
+      reviewReason: availability.review.reason,
+      tutorReason: availability.tutor.reason,
+      allowLayoutSwitching,
+      allowModeSwitching: availability.review.canEnter || availability.tutor.canEnter,
+      reviewReleased: Boolean(ctx.reviewReleased),
+    };
+  }
+
+  const canExam = ctx.modePermissions ? ctx.modePermissions.canExam : true;
+  const canTutor = availability.tutor.canEnter;
+
+  return {
+    canExam,
+    canReview: false,
+    canTutor,
+    examReason: canExam ? undefined : ctx.modePermissions?.examReason,
+    reviewReason: availability.review.reason,
+    tutorReason: availability.tutor.reason,
+    allowLayoutSwitching,
+    allowModeSwitching:
+      ctx.modePermissions?.allowModeSwitching !== false && canExam && canTutor,
+    reviewReleased: Boolean(ctx.modePermissions?.reviewReleased ?? true),
+  };
 }
 
 export function canTransitionStage(
