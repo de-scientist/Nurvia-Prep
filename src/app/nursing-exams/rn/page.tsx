@@ -76,7 +76,7 @@ export default function RNExamPathwayPage() {
               NCSBN Clinical Judgment Measurement Model (CJMM)
             </h2>
             <p className="mt-1 text-sm text-slate-600">
-              Every NGN item evaluates one of these six cognitive functions. Nurvia test items mirror this exact structure.
+              Every NGN item evaluates one of these six cognitive functions. QuizNurse test items mirror this exact structure.
             </p>
 
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

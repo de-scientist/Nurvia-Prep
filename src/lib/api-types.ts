@@ -807,6 +807,8 @@ export interface StudyLibraryFiltersDto {
   academicYears: number[];
   seasons: string[];
   subjects: string[];
+  rnSubjects?: string[];
+  lpnSubjects?: string[];
   topics: string[];
   difficulties: DifficultyLevel[];
   questionTypes: QuestionType[];

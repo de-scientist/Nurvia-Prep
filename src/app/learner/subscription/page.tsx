@@ -37,6 +37,31 @@ function SubscriptionContent() {
   const [message, setMessage] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [busyPlanId, setBusyPlanId] = React.useState<string | null>(null);
+  const [resuming, setResuming] = React.useState(false);
+
+  const handleResume = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (!safeReturnTo) return;
+    setResuming(true);
+    setError(null);
+    try {
+      const modeParam = requiredMode || "Exam";
+      const pathParam = pathway ? `&pathway=${encodeURIComponent(pathway)}` : "";
+      const res = await fetch(`/api/subscriptions/status?mode=${encodeURIComponent(modeParam)}${pathParam}`, {
+        headers: { "Cache-Control": "no-store" },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.allowed) {
+        router.push(safeReturnTo);
+        return;
+      }
+      setError(data.message || "Your subscription is not authorized for this learning destination. Please upgrade or choose an eligible plan.");
+    } catch {
+      setError("Unable to revalidate subscription authorization. Please check your connection.");
+    } finally {
+      setResuming(false);
+    }
+  };
 
   const loadData = React.useCallback(async () => {
     setLoading(true);
@@ -69,9 +94,21 @@ function SubscriptionContent() {
           window.dispatchEvent(new CustomEvent("nurvia:subscription-updated"));
         }
         if (safeReturnTo) {
-          setTimeout(() => {
-            router.push(safeReturnTo);
-          }, 1500);
+          try {
+            const modeParam = requiredMode || "Exam";
+            const pathParam = pathway ? `&pathway=${encodeURIComponent(pathway)}` : "";
+            const authCheck = await fetch(`/api/subscriptions/status?mode=${encodeURIComponent(modeParam)}${pathParam}`, {
+              headers: { "Cache-Control": "no-store" },
+            });
+            const authData = await authCheck.json().catch(() => ({}));
+            if (authCheck.ok && authData.allowed) {
+              setTimeout(() => {
+                router.push(safeReturnTo);
+              }, 1500);
+            }
+          } catch {
+            // Stay on subscription page if revalidation fails
+          }
         }
       } else {
         setError(res.errors?.[0] || res.message || "Unable to activate Free Starter plan.");
@@ -95,7 +132,7 @@ function SubscriptionContent() {
           Subscription &amp; Entitlements
         </h1>
         <p className="text-xs sm:text-sm text-foreground-secondary">
-          View your active PostgreSQL-backed plan entitlement or compare available NURVIA tiers.
+          View your active PostgreSQL-backed plan entitlement or compare available QuizNurse tiers.
         </p>
       </div>
 
@@ -123,9 +160,9 @@ function SubscriptionContent() {
             </p>
           </div>
           {activeSub && (
-            <Link href={safeReturnTo}>
-              <Button size="sm" className="text-xs bg-brand-teal hover:bg-brand-tealDark text-white gap-1.5 shrink-0">
-                <span>Resume {requiredMode || "Learning"}</span>
+            <Link href={safeReturnTo} onClick={handleResume}>
+              <Button size="sm" disabled={resuming} className="text-xs bg-brand-teal hover:bg-brand-tealDark text-white gap-1.5 shrink-0">
+                <span>{resuming ? "Verifying Authorization…" : `Resume ${requiredMode || "Learning"}`}</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             </Link>

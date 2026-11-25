@@ -101,7 +101,7 @@ function createRequestSignal(callerSignal?: AbortSignal | null, timeoutMs = DEFA
 } {
   const controller = new AbortController();
   const timer = setTimeout(() => {
-    controller.abort(new Error('Request timeout connecting to NURVIA API'));
+    controller.abort(new Error('Request timeout connecting to QuizNurse API'));
   }, timeoutMs);
 
   const onCallerAbort = () => {
@@ -169,7 +169,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       if (errorType === ErrorType.NETWORK_ERROR) {
         return {
           success: false,
-          message: 'Network error connecting to NURVIA API',
+          message: 'Network error connecting to QuizNurse API',
           statusCode: 0,
           errors: ['Failed to connect to the server. Please check your internet connection.'],
         };
@@ -178,7 +178,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       const message = error instanceof Error ? error.message : 'Unknown network error';
       return {
         success: false,
-        message: message || 'Network error connecting to NURVIA API',
+        message: message || 'Network error connecting to QuizNurse API',
         errors: [message],
       };
     } finally {
@@ -188,7 +188,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   return {
     success: false,
-    message: 'Network error connecting to NURVIA API',
+    message: 'Network error connecting to QuizNurse API',
     statusCode: 0,
   };
 }
@@ -516,7 +516,7 @@ export function resolveAuthoritativeExamTitleAndDifficulty(item: Record<string, 
     candidateTitle = candidateTitle.replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
-  candidateTitle = candidateTitle.replace(/[.,]+$/, '').trim() || 'NURVIA Examination';
+  candidateTitle = candidateTitle.replace(/[.,]+$/, '').trim() || 'QuizNurse Examination';
 
   return {
     title: candidateTitle,
@@ -2296,9 +2296,34 @@ export const nurviaApi = {
       if (src.school && !isUnauthorizedExamFamilyName(src.school)) schoolSet.add(src.school);
     }
 
-    const resolvedSubjects = Array.from(
-      new Set(curriculum.allSources.map((s) => s.displayName).filter((n) => n && !isUnauthorizedExamFamilyName(n)))
-    ).sort((a, b) => a.localeCompare(b));
+    const sortSubjectNames = (names: string[]): string[] => {
+      const getCanonicalSortRank = (title: string): number => {
+        const lower = title.toLowerCase();
+        if (lower.includes('med-surg') || lower.includes('medical-surgical') || lower.includes('med surg') || lower.includes('medical surgical')) return 1;
+        if (lower.includes('pediatric') || lower.includes('peds') || lower.includes('child')) return 2;
+        if (lower.includes('mental health') || lower.includes('psych')) return 3;
+        if (lower.includes('fundamental')) return 4;
+        if (lower.includes('pharmacol') || lower.includes('dosage') || lower.includes('drug')) return 5;
+        if (lower.includes('leadership') || lower.includes('management') || lower.includes('professional')) return 6;
+        if (lower.includes('adult health')) return 7;
+        if (lower.includes('health assessment') || lower.includes('assessment') || lower.includes('physical assessment')) return 8;
+        if (lower.includes('maternal') || lower.includes('newborn') || lower.includes('obstetric') || lower.includes('maternity') || lower.includes('women')) return 9;
+        return 10;
+      };
+
+      return Array.from(
+        new Set(names.filter((n) => Boolean(n) && !isUnauthorizedExamFamilyName(n)))
+      ).sort((a, b) => {
+        const rankA = getCanonicalSortRank(a);
+        const rankB = getCanonicalSortRank(b);
+        if (rankA !== rankB) return rankA - rankB;
+        return a.localeCompare(b);
+      });
+    };
+
+    const resolvedSubjects = sortSubjectNames(curriculum.allSources.map((s) => s.displayName));
+    const rnSubjects = sortSubjectNames(curriculum.rnSubjects.map((s) => s.displayName));
+    const lpnSubjects = sortSubjectNames(curriculum.lpnSubjects.map((s) => s.displayName));
 
     const pathways: import('./api-types').NursingPathway[] = ['RN', 'PN_LPN', 'RN_Exit', 'PN_Exit'];
 
@@ -2325,6 +2350,8 @@ export const nurviaApi = {
         schools: Array.from(schoolSet).sort((a, b) => a.localeCompare(b)),
         academicYears: Array.from(yearSet).sort((a, b) => b - a),
         subjects: resolvedSubjects,
+        rnSubjects,
+        lpnSubjects,
         seasons: Array.from(seasonSet),
         exams: mappedExams,
         topics: Array.from(
@@ -3343,3 +3370,5 @@ export const nurviaApi = {
     };
   },
 };
+
+export const quizNurseApi = nurviaApi;

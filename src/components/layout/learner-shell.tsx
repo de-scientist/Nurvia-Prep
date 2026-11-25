@@ -93,7 +93,7 @@ export const learnerNavigation: NavSection[] = [
         ],
       },
       {
-        name: "LPN / PN Exams",
+        name: "LPN Exams",
         href: "/learner/exams?track=PN_LPN",
         icon: Stethoscope,
         subItems: [
@@ -190,6 +190,9 @@ export function LearnerShell({
   const pathname = usePathname();
   const { status, user, error, refresh } = useAuth();
   const avatarUrl = status === "authenticated" ? (user?.avatarUrl ?? null) : null;
+  const currentReturnTo = typeof window === "undefined"
+    ? pathname
+    : `${pathname}${window.location.search}`;
 
   React.useEffect(() => {
     if (status === "unauthenticated" && !allowPublic) {
@@ -475,7 +478,7 @@ export function LearnerShell({
                   <Button size="sm" className="w-full text-xs h-8">Browse Practice Exams</Button>
                 </Link>
               ) : (
-                <Link href="/sign-in">
+                <Link href={`/sign-in?returnTo=${encodeURIComponent(currentReturnTo)}`}>
                   <Button size="sm" className="w-full text-xs h-8">Sign In to Save Progress</Button>
                 </Link>
               )}
@@ -522,17 +525,17 @@ export function LearnerShell({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-  {user && <NavbarSubscriptionButton />}
+  <NavbarSubscriptionButton />
   {user && <SuperadminSwitcher />}
   <ThemeToggle />
   {user ? (
     <UserAccountMenu avatarUrl={avatarUrl} />
   ) : (
     <div className="flex items-center gap-2">
-      <Link href={`/sign-in?returnTo=${encodeURIComponent(pathname)}`}>
+      <Link href={`/sign-in?returnTo=${encodeURIComponent(currentReturnTo)}`}>
         <Button variant="ghost" size="sm" className="text-xs">Sign In</Button>
       </Link>
-      <Link href={`/register?returnTo=${encodeURIComponent(pathname)}`}>
+      <Link href={`/sign-up?returnTo=${encodeURIComponent(currentReturnTo)}`}>
         <Button size="sm" className="text-xs">Register</Button>
       </Link>
     </div>
@@ -550,10 +553,21 @@ export function LearnerShell({
 
         {/* Page Content Body */}
         <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          {children}
+          {user?.emailVerified === false ? (
+            <div className="py-16 text-center space-y-3">
+              <p className="text-sm font-semibold text-foreground">
+                Email Verification Required
+              </p>
+              <p className="text-xs text-foreground-secondary max-w-md mx-auto">
+                Please complete email verification to access your examination library.
+              </p>
+            </div>
+          ) : (
+            children
+          )}
         </main>
         {status === "authenticated" && user?.emailVerified === false && (
-          <LearnerVerificationModal isOpen={true} />
+          <LearnerVerificationModal isOpen={true} returnTo={currentReturnTo} />
         )}
       </div>
     </div>

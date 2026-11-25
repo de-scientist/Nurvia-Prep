@@ -382,10 +382,10 @@ export default function ProfilePage() {
                     >
                       <option value="">Not declared yet</option>
                       <option value="RN">Registered Nurse (RN)</option>
-                      <option value="PN_LPN">Practical / Licensed Practical Nurse (PN/LPN)</option>
+                      <option value="PN_LPN">Practical / Licensed Practical Nurse (LPN)</option>
                     </select>
                     <p className="text-[11px] text-foreground-muted">
-                      Declaring your pathway restricts your examination catalog to matching RN or PN/LPN assessments.
+                      Declaring your pathway restricts your examination catalog to matching RN or LPN assessments.
                     </p>
                   </div>
                 </div>

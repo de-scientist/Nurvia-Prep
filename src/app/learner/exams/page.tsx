@@ -17,7 +17,7 @@ function LearnerExamsContent() {
   const trackTitles: Record<string, { title: string; subtitle: string; icon: React.ElementType }> = {
     All: {
       title: "All Nursing & Clinical Examination Tracks",
-      subtitle: "Complete published catalogue across RN, PN/LPN, Exit Predictors, and Dosage Math.",
+      subtitle: "Complete published catalogue across RN, LPN, Exit Predictors, and Dosage Math.",
       icon: GraduationCap,
     },
     RN: {
@@ -26,7 +26,7 @@ function LearnerExamsContent() {
       icon: GraduationCap,
     },
     PN_LPN: {
-      title: "Licensed Practical / Vocational Nurse (LPN/PN) Track",
+      title: "Licensed Practical / Vocational Nurse (LPN) Track",
       subtitle: "Focused ATI Practical exams, HESI PN benchmarks, and core skills assessments.",
       icon: Stethoscope,
     },

@@ -13,6 +13,7 @@ import {
 import { buildExamUpsertPath } from '@/lib/lexmacasto/contracts';
 import { validateSameOriginRequest } from '@/lib/lexmacasto/session';
 import type { ExamLayout } from '@/lib/api-types';
+import { verifyLearnerEntitlement } from '@/lib/subscriptions/entitlement-service';
 
 async function handleAutosave(
   request: NextRequest,
@@ -35,6 +36,17 @@ async function handleAutosave(
       );
     }
 
+    if (learner.emailVerified === false) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Email verification is required before persisting examination responses.',
+          errorCode: 'UNVERIFIED_EMAIL',
+        },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
+    }
+
     const { attemptId } = await context.params;
     const siteMeta = extractSiteMetadataFromRequestHeaders(
       request.headers,
@@ -46,6 +58,26 @@ async function handleAutosave(
       return NextResponse.json(
         { success: false, message: loaded.message, errorCode: loaded.errorCode },
         { status: loaded.status, headers: NO_STORE_HEADERS }
+      );
+    }
+
+    const entitlement = await verifyLearnerEntitlement({
+      session: learner.session,
+      mode: loaded.attempt.deliveryMode === 'Tutor' ? 'Tutor' : 'Exam',
+      pathway: loaded.attempt.pathway,
+      siteMeta,
+      isSuperadmin: learner.role === 'Superadmin',
+      isEmailVerified: Boolean(learner.emailVerified),
+    });
+
+    if (!entitlement.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: entitlement.reason || 'Active subscription required to submit responses.',
+          errorCode: entitlement.errorCode || 'ENTITLEMENT_LACKING',
+        },
+        { status: 403, headers: NO_STORE_HEADERS }
       );
     }
 

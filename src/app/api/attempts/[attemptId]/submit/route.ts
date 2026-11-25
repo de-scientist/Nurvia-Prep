@@ -11,6 +11,7 @@ import {
   buildStrataEndpointPath,
 } from '@/lib/lexmacasto/contracts';
 import { validateSameOriginRequest } from '@/lib/lexmacasto/session';
+import { verifyLearnerEntitlement } from '@/lib/subscriptions/entitlement-service';
 
 export async function POST(
   request: NextRequest,
@@ -33,6 +34,17 @@ export async function POST(
       );
     }
 
+    if (learner.emailVerified === false) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Email verification is required before submitting an examination.',
+          errorCode: 'UNVERIFIED_EMAIL',
+        },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
+    }
+
     const { attemptId } = await context.params;
     const siteMeta = extractSiteMetadataFromRequestHeaders(
       request.headers,
@@ -44,6 +56,26 @@ export async function POST(
       return NextResponse.json(
         { success: false, message: loaded.message, errorCode: loaded.errorCode },
         { status: loaded.status, headers: NO_STORE_HEADERS }
+      );
+    }
+
+    const entitlement = await verifyLearnerEntitlement({
+      session: learner.session,
+      mode: loaded.attempt.deliveryMode === 'Tutor' ? 'Tutor' : 'Exam',
+      pathway: loaded.attempt.pathway,
+      siteMeta,
+      isSuperadmin: learner.role === 'Superadmin',
+      isEmailVerified: Boolean(learner.emailVerified),
+    });
+
+    if (!entitlement.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: entitlement.reason || 'Active subscription required to submit attempt.',
+          errorCode: entitlement.errorCode || 'ENTITLEMENT_LACKING',
+        },
+        { status: 403, headers: NO_STORE_HEADERS }
       );
     }
 
@@ -88,7 +120,7 @@ export async function POST(
             examId: raw.examNumericId,
             examGuidId: raw.examId,
             status: 'Completed',
-            reason: 'Learner submitted examination in NURVIA',
+            reason: 'Learner submitted examination in QuizNurse',
             submissionType: 'ActionExamSubmit',
             actionGroup: 'ExamLifecycle',
             isDiy: false,

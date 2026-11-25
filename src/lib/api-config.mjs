@@ -40,7 +40,7 @@ export function resolveBackendBaseUrl(env = process.env, options = {}) {
   const rawUrl = skewLineUrl || legacyUrl;
   if (!rawUrl || rawUrl.startsWith('<')) {
     throw new BackendConfigurationError(
-      'NURVIA backend URL is not configured. Set SKEW_LINE_DOTNET_BASE_URL in apps/web/.env.local (or deployment environment variables).',
+      'QuizNurse backend URL is not configured. Set SKEW_LINE_DOTNET_BASE_URL in apps/web/.env.local (or deployment environment variables).',
       'MISSING_BACKEND_URL'
     );
   }
@@ -99,8 +99,8 @@ export function isHttpsBackendUrl(baseUrl) {
 export function resolveApplicationIdentity(env = process.env) {
   const appKey = (env.SKEW_LINE_APP_KEY || '').trim();
   const appDomain = (env.SKEW_LINE_APP_DOMAIN || '').trim();
-  const appName = (env.SKEW_LINE_APP_NAME || 'Nurvia').trim();
-  const appTitle = (env.SKEW_LINE_APP_TITLE || 'Nurvia').trim();
+  const appName = (env.SKEW_LINE_APP_NAME || 'QuizNurse').trim();
+  const appTitle = (env.SKEW_LINE_APP_TITLE || 'QuizNurse').trim();
 
   if (!appKey || appKey.startsWith('<')) {
     throw new BackendConfigurationError(
@@ -173,8 +173,8 @@ export function getSkewLineServerConfig(env = process.env) {
   const appDomain = (env.SKEW_LINE_APP_DOMAIN || '').trim();
   const appKey = (env.SKEW_LINE_APP_KEY || '').trim();
   return {
-    appName: (env.SKEW_LINE_APP_NAME || 'Nurvia').trim(),
-    appTitle: (env.SKEW_LINE_APP_TITLE || 'Nurvia').trim(),
+    appName: (env.SKEW_LINE_APP_NAME || 'QuizNurse').trim(),
+    appTitle: (env.SKEW_LINE_APP_TITLE || 'QuizNurse').trim(),
     appDomain,
     appDomainConfigured: Boolean(appDomain && !appDomain.startsWith('<')),
     appKeyConfigured: Boolean(appKey && !appKey.startsWith('<')),

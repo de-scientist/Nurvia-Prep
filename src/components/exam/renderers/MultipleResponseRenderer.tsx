@@ -7,6 +7,7 @@ import { CheckSquare, Square, CheckCircle2, XCircle, Info } from "lucide-react";
 import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 import { ContentIntegrityAlert } from "./ContentIntegrityAlert";
 import { ReviewRationaleBox } from "./ReviewRationaleBox";
+import { validateSataSelection } from "@/lib/attempts/sata-validation";
 
 export function MultipleResponseRenderer({
   question,
@@ -40,6 +41,10 @@ export function MultipleResponseRenderer({
     onChange?.(JSON.stringify({ SelectedOptionIds: updated }));
   };
 
+  const validation = React.useMemo(() => {
+    return validateSataSelection(question, value);
+  }, [question, value]);
+
   if (question.contentIntegrityError || question.options.length === 0) {
     return (
       <div className="space-y-4">
@@ -57,9 +62,45 @@ export function MultipleResponseRenderer({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-xs font-semibold text-brand-teal bg-brand-teal/10 border border-brand-teal/20 px-3 py-2 rounded-lg">
-        <Info className="w-4 h-4 shrink-0" />
-        <span>Select All That Apply (SATA). One, multiple, or all options may be correct.</span>
+      <div
+        className={cn(
+          "flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border text-xs font-medium transition-colors",
+          validation.requiredCount !== null
+            ? validation.isValid
+              ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+              : validation.selectedCount > validation.requiredCount
+                ? "border-rose-500/40 bg-rose-500/10 text-rose-800 dark:text-rose-300"
+                : "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300"
+            : "border-brand-teal/20 bg-brand-teal/10 text-brand-teal"
+        )}
+      >
+        <div className="flex items-center gap-2">
+          {validation.requiredCount !== null ? (
+            validation.isValid ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            ) : (
+              <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            )
+          ) : (
+            <Info className="w-4 h-4 text-brand-teal shrink-0" />
+          )}
+          <span>
+            {validation.requiredCount !== null
+              ? `Select exactly ${validation.requiredCount} answers.`
+              : "Select All That Apply (SATA). One, multiple, or all options may be correct."}
+          </span>
+        </div>
+
+        <div className="font-semibold text-[11px]">
+          {validation.requiredCount !== null ? (
+            <span>
+              {validation.selectedCount} of {validation.requiredCount} selected
+              {validation.isValid && " · Complete"}
+            </span>
+          ) : (
+            <span>{validation.selectedCount} selected</span>
+          )}
+        </div>
       </div>
 
       <div className="space-y-3">

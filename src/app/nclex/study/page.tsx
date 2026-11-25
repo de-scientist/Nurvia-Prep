@@ -34,7 +34,7 @@ export default function NclexStudyRedirectPage() {
           </a>
         </div>
         <p className="text-xs text-foreground-muted">
-          NURVIA-PLEX focuses exclusively on RN, LPN/PN, RN Exit, and LPN Exit academic courses and examinations.
+          QuizNurse focuses exclusively on RN, LPN, RN Exit, and LPN Exit academic courses and examinations.
         </p>
       </div>
     </div>

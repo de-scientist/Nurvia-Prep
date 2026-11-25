@@ -20,7 +20,7 @@ export function TrackComparisonChart({ data }: TrackComparisonChartProps) {
   if (!data || data.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-border bg-surface-muted/30 p-6 text-center text-xs text-foreground-secondary">
-        RN vs PN/LPN & Exit track comparison appears once attempts across tracks are recorded.
+        RN vs LPN & Exit track comparison appears once attempts across tracks are recorded.
       </div>
     );
   }

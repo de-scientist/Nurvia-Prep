@@ -144,7 +144,7 @@ export default function StudyGuidesPage() {
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="teal">{selectedGuide.subject}</Badge>
-                <Badge variant="outline">{selectedGuide.pathway === "Both" ? "RN & PN/LPN" : selectedGuide.pathway}</Badge>
+                <Badge variant="outline">{selectedGuide.pathway === "Both" ? "RN & LPN" : selectedGuide.pathway}</Badge>
                 <span className="text-xs text-foreground-muted inline-flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" /> {selectedGuide.readingMinutes} min read
                 </span>
@@ -310,7 +310,7 @@ export default function StudyGuidesPage() {
                     onClick={() => setPathway(pw)}
                     className="text-xs"
                   >
-                    {pw === "All" ? "All Pathways" : pw === "PN_LPN" ? "PN / LPN" : "RN"}
+                    {pw === "All" ? "All Pathways" : pw === "PN_LPN" ? "LPN" : "RN"}
                   </Button>
                 ))}
                 {subject !== "All" && (

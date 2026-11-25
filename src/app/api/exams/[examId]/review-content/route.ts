@@ -8,6 +8,7 @@ import {
 } from '@/lib/attempts/strata-answer-adapter';
 import { extractSiteMetadataFromRequestHeaders } from '@/lib/lexmacasto/client';
 import type { ExamReviewContentDto, ReviewQuestionDto } from '@/lib/api-types';
+import { verifyLearnerEntitlement } from '@/lib/subscriptions/entitlement-service';
 
 /**
  * Authoritative direct Review Mode content endpoint.
@@ -23,6 +24,17 @@ export async function GET(
     return NextResponse.json(
       { success: false, message: 'Authentication is required.', errorCode: 'UNAUTHORIZED' },
       { status: 401, headers: NO_STORE_HEADERS }
+    );
+  }
+
+  if (learner.emailVerified === false) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Email verification is required before accessing review content.',
+        errorCode: 'UNVERIFIED_EMAIL',
+      },
+      { status: 403, headers: NO_STORE_HEADERS }
     );
   }
 
@@ -52,6 +64,28 @@ export async function GET(
     return NextResponse.json(
       { success: false, message: loaded.message, errorCode: loaded.errorCode },
       { status: loaded.status, headers: NO_STORE_HEADERS }
+    );
+  }
+
+  const entitlement = await verifyLearnerEntitlement({
+    session: learner.session,
+    mode: 'Review',
+    pathway: loaded.pathway,
+    siteMeta,
+    isSuperadmin: learner.role === 'Superadmin',
+    isEmailVerified: Boolean(learner.emailVerified),
+  });
+
+  if (!entitlement.allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          entitlement.reason ||
+          'An active subscription is required to access review questions and rationales.',
+        errorCode: entitlement.errorCode || 'ENTITLEMENT_LACKING',
+      },
+      { status: 403, headers: NO_STORE_HEADERS }
     );
   }
 

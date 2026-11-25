@@ -3,6 +3,7 @@ import { NO_STORE_HEADERS, resolveAttemptLearner } from '@/lib/attempts/auth-hel
 import { attemptStore } from '@/lib/attempts/attempt-store';
 import { ensureAttemptLoaded } from '@/lib/attempts/live-exam-loader';
 import { extractSiteMetadataFromRequestHeaders } from '@/lib/lexmacasto/client';
+import { verifyLearnerEntitlement } from '@/lib/subscriptions/entitlement-service';
 
 export async function GET(
   request: NextRequest,
@@ -38,6 +39,26 @@ export async function GET(
     return NextResponse.json(
       { success: false, message: loaded.message, errorCode: loaded.errorCode },
       { status: loaded.status, headers: NO_STORE_HEADERS }
+    );
+  }
+
+  const entitlement = await verifyLearnerEntitlement({
+    session: learner.session,
+    mode: 'Tutor',
+    pathway: loaded.attempt.pathway,
+    siteMeta,
+    isSuperadmin: learner.role === 'Superadmin',
+    isEmailVerified: Boolean(learner.emailVerified),
+  });
+
+  if (!entitlement.allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: entitlement.reason || 'Active subscription required to access Tutor Mode.',
+        errorCode: entitlement.errorCode || 'ENTITLEMENT_LACKING',
+      },
+      { status: 403, headers: NO_STORE_HEADERS }
     );
   }
 

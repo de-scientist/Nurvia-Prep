@@ -125,7 +125,7 @@ export default function AiTutorPage() {
               Attempt-Grounded Clinical Tutor
             </h1>
             <p className="text-xs sm:text-sm text-foreground-secondary">
-              Analyze missed items, understand distractors, and master nursing rationales anchored directly to your completed NURVIA examination attempts.
+              Analyze missed items, understand distractors, and master nursing rationales anchored directly to your completed QuizNurse examination attempts.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -149,7 +149,7 @@ export default function AiTutorPage() {
               Grounded in Real Examination Items
             </p>
             <p className="mt-0.5 leading-relaxed">
-              NURVIA Tutor operates on specific questions from your examination attempts so every explanation reflects exact clinical stems, exhibits, your response, and authoritative rationales — without ever altering your submitted score. Open-ended standalone chat outside an examination attempt is not provisioned on the backend.
+              QuizNurse Tutor operates on specific questions from your examination attempts so every explanation reflects exact clinical stems, exhibits, your response, and authoritative rationales — without ever altering your submitted score. Open-ended standalone chat outside an examination attempt is not provisioned on the backend.
             </p>
           </div>
         </div>

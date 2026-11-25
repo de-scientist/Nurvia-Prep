@@ -8,6 +8,28 @@
  * before submitting their response, preventing incomplete submissions while preserving their selections.
  */
 
+const WORD_TO_NUM: Record<string, number> = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+};
+
+function parseNumOrWord(token: string): number | null {
+  if (!token) return null;
+  if (/^\d+$/.test(token)) {
+    return parseInt(token, 10);
+  }
+  const lower = token.toLowerCase();
+  return WORD_TO_NUM[lower] ?? null;
+}
+
 export function isSataQuestion(questionType: string | number | undefined | null): boolean {
   if (questionType === undefined || questionType === null) return false;
   const normalized = String(questionType).trim().toLowerCase().replace(/[-_ ]/g, '');
@@ -40,20 +62,49 @@ export function extractRequiredSataCount(question: {
   instructions?: string;
   metaStem?: string;
   correctAnswerMeta?: { correctOptionIds?: string[]; correctCellIds?: string[] };
+  options?: Array<{ id: string; optionIndex?: number | string; optionText?: string; isCorrect?: boolean }>;
+  requiredSelections?: number;
+  expectedCount?: number;
+  correctCount?: number;
+  maxSelections?: number;
 }): number | null {
+  if (typeof question.requiredSelections === 'number' && question.requiredSelections > 0) {
+    return question.requiredSelections;
+  }
+  if (typeof question.expectedCount === 'number' && question.expectedCount > 0) {
+    return question.expectedCount;
+  }
+  if (typeof question.correctCount === 'number' && question.correctCount > 0) {
+    return question.correctCount;
+  }
+  if (typeof question.maxSelections === 'number' && question.maxSelections > 0) {
+    return question.maxSelections;
+  }
+
   const textToSearch = `${question.instructions || ''} ${question.metaStem || ''} ${question.stem || ''}`;
-  
-  // Pattern 1: "(Select 4)" or "(Choose 3)"
-  const parenMatch = textToSearch.match(/\((?:select|choose|pick)\s+(\d+)\)/i);
-  if (parenMatch) return parseInt(parenMatch[1], 10);
+
+  // Pattern 1: "(Select 4)" or "(Choose 3)" or "(Select three)"
+  const parenMatch = textToSearch.match(/\((?:select|choose|pick)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\)/i);
+  if (parenMatch) {
+    const parsed = parseNumOrWord(parenMatch[1]);
+    if (parsed !== null) return parsed;
+  }
 
   // Pattern 2: "Select 4 findings", "Select all that apply. (Select 4)", "Select 3 interventions"
-  const selectMatch = textToSearch.match(/\b(?:select|choose|pick)\s+(?:all\s+that\s+apply[.,;]?\s*(?:\()?)?(\d+)\b/i);
-  if (selectMatch) return parseInt(selectMatch[1], 10);
+  const selectMatch = textToSearch.match(/\b(?:select|choose|pick)\s+(?:all\s+that\s+apply[.,;]?\s*(?:\()?)?(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b/i);
+  if (selectMatch) {
+    const parsed = parseNumOrWord(selectMatch[1]);
+    if (parsed !== null) return parsed;
+  }
 
   // Pattern 3: "(N options)" or "Select N options"
-  const optionsMatch = textToSearch.match(/\b(?:select|choose|pick)\s+(\d+)\s+(?:options|answers|findings|interventions|actions|manifestations|cues|items)\b/i);
-  if (optionsMatch) return parseInt(optionsMatch[1], 10);
+  const optionsMatch = textToSearch.match(
+    /\b(?:select|choose|pick)\s+(?:exactly\s+)?(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+(?:options|answers|findings|interventions|actions|manifestations|cues|items|statements|symptoms|prescriptions|orders)\b/i
+  );
+  if (optionsMatch) {
+    const parsed = parseNumOrWord(optionsMatch[1]);
+    if (parsed !== null) return parsed;
+  }
 
   // Pattern 4: Metadata check if available on client
   if (question.correctAnswerMeta) {
@@ -62,6 +113,14 @@ export function extractRequiredSataCount(question: {
     }
     if (Array.isArray(question.correctAnswerMeta.correctCellIds) && question.correctAnswerMeta.correctCellIds.length > 0) {
       return question.correctAnswerMeta.correctCellIds.length;
+    }
+  }
+
+  // Pattern 5: Direct options isCorrect check if available
+  if (Array.isArray(question.options)) {
+    const correctCount = question.options.filter((o) => o && o.isCorrect === true).length;
+    if (correctCount > 0) {
+      return correctCount;
     }
   }
 
@@ -82,6 +141,10 @@ export function validateSataSelection(
     instructions?: string;
     metaStem?: string;
     correctAnswerMeta?: { correctOptionIds?: string[]; correctCellIds?: string[] };
+    options?: Array<{ id: string; optionIndex?: number | string; optionText?: string; isCorrect?: boolean }>;
+    requiredSelections?: number;
+    expectedCount?: number;
+    correctCount?: number;
   },
   serializedAnswer: string | null | undefined
 ): SataValidationResult {

@@ -832,7 +832,7 @@ export async function fetchLiveExamFromBackend(
     exam,
     examId: examGuidId,
     examNumericId: typeof exam.id === 'number' ? exam.id : undefined,
-    examTitle: cleanWordHtml(String(titleInfo.title || exam.title || 'NURVIA Examination')),
+    examTitle: cleanWordHtml(String(titleInfo.title || exam.title || 'QuizNurse Examination')),
     pathway: inferExamPathway(examRecord),
     examCategory: inferExamCategory(examRecord),
     subjectName,
@@ -866,7 +866,7 @@ export async function fetchLiveExamFromBackend(
  * questions and saved responses directly from explicitbackend.com.
  */
 export async function ensureAttemptLoaded(
-  learner: { userId: string; session: CastoSessionCredentials },
+  learner: { userId: string; session: CastoSessionCredentials; emailVerified?: boolean; role?: string },
   attemptId: string,
   siteMeta?: LexmaCastoRequestOptions['siteMeta'],
   preferredMode?: 'Exam' | 'Tutor' | 'Review'
@@ -874,6 +874,14 @@ export async function ensureAttemptLoaded(
   | { ok: true; attempt: StoredAttempt }
   | { ok: false; status: number; message: string; errorCode: string }
 > {
+  if (learner.emailVerified === false) {
+    return {
+      ok: false,
+      status: 403,
+      message: 'Email verification is required before accessing examination attempts.',
+      errorCode: 'UNVERIFIED_EMAIL',
+    };
+  }
   if (attemptStore.hasAttempt(attemptId)) {
     const owned = attemptStore.getAttempt(learner.userId, attemptId);
     if (!owned) {

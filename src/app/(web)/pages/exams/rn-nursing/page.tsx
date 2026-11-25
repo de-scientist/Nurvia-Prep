@@ -378,7 +378,7 @@ export default function RnNursingPage() {
             {/* Left Column */}
             <div className="lg:col-span-7">
               <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3.5 py-1 text-xs font-semibold text-[#0D9488] dark:text-teal-300 mb-4">
-                <span>NURVIA Clinical Programme Track</span>
+                <span>QuizNurse Clinical Programme Track</span>
                 <span className="text-slate-400">•</span>
                 <span>{PROGRAM_NAME}</span>
               </div>

@@ -764,9 +764,9 @@ function toSourceIdentityDto(
 }
 
 function defaultInferTitle(exam: RawRecord): { title: string; difficulty: DifficultyLevel | null } {
-  const rawTitle = String(exam.title ?? exam.name ?? 'NURVIA Examination').trim();
+  const rawTitle = String(exam.title ?? exam.name ?? 'QuizNurse Examination').trim();
   return {
-    title: rawTitle || 'NURVIA Examination',
+    title: rawTitle || 'QuizNurse Examination',
     difficulty: normalizeSourceDifficulty(exam.difficulty),
   };
 }

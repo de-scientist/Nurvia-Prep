@@ -22,6 +22,7 @@ import {
   verifyAuthorizedNominalTarget,
 } from '@/lib/lexmacasto/study-library-index';
 import { parseStrictProgramId } from '@/lib/study-library/curriculum-consolidation';
+import { resolveAttemptLearner } from '@/lib/attempts/auth-helper';
 
 const ALLOWED_STRATA_QUERY_PARAMS = new Set([
   'page',
@@ -115,7 +116,7 @@ export async function GET(
 
   const isNominalExamRead = resource === 'exams' && resolvedFetchType === 'nominal';
   const requiresAuth =
-    endpointDef.requiresAuth || (resolvedFetchType !== 'absolute' && !isNominalExamRead);
+    endpointDef.requiresAuth || resolvedFetchType !== 'absolute' || resource === 'exams';
   const session = await getServerCastoSession();
 
   if (requiresAuth && !session) {
@@ -127,6 +128,20 @@ export async function GET(
       },
       { status: 401, headers: NO_STORE_HEADERS }
     );
+  }
+
+  if (resource === 'exams') {
+    const learner = await resolveAttemptLearner(request);
+    if (learner && learner.emailVerified === false) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Email verification is required before browsing examinations.',
+          errorCode: 'UNVERIFIED_EMAIL',
+        },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
+    }
   }
 
   const queryParams: Record<string, string> = {};

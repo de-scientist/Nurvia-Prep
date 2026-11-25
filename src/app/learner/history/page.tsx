@@ -124,7 +124,7 @@ export default function AttemptHistoryPage() {
                 {isLoading ? (
                   <tr>
                     <td colSpan={6} className="p-8 text-center text-foreground-muted">
-                      Loading attempt records from NURVIA server...
+                      Loading attempt records from QuizNurse server...
                     </td>
                   </tr>
                 ) : attempts.length === 0 ? (

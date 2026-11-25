@@ -107,7 +107,7 @@ export default function LearnerNotificationsPage() {
             Notifications &amp; Support Inbox
           </h1>
           <p className="text-xs sm:text-sm text-foreground-secondary">
-            View server-delivered notifications and communicate with NURVIA support.
+            View server-delivered notifications and communicate with QuizNurse support.
           </p>
         </div>
 

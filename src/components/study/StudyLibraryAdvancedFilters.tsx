@@ -193,7 +193,13 @@ export function StudyLibraryAdvancedFilters({
             id="filter-subject"
             label="Subject"
             value={value.subject}
-            options={filtersData?.subjects ?? []}
+            options={
+              (selectedPathway === "RN" || selectedPathway === "RN_Exit") && filtersData?.rnSubjects?.length
+                ? filtersData.rnSubjects
+                : (selectedPathway === "PN_LPN" || selectedPathway === "PN_Exit") && filtersData?.lpnSubjects?.length
+                  ? filtersData.lpnSubjects
+                  : filtersData?.subjects ?? []
+            }
             loading={filtersLoading}
             placeholder="All subjects"
             onChange={(subject) => onChange({ subject })}
