@@ -245,7 +245,7 @@ const STUDY_SETS: StudySetCardItem[] = [
     title: "NCLEX-PN Practical Nurse Exit",
     category: "EXIT EXAM",
     examTrack: "NCLEX-PN",
-    pathway: "LPN / PN",
+    pathway: "LPN",
     badge: "Predictor",
     description:
       " Targeted practical/vocational nursing licensure simulations covering coordinated care, safety, pharmacology, and physiological integrity.",
@@ -544,7 +544,7 @@ export default function HomePage({ data }: HomePageProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
-  const startHref = user ? "/pages/entrance" : "/auth/register";
+  const startHref = "/learner/library";
 
   const filteredSets = useMemo(() => {
     return STUDY_SETS.filter((set) => {
@@ -617,7 +617,7 @@ export default function HomePage({ data }: HomePageProps) {
                   Turn Practice Into <span className="text-[#0D9488]">ATI</span>,
                 </span>
                 <span className="block">
-                  <span className="text-[#0D9488]">HESI</span> &amp; <span className="text-[#0D9488]">NCLEX</span> Readiness
+                  <span className="text-[#0D9488]">HESI</span>, and <span className="text-[#0D9488]">General</span> Readiness
                 </span>
               </h1>
 
@@ -765,7 +765,7 @@ export default function HomePage({ data }: HomePageProps) {
                 </div>
                 <div className="pt-4 mt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                   <span>{item.focus}</span>
-                  <span className="text-[#0D9488] font-semibold">NURVIA Standard</span>
+                  <span className="text-[#0A6265] font-semibold">QuizNurse Standard</span>
                 </div>
               </div>
             ))}
@@ -821,7 +821,7 @@ export default function HomePage({ data }: HomePageProps) {
                 cta: "Open RN Nursing",
               },
               {
-                title: "LPN / PN Nursing",
+                title: "LPN Nursing",
                 subtitle: "Practical Nursing Mastery",
                 icon: Layers,
                 desc: "Excel in your LPN nursing courses and exit assessments with dedicated practical nursing test banks and clinical judgment drills.",
@@ -1193,7 +1193,7 @@ export default function HomePage({ data }: HomePageProps) {
             Begin Your Structured Nursing Preparation Today
           </h2>
           <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base max-w-2xl mx-auto">
-            Experience the NURVIA learning ecosystem, built from the ground up for nursing clarity, academic excellence, and clinical confidence.
+            Experience the QuizNurse learning ecosystem, built from the ground up for nursing clarity, academic excellence, and clinical confidence.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <Link

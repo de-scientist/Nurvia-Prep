@@ -42,11 +42,40 @@ function getExamBrowseHref(set: StudySetItem) {
   return `/exams?${params.toString()}`;
 }
 
+function getExamStartHref(set: StudySetItem, isAuthenticated = false) {
+  const params = new URLSearchParams();
+  if (set.pathway !== "All") params.set("track", set.pathway);
+  const category = set.examTrack === "Regular"
+    ? "RegularCourse"
+    : set.examTrack === "NCLEX"
+      ? "ExitPredictor"
+      : set.examTrack;
+  params.set("category", category);
+  const target = `/learner/library?${params.toString()}`;
+  if (!isAuthenticated) {
+    return `/sign-in?returnTo=${encodeURIComponent(target)}`;
+  }
+  return target;
+}
+
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState<string>("All");
   const { status, user } = useAuth();
+  const isAuthenticated = Boolean(user && status === "authenticated");
   const startHref = "/learner/library";
+
+  // Public pathway discovery routes directing visitors directly to pathway subjects
+  const rnPathwayHref = "/learner/library?track=RN";
+  const lpnPathwayHref = isAuthenticated
+    ? "/learner/library?track=PN_LPN"
+    : "/exams?track=PN_LPN";
+  const rnExitPathwayHref = isAuthenticated
+    ? "/learner/library?track=RN_Exit"
+    : "/exams?track=RN_Exit";
+  const lpnExitPathwayHref = isAuthenticated
+    ? "/learner/library?track=PN_Exit"
+    : "/exams?track=PN_Exit";
 
   const categories = [
     "All",
@@ -114,10 +143,10 @@ export default function HomePage() {
                 className="font-brand text-[2.5rem] font-extrabold leading-[1.06] tracking-tight text-foreground sm:text-5xl lg:text-[3.25rem] xl:text-[3.5rem]"
               >
                 <span className="block">
-                  Turn Practice Into <span className="text-brand-teal">ATI</span>
+                  Turn Practice Into <span className="text-brand-teal">ATI</span>,
                 </span>
                 <span className="block">
-                  and <span className="text-brand-teal">HESI</span> Readiness
+                  <span className="text-brand-teal">HESI</span>, and <span className="text-brand-teal">General</span> Readiness
                 </span>
               </h1>
               <p className="max-w-lg text-sm leading-relaxed text-foreground-secondary sm:text-base">
@@ -187,10 +216,10 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             {/* Left Featured Card: RN Exams */}
-            <div className="rounded-2xl border border-border/80 bg-surface p-7 sm:p-8 flex flex-col justify-between space-y-6 shadow-xs hover:border-brand-teal/50 transition-all">
+            <div className="rounded-2xl border border-border/80 bg-surface p-7 sm:p-8 flex flex-col justify-between space-y-6 shadow-xs hover:border-brand-teal/50 hover:shadow-md transition-all group">
               <div className="space-y-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center transition-transform group-hover:scale-105">
                     <Stethoscope className="w-6 h-6" />
                   </div>
                   <div>
@@ -220,8 +249,8 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <Link href="/learner/library?track=RN" className="w-full block pt-2">
-                <Button className="w-full h-11 text-sm font-semibold bg-brand-navy hover:bg-brand-navyDeep text-white dark:bg-brand-teal dark:hover:bg-brand-tealDark justify-center gap-1.5">
+              <Link href={rnPathwayHref} className="w-full block pt-2">
+                <Button className="w-full h-11 rounded-xl text-sm font-semibold bg-brand-navy hover:bg-brand-navyDeep text-white dark:bg-brand-teal dark:hover:bg-brand-tealDark justify-center gap-2 shadow-xs transition-all">
                   <span>Start RN Practice</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -229,10 +258,10 @@ export default function HomePage() {
             </div>
 
             {/* Right Featured Card: LPN Exams */}
-            <div className="rounded-2xl border border-border/80 bg-surface p-7 sm:p-8 flex flex-col justify-between space-y-6 shadow-xs hover:border-brand-teal/50 transition-all">
+            <div className="rounded-2xl border border-border/80 bg-surface p-7 sm:p-8 flex flex-col justify-between space-y-6 shadow-xs hover:border-brand-teal/50 hover:shadow-md transition-all group">
               <div className="space-y-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center transition-transform group-hover:scale-105">
                     <Stethoscope className="w-6 h-6" />
                   </div>
                   <div>
@@ -262,8 +291,8 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <Link href="/learner/library?track=PN_LPN" className="w-full block pt-2">
-                <Button className="w-full h-11 text-sm font-semibold bg-brand-navy hover:bg-brand-navyDeep text-white dark:bg-brand-teal dark:hover:bg-brand-tealDark justify-center gap-1.5">
+              <Link href={lpnPathwayHref} className="w-full block pt-2">
+                <Button className="w-full h-11 rounded-xl text-sm font-semibold bg-brand-navy hover:bg-brand-navyDeep text-white dark:bg-brand-teal dark:hover:bg-brand-tealDark justify-center gap-2 shadow-xs transition-all">
                   <span>Start LPN Practice</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -301,8 +330,8 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <Link href="/learner/library?track=RN_Exit" className="w-full block pt-2">
-                <Button className="w-full h-11 text-sm font-semibold bg-brand-navy hover:bg-brand-navyDeep text-white dark:bg-brand-teal dark:hover:bg-brand-tealDark justify-center gap-1.5">
+              <Link href={rnExitPathwayHref} className="w-full block pt-2">
+                <Button className="w-full h-11 rounded-xl text-sm font-semibold bg-brand-navy hover:bg-brand-navyDeep text-white dark:bg-brand-teal dark:hover:bg-brand-tealDark justify-center gap-2 shadow-xs transition-all">
                   <span>Start RN Exit Practice</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -310,10 +339,10 @@ export default function HomePage() {
             </div>
 
             {/* Right Featured Card: LPN Exit Exams */}
-            <div className="rounded-2xl border border-border/80 bg-surface p-7 sm:p-8 flex flex-col justify-between space-y-6 shadow-xs hover:border-brand-teal/50 transition-all">
+            <div className="rounded-2xl border border-border/80 bg-surface p-7 sm:p-8 flex flex-col justify-between space-y-6 shadow-xs hover:border-brand-teal/50 hover:shadow-md transition-all group">
               <div className="space-y-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center transition-transform group-hover:scale-105">
                     <BookOpen className="w-6 h-6" />
                   </div>
                   <div>
@@ -340,8 +369,8 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <Link href="/learner/library?track=PN_Exit" className="w-full block pt-2">
-                <Button className="w-full h-11 text-sm font-semibold bg-brand-navy hover:bg-brand-navyDeep text-white dark:bg-brand-teal dark:hover:bg-brand-tealDark justify-center gap-1.5">
+              <Link href={lpnExitPathwayHref} className="w-full block pt-2">
+                <Button className="w-full h-11 rounded-xl text-sm font-semibold bg-brand-navy hover:bg-brand-navyDeep text-white dark:bg-brand-teal dark:hover:bg-brand-tealDark justify-center gap-2 shadow-xs transition-all">
                   <span>Start LPN Exit Practice</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -478,7 +507,7 @@ export default function HomePage() {
                   </Link>
 
                   <Link
-                    href={getExamBrowseHref(set)}
+                    href={getExamStartHref(set, isAuthenticated)}
                     className="w-full block"
                   >
                     <Button
@@ -527,7 +556,7 @@ export default function HomePage() {
               Built for How Nursing Students Truly Learn
             </h2>
             <p className="text-sm sm:text-base text-foreground-secondary">
-              Unlike static quiz dumps, NURVIA adapts to your immediate study goal—whether you are dissecting a complex case or taking a proctored simulation.
+              Unlike static quiz dumps, QuizNurse adapts to your immediate study goal—whether you are dissecting a complex case or taking a proctored simulation.
             </p>
           </div>
 
@@ -575,7 +604,7 @@ export default function HomePage() {
                 Next Generation NCLEX (NGN) Formats Fully Supported
               </h2>
               <p className="text-foreground-secondary leading-relaxed text-sm">
-                Modern nursing assessments demand more than rote memorization. NURVIA’s question engine evaluates the six clinical judgment cognitive skills:
+                Modern nursing assessments demand more than rote memorization. QuizNurse’s question engine evaluates the six clinical judgment cognitive skills:
               </p>
               <div className="grid grid-cols-2 gap-3 pt-2 text-xs font-medium">
                 {[
@@ -629,13 +658,13 @@ export default function HomePage() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <Link href={startHref}>
-              <Button size="lg" className="h-12 px-8 text-sm font-semibold bg-brand-navy hover:bg-brand-navyDeep text-white dark:bg-brand-teal dark:hover:bg-brand-tealDark">
+              <Button size="lg" className="h-12 rounded-full px-8 text-sm font-bold bg-primary hover:bg-primary-hover text-primary-foreground shadow-md transition-all">
                 Start Practicing
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
             <Link href="/exams">
-              <Button variant="outline" size="lg" className="h-12 px-8 text-sm font-semibold">
+              <Button variant="outline" size="lg" className="h-12 rounded-full px-8 text-sm font-bold border-border bg-surface hover:border-brand-teal/60 hover:text-brand-tealDark shadow-xs transition-all">
                 Browse All Exam Tracks
               </Button>
             </Link>

@@ -114,9 +114,11 @@ export function PracticeQuestionPreview() {
 
   return (
     <section
+      id="quick-practice"
       aria-label="Quick Practice"
       data-testid="hero-quick-practice"
-      className="relative rounded-lg border border-border/80 bg-surface shadow-lg shadow-slate-900/10 overflow-hidden transition-all duration-200 dark:bg-surface"
+      className="relative rounded-lg border border-border/80 bg-surface shadow-lg shadow-slate-900/10 overflow-hidden transition-all duration-200 dark:bg-surface focus:outline-none"
+      tabIndex={-1}
     >
       {/* Reference-matched accent strip hugging the top-left edge of the card */}
       <div

@@ -362,7 +362,7 @@ export function StudentTestimonialCarousel({
               </div>
 
               <p className="text-xs text-foreground-muted">
-                Published learner feedback across RN and LPN / PN nursing study tracks.
+                Published learner feedback across RN and LPN nursing study tracks.
               </p>
             </div>
           </div>
@@ -378,7 +378,7 @@ export function StudentTestimonialCarousel({
                 [
                   { id: "All" as const, label: `All (${allItems.length})` },
                   { id: "RN" as const, label: `RN (${rnCount})` },
-                  { id: "PN_LPN" as const, label: `LPN / PN (${lpnCount})` },
+                  { id: "PN_LPN" as const, label: `LPN (${lpnCount})` },
                 ] as const
               ).map((tab) => {
                 const active = pathwayFilter === tab.id;
@@ -480,11 +480,11 @@ export function StudentTestimonialCarousel({
             <div className="mx-auto max-w-2xl text-center space-y-2">
               <p className="text-sm font-semibold text-foreground">
                 {hasPublishedTestimonials
-                  ? `No published ${pathwayFilter === "RN" ? "RN" : "LPN / PN"} learner testimonials are currently listed.`
-                  : "Published learner testimonials will appear here as approved submissions become available."}
+                  ? `No published ${pathwayFilter === "RN" ? "RN" : "LPN"} learner testimonials are currently listed.`
+                  : "Published learner feedback will appear here as approved submissions become available."}
               </p>
               <p className="text-xs leading-relaxed text-foreground-muted">
-                NURVIA displays only authorized, published learner feedback for the RN (Program 9) and LPN / PN (Program 6) nursing study pathways.
+                QuizNurse displays only authorized, published learner feedback for the RN (Program 9) and LPN (Program 6) nursing study pathways.
               </p>
             </div>
           </div>
@@ -615,7 +615,7 @@ export function StudentTestimonialCarousel({
                 ? "RN & LPN"
                 : pathwayFilter === "RN"
                   ? "RN"
-                  : "LPN / PN"}{" "}
+                  : "LPN"}{" "}
               learner testimonials
             </span>
             {totalItems > visibleCount && (
