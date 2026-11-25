@@ -47,6 +47,20 @@ export function middleware(req: NextRequest) {
   if (!sid) sid = crypto.randomUUID();
   h.set("x-current-session-id", sid);
 
+  const pathname = req.nextUrl.pathname;
+
+  // Server-side authentication gate for learner library routes
+  if (pathname === "/learner/library" || pathname.startsWith("/learner/library/")) {
+    const castoLine = req.cookies.get("nurvia_casto_line")?.value?.trim();
+    const castoBadge = req.cookies.get("nurvia_casto_badge")?.value?.trim();
+
+    if (!castoLine || !castoBadge) {
+      const returnTo = `${req.nextUrl.pathname}${req.nextUrl.search}`;
+      const signinUrl = new URL(`/sign-in?returnTo=${encodeURIComponent(returnTo)}`, req.url);
+      return NextResponse.redirect(signinUrl);
+    }
+  }
+
   const res = NextResponse.next({ request: { headers: h } });
   if (isNew) {
     res.cookies.set("x-site-session", sid, { httpOnly: true, sameSite: "lax", path: "/" });

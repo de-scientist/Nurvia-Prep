@@ -16,6 +16,17 @@ export async function GET(
     );
   }
 
+  if (learner.emailVerified === false) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Email verification is required before accessing tutor sessions.',
+        errorCode: 'UNVERIFIED_EMAIL',
+      },
+      { status: 403, headers: NO_STORE_HEADERS }
+    );
+  }
+
   const { attemptId } = await context.params;
   const siteMeta = extractSiteMetadataFromRequestHeaders(
     request.headers,

@@ -257,7 +257,17 @@ export function ExamLoadingScreen({
                   Return to Study Library
                 </Button>
               </Link>
-              {onRetry && (
+              {error.toLowerCase().includes("subscription") && (
+                <Link
+                  href={`/learner/subscription?returnTo=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "/learner/library")}`}
+                  className="w-full sm:w-auto"
+                >
+                  <Button className="w-full text-xs bg-brand-teal hover:bg-brand-tealDeep text-white">
+                    View Subscription Plans
+                  </Button>
+                </Link>
+              )}
+              {onRetry && !error.toLowerCase().includes("subscription") && (
                 <Button
                   onClick={onRetry}
                   disabled={isRetrying}

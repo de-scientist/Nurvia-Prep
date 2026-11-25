@@ -47,6 +47,8 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { PageLoader, RedirectScreen } from "@/components/shared/feedback";
 import { UserAccountMenu } from "@/components/layout/user-account-menu";
 import { SuperadminSwitcher } from "@/components/layout/superadmin-switcher";
+import { NavbarSubscriptionButton } from "@/components/layout/NavbarSubscriptionButton";
+import { LearnerVerificationModal } from "@/components/auth/LearnerVerificationModal";
 interface NavSubItem {
   name: string;
   href: string;
@@ -520,6 +522,7 @@ export function LearnerShell({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+  {user && <NavbarSubscriptionButton />}
   {user && <SuperadminSwitcher />}
   <ThemeToggle />
   {user ? (
@@ -549,6 +552,9 @@ export function LearnerShell({
         <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           {children}
         </main>
+        {status === "authenticated" && user?.emailVerified === false && (
+          <LearnerVerificationModal isOpen={true} />
+        )}
       </div>
     </div>
   );

@@ -196,6 +196,23 @@ export default function SignUpPage() {
       return;
     }
 
+    // Automatically initiate email-verification process for new learner
+    try {
+      const userObj = response.data as Record<string, unknown> | undefined;
+      const userGuidId = userObj && typeof userObj === "object" ? String(userObj.guidId || userObj.id || "") || undefined : undefined;
+      void fetch("/api/auth/support/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          userGuidId,
+          action: "resend-verification",
+        }),
+      });
+    } catch {
+      // Non-blocking dispatch
+    }
+
     setSuccess(true);
   }
 
@@ -230,12 +247,14 @@ export default function SignUpPage() {
           <div className="flex items-start gap-2.5">
             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
             <div className="space-y-1">
-              <p className="font-semibold">Your registration request is complete.</p>
-              <p className="text-xs opacity-90">Sign in with your email and selected credential to continue.</p>
+              <p className="font-semibold">Account created successfully!</p>
+              <p className="text-xs opacity-90 leading-relaxed">
+                We have dispatched a verification email to <strong>{email}</strong>. Please check your inbox and spam folder to verify your email, then sign in to access the Study Library.
+              </p>
             </div>
           </div>
           <Button type="button" className="w-full" onClick={() => router.push(signInHref)}>
-            Go to Sign In
+            Continue to Sign In
           </Button>
         </div>
       ) : (

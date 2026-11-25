@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FiAlertTriangle, FiCheckCircle, FiLoader } from "react-icons/fi";
 import { APP_NAME } from "@/lib/config/config";
 import { resolveValidation } from "@/lib/services/auth/validateService";
 import { confirmEmailVerificationCode, resetCredentials } from "@/lib/services/auth/supportService";
+import { useAuth } from "@/components/auth/auth-provider";
 
 type Phase = "form" | "checking" | "credentials" | "success" | "error";
 type Method = "password" | "pin" | "both";
@@ -37,7 +38,30 @@ interface Ctx {
 
 export default function ValidateClient({ reason: reasonProp, userGuid, token }: Props) {
     const params = useSearchParams();
+    const router = useRouter();
+    const { status: authStatus, refresh } = useAuth();
     const isLink = Boolean(reasonProp && userGuid && token);
+
+    const safeDestination = useMemo(() => {
+        const requested = params.get("returnTo");
+        const track = params.get("track") || params.get("pathway");
+
+        if (requested && requested.startsWith("/") && !requested.startsWith("//")) {
+            try {
+                const url = new URL(requested, "http://localhost");
+                if (!["/sign-in", "/sign-up", "/access-denied"].includes(url.pathname)) {
+                    if (track && !url.searchParams.has("track") && !url.searchParams.has("pathway")) {
+                        url.searchParams.set("track", track);
+                    }
+                    return `${url.pathname}${url.search}${url.hash}`;
+                }
+            } catch {
+                // Ignore parse errors
+            }
+        }
+        if (track) return `/learner/library?track=${encodeURIComponent(track)}`;
+        return "/learner/library";
+    }, [params]);
 
     const [reason, setReason] = useState(
         (reasonProp ?? params.get("reason") ?? "verification").toLowerCase()
@@ -164,7 +188,18 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
         setPhase("success");
     };
 
-    const loginHref = `/auth?tab=login${ctx?.email ? `&email=${encodeURIComponent(ctx.email)}` : ""}`;
+    useEffect(() => {
+        if (phase === "success") {
+            void refresh();
+            if (authStatus === "authenticated") {
+                const timer = setTimeout(() => {
+                    router.push(safeDestination);
+                }, 2000);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [phase, authStatus, refresh, router, safeDestination]);
+
     const input =
         "w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]";
 
@@ -189,14 +224,26 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
                 {phase === "success" && (
                     <div className="py-6 text-center">
                         <FiCheckCircle className="mx-auto mb-3 h-14 w-14 text-[#0D9488]" />
-                        <h2 className="text-lg font-bold text-[#0F172A] dark:text-white">Verified</h2>
-                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{message}</p>
-                        <Link
-                            href={loginHref}
-                            className="mt-6 inline-block rounded-xl bg-[#142B4A] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#1E3A5F]"
-                        >
-                            Continue to Login
-                        </Link>
+                        <h2 className="text-lg font-bold text-[#0F172A] dark:text-white">Email Verified</h2>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{message || "Your email address has been verified successfully."}</p>
+                        {authStatus === "authenticated" ? (
+                            <div className="mt-6 space-y-2">
+                                <Link
+                                    href={safeDestination}
+                                    className="inline-block rounded-xl bg-[#142B4A] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#1E3A5F] transition-colors"
+                                >
+                                    Continue to Study Library
+                                </Link>
+                                <p className="text-xs text-slate-400">Redirecting to your destination shortly…</p>
+                            </div>
+                        ) : (
+                            <Link
+                                href={`/sign-in?returnTo=${encodeURIComponent(safeDestination)}${ctx?.email ? `&email=${encodeURIComponent(ctx.email)}` : ""}`}
+                                className="mt-6 inline-block rounded-xl bg-[#142B4A] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#1E3A5F] transition-colors"
+                            >
+                                Sign In to Continue
+                            </Link>
+                        )}
                     </div>
                 )}
 

@@ -12,6 +12,7 @@ import {
 import { buildExamUpsertPath } from '@/lib/lexmacasto/contracts';
 import { validateSameOriginRequest } from '@/lib/lexmacasto/session';
 import type { ExamLayout } from '@/lib/api-types';
+import { verifyLearnerEntitlement } from '@/lib/subscriptions/entitlement-service';
 
 export async function POST(
   request: NextRequest,
@@ -30,6 +31,18 @@ export async function POST(
     return NextResponse.json(
       { success: false, message: 'Authentication is required.', errorCode: 'UNAUTHORIZED' },
       { status: 401, headers: NO_STORE_HEADERS }
+    );
+  }
+
+  // Enforce verified account state before starting exam or tutor attempt
+  if (learner.emailVerified === false) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Email verification is required before starting an examination or tutor session.',
+        errorCode: 'UNVERIFIED_EMAIL',
+      },
+      { status: 403, headers: NO_STORE_HEADERS }
     );
   }
 
@@ -97,6 +110,30 @@ export async function POST(
           loaded.modePermissions.examReason ||
           'Timed Exam mode is not permitted for this resource.',
         errorCode: 'EXAM_NOT_PERMITTED',
+      },
+      { status: 403, headers: NO_STORE_HEADERS }
+    );
+  }
+
+  // Enforce server-side subscription & feature entitlement strictly
+  const entitlement = await verifyLearnerEntitlement({
+    session: learner.session,
+    mode: requestedDeliveryMode,
+    pathway: loaded.pathway,
+    siteMeta,
+    isSuperadmin: learner.role === 'Superadmin',
+    isEmailVerified: learner.emailVerified === true,
+  });
+
+  if (!entitlement.allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          entitlement.reason ||
+          'An active subscription is required to access this learning feature.',
+        errorCode: entitlement.errorCode || 'SUBSCRIPTION_REQUIRED',
+        status: entitlement.status,
       },
       { status: 403, headers: NO_STORE_HEADERS }
     );

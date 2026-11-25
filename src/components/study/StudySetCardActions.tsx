@@ -2,10 +2,13 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Bookmark, BookmarkCheck, Copy, ExternalLink, MoreVertical } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Bookmark, BookmarkCheck, Copy, ExternalLink, MoreVertical, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ExamDeliveryMode, ExamLayoutPolicy, StudySetCardDto } from "@/lib/api-types";
 import { isModeEnabled as sharedIsModeEnabled } from "@/lib/api-client";
+import { useAuth } from "@/components/auth/auth-provider";
+import { useFeedback } from "@/lib/feedback/feedback-context";
 
 export function isModeEnabled(
   modeAllowed: ExamDeliveryMode | string | undefined | null,
@@ -49,15 +52,105 @@ interface StudySetOverflowMenuProps {
 export function StudySetCardActions({
   studySet,
 }: StudySetCardActionsProps) {
+  const router = useRouter();
+  const { status, user } = useAuth();
+  const feedback = useFeedback();
+  const [checkingMode, setCheckingMode] = React.useState<"Exam" | "Tutor" | null>(null);
+
   const canExam = isModeEnabled(studySet.modeAllowed, "Exam");
   const canTutor = isModeEnabled(studySet.modeAllowed, "Tutor");
+
+  const handleLaunchMode = async (mode: "Exam" | "Tutor", e: React.MouseEvent) => {
+    e.preventDefault();
+    const destination = buildStudySessionHref(studySet.id, mode, studySet.allowedLayouts);
+
+    if (status === "unauthenticated") {
+      router.push(`/sign-in?returnTo=${encodeURIComponent(destination)}`);
+      return;
+    }
+
+    if (status === "authenticated" && user?.emailVerified === false) {
+      feedback.showWarning(
+        "Please verify your email address before launching " + mode + " Mode.",
+        "Email Verification Required"
+      );
+      return;
+    }
+
+    setCheckingMode(mode);
+    try {
+      const pathwayParam = encodeURIComponent(studySet.pathway || "RN");
+      const res = await fetch(`/api/subscriptions/status?mode=${mode}&pathway=${pathwayParam}`, {
+        headers: { "Cache-Control": "no-store" },
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.allowed) {
+        router.push(destination);
+        return;
+      }
+
+      const subDestination = `/learner/subscription?requiredMode=${mode}&examId=${encodeURIComponent(studySet.id)}&pathway=${pathwayParam}&returnTo=${encodeURIComponent(destination)}`;
+
+      if (data.status === "None" || data.errorCode === "NO_SUBSCRIPTION") {
+        feedback.showInfo(
+          `An active subscription is required to access ${mode} Mode. Redirecting to subscription plans…`,
+          "Subscription Required"
+        );
+        router.push(subDestination);
+      } else if (data.status === "Expired" || data.errorCode === "SUBSCRIPTION_EXPIRED") {
+        feedback.showWarning(
+          "Your subscription has expired. Please renew your plan to continue.",
+          "Subscription Expired"
+        );
+        router.push(subDestination);
+      } else if (data.status === "Cancelled" || data.errorCode === "SUBSCRIPTION_CANCELLED") {
+        feedback.showWarning(
+          "Your subscription has been cancelled. Please resubscribe to continue.",
+          "Subscription Cancelled"
+        );
+        router.push(subDestination);
+      } else if (data.errorCode === "ENTITLEMENT_LACKING") {
+        feedback.showWarning(
+          data.message || `Your current plan does not include access to ${mode} Mode. Please upgrade your subscription.`,
+          "Plan Upgrade Required"
+        );
+        router.push(subDestination);
+      } else {
+        feedback.showError(
+          data.message || "Unable to verify subscription status at this time. Please try again.",
+          "Service Unavailable"
+        );
+      }
+    } catch {
+      feedback.showError("Unable to verify subscription status. Please check your connection.", "Network Error");
+    } finally {
+      setCheckingMode(null);
+    }
+  };
 
   return (
     <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60">
       {canTutor ? (
-        <Link href={buildStudySessionHref(studySet.id, "Tutor", studySet.allowedLayouts)} className="block">
-          <Button variant="outline" size="sm" className="w-full h-8 text-xs font-semibold hover:border-brand-teal/60">
-            Tutor Mode
+        <Link
+          href={buildStudySessionHref(studySet.id, "Tutor", studySet.allowedLayouts)}
+          onClick={(e) => handleLaunchMode("Tutor", e)}
+          className="block"
+        >
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={checkingMode !== null}
+            className="w-full h-8 text-xs font-semibold hover:border-brand-teal/60"
+          >
+            {checkingMode === "Tutor" ? (
+              <>
+                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                Verifying…
+              </>
+            ) : (
+              "Tutor Mode"
+            )}
           </Button>
         </Link>
       ) : (
@@ -74,9 +167,24 @@ export function StudySetCardActions({
       )}
 
       {canExam ? (
-        <Link href={buildStudySessionHref(studySet.id, "Exam", studySet.allowedLayouts)} className="block">
-          <Button size="sm" className="w-full h-8 text-xs font-semibold bg-brand-teal hover:bg-brand-tealDark text-white">
-            Exam Mode
+        <Link
+          href={buildStudySessionHref(studySet.id, "Exam", studySet.allowedLayouts)}
+          onClick={(e) => handleLaunchMode("Exam", e)}
+          className="block"
+        >
+          <Button
+            size="sm"
+            disabled={checkingMode !== null}
+            className="w-full h-8 text-xs font-semibold bg-brand-teal hover:bg-brand-tealDark text-white"
+          >
+            {checkingMode === "Exam" ? (
+              <>
+                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                Verifying…
+              </>
+            ) : (
+              "Exam Mode"
+            )}
           </Button>
         </Link>
       ) : (

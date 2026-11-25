@@ -4,6 +4,7 @@ import type { CastoSessionCredentials } from '@/lib/lexmacasto/headers';
 import {
   extractSiteMetadataFromRequestHeaders,
   lexmaCastoRequest,
+  sanitizeAuthUser,
 } from '@/lib/lexmacasto/client';
 import { buildCurrentUserEndpointPath } from '@/lib/lexmacasto/contracts';
 
@@ -17,6 +18,7 @@ interface CachedIdentity {
   guidId?: string;
   email?: string;
   role?: string;
+  emailVerified?: boolean;
   expiresAt: number;
 }
 
@@ -44,6 +46,7 @@ export async function resolveAttemptLearner(
   guidId?: string;
   email?: string;
   role?: string;
+  emailVerified?: boolean;
   session: CastoSessionCredentials;
 } | null> {
   const session = await getServerCastoSession();
@@ -62,6 +65,7 @@ export async function resolveAttemptLearner(
     let guidId: string | undefined;
     let email: string | undefined;
     let role: string | undefined;
+    let emailVerified: boolean | undefined;
 
     try {
       const siteMeta = extractSiteMetadataFromRequestHeaders(
@@ -83,6 +87,10 @@ export async function resolveAttemptLearner(
 
       if (userRes.ok && userRes.data) {
         const u = (userRes.data.data ?? userRes.data) as Record<string, unknown>;
+        const sanitized = sanitizeAuthUser(u as any);
+        if (sanitized) {
+          emailVerified = sanitized.emailVerified;
+        }
         const rawGuid = u.guidId ?? u.userGuidId;
         const rawId = u.id;
         if (typeof rawGuid === 'string' && rawGuid.trim()) {
@@ -115,6 +123,7 @@ export async function resolveAttemptLearner(
       guidId,
       email,
       role,
+      emailVerified,
       expiresAt: Date.now() + IDENTITY_TTL_MS,
     };
     cache.set(cacheKey, resolved);
@@ -129,6 +138,7 @@ export async function resolveAttemptLearner(
     guidId: resolved.guidId,
     email: resolved.email,
     role: resolved.role,
+    emailVerified: resolved.emailVerified,
     session,
   };
 }
