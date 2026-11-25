@@ -28,7 +28,6 @@ export interface StudentTestimonial {
   roleOrQualification?: string;
   attribution?: string;
   source: "verified_backend" | "approved_local" | "none";
-  isVerified?: boolean;
   isSample: false;
 }
 

@@ -2113,8 +2113,23 @@ export const nurviaApi = {
 
       if (reqCategory && reqCategory !== 'all') {
         const c = item.category.toLowerCase();
-        const rawCat = String(reqCategory);
-        if (c !== rawCat && !c.includes(rawCat)) return false;
+        const t = item.title.toLowerCase();
+        const rawCat = String(reqCategory).toLowerCase();
+        const matchesCategory =
+          c === rawCat ||
+          c.includes(rawCat) ||
+          t === rawCat ||
+          t.includes(rawCat) ||
+          (rawCat === 'med-surg' && (t.includes('med-surg') || t.includes('medical-surgical') || t.includes('med surg') || t.includes('medical surgical'))) ||
+          (rawCat === 'pediatrics' && (t.includes('pediatric') || t.includes('peds') || t.includes('child'))) ||
+          (rawCat === 'mental health' && (t.includes('mental health') || t.includes('psych'))) ||
+          (rawCat === 'fundamentals' && t.includes('fundamental')) ||
+          (rawCat === 'pharmacology' && (t.includes('pharmacol') || t.includes('dosage') || t.includes('drug'))) ||
+          (rawCat === 'leadership' && (t.includes('leadership') || t.includes('management') || t.includes('professional'))) ||
+          (rawCat === 'adult health' && t.includes('adult health')) ||
+          (rawCat === 'health assessment' && (t.includes('health assessment') || t.includes('physical assessment') || t.includes('assessment'))) ||
+          (rawCat === 'maternal & newborn' && (t.includes('maternal') || t.includes('newborn') || t.includes('obstetric') || t.includes('maternity') || t.includes('women')));
+        if (!matchesCategory) return false;
       }
       if (reqSchool) {
         const sc = String(item.school ?? '').toLowerCase();
@@ -2137,6 +2152,27 @@ export const nurviaApi = {
         if (!hay.includes(search)) return false;
       }
       return true;
+    });
+
+    const getCanonicalSortRank = (title: string): number => {
+      const lower = title.toLowerCase();
+      if (lower.includes('med-surg') || lower.includes('medical-surgical') || lower.includes('med surg') || lower.includes('medical surgical')) return 1;
+      if (lower.includes('pediatric') || lower.includes('peds') || lower.includes('child')) return 2;
+      if (lower.includes('mental health') || lower.includes('psych')) return 3;
+      if (lower.includes('fundamental')) return 4;
+      if (lower.includes('pharmacol') || lower.includes('dosage') || lower.includes('drug')) return 5;
+      if (lower.includes('leadership') || lower.includes('management') || lower.includes('professional')) return 6;
+      if (lower.includes('adult health')) return 7;
+      if (lower.includes('health assessment') || lower.includes('assessment') || lower.includes('physical assessment')) return 8;
+      if (lower.includes('maternal') || lower.includes('newborn') || lower.includes('obstetric') || lower.includes('maternity') || lower.includes('women')) return 9;
+      return 10;
+    };
+
+    filteredSubjects.sort((a, b) => {
+      const rankA = getCanonicalSortRank(a.title);
+      const rankB = getCanonicalSortRank(b.title);
+      if (rankA !== rankB) return rankA - rankB;
+      return a.title.localeCompare(b.title);
     });
 
     const totalCount = filteredSubjects.length;
@@ -2749,6 +2785,9 @@ export const nurviaApi = {
 
   // Study Guides (not yet provisioned on LexmaCasto)
   async getStudyGuides(params?: { category?: string; pathway?: string; search?: string }): Promise<ApiResponse<import('./api-types').StudyGuideSummaryDto[]>> {
+    if (!params) {
+      return unprovisionedResponse('Study Guides');
+    }
     return unprovisionedResponse('Study Guides', params?.category || params?.pathway || params?.search);
   },
 

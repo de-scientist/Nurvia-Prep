@@ -252,8 +252,9 @@ export function ContextualTutorWorkspace({
           setDisclosureNotice(res.data.disclosureNotice || DEFAULT_DISCLAIMER);
           setAiProviderConfigured(res.data.aiProviderConfigured);
           setRemainingTurns(res.data.remainingTurns);
-          if (res.data.practiceChecks && typeof res.data.practiceChecks === "object") {
-            setPracticeChecks((prev) => ({ ...res.data!.practiceChecks!, ...prev }));
+          const dataWithPractice = res.data as typeof res.data & { practiceChecks?: Record<string, TutorPracticeCheckResponseDto> };
+          if (dataWithPractice.practiceChecks && typeof dataWithPractice.practiceChecks === "object") {
+            setPracticeChecks((prev) => ({ ...(dataWithPractice.practiceChecks as Record<string, TutorPracticeCheckResponseDto>), ...prev }));
           }
         } else {
           setErrorMsg(res.message || "Unable to load Tutor conversation for this question.");
@@ -570,7 +571,7 @@ export function ContextualTutorWorkspace({
         initialHints={tutorHints}
         onHintReceived={(hint) =>
           setTutorHints((prev) =>
-            prev.some((h) => h.hintTier === hint.hintTier) ? prev : [...prev, hint]
+            prev.some((h) => h.stage === hint.stage) ? prev : [...prev, hint]
           )
         }
         onEvaluated={(evalRes) => setTutorEval(evalRes)}

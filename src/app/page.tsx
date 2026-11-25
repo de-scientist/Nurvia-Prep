@@ -101,7 +101,7 @@ export default function HomePage() {
           was deliberately NOT placed in a separate section below the hero. */}
       <section aria-labelledby="hero-heading" className="relative isolate overflow-hidden border-b border-border/70">
         <HeroBackgroundVideo />
-        <div className="relative z-10 mx-auto max-w-7xl px-4 pb-10 pt-5 sm:px-6 sm:pb-12 sm:pt-7 lg:px-8 lg:pb-14 lg:pt-8">
+        <div className="relative z-10 mx-auto max-w-7xl px-4 pb-6 pt-3 sm:px-6 sm:pb-8 sm:pt-4 lg:px-8 lg:pb-10 lg:pt-5">
           <div className="grid items-center gap-8 md:gap-8 lg:grid-cols-12 lg:gap-10">
             <div className="min-w-0 space-y-4 sm:space-y-5 lg:col-span-7">
               <p className="flex items-center gap-3 text-[13px] font-bold uppercase tracking-[0.22em] text-brand-teal">

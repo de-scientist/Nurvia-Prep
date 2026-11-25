@@ -94,7 +94,12 @@ export default function SignUpPage() {
     }
 
     if (status === "authenticated" && user) {
-      router.replace(user.role === "Learner" ? "/learner" : "/access-denied");
+      const targetDestination = requested?.startsWith("/")
+        ? requested
+        : track
+          ? `/learner/library?track=${encodeURIComponent(track)}`
+          : "/learner";
+      router.replace(user.role === "Learner" ? targetDestination : "/access-denied");
     }
   }, [status, user, router]);
 

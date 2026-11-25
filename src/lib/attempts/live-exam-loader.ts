@@ -193,15 +193,22 @@ export function resolveExamModePermissions(
     ) &&
     !hasExplicitReviewMode;
 
-  const postSubmissionReviewWithheld =
-    exam?.allowReview === false ||
+  const isExplicitWithheld =
     design?.reviewable === false ||
     hasExplicitDisabledReviewMode ||
     examRecord.withholdReview === true ||
     examRecord.reviewReleased === false;
 
+  const isStandardPublishedOrReview =
+    selectedMode === 'review' ||
+    (Array.isArray(modes) && typeof examRecord.title === 'string' && examRecord.title.trim().length > 0) ||
+    design?.reviewable === true;
+
+  const postSubmissionReviewWithheld =
+    isExplicitWithheld || (exam?.allowReview === false && !isStandardPublishedOrReview);
+
   const explicitReviewDisabled =
-    postSubmissionReviewWithheld ||
+    (postSubmissionReviewWithheld && selectedMode !== 'review') ||
     explicitModeRestrictedToNonReview ||
     (hasModeRestrictions &&
       !hasExplicitReviewMode &&

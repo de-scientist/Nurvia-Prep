@@ -25,8 +25,13 @@ export function StudyLibraryHeader({ isPublic = false, summary, selectedPathway,
       <header className="flex flex-col gap-2 border-b border-border pb-4">
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center rounded-full bg-brand-teal/15 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-brand-tealDark dark:text-teal-200">
-            {pathwayDisplay}
+            Pathway: {pathwayDisplay}
           </span>
+          {selectedSubject && (
+            <span className="inline-flex items-center rounded-full bg-surface-muted border border-border px-2.5 py-0.5 text-xs font-semibold text-foreground-secondary">
+              Subject: {selectedSubject}
+            </span>
+          )}
         </div>
         <h1 className="font-brand text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
           {selectedSubject || "Practice Examinations"}

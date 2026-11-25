@@ -273,16 +273,25 @@ export default function LearnerDashboardPage() {
                       )}
                     >
                       {subscription?.status?.toLowerCase() === "active"
-                        ? `${subscription.planName || "Active"}`
+                        ? `${subscription.planName || "Active Plan"}`
                         : "Starter / Inactive"}
                     </span>
                   </div>
                 </div>
                 <Link href="/learner/subscription" className="mt-3 block">
-                  <Button variant="outline" size="sm" className="w-full text-xs h-8">
+                  <Button
+                    variant={subscription?.status?.toLowerCase() === "active" ? "outline" : "primary"}
+                    size="sm"
+                    className={cn(
+                      "w-full text-xs h-8 font-semibold",
+                      subscription?.status?.toLowerCase() === "active"
+                        ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10"
+                        : "bg-brand-teal hover:bg-brand-tealDark text-white"
+                    )}
+                  >
                     {subscription?.status?.toLowerCase() === "active"
-                      ? "Manage Subscription"
-                      : "Subscribe Now"}
+                      ? "Active"
+                      : "Subscribe"}
                   </Button>
                 </Link>
               </Card>

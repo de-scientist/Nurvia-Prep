@@ -41,6 +41,7 @@ function createEmptyTestimonialsCollection(): TestimonialsCollectionResult {
     eligibleBackendCount: 0,
     rejectedBackendCount: 0,
     endpointChecked: false,
+    localFallbackUsed: false,
   };
 }
 

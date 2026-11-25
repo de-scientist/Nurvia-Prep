@@ -11,7 +11,11 @@ export function isModeEnabled(
   modeAllowed: ExamDeliveryMode | string | undefined | null,
   target: "Exam" | "Review" | "Tutor"
 ): boolean {
-  return sharedIsModeEnabled(modeAllowed, target);
+  if (!modeAllowed) return false;
+  const normalized = String(modeAllowed).trim().toLowerCase();
+  if (normalized === "all") return true;
+  if (normalized === "both") return target === "Exam" || target === "Review";
+  return normalized === target.toLowerCase();
 }
 
 export function buildStudySessionHref(

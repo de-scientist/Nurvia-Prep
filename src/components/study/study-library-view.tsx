@@ -371,17 +371,23 @@ export function StudyLibraryView({
     <div className="space-y-6">
       <StudyLibraryHeader isPublic={isPublic} summary={summary} selectedPathway={pathway} selectedSubject={advanced.subject} />
 
-      <StudyLibrarySearch
-        value={searchInput}
-        onChange={setSearchInput}
-        isSearching={loading && searchInput !== debouncedSearch}
-      />
+      {/* Unified Search & Category/Pathway Controls: Search top-left, filters alongside on the right */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <StudyLibrarySearch
+            value={searchInput}
+            onChange={setSearchInput}
+            isSearching={loading && searchInput !== debouncedSearch}
+          />
+        </div>
 
-      <StudyLibraryCategoryTabs
-        selectedPathway={pathway}
-        selectedCategory={category}
-        availablePathways={filtersData?.pathways ?? []}
-        availableCategories={filtersData?.categories ?? []}
+        <div className="shrink-0">
+          <StudyLibraryCategoryTabs
+            isExamView={isExamView}
+            selectedPathway={pathway}
+            selectedCategory={category}
+            availablePathways={filtersData?.pathways ?? []}
+            availableCategories={filtersData?.categories ?? []}
         onSelectPathway={(next) => {
           setPathway(next);
           if (category === "ExitPredictor" && next !== "All" && next !== "RN_Exit" && next !== "PN_Exit") {
@@ -441,6 +447,8 @@ export function StudyLibraryView({
           setPageNumber(1);
         }}
       />
+        </div>
+      </div>
 
       <StudyLibraryAdvancedFilters
         filtersData={filtersData}

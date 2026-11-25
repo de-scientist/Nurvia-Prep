@@ -123,11 +123,11 @@ export function PracticeQuestionPreview() {
         aria-hidden="true"
         className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-teal from-45% via-brand-teal/25 to-transparent"
       />
-      <div className="p-3.5 sm:p-4 pb-2.5 border-b border-border/60">
+      <div className="p-3 sm:p-3.5 pb-2 border-b border-border/60">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-brand-teal text-white flex items-center justify-center">
-              <HeartPulse className="w-4 h-4" />
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-brand-teal text-white flex items-center justify-center">
+              <HeartPulse className="w-3.5 h-3.5" />
             </div>
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-foreground">
@@ -151,7 +151,7 @@ export function PracticeQuestionPreview() {
         </div>
 
         {/* Eyebrow tags */}
-        <div className="flex flex-wrap items-center gap-2 mt-2.5">
+        <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-teal/10 text-brand-teal dark:text-teal-300 border border-brand-teal/25 text-[10px] font-semibold">
             <Sparkles className="w-3 h-3" />
             {currentQ.modeBadge}
@@ -163,11 +163,11 @@ export function PracticeQuestionPreview() {
       </div>
 
         {/* Card Body */}
-        <div className="p-3.5 sm:p-4 space-y-3">
+        <div className="p-3 sm:p-3.5 space-y-2.5">
           {!completed ? (
             <>
               {/* Question Text */}
-              <p className="font-ui text-xs sm:text-sm font-semibold text-foreground leading-relaxed">
+              <p className="font-ui text-xs sm:text-sm font-semibold text-foreground leading-snug">
                 {currentQ.stem}
               </p>
 
@@ -212,27 +212,27 @@ export function PracticeQuestionPreview() {
                       aria-checked={isSelected}
                       onClick={() => handleSelectOption(idx)}
                       className={cn(
-                        "w-full text-left p-2.5 sm:p-3 rounded-lg border transition-all flex items-start gap-2.5 group focus:outline-none focus:ring-2 focus:ring-brand-teal/70",
+                        "w-full text-left p-2 sm:p-2.5 rounded-lg border transition-all flex items-start gap-2 group focus:outline-none focus:ring-2 focus:ring-brand-teal/70",
                         optionStyle
                       )}
                     >
                       <span
                         className={cn(
-                          "w-6 h-6 shrink-0 rounded-full border text-xs font-bold flex items-center justify-center transition-colors font-mono",
+                          "w-5 h-5 shrink-0 rounded-full border text-[11px] font-bold flex items-center justify-center transition-colors font-mono",
                           badgeStyle
                         )}
                       >
                         {opt.letter}
                       </span>
-                      <span className="text-xs font-medium leading-snug flex-1 pt-0.5">
+                      <span className="text-xs font-medium leading-tight flex-1 pt-0.5">
                         {opt.text}
                       </span>
                       {hasSelected && isSelected && (
                         <span className="shrink-0 pt-0.5">
                           {isCorrect ? (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                           ) : (
-                            <XCircle className="w-4 h-4 text-rose-500" />
+                            <XCircle className="w-3.5 h-3.5 text-rose-500" />
                           )}
                         </span>
                       )}
@@ -245,7 +245,7 @@ export function PracticeQuestionPreview() {
               {hasSelected && showRationale && (
                 <div
                   className={cn(
-                    "p-3 rounded-lg border text-xs leading-relaxed space-y-1.5 animate-in fade-in duration-200",
+                    "p-2.5 rounded-lg border text-xs leading-relaxed space-y-1 animate-in fade-in duration-200",
                     currentQ.options[selectedOptionIndex]?.isCorrect
                       ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-100"
                       : "bg-surface-muted border-border text-foreground"
@@ -255,7 +255,7 @@ export function PracticeQuestionPreview() {
                     <BookOpen className="w-3 h-3" />
                     <span>Clinical Reasoning & Rationale</span>
                   </div>
-                  <p className="text-[11px] leading-relaxed">{currentQ.rationale}</p>
+                  <p className="text-[11px] leading-snug">{currentQ.rationale}</p>
                   <p className="text-foreground-secondary pt-1 border-t border-border/50 text-[10px] italic">
                     💡 {currentQ.clinicalTip}
                   </p>

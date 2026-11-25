@@ -277,6 +277,8 @@ function ExamSessionContent() {
       router.replace(`/sign-in?returnTo=${encodeURIComponent(returnTo)}`);
     } else if (status === "authenticated" && user?.role !== "Learner" && user?.role !== "Superadmin") {
       router.replace("/access-denied");
+    } else if (status === "authenticated" && user?.emailVerified === false) {
+      setLoadError("Email verification is required before accessing protected examination or tutor sessions. Please verify your email address in Account Settings.");
     }
   }, [status, user, router]);
 
@@ -1372,7 +1374,7 @@ function ExamSessionContent() {
                 onHintReceived={(hint) =>
                   setTutorHints((prev) => {
                     const existing = prev[q.id] ?? [];
-                    if (existing.some((h) => h.hintTier === hint.hintTier)) return prev;
+                    if (existing.some((h) => h.stage === hint.stage)) return prev;
                     return { ...prev, [q.id]: [...existing, hint] };
                   })
                 }

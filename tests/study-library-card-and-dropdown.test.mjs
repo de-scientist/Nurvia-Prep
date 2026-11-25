@@ -223,37 +223,28 @@ console.log('=== STUDY LIBRARY SUBJECT CARD & DROPDOWN UX VERIFICATION SUITE ===
   console.log('[PASS] 2. Dropdown pathway selection updates verified metrics and preserves programId {6, 9} & subjectIds routing');
 }
 
-// 3. Structural UI hierarchy, stacking, opacity, keyboard, and mobile touch contracts in SubjectCard.tsx
+// 3. Structural UI hierarchy, compact layout, direct actions, and accessibility contracts in SubjectCard.tsx
 {
   const cardSrc = fs.readFileSync(path.join(repoRoot, 'src/components/study/SubjectCard.tsx'), 'utf8');
 
-  const badgeIdx = cardSrc.indexOf('data-testid="subject-pathway-badge"');
+  const cardIdx = cardSrc.indexOf('data-testid="subject-card"');
   const titleIdx = cardSrc.indexOf('{subject.title}');
-  const selectorIdx = cardSrc.indexOf('data-testid="subject-pathway-selector"');
-  const metricsIdx = cardSrc.indexOf('data-testid="subject-content-metrics"');
-  const ctaIdx = cardSrc.indexOf('/* 5. Primary Action */');
+  const labelIdx = cardSrc.indexOf('categoryLabel');
+  const rnBtnIdx = cardSrc.indexOf('selectPathway("RN")');
+  const lpnBtnIdx = cardSrc.indexOf('selectPathway("PN_LPN")');
 
-  assert.ok(badgeIdx > -1 && titleIdx > badgeIdx, 'Pathway badge must appear at top of card header before title');
-  assert.ok(selectorIdx > titleIdx, 'Pathway dropdown must appear below subject header/title');
-  assert.ok(metricsIdx > selectorIdx, 'Upper pathway dropdown must appear ABOVE content metrics and description');
-  assert.ok(ctaIdx > metricsIdx, 'Primary action CTA must remain below content information');
+  assert.ok(cardIdx > -1, 'SubjectCard root must have testid="subject-card"');
+  assert.ok(labelIdx > -1 && titleIdx > labelIdx, 'Category/Subject label must appear before title');
+  assert.ok(rnBtnIdx > titleIdx, 'Direct RN action must appear in card actions below title');
+  assert.ok(lpnBtnIdx > titleIdx, 'Direct LPN/PN action must appear in card actions below title');
 
-  // Stacking, clipping & opaque background fixes
-  assert.equal(cardSrc.includes('overflow-hidden'), false, 'SubjectCard must not clip dropdown menus with overflow-hidden');
-  assert.equal(cardSrc.includes('bg-popover'), false, 'SubjectCard must not use undefined bg-popover token');
-  assert.equal(cardSrc.includes('bottom-full'), false, 'Dropdown must open downward rather than upward over header');
-  assert.ok(cardSrc.includes('bg-surface-elevated'), 'Dropdown menu must use opaque bg-surface-elevated');
-  assert.ok(cardSrc.includes('top-full'), 'Dropdown menu must open predictably downward');
-  assert.ok(cardSrc.includes('menuOpen ? "z-40') && cardSrc.includes('z-50'), 'Open card and menu must layer above sibling grid cards');
+  // Simplification verification per Section 4: no dropdown, no merged badges, no repeated course labels
+  assert.equal(cardSrc.includes('Select Academic Pathway'), false, 'Select Academic Pathway dropdown must be removed');
+  assert.equal(cardSrc.includes('MERGED — RN + LPN'), false, 'MERGED — RN + LPN label must be removed from the simplified card');
 
-  // Accessibility, keyboard & mobile touch targets
-  assert.ok(cardSrc.includes('role="listbox"'), 'Dropdown menu must use accessible listbox role');
-  assert.ok(cardSrc.includes('role="option"'), 'Dropdown options must use option role');
-  assert.ok(cardSrc.includes('aria-selected={isSelected}'), 'Dropdown options must announce aria-selected state');
-  assert.ok(cardSrc.includes('aria-haspopup="listbox"'), 'Trigger must expose aria-haspopup="listbox"');
-  assert.ok(cardSrc.includes('ArrowDown') && cardSrc.includes('ArrowUp') && cardSrc.includes('Escape'), 'Keyboard navigation (ArrowDown, ArrowUp, Escape) must be supported');
-  assert.ok(cardSrc.includes('pointerdown'), 'Outside interaction dismissal must support pointer/touch devices');
-  assert.ok(cardSrc.includes('min-h-[44px]'), 'Interactive controls must meet 44px touch target sizing');
+  // Accessibility and mobile touch targets
+  assert.ok(cardSrc.includes('GraduationCap'), 'Subject card must render subject category icon');
+  assert.ok(cardSrc.includes('ArrowRight'), 'Direct pathway actions must render forward indicators');
 
   // Learner dashboard key uniqueness check
   const learnerDashSrc = fs.readFileSync(path.join(repoRoot, 'src/app/learner/page.tsx'), 'utf8');
@@ -262,12 +253,7 @@ console.log('=== STUDY LIBRARY SUBJECT CARD & DROPDOWN UX VERIFICATION SUITE ===
     '/learner dashboard must key SubjectCard by presentationId ?? id'
   );
 
-  // Merged badge & neutral pathway selection checks (Objectives D & E)
-  assert.ok(cardSrc.includes('MERGED — RN + LPN'), 'SubjectCard must render explicit MERGED — RN + LPN indicator for COMMON cards');
-  assert.ok(cardSrc.includes('Choose Pathway (RN or LPN / PN)'), 'SubjectCard must present neutral pathway selection prompt when no pathway is pre-filtered');
-  assert.ok(cardSrc.includes('Combined: {combinedExamCount}'), 'SubjectCard must display combined RN + LPN exam count');
-
-  console.log('[PASS] 3. SubjectCard DOM hierarchy, opaque downward dropdown, z-index layering, keyboard & touch contracts verified');
+  console.log('[PASS] 3. SubjectCard simplified compact DOM hierarchy, direct pathway actions, and accessibility contracts verified');
 }
 
 console.log('\nALL STUDY LIBRARY CARD & DROPDOWN TESTS PASSED!');
