@@ -40,7 +40,7 @@ test('1. Hero reproduces the approved reference copy and hierarchy', () => {
   for (const copy of [
     'Built for nursing school exam days',
     'Turn Practice Into',
-    'and <span className="text-brand-teal">HESI</span> Readiness',
+    '<span className="text-brand-teal">HESI</span>, and <span className="text-brand-teal">General</span> Readiness',
     'Work through ATI, HESI, and exit-exam practice at your own pace. Learn from clear rationales, build comfort with NGN formats, and choose the study mode that fits today.',
     'Try a Practice Set',
     'Explore the Exam Library',

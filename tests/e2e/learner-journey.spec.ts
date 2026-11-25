@@ -43,7 +43,7 @@ test.describe("Complete authenticated learner journey", () => {
   test("Step 1 — Public landing page hero, CTAs, Quick Practice, navbar", async ({ page }) => {
     await page.goto("/");
     await expect(
-      page.getByRole("heading", { level: 1, name: /Turn Practice Into ATI\s*and HESI Readiness/ })
+      page.getByRole("heading", { level: 1, name: /Turn Practice Into ATI,\s*HESI,\s*and General Readiness/ })
     ).toBeVisible();
     await expect(page.getByText("Built for nursing school exam days", { exact: false })).toBeVisible();
     await expect(page.getByText("Work through ATI, HESI, and exit-exam practice", { exact: false })).toBeVisible();
@@ -59,7 +59,7 @@ test.describe("Complete authenticated learner journey", () => {
 
     const startLink = page.getByRole("link", { name: /Try a Practice Set/ }).first();
     await expect(startLink).toBeVisible();
-    await expect(startLink).toHaveAttribute("href", /\/sign-up/);
+    await expect(startLink).toHaveAttribute("href", "/learner/library");
 
     const exploreLink = page.getByRole("main").getByRole("link", { name: "Explore the Exam Library" });
     await expect(exploreLink).toBeVisible();
@@ -76,7 +76,7 @@ test.describe("Complete authenticated learner journey", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     await expect(
-      page.getByRole("heading", { level: 1, name: /Turn Practice Into ATI\s*and HESI Readiness/ })
+      page.getByRole("heading", { level: 1, name: /Turn Practice Into ATI,\s*HESI,\s*and General Readiness/ })
     ).toBeVisible();
     await expect(page.getByRole("region", { name: "Quick Practice" })).toBeVisible();
     await shot(page, "01b-hero-mobile");

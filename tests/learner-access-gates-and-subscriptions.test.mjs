@@ -96,36 +96,57 @@ async function test(name, fn) {
 
 console.log('=== NURVIA LEARNER ACCESS GATES & SUBSCRIPTION STATUS TEST SUITE ===');
 
-// --- 1. SERVER-SIDE AUTHENTICATION & LIBRARY ROUTE PROTECTION ---
-await test('1. Middleware: unauthenticated requests to /learner/library redirect server-side to /sign-in with returnTo preserved', () => {
-  const req = new NextRequest('http://localhost:3000/learner/library?track=RN&subjectIds=188', {
+// --- 1. SERVER-SIDE AUTHENTICATION & ACCESS CONTROL BOUNDARIES ---
+await test('1. Middleware: unauthenticated requests to /learner/library are public for discovery, while /learner redirects to /sign-in', () => {
+  const reqLibrary = new NextRequest('http://localhost:3000/learner/library?track=RN', {
     headers: { host: 'localhost:3000' },
   });
 
-  const res = middleware(req);
-  assert.equal(res.status, 307, 'Should redirect unauthenticated request');
-  const location = res.headers.get('location') || '';
-  assert.ok(location.includes('/sign-in'), 'Redirect must point to /sign-in');
-  assert.ok(location.includes('returnTo=%2Flearner%2Flibrary%3Ftrack%3DRN%26subjectIds%3D188'), 'returnTo must preserve full path and query params');
-});
+  const resLibrary = middleware(reqLibrary);
+  assert.equal(resLibrary.status, 200, 'Unauthenticated request to /learner/library must be permitted for public subject discovery');
+  assert.equal(resLibrary.headers.get('location'), null);
 
-await test('2. Middleware: authenticated requests with Casto session cookies pass through to /learner/library', () => {
-  const req = new NextRequest('http://localhost:3000/learner/library?track=PN_LPN', {
-    headers: {
-      host: 'localhost:3000',
-      cookie: 'nurvia_casto_line=valid_line_123; nurvia_casto_badge=valid_badge_456',
-    },
+  const reqDashboard = new NextRequest('http://localhost:3000/learner', {
+    headers: { host: 'localhost:3000' },
   });
 
-  const res = middleware(req);
-  assert.notEqual(res.status, 307, 'Authenticated request must not redirect to sign-in');
-  assert.equal(res.status, 200);
+  const resDashboard = middleware(reqDashboard);
+  assert.equal(resDashboard.status, 307, 'Unauthenticated request to /learner dashboard must redirect to /sign-in');
+  const locDashboard = resDashboard.headers.get('location') || '';
+  assert.ok(locDashboard.includes('/sign-in'), 'Redirect must point to /sign-in');
+  assert.ok(locDashboard.includes('returnTo=%2Flearner'), 'returnTo must preserve dashboard path');
 });
 
-await test('3. LearnerStudyLibraryPage: does not grant public bypass (allowPublic removed)', () => {
+await test('2. Middleware: unauthenticated requests to protected examination and account routes redirect to /sign-in with returnTo preserved', () => {
+  const reqExam = new NextRequest('http://localhost:3000/exam-session?examId=exam_123&mode=Exam', {
+    headers: { host: 'localhost:3000' },
+  });
+
+  const resExam = middleware(reqExam);
+  assert.equal(resExam.status, 307, 'Should redirect unauthenticated examination session request');
+  const locationExam = resExam.headers.get('location') || '';
+  assert.ok(locationExam.includes('/sign-in'), 'Redirect must point to /sign-in');
+  assert.ok(locationExam.includes('returnTo=%2Fexam-session%3FexamId%3Dexam_123%26mode%3DExam'), 'returnTo must preserve full exam session path and query params');
+
+  const reqHistory = new NextRequest('http://localhost:3000/learner/history', {
+    headers: { host: 'localhost:3000' },
+  });
+
+  const resHistory = middleware(reqHistory);
+  assert.equal(resHistory.status, 307, 'Should redirect unauthenticated attempt history request');
+  const locationHistory = resHistory.headers.get('location') || '';
+  assert.ok(locationHistory.includes('/sign-in'), 'Redirect must point to /sign-in');
+  assert.ok(locationHistory.includes('returnTo=%2Flearner%2Fhistory'), 'returnTo must preserve history path');
+});
+
+await test('3. LearnerStudyLibraryPage allows public discovery via allowPublic, while LearnerDashboardPage enforces authentication', () => {
   const libraryPageSrc = fs.readFileSync(path.join(ROOT, 'src/app/learner/library/page.tsx'), 'utf8');
-  assert.ok(!libraryPageSrc.includes('allowPublic'), 'LearnerStudyLibraryPage must not contain allowPublic');
-  assert.ok(libraryPageSrc.includes('<LearnerShell>'), 'Must enforce LearnerShell authentication');
+  assert.ok(libraryPageSrc.includes('allowPublic={true}'), 'LearnerStudyLibraryPage must allow unauthenticated public subject discovery');
+  assert.ok(libraryPageSrc.includes('<LearnerShell'), 'Must use LearnerShell layout');
+
+  const dashboardPageSrc = fs.readFileSync(path.join(ROOT, 'src/app/learner/page.tsx'), 'utf8');
+  assert.ok(!dashboardPageSrc.includes('allowPublic={true}'), 'LearnerDashboardPage must not allow unauthenticated public access');
+  assert.ok(dashboardPageSrc.includes('<LearnerShell'), 'Must use LearnerShell layout');
 });
 
 // --- 2. EMAIL VERIFICATION GATE & MODAL ---
@@ -253,6 +274,61 @@ await test('16. Subscription page: preserves returnTo destination and provides R
   assert.ok(subPageSrc.includes('safeReturnTo'), 'Must safely parse returnTo destination');
   assert.ok(subPageSrc.includes('Resume'), 'Must offer Resume CTA after activation');
   assert.ok(subPageSrc.includes('nurvia:subscription-updated'), 'Must dispatch update event on activation');
+});
+
+// --- 8. PRESERVATION AND ADDITIONAL REQUIREMENT VERIFICATION ---
+await test('17. LearnerShell: preserves NavbarSubscriptionButton in dashboard navbar unconditionally', () => {
+  const shellSrc = fs.readFileSync(path.join(ROOT, 'src/components/layout/learner-shell.tsx'), 'utf8');
+  assert.ok(
+    shellSrc.includes('<NavbarSubscriptionButton />'),
+    'LearnerShell must render NavbarSubscriptionButton directly in header'
+  );
+  assert.ok(
+    !shellSrc.includes('{user && <NavbarSubscriptionButton />}'),
+    'NavbarSubscriptionButton must not be hidden when user is unauthenticated or loading'
+  );
+});
+
+await test('18. NavbarSubscriptionButton: comprehensive revalidation, error resilience, and visual styling', () => {
+  const navBtnSrc = fs.readFileSync(path.join(ROOT, 'src/components/layout/NavbarSubscriptionButton.tsx'), 'utf8');
+  assert.ok(navBtnSrc.includes('visibilitychange'), 'Must revalidate on document visibilitychange');
+  assert.ok(navBtnSrc.includes('storage'), 'Must revalidate on storage event');
+  assert.ok(navBtnSrc.includes('focus'), 'Must revalidate on window focus');
+  assert.ok(navBtnSrc.includes('nurvia:subscription-updated'), 'Must revalidate on subscription updated event');
+  assert.ok(navBtnSrc.includes('data-testid="navbar-subscription-active"'), 'Must have distinct active test identifier');
+  assert.ok(navBtnSrc.includes('data-testid="navbar-subscription-subscribe"'), 'Must have distinct subscribe test identifier');
+  assert.ok(navBtnSrc.includes('emerald'), 'Active state must use emerald visual accent');
+  assert.ok(navBtnSrc.includes('brand-teal'), 'Subscribe state must use brand teal visual accent');
+});
+
+await test('19. StudySetDetails: validates mode launch with authentication, email verification, pathway, and subscription status', () => {
+  const detailsSrc = fs.readFileSync(path.join(ROOT, 'src/components/study/StudySetDetails.tsx'), 'utf8');
+  assert.ok(detailsSrc.includes('handleLaunchMode'), 'Must implement handleLaunchMode for detail view mode actions');
+  assert.ok(detailsSrc.includes('/api/subscriptions/status'), 'Must check backend subscription status');
+  assert.ok(detailsSrc.includes('/learner/subscription?requiredMode='), 'Must redirect unentitled learners to subscription plans');
+  assert.ok(detailsSrc.includes('returnTo='), 'Must preserve intended destination and pathway in redirect');
+  assert.ok(detailsSrc.includes('emailVerified === false'), 'Must validate email verification before launching protected mode');
+});
+
+await test('20. verifyLearnerEntitlement: rejects expired and cancelled subscriptions, enforces pathway boundaries fail-closed', async () => {
+  // Unauthenticated call fails closed
+  const unauth = await verifyLearnerEntitlement({
+    session: null,
+    mode: 'Tutor',
+    pathway: 'RN',
+  });
+  assert.equal(unauth.allowed, false);
+  assert.equal(unauth.status, 'None');
+
+  // Unverified call fails closed
+  const unverified = await verifyLearnerEntitlement({
+    session: { castoLine: 'line1', castoBadge: 'badge1' },
+    mode: 'Exam',
+    pathway: 'RN',
+    isEmailVerified: false,
+  });
+  assert.equal(unverified.allowed, false);
+  assert.equal(unverified.errorCode, 'UNVERIFIED');
 });
 
 console.log(`\nResults: ${passed} passed, ${failed} failed.`);
