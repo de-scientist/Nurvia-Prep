@@ -121,7 +121,7 @@ export function getUserFriendlyMessage(error: unknown): string {
 
   switch (errorType) {
     case ErrorType.NETWORK_ERROR:
-      return 'Unable to connect to NURVIA services. Please check your internet connection.';
+      return 'Unable to connect to QuizNurse services. Please check your internet connection.';
     case ErrorType.TIMEOUT:
       return 'Request timed out. Please try again.';
     case ErrorType.HTTP_400:

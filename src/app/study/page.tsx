@@ -97,7 +97,7 @@ export default function StudyHubLandingPage() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-teal/10 text-brand-teal text-xs font-bold uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>NURVIA Study Ecosystem</span>
+              <span>QuizNurse Study Ecosystem</span>
             </div>
             <h1 className="font-brand text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground max-w-3xl mx-auto leading-tight">
               A Complete Study Hub Built for Clinical Judgment

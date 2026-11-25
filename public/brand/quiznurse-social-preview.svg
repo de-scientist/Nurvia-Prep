@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" fill="none">
+  <!-- QuizNurse Open Graph / Social Sharing Banner (1200x630) -->
+  <defs>
+    <linearGradient id="ogBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A6265" />
+      <stop offset="100%" stop-color="#193B42" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#ogBgGrad)" />
+
+  <!-- Subtle decorative clinical grid circles -->
+  <circle cx="1050" cy="150" r="320" stroke="#148387" stroke-opacity="0.2" stroke-width="2" />
+  <circle cx="1050" cy="150" r="220" stroke="#C58B43" stroke-opacity="0.15" stroke-width="2" />
+  <circle cx="100" cy="550" r="240" stroke="#D6E9E3" stroke-opacity="0.15" stroke-width="1.5" />
+
+  <!-- Symbol -->
+  <g transform="translate(100, 180) scale(2.4)">
+    <path d="M 67 65 A 32 32 0 1 0 76 46"
+          stroke="#F1F6F4"
+          stroke-width="9"
+          stroke-linecap="round" />
+    <path d="M 37 59 L 37 41 C 37 36 41 34 45 37 L 54 55 C 57 60 62 57 62 52 L 62 36"
+          stroke="#D6E9E3"
+          stroke-width="7"
+          stroke-linecap="round"
+          stroke-linejoin="round" />
+    <path d="M 52 52 L 77 77"
+          stroke="#C58B43"
+          stroke-width="9"
+          stroke-linecap="round" />
+    <path d="M 65 77 L 77 77 L 77 65"
+          stroke="#C58B43"
+          stroke-width="5"
+          stroke-linecap="round"
+          stroke-linejoin="round" />
+    <circle cx="50" cy="22" r="5" fill="#C58B43" />
+  </g>
+
+  <!-- Typography -->
+  <text x="380" y="270" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="76" font-weight="800" fill="#FFFFFF" letter-spacing="-1">
+    Quiz<tspan fill="#2DD4BF">Nurse</tspan>
+  </text>
+  <text x="385" y="325" font-family="'Inter', system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#C58B43" letter-spacing="2">
+    NURSING EXAMINATION PREPARATION PLATFORM
+  </text>
+  <text x="385" y="375" font-family="'Inter', system-ui, -apple-system, sans-serif" font-size="20" font-weight="400" fill="#E2E8F0">
+    NCLEX-RN • NCLEX-PN • ATI TEAS 7 • HESI A2 • RN &amp; LPN Exit Examinations
+  </text>
+
+  <!-- Badge -->
+  <rect x="385" y="420" width="310" height="44" rx="22" fill="#148387" fill-opacity="0.4" stroke="#2DD4BF" stroke-width="1.5" />
+  <text x="540" y="448" text-anchor="middle" font-family="'Inter', system-ui, -apple-system, sans-serif" font-size="16" font-weight="700" fill="#FFFFFF" letter-spacing="1">
+    OFFICIAL: QUIZNURSE.COM
+  </text>
+</svg>

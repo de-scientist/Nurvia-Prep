@@ -73,15 +73,15 @@ const Navbar: React.FC = () => {
           <div className="flex lg:hidden items-center w-full h-full gap-2 px-1">
             <Link href="/" className="shrink-0">
               <Image
-                src="/brand/nurvia-symbol.svg"
-                alt="NURVIA"
+                src="/brand/quiznurse-symbol.svg"
+                alt="QuizNurse"
                 width={32}
                 height={32}
                 className="dark:hidden"
               />
               <Image
-                src="/brand/nurvia-symbol.svg"
-                alt="NURVIA"
+                src="/brand/quiznurse-symbol.svg"
+                alt="QuizNurse"
                 width={32}
                 height={32}
                 className="hidden dark:block"
@@ -140,8 +140,8 @@ const Navbar: React.FC = () => {
             <Link href="/" className="flex items-center gap-3 shrink-0">
               {/* Light logo */}
               <Image
-                src="/brand/nurvia-symbol.svg"
-                alt="NURVIA"
+                src="/brand/quiznurse-symbol.svg"
+                alt="QuizNurse"
                 width={32}
                 height={32}
                 className="dark:hidden"
@@ -149,8 +149,8 @@ const Navbar: React.FC = () => {
 
               {/* Dark logo */}
               <Image
-                src="/brand/nurvia-symbol.svg"
-                alt="NURVIA"
+                src="/brand/quiznurse-symbol.svg"
+                alt="QuizNurse"
                 width={32}
                 height={32}
                 className="hidden dark:block"

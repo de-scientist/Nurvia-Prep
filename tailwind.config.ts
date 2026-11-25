@@ -12,10 +12,24 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          navy: "#142B4A", // Deep Navy — primary NURVIA brand
-          teal: "#0D9488", // Clinical Teal — actions and accents
-          tealDark: "#0F766E", // darker teal hover
-          navyDeep: "#0F2036", // deepest navy emphasis
+          teal: "#0A6265", // Deep Teal — primary QuizNurse brand
+          slate: "#193B42", // Forest Slate — headings and dark surfaces
+          mist: "#F1F6F4", // Eucalyptus Mist — light backgrounds
+          sand: "#F5EDE2", // Warm Sand — warm supporting backgrounds
+          sage: "#D6E9E3", // Soft Sage — secondary surfaces
+          amber: "#C58B43", // Muted Amber — accents and highlights
+          navy: "#193B42", // Forest Slate alias for backward compatibility
+          tealDark: "#084F52", // Darker teal hover
+          navyDeep: "#10262B", // Deep slate emphasis
+        },
+        clinical: {
+          teal: "#0A6265",
+          tealHover: "#084F52",
+          slate: "#193B42",
+          mist: "#F1F6F4",
+          sand: "#F5EDE2",
+          sage: "#D6E9E3",
+          amber: "#C58B43",
         },
         background: "var(--background)",
         foreground: {

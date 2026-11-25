@@ -9,7 +9,7 @@ export default function TermsPage() {
         </div>
         <h1 className="text-3xl font-extrabold text-[#0F172A] dark:text-white mb-4">Terms and Conditions</h1>
         <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-          By using this site, you agree to our terms and conditions governing access to NURVIA clinical exam preparation resources, assessments, and learner accounts.
+          By using this site, you agree to our terms and conditions governing access to QuizNurse clinical exam preparation resources, assessments, and learner accounts.
         </p>
       </div>
     </div>

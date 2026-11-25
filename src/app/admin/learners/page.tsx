@@ -69,7 +69,7 @@ export default function AdminLearnersPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `nurvia-learners-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `quiznurse-learners-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };

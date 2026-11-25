@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       examDate: body.examDate,
       questionCount: body.questionCount ? Number(body.questionCount) : undefined,
       weeksStudied: body.weeksStudied ? Number(body.weeksStudied) : undefined,
-      prepResources: Array.isArray(body.prepResources) ? body.prepResources : ['NURVIA Study Library'],
+      prepResources: Array.isArray(body.prepResources) ? body.prepResources : ['QuizNurse Study Library'],
       story: body.story,
     });
 

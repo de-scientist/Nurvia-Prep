@@ -32,14 +32,14 @@ export default function InsightsPage() {
   const [questionCount, setQuestionCount] = React.useState<number>(85);
   const [weeksStudied, setWeeksStudied] = React.useState<number>(8);
   const [selectedResources, setSelectedResources] = React.useState<string[]>([
-    "NURVIA Study Library",
+    "QuizNurse Study Library",
     "Mark Klimek Notes",
   ]);
   const [story, setStory] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
 
   const availableResources = [
-    "NURVIA Study Library",
+    "QuizNurse Study Library",
     "Mark Klimek Notes",
     "Saunders Comprehensive Review",
     "UWorld",
@@ -193,7 +193,7 @@ export default function InsightsPage() {
                 </div>
               </div>
               <div className="mt-3 truncate text-xl font-bold text-slate-900">
-                {loading ? "--" : data?.mostUsedResources[0]?.resourceName ?? "NURVIA Study"}
+                {loading ? "--" : data?.mostUsedResources[0]?.resourceName ?? "QuizNurse Study"}
               </div>
               <p className="mt-1 text-xs text-slate-500">
                 {data?.mostUsedResources[0] ? `${data.mostUsedResources[0].passPercentage}% pass rate with resource` : "Highest yield prep asset"}

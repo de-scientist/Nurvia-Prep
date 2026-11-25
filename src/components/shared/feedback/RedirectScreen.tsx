@@ -14,7 +14,7 @@ export interface RedirectScreenProps {
 
 export function RedirectScreen({
   heading = "Preparing your workspace",
-  description = "Securely redirecting you to your NURVIA dashboard.",
+  description = "Securely redirecting you to your QuizNurse dashboard.",
   destination,
   showProgress = true,
 }: RedirectScreenProps) {

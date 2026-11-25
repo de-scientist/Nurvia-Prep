@@ -38,7 +38,7 @@ export async function GET(
     return NextResponse.json(
       {
         success: false,
-        message: 'Sign in with a NURVIA learner account to access Lectures 4–12.',
+        message: 'Sign in with a QuizNurse learner account to access Lectures 4–12.',
         errorCode: 'UNAUTHORIZED',
       },
       { status: 401, headers: NO_STORE_HEADERS }

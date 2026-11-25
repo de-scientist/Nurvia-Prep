@@ -255,7 +255,7 @@ const ThemeDropdown: React.FC = () => {
                   transition-colors
                 "
               >
-                Reset to NURVIA Default
+                Reset to QuizNurse Default
               </button>
             </div>
           </div>

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 80" width="100%" height="100%" fill="none">
+  <!-- QuizNurse Primary Horizontal Logo (Light Surfaces) -->
+  <defs>
+    <linearGradient id="qnTealGradLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A6265" />
+      <stop offset="100%" stop-color="#148387" />
+    </linearGradient>
+    <linearGradient id="qnAmberGradLight" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C58B43" />
+      <stop offset="100%" stop-color="#E2A65C" />
+    </linearGradient>
+    <linearGradient id="qnSlateGradLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#193B42" />
+      <stop offset="100%" stop-color="#2D5A64" />
+    </linearGradient>
+  </defs>
+
+  <!-- Scaled Vector Symbol -->
+  <g transform="translate(6, 6) scale(0.68)">
+    <path d="M 67 65 A 32 32 0 1 0 76 46"
+          stroke="url(#qnTealGradLight)"
+          stroke-width="9.5"
+          stroke-linecap="round" />
+    <path d="M 37 59 L 37 41 C 37 36 41 34 45 37 L 54 55 C 57 60 62 57 62 52 L 62 36"
+          stroke="url(#qnSlateGradLight)"
+          stroke-width="7.5"
+          stroke-linecap="round"
+          stroke-linejoin="round" />
+    <path d="M 52 52 L 77 77"
+          stroke="url(#qnAmberGradLight)"
+          stroke-width="9.5"
+          stroke-linecap="round" />
+    <path d="M 65 77 L 77 77 L 77 65"
+          stroke="url(#qnAmberGradLight)"
+          stroke-width="5"
+          stroke-linecap="round"
+          stroke-linejoin="round" />
+    <circle cx="50" cy="22" r="5" fill="url(#qnAmberGradLight)" />
+  </g>
+
+  <!-- Wordmark: QuizNurse -->
+  <g transform="translate(86, 48)">
+    <text font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="34" font-weight="800" letter-spacing="-0.5">
+      <tspan fill="#193B42">Quiz</tspan>
+      <tspan fill="#0A6265">Nurse</tspan>
+    </text>
+  </g>
+
+  <!-- Subtitle / Platform Mission Descriptor -->
+  <g transform="translate(88, 64)">
+    <text font-family="'Inter', system-ui, -apple-system, sans-serif" font-size="9" font-weight="700" fill="#64748B" letter-spacing="1.2">
+      NURSING EXAMINATION PREPARATION
+    </text>
+  </g>
+</svg>

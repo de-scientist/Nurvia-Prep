@@ -82,7 +82,7 @@ export default function EntrancePage() {
             <div className="mx-auto max-w-7xl">
                 <div className="mb-10 text-center">
                     <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3.5 py-1 text-xs font-semibold text-[#0D9488] dark:text-teal-300 mb-3">
-                        NURVIA Study Notes & Reference Library
+                        QuizNurse Study Notes & Reference Library
                     </div>
                     <h1 className="text-3xl font-extrabold text-[#0F172A] dark:text-white sm:text-4xl">
                         Where would you like to Start Reading?

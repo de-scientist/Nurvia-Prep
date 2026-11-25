@@ -3,43 +3,54 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * NURVIA-PREP — Canonical NURVIA Design System (Tailwind CSS v4)
- * Primary Navy: #142B4A | Clinical Teal: #0D9488 | Background: #FFFFFF
- * Surface: #F8FAFC | Primary Text: #0F172A | Muted Text: #64748B | Border: #E2E8F0
+ * QUIZNURSE — Official QuizNurse Design System (Tailwind CSS v4)
+ * Clinical Warmth Palette:
+ * Deep Teal: #0A6265 | Forest Slate: #193B42 | Eucalyptus Mist: #F1F6F4
+ * Warm Sand: #F5EDE2 | Soft Sage: #D6E9E3 | Muted Amber: #C58B43
  */
 :root {
-  /* Canonical Brand Identity */
-  --brand-navy: #142B4A;
-  --brand-navy-deep: #0F2036;
-  --brand-teal: #0D9488;
-  --brand-teal-dark: #0F766E;
+  /* QuizNurse Official Brand Identity */
+  --brand-teal: #0A6265;
+  --brand-teal-dark: #084F52;
+  --brand-slate: #193B42;
+  --brand-navy: #193B42;
+  --brand-navy-deep: #10262B;
+
+  /* Clinical Warmth Palette */
+  --clinical-teal: #0A6265;
+  --clinical-teal-hover: #084F52;
+  --clinical-slate: #193B42;
+  --clinical-mist: #F1F6F4;
+  --clinical-sand: #F5EDE2;
+  --clinical-sage: #D6E9E3;
+  --clinical-amber: #C58B43;
 
   /* Base Surfaces */
   --background: #FFFFFF;
-  --foreground: #0F172A;
+  --foreground: #193B42;
   --surface: #F8FAFC;
-  --surface-muted: #F1F5F9;
+  --surface-muted: #F1F6F4;
   --surface-elevated: #FFFFFF;
-  --secondary-surface: #F8FAFC;
+  --secondary-surface: #F1F6F4;
 
   /* Typography */
-  --text-primary: #0F172A;
+  --text-primary: #193B42;
   --text-secondary: #475569;
   --text-muted: #64748B;
-  --text-color: #0F172A;
+  --text-color: #193B42;
 
   /* Structural Borders & Rings */
   --border: #E2E8F0;
   --border-strong: #CBD5E1;
   --input: #E2E8F0;
-  --ring: #0D9488;
+  --ring: #0A6265;
 
   /* Interactive Actions */
-  --primary: #0D9488;
-  --primary-hover: #0F766E;
+  --primary: #0A6265;
+  --primary-hover: #084F52;
   --primary-foreground: #FFFFFF;
-  --accent: #D97706;
-  --accent-hover: #B45309;
+  --accent: #C58B43;
+  --accent-hover: #A67232;
 
   /* Semantic States */
   --success: #059669;
@@ -193,6 +204,13 @@
   --color-surface-muted: var(--surface-muted);
   --color-surface-elevated: var(--surface-elevated);
   --color-brand-tealDeep: var(--brand-teal-dark);
+  --color-clinical-teal: #0A6265;
+  --color-clinical-tealHover: #084F52;
+  --color-clinical-slate: #193B42;
+  --color-clinical-mist: #F1F6F4;
+  --color-clinical-sand: #F5EDE2;
+  --color-clinical-sage: #D6E9E3;
+  --color-clinical-amber: #C58B43;
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-primary: var(--primary);
@@ -239,4 +257,92 @@ h1, h2, h3, h4, .font-brand {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.65);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   NURVIA Prep — Authentication Experience Animations
+   Refined, purposeful, and fully respects prefers-reduced-motion
+   ───────────────────────────────────────────────────────────── */
+@keyframes authFadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes authImageReveal {
+  0% {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes authFloatSlow {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1.5deg);
+  }
+}
+
+@keyframes authFloatReverse {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(8px) rotate(-1.5deg);
+  }
+}
+
+@keyframes authPulseGlow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.08);
+  }
+}
+
+.auth-animate-fade-in-up {
+  animation: authFadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.auth-animate-image-reveal {
+  animation: authImageReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.auth-animate-float {
+  animation: authFloatSlow 12s ease-in-out infinite;
+}
+
+.auth-animate-float-reverse {
+  animation: authFloatReverse 14s ease-in-out infinite;
+}
+
+.auth-animate-pulse-glow {
+  animation: authPulseGlow 8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-animate-fade-in-up,
+  .auth-animate-image-reveal,
+  .auth-animate-float,
+  .auth-animate-float-reverse,
+  .auth-animate-pulse-glow {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    transition: none !important;
+  }
 }

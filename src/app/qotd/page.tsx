@@ -257,7 +257,7 @@ export default function QotdPage() {
                 )}
 
                 <div className="text-[11px] text-foreground-muted pt-1">
-                  Original NURVIA-Prep clinical scenario calibrated for NCLEX judgment practice.
+                  Original QuizNurse clinical scenario calibrated for NCLEX judgment practice.
                 </div>
               </Card>
             )}

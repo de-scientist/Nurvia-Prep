@@ -90,7 +90,7 @@ export default function SupportPage() {
       {/* App Title / Branding */}
       <div className="flex flex-col items-center justify-center mb-6 text-center">
         <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3.5 py-1 text-xs font-semibold text-[#0D9488] dark:text-teal-300 mb-3">
-          NURVIA Academic & Technical Support
+          QuizNurse Academic & Technical Support
         </div>
         <div className="flex items-center justify-center gap-2">
           <span className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-slate-600 dark:text-slate-300">

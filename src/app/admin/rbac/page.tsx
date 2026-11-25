@@ -376,7 +376,7 @@ export default function AdminRbacPage() {
               required
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
-              placeholder="staff.member@nurvia.edu"
+              placeholder="staff.member@quiznurse.com"
               className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-foreground"
             />
             <select

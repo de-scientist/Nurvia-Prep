@@ -1,4 +1,4 @@
-// Root Application Layout — NURVIA Design System
+// Root Application Layout — QuizNurse Design System
 import "./globals.css";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import type { Metadata } from "next";
@@ -23,11 +23,36 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Nurvia-Prep — Your Path to Nursing Confidence",
+  metadataBase: new URL("https://quiznurse.com"),
+  title: "QuizNurse — Nursing Examination Preparation Platform",
   description:
-    "NURVIA comprehensive nursing education and exam-preparation platform for ATI TEAS, HESI A2, RN, LPN, NCLEX-RN, and NCLEX-PN.",
+    "QuizNurse is the premier nursing examination preparation and learning platform for NCLEX-RN, NCLEX-PN, ATI TEAS 7, HESI A2, and RN/LPN exit examinations.",
   icons: {
     icon: "/brand/favicon.svg",
+    apple: "/brand/quiznurse-app-icon.svg",
+  },
+  manifest: "/manifest.json",
+  openGraph: {
+    title: "QuizNurse — Nursing Examination Preparation Platform",
+    description: "Prepare with clinical confidence for NCLEX-RN, NCLEX-PN, ATI TEAS 7, and HESI A2 with QuizNurse.",
+    url: "https://quiznurse.com",
+    siteName: "QuizNurse",
+    images: [
+      {
+        url: "/brand/quiznurse-social-preview.svg",
+        width: 1200,
+        height: 630,
+        alt: "QuizNurse — Nursing Examination Preparation Platform",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "QuizNurse — Nursing Examination Preparation Platform",
+    description: "Prepare with clinical confidence for NCLEX-RN, NCLEX-PN, ATI TEAS 7, and HESI A2 with QuizNurse.",
+    images: ["/brand/quiznurse-social-preview.svg"],
   },
 };
 
@@ -38,7 +63,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className={`light ${plusJakartaSans.variable} ${inter.variable}`}>
-      <body className="antialiased bg-background text-foreground selection:bg-[#0D9488] selection:text-white transition-colors duration-200">
+      <body className="antialiased bg-background text-foreground selection:bg-[#0A6265] selection:text-white transition-colors duration-200">
         <ThemeProvider>
           <FeedbackProvider>
             <AuthProvider>

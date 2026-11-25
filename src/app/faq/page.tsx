@@ -24,9 +24,9 @@ const faqs: FaqItem[] = [
   {
     id: "faq-01",
     category: "Exam Preparation",
-    question: "How does NURVIA prepare me for ATI Content Mastery and Comprehensive Predictor exams?",
+    question: "How does QuizNurse prepare me for ATI Content Mastery and Comprehensive Predictor exams?",
     answer:
-      "NURVIA organizes practice questions around ATI's core testing blueprints—including Fundamentals, Adult Med-Surg, Pharmacology, Maternal-Newborn, Nursing Care of Children, Mental Health, and Community Health. Every question includes dual rationales breaking down why the correct choice is safe and why distractors are clinically unsound.",
+      "QuizNurse organizes practice questions around ATI's core testing blueprints—including Fundamentals, Adult Med-Surg, Pharmacology, Maternal-Newborn, Nursing Care of Children, Mental Health, and Community Health. Every question includes dual rationales breaking down why the correct choice is safe and why distractors are clinically unsound.",
   },
   {
     id: "faq-02",
@@ -38,23 +38,23 @@ const faqs: FaqItem[] = [
   {
     id: "faq-03",
     category: "NGN & Clinical Judgment",
-    question: "Does NURVIA support all Next Generation NCLEX (NGN) question item types?",
+    question: "Does QuizNurse support all Next Generation NCLEX (NGN) question item types?",
     answer:
-      "Yes. NURVIA natively supports Extended Multiple Response, Extended Drag-and-Drop, Cloze (Drop-Down), Enhanced Hot Spot, Matrix / Grid, and 6-question Unfolding Clinical Case Studies that follow the NCSBN Clinical Judgment Measurement Model (CJMM).",
+      "Yes. QuizNurse natively supports Extended Multiple Response, Extended Drag-and-Drop, Cloze (Drop-Down), Enhanced Hot Spot, Matrix / Grid, and 6-question Unfolding Clinical Case Studies that follow the NCSBN Clinical Judgment Measurement Model (CJMM).",
   },
   {
     id: "faq-04",
     category: "NGN & Clinical Judgment",
     question: "How does partial credit (polytomous) scoring work in NGN questions?",
     answer:
-      "NURVIA accurately implements NCSBN scoring models: +/- Scoring (giving +1 point for correct responses and deducting -1 point for incorrect choices down to a minimum score of 0) and 0/1 Scoring (for drop-down and matrix cells), so your practice scores reflect true NCLEX scoring.",
+      "QuizNurse accurately implements NCSBN scoring models: +/- Scoring (giving +1 point for correct responses and deducting -1 point for incorrect choices down to a minimum score of 0) and 0/1 Scoring (for drop-down and matrix cells), so your practice scores reflect true NCLEX scoring.",
   },
   {
     id: "faq-05",
     category: "Account & Subscriptions",
-    question: "Can I use NURVIA across my phone, tablet, and laptop?",
+    question: "Can I use QuizNurse across my phone, tablet, and laptop?",
     answer:
-      "Yes. NURVIA is fully responsive and cloud-synchronized across iOS, Android, macOS, and Windows. Your question history, saved questions, flashcard intervals, and study planner sync automatically.",
+      "Yes. QuizNurse is fully responsive and cloud-synchronized across iOS, Android, macOS, and Windows. Your question history, saved questions, flashcard intervals, and study planner sync automatically.",
   },
   {
     id: "faq-06",
@@ -73,9 +73,9 @@ const faqs: FaqItem[] = [
   {
     id: "faq-08",
     category: "Platform & Technical",
-    question: "Who writes and reviews the clinical rationales on NURVIA?",
+    question: "Who writes and reviews the clinical rationales on QuizNurse?",
     answer:
-      "All NURVIA rationales and unfolding case studies are authored and reviewed by MSN and DNP nurse educators, licensed nurse practitioners, and clinical nurse specialists referencing evidence-based medical and nursing guidelines.",
+      "All QuizNurse rationales and unfolding case studies are authored and reviewed by MSN and DNP nurse educators, licensed nurse practitioners, and clinical nurse specialists referencing evidence-based medical and nursing guidelines.",
   },
 ];
 

@@ -59,7 +59,7 @@ interface ExamShellProps {
 
 export function ExamShell({
   children,
-  examTitle = "NURVIA Clinical Examination",
+  examTitle = "QuizNurse Clinical Examination",
   totalQuestions = 0,
   configuredQuestionCount,
   currentQuestion = 1,

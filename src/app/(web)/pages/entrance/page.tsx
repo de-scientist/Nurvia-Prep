@@ -131,7 +131,7 @@ export default function EntrancePage() {
                 {/* Page heading */}
                 <div className="mb-8 text-center sm:mb-12">
                     <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3.5 py-1 text-xs font-semibold text-[#0D9488] dark:text-teal-300 mb-3">
-                        NURVIA Programme Directory
+                        QuizNurse Programme Directory
                     </div>
                     <h1 className="text-2xl font-extrabold text-[#0F172A] dark:text-white sm:text-3xl lg:text-4xl">
                         Where would you like to start?

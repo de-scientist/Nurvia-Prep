@@ -1,29 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%" fill="none">
-  <!-- NURVIA Geometric Learning Path Symbol -->
+  <!-- QuizNurse Symbol (Alias for legacy nurvia-symbol.svg) -->
   <defs>
-    <linearGradient id="nurviaTealGrad" x1="15%" y1="85%" x2="85%" y2="15%">
-      <stop offset="0%" stop-color="#0D9488" />
-      <stop offset="100%" stop-color="#2DD4BF" />
+    <linearGradient id="qnTealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A6265" />
+      <stop offset="100%" stop-color="#148387" />
     </linearGradient>
-    <linearGradient id="nurviaNavyGrad" x1="10%" y1="10%" x2="90%" y2="90%">
-      <stop offset="0%" stop-color="#142B4A" />
-      <stop offset="100%" stop-color="#0F2036" />
+    <linearGradient id="qnAmberGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C58B43" />
+      <stop offset="100%" stop-color="#E2A65C" />
+    </linearGradient>
+    <linearGradient id="qnSlateGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#193B42" />
+      <stop offset="100%" stop-color="#2D5A64" />
     </linearGradient>
   </defs>
 
-  <!-- Base foundational arc (Foundation) -->
-  <path d="M 22 76 C 22 52, 40 38, 56 38 C 66 38, 74 44, 78 52" 
-        stroke="url(#nurviaNavyGrad)" 
-        stroke-width="10" 
-        stroke-linecap="round" />
-
-  <!-- Ascending learning path arc (Progression) -->
-  <path d="M 28 82 C 42 82, 60 76, 74 58 C 82 48, 82 32, 72 24 C 64 17, 50 20, 48 34" 
-        stroke="url(#nurviaTealGrad)" 
-        stroke-width="10" 
-        stroke-linecap="round" />
-
-  <!-- Zenith focus marker (Confidence & Achievement) -->
-  <circle cx="76" cy="22" r="7" fill="#0D9488" />
-  <circle cx="24" cy="76" r="5" fill="#142B4A" />
+  <path d="M 67 65 A 32 32 0 1 0 76 46" stroke="url(#qnTealGrad)" stroke-width="9.5" stroke-linecap="round" />
+  <path d="M 37 59 L 37 41 C 37 36 41 34 45 37 L 54 55 C 57 60 62 57 62 52 L 62 36" stroke="url(#qnSlateGrad)" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 52 52 L 77 77" stroke="url(#qnAmberGrad)" stroke-width="9.5" stroke-linecap="round" />
+  <path d="M 65 77 L 77 77 L 77 65" stroke="url(#qnAmberGrad)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="50" cy="22" r="5" fill="url(#qnAmberGrad)" />
 </svg>

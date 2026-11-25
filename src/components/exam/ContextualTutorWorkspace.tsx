@@ -430,7 +430,7 @@ export function ContextualTutorWorkspace({
           <p className="text-foreground font-semibold">
             {aiProviderConfigured
               ? "AI + Grounded Clinical Tutor (Attempt Isolated)"
-              : "NURVIA Grounded Clinical Coach (Attempt Isolated)"}
+              : "QuizNurse Grounded Clinical Coach (Attempt Isolated)"}
           </p>
           <p>{disclosureNotice}</p>
         </div>

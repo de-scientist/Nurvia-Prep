@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     default: `${APP_NAME} — NCLEX-RN/PN, ATI TEAS 7, HESI A2 & Nursing Exam Prep`,
     template: `%s | ${APP_NAME}`,
   },
-  description: `${APP_NAME} is the NURVIA clinical exam preparation platform for nursing learners: NCLEX-RN, NCLEX-PN, ATI TEAS 7, HESI A2, and RN & LPN Q-Banks.`,
+  description: `${APP_NAME} is the premier clinical exam preparation platform for nursing learners: NCLEX-RN, NCLEX-PN, ATI TEAS 7, HESI A2, and RN & LPN Q-Banks.`,
   applicationName: APP_NAME,
   robots: { index: true, follow: true },
   openGraph: { siteName: APP_NAME, type: "website", url: SITE_URL, title: APP_NAME },
@@ -32,7 +32,7 @@ const siteJsonLd = [
     "@type": "Organization",
     name: APP_NAME,
     url: SITE_URL,
-    logo: `${SITE_URL}/brand/nurvia-logo-light.svg`,
+    logo: `${SITE_URL}/brand/quiznurse-logo-light.svg`,
   },
   {
     "@context": "https://schema.org",

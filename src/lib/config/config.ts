@@ -4,18 +4,18 @@
 // -----------------------------------------------------------------------------
 // APP INFO
 // -----------------------------------------------------------------------------
-export const SITE_HEADER_NAME = process.env.SKEW_LINE_APP_NAME || "Nurvia-Prep";
-export const APP_NAME = "Nurvia-Prep";
-export const APP_TITLE = "Nurvia-Prep";
-export const APP_ACRONYM = "NP";
-export const APP_DESCRIPTION = process.env.SKEW_LINE_APP_DESCRIPTION || "NURVIA Clinical Nursing Examination & Preparation Platform";
+export const SITE_HEADER_NAME = process.env.SKEW_LINE_APP_NAME || "QuizNurse";
+export const APP_NAME = "QuizNurse";
+export const APP_TITLE = "QuizNurse";
+export const APP_ACRONYM = "QN";
+export const APP_DESCRIPTION = process.env.SKEW_LINE_APP_DESCRIPTION || "QuizNurse Clinical Nursing Examination & Preparation Platform";
 export const APP_VERSION = process.env.SKEW_LINE_APP_VERSION || "1.0.0";
 export const APP_ENV = process.env.SKEW_LINE_APP_ENV || "live";
 export const APP_DEBUG = process.env.SKEW_LINE_APP_DEBUG === "true";
 export const APP_TIMEZONE = process.env.SKEW_LINE_APP_TIMEZONE || "UTC";
 export const APP_LOCALE = process.env.SKEW_LINE_APP_LOCALE || "en";
-export const APP_DOMAIN = process.env.SKEW_LINE_APP_DOMAIN || "http://localhost:3000";
-export const APP_KEY = process.env.SKEW_LINE_APP_KEY || "NURVIA_APP_KEY";
+export const APP_DOMAIN = process.env.SKEW_LINE_APP_DOMAIN || "https://quiznurse.com";
+export const APP_KEY = process.env.SKEW_LINE_APP_KEY || "QUIZNURSE_APP_KEY";
 
 // -----------------------------------------------------------------------------
 // CONTACT & SOCIAL MEDIA
@@ -27,19 +27,19 @@ export const CONTACT = {
   PHONEUNO: process.env.SKEW_LINE_APP_PHONEUNO || "",
   TELTOS: process.env.SKEW_LINE_APP_TELTOS || "",
   PHONETOS: process.env.SKEW_LINE_APP_PHONETOS || "",
-  EMAILUNO: process.env.SKEW_LINE_APP_EMAILUNO || "",
-  EMAILTOS: process.env.SKEW_LINE_APP_EMAILTOS || "",
+  EMAILUNO: process.env.SKEW_LINE_APP_EMAILUNO || "support@quiznurse.com",
+  EMAILTOS: process.env.SKEW_LINE_APP_EMAILTOS || "help@quiznurse.com",
   WHATSAPP: process.env.SKEW_LINE_APP_WHATSAPP || "",
-  INSTAGRAM: process.env.SKEW_LINE_APP_INSTAGRAM || "",
-  FACEBOOK: process.env.SKEW_LINE_APP_FACEBOOK || "",
-  TWITTER: process.env.SKEW_LINE_APP_TWITTER || "",
-  LINKEDIN: process.env.SKEW_LINE_APP_LINKEDIN || "",
+  INSTAGRAM: process.env.SKEW_LINE_APP_INSTAGRAM || "https://instagram.com/quiznurse",
+  FACEBOOK: process.env.SKEW_LINE_APP_FACEBOOK || "https://facebook.com/quiznurse",
+  TWITTER: process.env.SKEW_LINE_APP_TWITTER || "https://twitter.com/quiznurse",
+  LINKEDIN: process.env.SKEW_LINE_APP_LINKEDIN || "https://linkedin.com/company/quiznurse",
   TELEGRAM: process.env.SKEW_LINE_APP_TELEGRAM || "",
   TIKTOK: process.env.SKEW_LINE_APP_TIKTOK || "",
   REDDIT: process.env.SKEW_LINE_APP_REDDIT || "",
   YOUTUBE: process.env.SKEW_LINE_APP_YOUTUBE || "",
   PINTEREST: process.env.SKEW_LINE_APP_PINTEREST || "",
-  CANONICALLINK: process.env.SKEW_LINE_APP_CANONICALLINK || "",
+  CANONICALLINK: process.env.SKEW_LINE_APP_CANONICALLINK || "https://quiznurse.com",
   DEVELOPER: process.env.SKEW_LINE_APP_DEVELOPER || "",
   DEVLINK: process.env.SKEW_LINE_APP_DEVLINK || "",
   SENDWHATSAPP: process.env.SKEW_LINE_APP_SENDWHATSAPP || "",
@@ -49,9 +49,9 @@ export const CONTACT = {
 // EMAILS CONFIGURATION
 // -----------------------------------------------------------------------------
 export const EMAILS = {
-  SUPPORT: process.env.SKEW_LINE_SUPPORT_EMAIL || "support@nurvia.app",
-  SYSTEM: process.env.SKEW_LINE_SYSTEM_EMAIL || "system@nurvia.app",
-  HELP: process.env.SKEW_LINE_HELP_EMAIL || "help@nurvia.app",
+  SUPPORT: process.env.SKEW_LINE_SUPPORT_EMAIL || "support@quiznurse.com",
+  SYSTEM: process.env.SKEW_LINE_SYSTEM_EMAIL || "system@quiznurse.com",
+  HELP: process.env.SKEW_LINE_HELP_EMAIL || "help@quiznurse.com",
 };
 
 // -----------------------------------------------------------------------------
@@ -88,8 +88,8 @@ export const DEVELOPER = {
 // SEO CONFIG
 // -----------------------------------------------------------------------------
 export const SEO = {
-  author: DEVELOPER.NAME || "NURVIA Team",
-  keywords: "Nurvia-Prep, NURVIA, Nursing Exam Preparation, NCLEX-RN, NCLEX-PN, ATI TEAS 7, HESI A2, RN, LPN",
-  ogImage: `${CONTACT.CANONICALLINK || "https://nurvia-black.vercel.app"}/images/og-banner.jpg`,
-  siteUrl: CONTACT.CANONICALLINK || "https://nurvia-black.vercel.app",
+  author: DEVELOPER.NAME || "QuizNurse Team",
+  keywords: "QuizNurse, Nursing Exam Preparation, NCLEX-RN, NCLEX-PN, ATI TEAS 7, HESI A2, RN, LPN, Nursing Study",
+  ogImage: `${CONTACT.CANONICALLINK || "https://quiznurse.com"}/brand/quiznurse-social-preview.svg`,
+  siteUrl: CONTACT.CANONICALLINK || "https://quiznurse.com",
 };

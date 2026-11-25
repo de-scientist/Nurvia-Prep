@@ -83,7 +83,7 @@ export function AppSplashScreen() {
     <div
       role="status"
       aria-live="polite"
-      aria-label="Loading NURVIA Workspace"
+      aria-label="Loading QuizNurse Workspace"
       tabIndex={-1}
       className="fixed inset-0 z-50 flex items-center justify-center bg-background px-4"
     >

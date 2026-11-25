@@ -23,8 +23,8 @@ export default function DesignSystemShowcasePage() {
   const [btnLoading, setBtnLoading] = React.useState(false);
 
   const colorSwatches = [
-    { name: "NURVIA Deep Navy (Primary)", hex: "#142B4A", token: "--brand-navy", text: "text-white", bg: "bg-[#142B4A]" },
-    { name: "NURVIA Clinical Teal (Secondary)", hex: "#0D9488", token: "--primary / --brand-teal", text: "text-white", bg: "bg-[#0D9488]" },
+    { name: "QuizNurse Deep Teal (Primary)", hex: "#142B4A", token: "--brand-navy", text: "text-white", bg: "bg-[#142B4A]" },
+    { name: "QuizNurse Clinical Warmth (Accent)", hex: "#0D9488", token: "--primary / --brand-teal", text: "text-white", bg: "bg-[#0D9488]" },
     { name: "Clinical Teal Hover", hex: "#0F766E", token: "--primary-hover / --brand-teal-dark", text: "text-white", bg: "bg-[#0F766E]" },
     { name: "Main Light Background", hex: "#FFFFFF", token: "--background", text: "text-slate-900", bg: "bg-[#FFFFFF]" },
     { name: "Subtle Surface", hex: "#F8FAFC", token: "--surface", text: "text-slate-900", bg: "bg-[#F8FAFC]" },
@@ -45,7 +45,7 @@ export default function DesignSystemShowcasePage() {
             <Sparkles className="w-4 h-4" /> Phase 1 Foundation Specification
           </div>
           <h1 className="font-brand text-3xl sm:text-4xl font-extrabold text-foreground">
-            NURVIA Design System & Component Showcase
+            QuizNurse Design System & Component Showcase
           </h1>
           <p className="text-sm text-foreground-secondary max-w-2xl">
             Live interactive documentation of brand primitives, design tokens, typography scale, UI variants, and accessibility verification.

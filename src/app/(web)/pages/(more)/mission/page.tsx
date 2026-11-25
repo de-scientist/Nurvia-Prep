@@ -15,7 +15,7 @@ export default function AboutPage() {
             <section className="relative overflow-hidden bg-gradient-to-br from-[#142B4A] via-[#0F2036] to-[#0D9488] text-white py-20 px-6">
                 <div className="relative max-w-4xl mx-auto text-center">
                     <span className="inline-block mb-4 px-4 py-1.5 rounded-full border border-white/20 bg-white/10 text-xs font-semibold tracking-wider uppercase text-teal-200">
-                        NURVIA Mission
+                        QuizNurse Mission
                     </span>
                     <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-5">
                         Built for Nursing Learners.<br className="hidden sm:block" /> Driven by Clinical Readiness.

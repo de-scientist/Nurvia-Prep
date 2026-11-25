@@ -23,6 +23,7 @@ import { UserAvatar } from "@/components/shared/avatar/UserAvatar";
 
 interface PublicNavItem {
   name: string;
+  label?: string;
   href: string;
 }
 
@@ -35,7 +36,7 @@ const approvedNavItems: PublicNavItem[] = [
   { name: "Mark K.", href: ROUTES.markK },
   { name: "Community", href: ROUTES.community },
   { name: "FAQ", href: ROUTES.faq },
-  { name: "NCLEX", href: ROUTES.nclex },
+  { name: "NCLEX", label: "Licensure", href: ROUTES.nclex },
   { name: "TEAS", href: ROUTES.teas },
 ];
 
@@ -105,14 +106,14 @@ export function PublicShell({ children }: PublicShellProps) {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       {/* Top Banner */}
-      <div className="bg-brand-navy dark:bg-brand-navyDeep text-white text-xs py-2 px-4 text-center font-medium flex items-center justify-center gap-2">
+      <div className="bg-brand-navy dark:bg-brand-navyDeep text-white text-xs py-1.5 px-4 text-center font-medium flex items-center justify-center gap-2">
         <span className="inline-flex items-center gap-1 bg-brand-teal/20 text-teal-300 px-2 py-0.5 rounded-full text-[11px] font-semibold">
-          <Sparkles className="w-3 h-3" /> NURVIA Education
+          <Sparkles className="w-3 h-3" /> QuizNurse Education
         </span>
         <span className="hidden sm:inline">
-          NURVIA — Your Path to Nursing Confidence. Next-Gen NCLEX, ATI & HESI preparation.
+          QuizNurse — Nursing Examination Preparation Platform. Clinical judgment, ATI &amp; HESI preparation.
         </span>
-        <span className="sm:hidden">NURVIA — Nursing Confidence</span>
+        <span className="sm:hidden">QuizNurse — Nursing Examination Preparation</span>
       </div>
 
       {/* Main Public Header with exact 9 approved items (Direct Links, No Dropdowns) */}
@@ -122,13 +123,13 @@ export function PublicShell({ children }: PublicShellProps) {
           scrolled ? "border-b border-border shadow-xs" : "border-b border-border/70"
         )}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-14 sm:h-15 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Brand Logo & Wordmark */}
           <Logo size="md" variant="full" />
 
           {/* Desktop Navigation — Exactly 9 Direct Items in Approved Order (No Dropdowns) */}
           <nav
-            className="hidden xl:flex items-center gap-1 lg:gap-2"
+            className="hidden xl:flex items-center gap-1 lg:gap-1.5"
             aria-label="Main Navigation"
           >
             {approvedNavItems.map((item) => {
@@ -142,14 +143,14 @@ export function PublicShell({ children }: PublicShellProps) {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "px-3 py-1.5 rounded-md text-xs lg:text-[13px] font-medium transition-colors",
+                    "px-2.5 py-1 sm:py-1.5 rounded-md text-xs lg:text-[13px] font-medium transition-colors",
                     isActive
                       ? "text-brand-teal dark:text-teal-400 font-bold bg-brand-teal/10"
                       : "text-foreground-secondary hover:text-foreground hover:bg-surface-muted"
                   )}
                   aria-current={isActive ? "page" : undefined}
                 >
-                  {item.name}
+                  {item.label ?? item.name}
                 </Link>
               );
             })}
@@ -230,7 +231,7 @@ export function PublicShell({ children }: PublicShellProps) {
               </div>
 
               {/* 9 Mobile Items in Exact Approved Order */}
-              <nav className="flex flex-col space-y-1.5" aria-label="Mobile Navigation">
+              <nav className="flex flex-col space-y-1" aria-label="Mobile Navigation">
                 {approvedNavItems.map((item, idx) => {
                   const isActive =
                     item.href === "/"
@@ -243,7 +244,7 @@ export function PublicShell({ children }: PublicShellProps) {
                       href={item.href}
                       onClick={() => setMobileMenuOpen(false)}
                       className={cn(
-                        "flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                        "flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-colors",
                         isActive
                           ? "bg-brand-teal/10 text-brand-teal font-bold"
                           : "text-foreground-secondary hover:text-foreground hover:bg-surface-muted"
@@ -253,7 +254,7 @@ export function PublicShell({ children }: PublicShellProps) {
                         <span className="w-5 text-[11px] font-mono text-foreground-muted">
                           0{idx + 1}
                         </span>
-                        <span>{item.name}</span>
+                        <span>{item.label ?? item.name}</span>
                       </span>
                       <ArrowRight className="w-4 h-4 text-foreground-muted" />
                     </Link>
@@ -308,7 +309,7 @@ export function PublicShell({ children }: PublicShellProps) {
               )}
               {authError && <p role="alert" className="text-xs text-rose-700 dark:text-rose-300">{authError}</p>}
               <div className="flex items-center justify-between text-xs text-foreground-muted pt-2">
-                <span>NURVIA Platform</span>
+                <span>QuizNurse Platform</span>
                 <ThemeToggle />
               </div>
             </div>
@@ -327,9 +328,9 @@ export function PublicShell({ children }: PublicShellProps) {
             <div className="md:col-span-2 space-y-4">
               <Logo size="md" variant="full" />
               <p className="text-sm text-foreground-secondary max-w-sm">
-                NURVIA provides structured exam preparation, clinical judgment training,
+                QuizNurse provides structured exam preparation, clinical judgment training,
                 and personalized revision intelligence for nursing learners across ATI,
-                HESI, NCLEX, and TEAS tracks.
+                HESI, RN / PN, and TEAS tracks.
               </p>
               <div className="flex items-center gap-2 text-xs text-foreground-muted">
                 <ShieldCheck className="w-4 h-4 text-brand-teal" />
@@ -348,7 +349,7 @@ export function PublicShell({ children }: PublicShellProps) {
                 <li><Link href="/exams?category=ATI" className="hover:text-primary">ATI Subject Sets</Link></li>
                 <li><Link href="/exams?category=HESI" className="hover:text-primary">HESI Specialties</Link></li>
                 <li><Link href="/exams?category=ExitPredictor" className="hover:text-primary">Exit Predictor Exams</Link></li>
-                <li><Link href="/nclex" className="hover:text-primary">NCLEX-RN & PN</Link></li>
+                <li><Link href="/nclex" className="hover:text-primary">RN &amp; PN Licensure</Link></li>
                 <li><Link href="/teas" className="hover:text-primary">TEAS Prep</Link></li>
               </ul>
             </div>
@@ -383,9 +384,9 @@ export function PublicShell({ children }: PublicShellProps) {
           </div>
 
           <div className="mt-12 pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between text-xs text-foreground-muted gap-4">
-            <p>© {new Date().getFullYear()} NURVIA. All rights reserved. Your Path to Nursing Confidence.</p>
+            <p>© {new Date().getFullYear()} QuizNurse. All rights reserved. Professional Nursing Examination Preparation.</p>
             <p className="max-w-xl text-center md:text-right">
-              Disclaimer: NURVIA is an independent educational prep platform and is not affiliated with or endorsed by ATI, HESI, or NCSBN. Rationales are intended solely for academic study.
+              Disclaimer: QuizNurse is an independent educational prep platform and is not affiliated with or endorsed by ATI, HESI, or NCSBN. Rationales are intended solely for academic study.
             </p>
           </div>
         </div>

@@ -154,7 +154,7 @@ export default function DashboardsPage() {
             <div className="mx-auto max-w-7xl">
                 <div className="text-center mb-10">
                     <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3.5 py-1 text-xs font-semibold text-[#0D9488] dark:text-teal-300 mb-3">
-                        NURVIA Resource Hub
+                        QuizNurse Resource Hub
                     </div>
                     <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] dark:text-white">
                         Explore All Resources

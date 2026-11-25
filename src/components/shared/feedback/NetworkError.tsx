@@ -27,7 +27,7 @@ interface NetworkErrorProps {
 
 export function NetworkError({
   onRetry,
-  message = "We couldn't reach the NURVIA services. Your internet connection may be unavailable, or the service may be temporarily unreachable.",
+  message = "We couldn't reach QuizNurse services. Your internet connection may be unavailable, or the service may be temporarily unreachable.",
   title = "Connection interrupted",
   showRetry = true,
   showBack = false,

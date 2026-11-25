@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /learner/settings/
+Disallow: /learner/account/
+
+Sitemap: https://quiznurse.com/sitemap.xml

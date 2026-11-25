@@ -20,8 +20,8 @@ export default function Footer() {
               <NurviaLogo
                 size="md"
                 variant="full"
-                label="NURVIA"
-                subtitle="NURVIA-PREP"
+                label="QuizNurse"
+                subtitle="EXAMINATION PREPARATION"
               />
               <p className="text-sm text-slate-600 dark:text-slate-400 max-w-sm leading-relaxed">
                 {APP_NAME} provides structured nursing exam preparation, Next-Gen clinical
@@ -57,7 +57,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link href="/pages/exams/lpn-nursing" className="hover:text-[#0D9488] transition-colors">
-                    LPN / PN Nursing
+                    LPN Nursing
                   </Link>
                 </li>
                 <li>
@@ -160,7 +160,7 @@ export default function Footer() {
           {/* Bottom Bar */}
           <div className="mt-10 pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-4">
             <p className="font-medium text-slate-700 dark:text-slate-300">
-              &copy; {new Date().getFullYear()} {APP_NAME} (NURVIA). All rights reserved. Your Path to Nursing Confidence.
+              &copy; {new Date().getFullYear()} QuizNurse. All rights reserved. Professional Nursing Examination Preparation.
             </p>
 
             <button

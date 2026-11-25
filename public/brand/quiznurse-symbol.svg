@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%" fill="none">
+  <!-- QuizNurse Official Standalone Brand Symbol -->
+  <defs>
+    <linearGradient id="qnTealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A6265" />
+      <stop offset="100%" stop-color="#148387" />
+    </linearGradient>
+    <linearGradient id="qnAmberGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C58B43" />
+      <stop offset="100%" stop-color="#E2A65C" />
+    </linearGradient>
+    <linearGradient id="qnSlateGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#193B42" />
+      <stop offset="100%" stop-color="#2D5A64" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Q-Ring representing comprehensive examination mastery -->
+  <path d="M 67 65 A 32 32 0 1 0 76 46"
+        stroke="url(#qnTealGrad)"
+        stroke-width="9.5"
+        stroke-linecap="round" />
+
+  <!-- Inner Nursing 'N' Ascender & Pulse Wave -->
+  <!-- Left upright of N -->
+  <path d="M 37 59 L 37 41 C 37 36 41 34 45 37 L 54 55 C 57 60 62 57 62 52 L 62 36"
+        stroke="url(#qnSlateGrad)"
+        stroke-width="7.5"
+        stroke-linecap="round"
+        stroke-linejoin="round" />
+
+  <!-- Clinical Mastery Chevron & Dynamic Q-Tail (Muted Amber) -->
+  <path d="M 52 52 L 77 77"
+        stroke="url(#qnAmberGrad)"
+        stroke-width="9.5"
+        stroke-linecap="round" />
+  <path d="M 65 77 L 77 77 L 77 65"
+        stroke="url(#qnAmberGrad)"
+        stroke-width="5"
+        stroke-linecap="round"
+        stroke-linejoin="round" />
+
+  <!-- Zenith Clinical Excellence Beacon (Aspiration / Board Readiness) -->
+  <circle cx="50" cy="22" r="5" fill="url(#qnAmberGrad)" />
+</svg>

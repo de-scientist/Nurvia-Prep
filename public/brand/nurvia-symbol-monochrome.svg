@@ -1,13 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%" fill="none">
-  <!-- NURVIA Monochrome Single-Color Symbol -->
-  <path d="M 22 76 C 22 52, 40 38, 56 38 C 66 38, 74 44, 78 52" 
-        stroke="currentColor" 
-        stroke-width="10" 
-        stroke-linecap="round" />
-  <path d="M 28 82 C 42 82, 60 76, 74 58 C 82 48, 82 32, 72 24 C 64 17, 50 20, 48 34" 
-        stroke="currentColor" 
-        stroke-width="10" 
-        stroke-linecap="round" />
-  <circle cx="76" cy="22" r="7" fill="currentColor" />
-  <circle cx="24" cy="76" r="5" fill="currentColor" />
+  <!-- QuizNurse Monochrome Symbol (Alias for legacy nurvia-symbol-monochrome.svg) -->
+  <path d="M 67 65 A 32 32 0 1 0 76 46" stroke="currentColor" stroke-width="9.5" stroke-linecap="round" />
+  <path d="M 37 59 L 37 41 C 37 36 41 34 45 37 L 54 55 C 57 60 62 57 62 52 L 62 36" stroke="currentColor" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 52 52 L 77 77" stroke="currentColor" stroke-width="9.5" stroke-linecap="round" />
+  <path d="M 65 77 L 77 77 L 77 65" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="50" cy="22" r="5" fill="currentColor" />
 </svg>

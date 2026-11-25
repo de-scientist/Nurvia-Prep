@@ -4,7 +4,7 @@ export default function GlobalLoading() {
   return (
     <PageLoader
       fullscreen
-      message="Loading NURVIA workspace..."
+      message="Loading QuizNurse workspace..."
     />
   );
 }

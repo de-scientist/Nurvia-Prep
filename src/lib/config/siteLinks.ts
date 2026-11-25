@@ -1,4 +1,4 @@
-export const SITE_URL = (process.env.SKEW_LINE_APP_DOMAIN || "https://skewblanc.com").replace(/\/$/, "");
+export const SITE_URL = (process.env.SKEW_LINE_APP_DOMAIN || "https://quiznurse.com").replace(/\/$/, "");
 
 export interface SiteLink {
   name: string;

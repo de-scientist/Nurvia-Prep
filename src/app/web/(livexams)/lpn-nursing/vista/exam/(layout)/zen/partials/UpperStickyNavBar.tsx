@@ -254,8 +254,8 @@ export default function UpperStickyNavBar() {
                         >
                             {/* Light logo */}
                             <Image
-                                src="/brand/nurvia-symbol.svg"
-                                alt="NURVIA"
+                                src="/brand/quiznurse-symbol.svg"
+                                alt="QuizNurse"
                                 width={0}
                                 height={0}
                                 sizes="100vw"
@@ -270,8 +270,8 @@ export default function UpperStickyNavBar() {
 
                             {/* Dark logo */}
                             <Image
-                                src="/brand/nurvia-symbol.svg"
-                                alt="NURVIA"
+                                src="/brand/quiznurse-symbol.svg"
+                                alt="QuizNurse"
                                 width={0}
                                 height={0}
                                 sizes="100vw"

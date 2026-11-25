@@ -192,7 +192,7 @@ export default function TeasPage() {
                   Independent Educational Notice
                 </span>
                 <p className="text-foreground-secondary leading-relaxed">
-                  ATI® and TEAS® are registered trademarks of Assessment Technologies Institute, LLC, which is unaffiliated with NURVIA. NURVIA provides independent review materials and original practice problems designed to help students master physiological and mathematical prerequisites.
+                  ATI® and TEAS® are registered trademarks of Assessment Technologies Institute, LLC, which is unaffiliated with QuizNurse. QuizNurse provides independent review materials and original practice problems designed to help students master physiological and mathematical prerequisites.
                 </p>
               </div>
             </div>

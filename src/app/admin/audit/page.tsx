@@ -98,7 +98,7 @@ export default function AdminAuditPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `nurvia-audit-logs-page-${pageNumber}.csv`;
+    link.download = `quiznurse-audit-logs-page-${pageNumber}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };

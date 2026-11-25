@@ -194,7 +194,7 @@ function ExamSessionContent() {
 
   // Core session & explicit experience stage state
   const [attemptId, setAttemptId] = React.useState<string | null>(attemptIdParam);
-  const [examTitle, setExamTitle] = React.useState<string>("NURVIA examination");
+  const [examTitle, setExamTitle] = React.useState<string>("QuizNurse Examination");
   const [pathway, setPathway] = React.useState<string | undefined>(undefined);
   const [examCategory, setExamCategory] = React.useState<string | undefined>(undefined);
   const [isTimed, setIsTimed] = React.useState<boolean>(true);
@@ -1352,7 +1352,8 @@ function ExamSessionContent() {
               value={answers[q.id] ?? null}
               onChange={(val) => handleAnswerChange(q.id, val)}
               disabled={isSubmitted || isReviewContent}
-              isReview={showReview}
+              isReview={deliveryMode === "Tutor" && !isSubmitted ? false : showReview}
+              hideRationaleBox={deliveryMode === "Tutor" || !showReview}
               canAskTutor={stageAvailability.tutor.canEnter}
               onAskTutor={(qid) => handleOpenTutorFromReview(qid)}
             />
@@ -1777,7 +1778,7 @@ export default function ExamSessionPage() {
     <Suspense
       fallback={
         <div className="p-8 text-center text-xs text-foreground-muted">
-          Loading NURVIA examination session...
+          Loading QuizNurse examination session...
         </div>
       }
     >

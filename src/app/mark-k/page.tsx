@@ -85,7 +85,7 @@ export default function MarkKIndexPage() {
               Mark K. NCLEX Lecture Notes Index
             </h1>
             <p className="text-foreground-secondary text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-              Explore the 12 core clinical review lectures—with free public access to Lectures 1–3 and full 12-lecture access for signed-in NURVIA learners.
+              Explore the 12 core clinical review lectures—with free public access to Lectures 1–3 and full 12-lecture access for signed-in QuizNurse learners.
             </p>
 
             {/* Independence & Educational Disclaimer */}
@@ -94,7 +94,7 @@ export default function MarkKIndexPage() {
               <div className="space-y-1">
                 <span className="font-bold block">Educational Reference &amp; Independence Notice</span>
                 <p className="text-amber-800 dark:text-amber-300">
-                  NURVIA is independent and is not affiliated with, endorsed by, or officially connected to Mark Klimek or Klimek Reviews. All lecture notes, clinical summaries, practice questions, and rationales provided in NURVIA are original educational materials developed by NURVIA.
+                  QuizNurse is independent and is not affiliated with, endorsed by, or officially connected to Mark Klimek or Klimek Reviews. All lecture notes, clinical summaries, practice questions, and rationales provided in QuizNurse are original educational materials developed by QuizNurse.
                 </p>
               </div>
             </div>
@@ -221,7 +221,7 @@ export default function MarkKIndexPage() {
                           ) : isLockedForVisitor ? (
                             <div className="p-3 rounded-xl bg-surface-muted/70 border border-border/70 text-[11px] text-foreground-muted flex items-center gap-2">
                               <Lock className="w-3.5 h-3.5 shrink-0 text-amber-600" />
-                              <span>Sign in with a NURVIA learner account to unlock full notes and high-yield takeaways.</span>
+                              <span>Sign in with a QuizNurse learner account to unlock full notes and high-yield takeaways.</span>
                             </div>
                           ) : null}
                         </div>
@@ -273,7 +273,7 @@ export default function MarkKIndexPage() {
               Put Clinical Lecture Rules Into Practice
             </h2>
             <p className="text-sm text-foreground-secondary max-w-2xl mx-auto leading-relaxed">
-              Reinforce your lecture review with NURVIA’s original NCLEX practice examinations and clinical rationales.
+              Reinforce your lecture review with QuizNurse’s original NCLEX practice examinations and clinical rationales.
             </p>
             <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
               <Link href="/learner/exams">
