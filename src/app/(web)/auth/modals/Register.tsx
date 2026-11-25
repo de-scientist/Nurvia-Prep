@@ -216,7 +216,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
           Continue with Google
         </button>
 
-        <div className="text-center text-xs text-slate-400 my-4">or sign up with email</div>
+        <div className="text-center text-xs text-slate-400 my-3 whitespace-nowrap">or create account with email</div>
 
         {error && (
           <p role="alert" className="mb-3 text-sm text-rose-800 dark:text-rose-200 text-center font-medium bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl py-2.5 px-3">

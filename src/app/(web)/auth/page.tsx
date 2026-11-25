@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FcGoogle } from "react-icons/fc";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { FiCheckCircle, FiX } from "react-icons/fi";
+import { FiCheckCircle, FiAlertCircle } from "react-icons/fi";
+import { ArrowRight, User, Mail, Lock } from "lucide-react";
 import "react-phone-number-input/style.css";
 import { CountryCode } from "libphonenumber-js";
 import PhoneInput from "react-phone-number-input";
@@ -13,15 +14,13 @@ import { APP_NAME } from "@/lib/config/config";
 import { login, LoginCredentials } from "@/lib/services/auth/loginService";
 import { registerUser } from "@/lib/services/auth/registerService";
 import { redirectToSocialProvider } from "@/lib/services/auth/socialService";
-
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+import { AuthShell } from "@/components/auth/auth-shell";
+import { Button } from "@/components/ui/button";
 
 const DEFAULT_LANDING_PATH = "/pages/entrance";
 const role = "Learner";
 
 type AuthTab = "login" | "register";
-
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 function AuthForm() {
     const router = useRouter();
@@ -40,7 +39,7 @@ function AuthForm() {
     const [tab, setTab] = useState<AuthTab>(initialTab);
 
     // ── Login state
-    const [loginForm, setLoginForm] = useState({ email: "", password: "", remember: false });
+    const [loginForm, setLoginForm] = useState({ email: "", password: "", remember: true });
     const [loginLoading, setLoginLoading] = useState(false);
     const [loginError, setLoginError] = useState("");
     const [loginSuccess, setLoginSuccess] = useState("");
@@ -84,8 +83,6 @@ function AuthForm() {
         }
     }, [initialTab]);
 
-    // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
     const switchTab = (next: AuthTab) => {
         if (next === tab) return;
         setLoginError("");
@@ -107,7 +104,6 @@ function AuthForm() {
         });
     };
 
-    // ── Login handlers
     const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
         setLoginForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
@@ -140,11 +136,11 @@ function AuthForm() {
                 return;
             }
 
-            setLoginSuccess("Login Successful ! Redirecting . . . ⚓");
+            setLoginSuccess("Authentication verified! Opening your study workspace...");
             setLoginError("");
             setTimeout(() => {
                 router.push(redirectPath || DEFAULT_LANDING_PATH);
-            }, 800);
+            }, 700);
         } catch (err: unknown) {
             console.error("Login failed:", err);
             setLoginError(err instanceof Error ? err.message : "Login failed. Please try again.");
@@ -153,7 +149,6 @@ function AuthForm() {
         }
     };
 
-    // ── Register handlers
     const handleRegChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
         setRegForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
@@ -168,9 +163,8 @@ function AuthForm() {
         }
     };
 
-    const handlePhoneChange = (value: string | undefined) => {
-        const phone = value || "";
-        setRegForm((prev) => ({ ...prev, phone }));
+    const handlePhoneChange = (val: string | undefined) => {
+        setRegForm((prev) => ({ ...prev, phone: val ?? "" }));
     };
 
     const generatePassword = () => {
@@ -179,14 +173,17 @@ function AuthForm() {
         const digits = "0123456789";
         const specials = "!@#$%^&*()-_=+[]{};:,.<>?";
         const allChars = upper + lower + digits + specials;
+
         let password = "";
         password += upper.charAt(Math.floor(Math.random() * upper.length));
         password += lower.charAt(Math.floor(Math.random() * lower.length));
         password += digits.charAt(Math.floor(Math.random() * digits.length));
         password += specials.charAt(Math.floor(Math.random() * specials.length));
+
         for (let i = 0; i < 12; i++) {
             password += allChars.charAt(Math.floor(Math.random() * allChars.length));
         }
+
         password = password.split("").sort(() => 0.5 - Math.random()).join("");
         setRegForm((prev) => ({ ...prev, password, confirmPassword: password }));
         setPasswordRequirements({ length: true, uppercase: true, number: true, specialChar: true });
@@ -195,17 +192,20 @@ function AuthForm() {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!regForm.agree) {
-            setRegError("You must agree to the terms to continue.");
+        if (!regForm.username.trim()) {
+            setRegError("Please provide your name or candidate handle.");
+            return;
+        }
+        if (!regForm.email.trim()) {
+            setRegError("Candidate email address is required.");
             return;
         }
         if (regForm.password !== regForm.confirmPassword) {
-            setRegError("Passwords do not match!");
+            setRegError("Passwords do not match. Please verify your entries.");
             return;
         }
-
         if (!Object.values(passwordRequirements).every(Boolean)) {
-            setRegError("Password does not meet all requirements. Please check the criteria.");
+            setRegError("Password must meet length, uppercase, number, and special character criteria.");
             return;
         }
 
@@ -219,8 +219,6 @@ function AuthForm() {
                 phone: regForm.phone,
                 password: regForm.password,
                 passwordConfirmation: regForm.confirmPassword,
-                pin: undefined,
-                pin_confirmation: undefined,
                 loginMethod: "password",
                 agree: regForm.agree,
                 role,
@@ -234,378 +232,377 @@ function AuthForm() {
                 setRegError(response.error);
             } else {
                 setLoginForm((prev) => ({ ...prev, email: regForm.email, password: "" }));
-                setLoginSuccess(`Account created successfully ⚓ You can now log in as ${regForm.email}`);
+                setLoginSuccess(`Account created successfully! You can now sign in as ${regForm.email}`);
                 setLoginError("");
                 setTab("login");
             }
         } catch (err: unknown) {
-            console.error("💥 Registration error:", err);
+            console.error("Registration error:", err);
             setRegError(err instanceof Error ? err.message : "Unexpected registration error");
         } finally {
             setRegLoading(false);
         }
     };
 
-    // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
     const isLogin = tab === "login";
 
     return (
-        <div className="flex min-h-[85vh] items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1220] px-4 py-10">
-            <div className="relative w-full max-w-lg bg-white dark:bg-[#111C2E] rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 p-6 md:p-8">
-                {/* Back home */}
-                <Link
-                    href="/"
-                    aria-label="Back home"
-                    className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-[#F8FAFC] dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition hover:border-[#0D9488] hover:text-[#0D9488]"
-                >
-                    <FiX className="h-5 w-5" />
-                </Link>
-
-                {/* Header */}
-                <div className="text-center mb-5 pt-1">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3 py-0.5 text-[11px] font-semibold text-[#0D9488] dark:text-teal-300 mb-2">
-                        NURVIA Learner Portal
-                    </div>
-                    <div className="flex items-center justify-center gap-2">
-                        <h1 className="text-xl md:text-2xl font-extrabold text-[#142B4A] dark:text-white">{APP_NAME}</h1>
-                        <FiCheckCircle className="text-[#0D9488] text-lg" title="Verified" />
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        {isLogin ? "Sign in to your clinical learning workspace" : "Create your learner account"}
-                    </p>
+        <AuthShell mode={isLogin ? "sign-in" : "sign-up"}>
+            <div className="mb-5 space-y-2">
+                <div className="inline-flex items-center gap-2 rounded-full border border-clinical-teal/30 bg-clinical-mist px-3 py-1 text-xs font-semibold text-clinical-teal">
+                    <span className="h-2 w-2 rounded-full bg-clinical-teal animate-pulse" />
+                    {isLogin ? "Learner Sign-In" : "Candidate Registration"}
                 </div>
+                <h1 className="font-brand text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                    {isLogin ? `Welcome back to ${APP_NAME}` : `Join ${APP_NAME}`}
+                </h1>
+                <p className="text-sm text-foreground-secondary leading-relaxed">
+                    {isLogin
+                        ? "Sign in to resume timed simulations, study sets, and performance analytics."
+                        : "Create your learner profile to access evidence-based nursing question banks."}
+                </p>
+            </div>
 
-                {/* Composite tab switch */}
-                <div
-                    role="tablist"
-                    className="relative mx-auto mb-5 grid grid-cols-2 w-full max-w-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1"
-                >
-                    <span
-                        aria-hidden
-                        className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-lg bg-[#142B4A] shadow-xs transition-transform duration-300 ease-out"
-                        style={{ transform: isLogin ? "translateX(0)" : "translateX(100%)" }}
-                    />
-                    <button
-                        type="button"
-                        role="tab"
-                        aria-selected={isLogin}
-                        onClick={() => switchTab("login")}
-                        className={`relative z-10 py-2 text-xs font-semibold rounded-lg transition-colors duration-300 ${
-                            isLogin ? "text-white" : "text-slate-600 dark:text-slate-300 hover:text-[#0F172A] dark:hover:text-white"
-                        }`}
-                    >
-                        Login
-                    </button>
-                    <button
-                        type="button"
-                        role="tab"
-                        aria-selected={!isLogin}
-                        onClick={() => switchTab("register")}
-                        className={`relative z-10 py-2 text-xs font-semibold rounded-lg transition-colors duration-300 ${
-                            !isLogin ? "text-white" : "text-slate-600 dark:text-slate-300 hover:text-[#0F172A] dark:hover:text-white"
-                        }`}
-                    >
-                        Register
-                    </button>
-                </div>
-
-                {/* Google */}
+            {/* Composite Pill Tab Switcher */}
+            <div
+                role="tablist"
+                className="relative mb-5 grid grid-cols-2 w-full rounded-xl bg-surface-muted border border-border p-1"
+            >
                 <button
                     type="button"
-                    className="w-full flex items-center justify-center gap-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition text-slate-700 dark:text-slate-200 font-semibold text-sm"
-                    onClick={() => handleSocialClick("google")}
+                    role="tab"
+                    aria-selected={isLogin}
+                    onClick={() => switchTab("login")}
+                    className={`relative z-10 py-2 text-xs font-semibold rounded-lg transition-all ${
+                        isLogin
+                            ? "bg-clinical-teal text-white shadow-sm"
+                            : "text-foreground-secondary hover:text-foreground"
+                    }`}
                 >
-                    <FcGoogle className="text-xl" />
-                    Continue with Google
+                    Sign In
                 </button>
-
-                <div className="relative my-4 flex items-center justify-center">
-                    <div className="w-full border-t border-slate-200 dark:border-slate-800" />
-                    <span className="bg-white dark:bg-[#111C2E] px-3 text-xs text-slate-400 whitespace-nowrap">
-                        {isLogin ? "or sign in with email" : "or sign up with email"}
-                    </span>
-                    <div className="w-full border-t border-slate-200 dark:border-slate-800" />
-                </div>
-
-                {/* Animated panel */}
-                <div key={tab} className={isLogin ? "auth-slide-left" : "auth-slide-right"}>
-                    {isLogin ? (
-                        <>
-                            {loginError && (
-                                <div role="alert" className="mb-4 relative bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 px-4 py-3 rounded-xl text-sm flex items-center gap-3">
-                                    <span className="flex-1 leading-tight">{loginError}</span>
-                                    <button type="button" onClick={() => setLoginError("")} className="opacity-70 hover:opacity-100">✕</button>
-                                </div>
-                            )}
-
-                            {loginSuccess && (
-                                <div role="status" className="mb-4 relative bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 px-4 py-3 rounded-xl text-sm flex items-center gap-3">
-                                    <FiCheckCircle className="text-emerald-600 shrink-0" />
-                                    <span className="flex-1 leading-tight">{loginSuccess}</span>
-                                    <button type="button" onClick={() => setLoginSuccess("")} className="opacity-70 hover:opacity-100">✕</button>
-                                </div>
-                            )}
-
-                            <form onSubmit={handleLogin} className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Email Address</label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        autoComplete="username"
-                                        required
-                                        value={loginForm.email}
-                                        onChange={handleLoginChange}
-                                        className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Password</label>
-                                    <div className="relative">
-                                        <input
-                                            type={showLoginPassword ? "text" : "password"}
-                                            name="password"
-                                            autoComplete="current-password"
-                                            required
-                                            value={loginForm.password}
-                                            onChange={handleLoginChange}
-                                            maxLength={32}
-                                            className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 pr-10 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowLoginPassword(!showLoginPassword)}
-                                            className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
-                                        >
-                                            {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <label className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        name="remember"
-                                        checked={loginForm.remember}
-                                        onChange={handleLoginChange}
-                                        className="accent-[#0D9488] rounded"
-                                    />
-                                    Remember me
-                                </label>
-
-                                <button
-                                    type="submit"
-                                    disabled={loginLoading}
-                                    className="w-full bg-[#142B4A] hover:bg-[#1E3A5F] text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
-                                >
-                                    {loginLoading ? "Signing in…" : "Sign In"}
-                                </button>
-
-                                <div className="flex flex-row gap-3 pt-2">
-                                    <Link
-                                        href="/auth/recovery/password"
-                                        className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
-                                    >
-                                        Forgot Password?
-                                    </Link>
-                                    <button
-                                        type="button"
-                                        onClick={() => switchTab("register")}
-                                        className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
-                                    >
-                                        Register Instead?
-                                    </button>
-                                </div>
-                            </form>
-                        </>
-                    ) : (
-                        <>
-                            {regError && (
-                                <p role="alert" className="mb-4 text-sm text-rose-800 dark:text-rose-200 text-center font-medium bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl py-2.5 px-3">
-                                    {regError}
-                                </p>
-                            )}
-
-                            <form onSubmit={handleRegister} className="space-y-4">
-                                <div>
-                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Username</label>
-                                    <input
-                                        type="text"
-                                        name="username"
-                                        autoComplete="nickname"
-                                        required
-                                        value={regForm.username}
-                                        onChange={handleRegChange}
-                                        className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Email Address</label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        required
-                                        value={regForm.email}
-                                        onChange={handleRegChange}
-                                        className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                                        Phone Number
-                                    </label>
-                                    <PhoneInput
-                                        international
-                                        defaultCountry={userCountry}
-                                        value={regForm.phone}
-                                        onChange={handlePhoneChange}
-                                        name="phone"
-                                        className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 focus-within:ring-2 focus-within:ring-[#0D9488]/30 focus-within:border-[#0D9488] transition-all [&_.PhoneInputInput]:text-[#0F172A] dark:[&_.PhoneInputInput]:text-white [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:border-0 [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:ring-0 [&_.PhoneInputInput]:shadow-none"
-                                    />
-                                </div>
-
-                                <div className="space-y-3">
-                                    <div>
-                                        <div className="flex justify-between items-center mb-1.5">
-                                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">Password</label>
-                                            <button
-                                                type="button"
-                                                onClick={generatePassword}
-                                                className="text-xs font-semibold bg-[#0D9488]/10 text-[#0D9488] px-2.5 py-0.5 rounded-lg hover:bg-[#0D9488]/20"
-                                            >
-                                                Auto-Generate
-                                            </button>
-                                        </div>
-                                        <div className="relative">
-                                            <input
-                                                type={showRegPassword ? "text" : "password"}
-                                                name="password"
-                                                autoComplete="new-password"
-                                                required
-                                                value={regForm.password}
-                                                maxLength={24}
-                                                onChange={handleRegChange}
-                                                className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] pr-10"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowRegPassword(!showRegPassword)}
-                                                className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
-                                            >
-                                                {showRegPassword ? <FaEyeSlash /> : <FaEye />}
-                                            </button>
-                                        </div>
-
-                                        {regForm.password && (
-                                            <ul className="mt-2 text-xs space-y-1">
-                                                <li className={passwordRequirements.length ? "text-[#0D9488] font-medium" : "text-slate-500"}>
-                                                    {passwordRequirements.length ? "✓" : "•"} At Least 6 Characters
-                                                </li>
-                                                <li className={passwordRequirements.uppercase ? "text-[#0D9488] font-medium" : "text-slate-500"}>
-                                                    {passwordRequirements.uppercase ? "✓" : "•"} One Uppercase Letter
-                                                </li>
-                                                <li className={passwordRequirements.number ? "text-[#0D9488] font-medium" : "text-slate-500"}>
-                                                    {passwordRequirements.number ? "✓" : "•"} One Number
-                                                </li>
-                                                <li className={passwordRequirements.specialChar ? "text-[#0D9488] font-medium" : "text-slate-500"}>
-                                                    {passwordRequirements.specialChar ? "✓" : "•"} One Special Character
-                                                </li>
-                                            </ul>
-                                        )}
-                                    </div>
-
-                                    {passwordRequirements.length && (
-                                        <div>
-                                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Confirm Password</label>
-                                            <div className="relative">
-                                                <input
-                                                    type={showConfirmPassword ? "text" : "password"}
-                                                    name="confirmPassword"
-                                                    autoComplete="new-password"
-                                                    required
-                                                    value={regForm.confirmPassword}
-                                                    onChange={handleRegChange}
-                                                    maxLength={24}
-                                                    className={`w-full border ${
-                                                        regForm.password && regForm.confirmPassword && regForm.password !== regForm.confirmPassword
-                                                            ? "border-rose-400"
-                                                            : "border-slate-300 dark:border-slate-700"
-                                                    } bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] pr-10`}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                    className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
-                                                >
-                                                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                                                </button>
-                                            </div>
-                                            {regForm.password && regForm.confirmPassword && regForm.password !== regForm.confirmPassword && (
-                                                <p className="mt-1 text-xs text-rose-500">Passwords do not match</p>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="flex items-start gap-2">
-                                    <input
-                                        type="checkbox"
-                                        name="agree"
-                                        checked={regForm.agree}
-                                        onChange={handleRegChange}
-                                        className="mt-1 accent-[#0D9488]"
-                                    />
-                                    <label className="text-xs text-slate-600 dark:text-slate-300">
-                                        I agree to the{" "}
-                                        <Link
-                                            href="/pages/terms-of-service"
-                                            className="text-[#0D9488] font-semibold underline hover:text-[#0F766E]"
-                                        >
-                                            Terms and Conditions
-                                        </Link>
-                                    </label>
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    disabled={regLoading}
-                                    className="w-full bg-[#142B4A] hover:bg-[#1E3A5F] text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
-                                >
-                                    {regLoading ? "Creating Account…" : "Create Account"}
-                                </button>
-
-                                <div className="flex flex-row gap-3 pt-2">
-                                    <Link
-                                        href="/auth/support"
-                                        className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
-                                    >
-                                        Need Support?
-                                    </Link>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setLoginForm((prev) => ({ ...prev, email: regForm.email || prev.email }));
-                                            switchTab("login");
-                                        }}
-                                        className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
-                                    >
-                                        Login Instead?
-                                    </button>
-                                </div>
-                            </form>
-                        </>
-                    )}
-                </div>
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={!isLogin}
+                    onClick={() => switchTab("register")}
+                    className={`relative z-10 py-2 text-xs font-semibold rounded-lg transition-all ${
+                        !isLogin
+                            ? "bg-clinical-teal text-white shadow-sm"
+                            : "text-foreground-secondary hover:text-foreground"
+                    }`}
+                >
+                    Create Account
+                </button>
             </div>
-        </div>
+
+            {/* Google Authentication */}
+            <button
+                type="button"
+                className="w-full flex items-center justify-center gap-3 bg-white border border-border px-4 py-3 rounded-xl hover:bg-clinical-mist/50 hover:border-clinical-teal/60 transition text-foreground font-semibold text-sm shadow-xs disabled:opacity-60 dark:bg-surface"
+                onClick={() => handleSocialClick("google")}
+                disabled={loginLoading || regLoading}
+            >
+                <FcGoogle className="text-xl" />
+                <span>{isLogin ? "Continue with Google" : "Sign up with Google"}</span>
+            </button>
+
+            <div className="relative my-3 flex items-center justify-center">
+                <div className="w-full border-t border-border" />
+                <span className="bg-surface-elevated px-3 text-xs sm:text-[13px] font-medium text-foreground-muted whitespace-nowrap">
+                    {isLogin ? "or sign in with email" : "or create account with email"}
+                </span>
+                <div className="w-full border-t border-border" />
+            </div>
+
+            {isLogin ? (
+                <>
+                    {loginError && (
+                        <div
+                            role="alert"
+                            className="mb-4 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/80 p-3.5 text-sm text-rose-900 shadow-xs dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200"
+                        >
+                            <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                            <span className="flex-1 leading-snug">{loginError}</span>
+                        </div>
+                    )}
+
+                    {loginSuccess && (
+                        <div
+                            role="status"
+                            className="mb-4 flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50/80 p-3.5 text-sm text-emerald-900 shadow-xs dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
+                        >
+                            <FiCheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                            <span className="flex-1 leading-snug">{loginSuccess}</span>
+                        </div>
+                    )}
+
+                    <form onSubmit={handleLogin} className="space-y-4" noValidate>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary">
+                                Email Address
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="email"
+                                    name="email"
+                                    autoComplete="username"
+                                    required
+                                    value={loginForm.email}
+                                    onChange={handleLoginChange}
+                                    placeholder="nurse@example.com"
+                                    className="h-12 w-full rounded-xl border border-border bg-background px-3.5 pl-10 text-sm text-foreground placeholder:text-foreground-muted/60 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-teal"
+                                />
+                                <Mail className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <div className="flex items-center justify-between gap-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary">
+                                    Password
+                                </label>
+                                <Link
+                                    href="/auth/recovery/password"
+                                    className="text-xs font-semibold text-clinical-teal underline-offset-4 hover:underline"
+                                >
+                                    Forgot Password?
+                                </Link>
+                            </div>
+                            <div className="relative">
+                                <input
+                                    type={showLoginPassword ? "text" : "password"}
+                                    name="password"
+                                    autoComplete="current-password"
+                                    required
+                                    value={loginForm.password}
+                                    onChange={handleLoginChange}
+                                    maxLength={128}
+                                    placeholder="Enter your password"
+                                    className="h-12 w-full rounded-xl border border-border bg-background px-3.5 pl-10 pr-11 text-sm text-foreground placeholder:text-foreground-muted/60 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-teal"
+                                />
+                                <Lock className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                                    aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                                    className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-foreground-muted hover:text-foreground"
+                                >
+                                    {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <label className="flex items-center gap-2 text-xs font-medium text-foreground-secondary cursor-pointer select-none">
+                            <input
+                                type="checkbox"
+                                name="remember"
+                                checked={loginForm.remember}
+                                onChange={handleLoginChange}
+                                className="h-4 w-4 rounded border-border text-clinical-teal focus:ring-clinical-teal"
+                            />
+                            Remember me on this device
+                        </label>
+
+                        <Button
+                            type="submit"
+                            size="lg"
+                            disabled={loginLoading}
+                            isLoading={loginLoading}
+                            className="h-12 w-full rounded-xl bg-clinical-teal text-white font-semibold shadow-md transition-all hover:bg-clinical-tealHover hover:shadow-lg active:scale-[0.99]"
+                        >
+                            <span>Sign In to Study Sanctuary</span>
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                    </form>
+                </>
+            ) : (
+                <>
+                    {regError && (
+                        <div
+                            role="alert"
+                            className="mb-4 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/80 p-3.5 text-sm text-rose-900 shadow-xs dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200"
+                        >
+                            <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                            <span className="flex-1 leading-snug">{regError}</span>
+                        </div>
+                    )}
+
+                    <form onSubmit={handleRegister} className="space-y-3.5" noValidate>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary">
+                                Full Name / Candidate Handle
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    name="username"
+                                    autoComplete="nickname"
+                                    required
+                                    value={regForm.username}
+                                    onChange={handleRegChange}
+                                    placeholder="Nurse Jordan, RN candidate"
+                                    className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pl-10 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-teal"
+                                />
+                                <User className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary">
+                                Candidate Email Address
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="email"
+                                    name="email"
+                                    required
+                                    value={regForm.email}
+                                    onChange={handleRegChange}
+                                    placeholder="jordan@nursing.edu"
+                                    className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pl-10 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-teal"
+                                />
+                                <Mail className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary">
+                                Mobile Phone Number
+                            </label>
+                            <PhoneInput
+                                international
+                                defaultCountry={userCountry}
+                                value={regForm.phone}
+                                onChange={handlePhoneChange}
+                                name="phone"
+                                className="phone-input-custom rounded-xl border border-border bg-background px-3.5 py-2 text-sm text-foreground focus-within:ring-2 focus-within:ring-clinical-teal"
+                            />
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="space-y-1.5">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary">
+                                        Password
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={generatePassword}
+                                        className="text-xs font-semibold text-clinical-teal hover:underline"
+                                    >
+                                        Auto-Generate
+                                    </button>
+                                </div>
+                                <div className="relative">
+                                    <input
+                                        type={showRegPassword ? "text" : "password"}
+                                        name="password"
+                                        autoComplete="new-password"
+                                        required
+                                        value={regForm.password}
+                                        maxLength={128}
+                                        onChange={handleRegChange}
+                                        placeholder="Min 6 characters"
+                                        className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pl-10 pr-10 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-teal"
+                                    />
+                                    <Lock className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowRegPassword(!showRegPassword)}
+                                        aria-label={showRegPassword ? "Hide password" : "Show password"}
+                                        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-foreground-muted hover:text-foreground"
+                                    >
+                                        {showRegPassword ? <FaEyeSlash /> : <FaEye />}
+                                    </button>
+                                </div>
+
+                                {regForm.password && (
+                                    <ul className="grid grid-cols-2 gap-1 text-[11px] pt-1">
+                                        <li className={passwordRequirements.length ? "text-emerald-700 font-medium" : "text-foreground-muted"}>
+                                            {passwordRequirements.length ? "✓" : "•"} 6+ characters
+                                        </li>
+                                        <li className={passwordRequirements.uppercase ? "text-emerald-700 font-medium" : "text-foreground-muted"}>
+                                            {passwordRequirements.uppercase ? "✓" : "•"} 1 uppercase
+                                        </li>
+                                        <li className={passwordRequirements.number ? "text-emerald-700 font-medium" : "text-foreground-muted"}>
+                                            {passwordRequirements.number ? "✓" : "•"} 1 number
+                                        </li>
+                                        <li className={passwordRequirements.specialChar ? "text-emerald-700 font-medium" : "text-foreground-muted"}>
+                                            {passwordRequirements.specialChar ? "✓" : "•"} 1 special char
+                                        </li>
+                                    </ul>
+                                )}
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary">
+                                    Confirm Password
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        name="confirmPassword"
+                                        autoComplete="new-password"
+                                        required
+                                        value={regForm.confirmPassword}
+                                        onChange={handleRegChange}
+                                        maxLength={128}
+                                        placeholder="Repeat password"
+                                        className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pl-10 pr-10 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-teal"
+                                    />
+                                    <Lock className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-foreground-muted hover:text-foreground"
+                                    >
+                                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-1">
+                            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    name="agree"
+                                    checked={regForm.agree}
+                                    onChange={handleRegChange}
+                                    className="mt-0.5 h-4 w-4 rounded border-border text-clinical-teal focus:ring-clinical-teal"
+                                />
+                                <span className="text-xs leading-relaxed text-foreground-secondary">
+                                    I agree to the NURVIA{" "}
+                                    <Link href="/terms" className="font-semibold text-clinical-teal underline-offset-4 hover:underline">
+                                        Terms of Service
+                                    </Link>{" "}
+                                    and{" "}
+                                    <Link href="/privacy" className="font-semibold text-clinical-teal underline-offset-4 hover:underline">
+                                        Privacy Policy
+                                    </Link>
+                                    .
+                                </span>
+                            </label>
+                        </div>
+
+                        <Button
+                            type="submit"
+                            size="lg"
+                            disabled={regLoading}
+                            isLoading={regLoading}
+                            className="h-12 w-full rounded-xl bg-clinical-teal text-white font-semibold shadow-md transition-all hover:bg-clinical-tealHover hover:shadow-lg active:scale-[0.99]"
+                        >
+                            <span>Create Candidate Profile</span>
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                    </form>
+                </>
+            )}
+        </AuthShell>
     );
 }
-
-// ─────────────────────────────────────────────
 
 export default function AuthPage() {
     return (
@@ -614,5 +611,3 @@ export default function AuthPage() {
         </Suspense>
     );
 }
-
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

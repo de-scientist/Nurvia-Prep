@@ -2,27 +2,24 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { FaEye, FaEyeSlash } from 'react-icons/fa'
-import { FiCheckCircle, FiMail, FiArrowLeft } from 'react-icons/fi'
-import { APP_NAME } from '@/lib/config/config'
 import { useRouter } from 'next/navigation'
+import { FaEye, FaEyeSlash } from 'react-icons/fa'
+import { FiCheckCircle, FiAlertCircle } from 'react-icons/fi'
+import { Mail, KeyRound, Lock, ArrowRight, ArrowLeft } from 'lucide-react'
+import { APP_NAME } from '@/lib/config/config'
 import {
   requestRecoveryCode,
   verifyRecoveryCode,
   resetCredentials,
 } from '@/lib/services/auth/supportService'
 import { useCurrentSystemUser } from '@/lib/hooks/users/account/current/useCurrentSystemUser'
-
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+import { AuthShell } from '@/components/auth/auth-shell'
+import { Button } from '@/components/ui/button'
 
 type Step = 'email' | 'code' | 'reset' | 'done'
 
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
 export default function RecoveryPasswordPage() {
   const { user, loading: userLoading } = useCurrentSystemUser()
-
   const router = useRouter()
 
   const [step, setStep] = useState<Step>('email')
@@ -54,8 +51,6 @@ export default function RecoveryPasswordPage() {
     specialChar: false,
   })
 
-  // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
   const handlePasswordInput = (value: string) => {
     setPassword(value)
     setPasswordRequirements({
@@ -66,31 +61,7 @@ export default function RecoveryPasswordPage() {
     })
   }
 
-  const generatePassword = () => {
-    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    const lower = 'abcdefghijklmnopqrstuvwxyz'
-    const digits = '0123456789'
-    const specials = '!@#$%^&*()-_=+[]{};:,.<>?'
-    const allChars = upper + lower + digits + specials
-
-    let generated = ''
-    generated += upper.charAt(Math.floor(Math.random() * upper.length))
-    generated += lower.charAt(Math.floor(Math.random() * lower.length))
-    generated += digits.charAt(Math.floor(Math.random() * digits.length))
-    generated += specials.charAt(Math.floor(Math.random() * specials.length))
-    for (let i = 0; i < 12; i++) {
-      generated += allChars.charAt(Math.floor(Math.random() * allChars.length))
-    }
-    generated = generated.split('').sort(() => 0.5 - Math.random()).join('')
-
-    setPassword(generated)
-    setConfirmPassword(generated)
-    setPasswordRequirements({ length: true, uppercase: true, number: true, specialChar: true })
-  }
-
-  // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   // Step 1 → Request code
-
   const handleRequestCode = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -99,7 +70,6 @@ export default function RecoveryPasswordPage() {
 
     try {
       const response = await requestRecoveryCode({
-        ...(user ? { userGuidId: user.guidId } : {}),
         email,
         context: 'password',
       })
@@ -109,9 +79,9 @@ export default function RecoveryPasswordPage() {
         return
       }
 
-      setSuccess(`A recovery code (or link) has been sent to ${email} ⚓`)
+      setSuccess('Verification code sent to your email.')
       setStep('code')
-      startResendCooldown()
+      setResendCooldown(60)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unable to send recovery code.')
     } finally {
@@ -119,45 +89,7 @@ export default function RecoveryPasswordPage() {
     }
   }
 
-  const startResendCooldown = () => {
-    setResendCooldown(60)
-    const interval = setInterval(() => {
-      setResendCooldown(prev => {
-        if (prev <= 1) {
-          clearInterval(interval)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-  }
-
-  const handleResendCode = async () => {
-    if (resendCooldown > 0) return
-    setError('')
-    setIsLoading(true)
-    try {
-      const response = await requestRecoveryCode({
-        ...(user ? { userGuidId: user.guidId } : {}),
-        email,
-        context: 'password',
-      })
-      if (response.error) {
-        setError(response.error)
-        return
-      }
-      setSuccess('Code resent ⚓')
-      startResendCooldown()
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Unable to resend code.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   // Step 2 → Verify code
-
   const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -166,7 +98,6 @@ export default function RecoveryPasswordPage() {
 
     try {
       const response = await verifyRecoveryCode({
-        ...(user ? { userGuidId: user.guidId } : {}),
         email,
         code,
         context: 'password',
@@ -177,25 +108,23 @@ export default function RecoveryPasswordPage() {
         return
       }
 
-      setSuccess('Code verified ✓ Now set your new credentials.')
+      setSuccess('Code verified. Set your new password.')
       setStep('reset')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Invalid or expired code.')
+      setError(err instanceof Error ? err.message : 'Invalid verification code.')
     } finally {
       setIsLoading(false)
     }
   }
 
-  // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   // Step 3 → Reset credentials
-
   const handleResetCredentials = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setSuccess('')
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match!')
+      setError('Passwords do not match.')
       return
     }
 
@@ -233,321 +162,222 @@ export default function RecoveryPasswordPage() {
     }
   }
 
-  // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  // Cooldown countdown
+  useEffect(() => {
+    if (resendCooldown <= 0) return
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => prev - 1)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [resendCooldown])
 
   return (
-    <div className="flex flex-col items-center bg-[#F8FAFC] dark:bg-[#0B1220] px-4 py-12 min-h-[85vh]">
-
-      {/* App Title / Branding */}
-      <div className="flex flex-col items-center justify-center mb-6 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3.5 py-1 text-xs font-semibold text-[#0D9488] dark:text-teal-300 mb-2">
-          NURVIA Account Security
+    <AuthShell mode="forgot-password">
+      <div className="mb-4 space-y-1.5">
+        <div className="inline-flex items-center gap-2 rounded-full border border-clinical-teal/30 bg-clinical-mist px-3 py-1 text-xs font-semibold text-clinical-teal">
+          <span className="h-2 w-2 rounded-full bg-clinical-teal animate-pulse" />
+          Credential Recovery
         </div>
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-2xl md:text-3xl font-extrabold text-slate-600 dark:text-slate-300">
-            Recover your
-          </span>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-[#142B4A] dark:text-white">
-            {APP_NAME}
-          </h1>
-          <FiCheckCircle className="text-[#0D9488] text-xl md:text-2xl" title="Verified" />
-        </div>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Reset your password and restore access to your learner account.
+        <h1 className="font-brand text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          Recover your access
+        </h1>
+        <p className="text-sm text-foreground-secondary leading-relaxed">
+          Verify your candidate identity to securely establish a new password for {APP_NAME}.
         </p>
       </div>
 
-      {/* Card Container */}
-      <div className="max-w-5xl w-full bg-white dark:bg-[#111C2E] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg grid grid-cols-1 md:grid-cols-2 overflow-hidden">
-
-        {/* LEFT SIDE: Photo */}
-        <div className="hidden md:flex relative w-full h-full items-end justify-center overflow-hidden bg-[#142B4A]">
-          <Image
-            src="/web/auth/recovery/password/passwordFoto.jpg"
-            alt="Account Recovery"
-            layout="fill"
-            objectFit="cover"
-            priority
-            className="z-0 opacity-85"
-          />
-
-          <div className="z-10 w-full p-8 bg-gradient-to-t from-[#142B4A] via-[#142B4A]/70 to-transparent text-white text-left">
-            <h2 className="text-2xl font-extrabold">Password Recovery</h2>
-            <p className="text-sm text-slate-200 mt-1.5">
-              We&apos;ll help you verify your identity and get back into {APP_NAME} safely.
-            </p>
-          </div>
-        </div>
-
-        {/* RIGHT SIDE: Form */}
-        <div className="w-full p-8 space-y-5 border-l border-slate-200 dark:border-slate-800">
-
-          {/* Step indicator */}
-          <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-400">
-            <span className={step === 'email' ? 'text-[#0D9488]' : ''}>1. Email</span>
-            <span>→</span>
-            <span className={step === 'code' ? 'text-[#0D9488]' : ''}>2. Verify</span>
-            <span>→</span>
-            <span className={step === 'reset' || step === 'done' ? 'text-[#0D9488]' : ''}>3. New Credentials</span>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-[#F8FAFC] dark:bg-slate-900/60 p-3.5 text-xs text-slate-600 dark:text-slate-300 space-y-1.5">
-            <p className="font-semibold text-[#0F172A] dark:text-white">
-              Use this form if you already have an account and need to reset your forgotten password.
-            </p>
-            <p>
-              Enter your registered email, confirm the verification code sent to your inbox, and set your new password.
-            </p>
-          </div>
-
-          {/* Alert Message */}
-          {(error || success) && (
-            <div className="flex justify-center">
-              <div
-                role="alert"
-                className={`relative max-w-md w-full px-4 py-3 rounded-xl text-sm flex items-center gap-3 ${
-                  error
-                    ? 'bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200'
-                    : 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
-                }`}
-              >
-                <span className="flex-1 leading-tight">{error || success}</span>
-                <button
-                  type="button"
-                  onClick={() => { setError(''); setSuccess('') }}
-                  className="opacity-70 hover:opacity-100"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 1: Email */}
-          {step === 'email' && (
-            <form onSubmit={handleRequestCode} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                  Account Email
-                  {userLoading && <span className="ml-2 text-xs text-slate-400 font-normal">(checking session…)</span>}
-                </label>
-                <div className="relative">
-                  <FiMail className="absolute top-3 left-3 text-slate-400" />
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    readOnly={!!user}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full border border-slate-300 dark:border-slate-700 rounded-xl pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] ${
-                      user ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-white dark:bg-slate-900 text-[#0F172A] dark:text-white'
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-[#142B4A] hover:bg-[#1E3A5F] text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {isLoading ? 'Sending…' : 'Send Recovery Code'}
-              </button>
-            </form>
-          )}
-
-          {/* STEP 2: Code */}
-          {step === 'code' && (
-            <form onSubmit={handleVerifyCode} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                  Verification code sent to {email}
-                </label>
-                <input
-                  type="text"
-                  name="code"
-                  required
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  onPaste={(e) => {
-                    e.preventDefault()
-                    const pasted = e.clipboardData.getData('text').trim()
-                    setCode(pasted.slice(0, 8))
-                  }}
-                  maxLength={8}
-                  className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-center text-lg font-mono tracking-[0.5em] text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
-                />
-                <p className="text-xs text-slate-500 mt-2">
-                  You can also click the verification link sent to your email.
-                </p>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-[#142B4A] hover:bg-[#1E3A5F] text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {isLoading ? 'Verifying…' : 'Verify Code'}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleResendCode}
-                disabled={resendCooldown > 0}
-                className="w-full text-xs font-semibold text-[#0D9488] hover:text-[#0F766E] disabled:text-slate-400 disabled:cursor-not-allowed"
-              >
-                {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend Code'}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setStep('email')}
-                className="w-full flex items-center justify-center gap-1 text-xs text-slate-500 hover:text-slate-700"
-              >
-                <FiArrowLeft /> Use a different email
-              </button>
-            </form>
-          )}
-
-          {/* STEP 3: New Credentials */}
-          {step === 'reset' && (
-            <form onSubmit={handleResetCredentials} className="space-y-4">
-              <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between items-center mb-1.5">
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">New Password</label>
-                    <button
-                      type="button"
-                      onClick={generatePassword}
-                      className="text-xs font-semibold bg-[#0D9488]/10 text-[#0D9488] px-2.5 py-0.5 rounded-lg hover:bg-[#0D9488]/20"
-                    >
-                      Auto-Generate
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      maxLength={24}
-                      value={password}
-                      onChange={(e) => handlePasswordInput(e.target.value)}
-                      className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
-                    >
-                      {showPassword ? <FaEyeSlash /> : <FaEye />}
-                    </button>
-                  </div>
-
-                  {password && (
-                    <ul className="mt-2 text-xs space-y-1">
-                      <li className={passwordRequirements.length ? 'text-[#0D9488] font-medium' : 'text-slate-500'}>
-                        {passwordRequirements.length ? '✓' : '•'} At least 6 characters
-                      </li>
-                      <li className={passwordRequirements.uppercase ? 'text-[#0D9488] font-medium' : 'text-slate-500'}>
-                        {passwordRequirements.uppercase ? '✓' : '•'} One uppercase letter (optional)
-                      </li>
-                      <li className={passwordRequirements.number ? 'text-[#0D9488] font-medium' : 'text-slate-500'}>
-                        {passwordRequirements.number ? '✓' : '•'} One number (optional)
-                      </li>
-                      <li className={passwordRequirements.specialChar ? 'text-[#0D9488] font-medium' : 'text-slate-500'}>
-                        {passwordRequirements.specialChar ? '✓' : '•'} One special character (optional)
-                      </li>
-                    </ul>
-                  )}
-                </div>
-
-                {passwordRequirements.length && (
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Confirm New Password</label>
-                    <div className="relative">
-                      <input
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        required
-                        maxLength={24}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className={`w-full border ${
-                          password && confirmPassword && password !== confirmPassword
-                            ? 'border-rose-400'
-                            : 'border-slate-300 dark:border-slate-700'
-                        } bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488] pr-10`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
-                      >
-                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                      </button>
-                    </div>
-                    {password && confirmPassword && password !== confirmPassword && (
-                      <p className="mt-1 text-xs text-rose-500">Passwords do not match</p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-[#142B4A] hover:bg-[#1E3A5F] text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {isLoading ? 'Saving…' : 'Save New Credentials'}
-              </button>
-            </form>
-          )}
-
-          {/* STEP 4: Done */}
-          {step === 'done' && (
-            <div className="text-center space-y-3 py-4">
-              <FiCheckCircle className="text-[#0D9488] text-4xl mx-auto" />
-              <h3 className="text-lg font-bold text-[#0F172A] dark:text-white">Password Updated</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300">Redirecting you to login…</p>
-            </div>
-          )}
-
-          {/* Links */}
-          <div className="mt-6 flex flex-row gap-3 w-full">
-            <Link
-              href="/auth/login"
-              className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
-            >
-              Back to Login
-            </Link>
-            <Link
-              href="/auth/register"
-              className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
-            >
-              Register Now?
-            </Link>
-          </div>
-
-          <div className="mt-3 flex flex-row gap-3 w-full">
-            <Link
-              href="/auth/update/password"
-              className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
-            >
-              Change Password
-            </Link>
-            <Link
-              href="/auth/support"
-              className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-4 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
-            >
-              Need Support?
-            </Link>
-          </div>
-
-        </div>
+      {/* Step Indicator */}
+      <div className="flex items-center gap-2 pb-3 text-xs font-semibold text-foreground-muted border-b border-border/60 mb-4">
+        <span className={step === 'email' ? 'text-clinical-teal' : ''}>1. Email</span>
+        <span>→</span>
+        <span className={step === 'code' ? 'text-clinical-teal' : ''}>2. Code</span>
+        <span>→</span>
+        <span className={step === 'reset' || step === 'done' ? 'text-clinical-teal' : ''}>3. New Password</span>
       </div>
-    </div>
+
+      {(error || success) && (
+        <div
+          role="alert"
+          className={`mb-4 flex items-start gap-2.5 rounded-xl p-3.5 text-sm shadow-xs ${
+            error
+              ? 'border border-rose-200 bg-rose-50/80 text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200'
+              : 'border border-emerald-200 bg-emerald-50/80 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'
+          }`}
+        >
+          {error ? (
+            <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+          ) : (
+            <FiCheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+          )}
+          <span className="flex-1 leading-snug">{error || success}</span>
+        </div>
+      )}
+
+      {step === 'email' && (
+        <form onSubmit={handleRequestCode} className="space-y-3">
+          <div className="space-y-1">
+            <label className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary">
+              Account Email
+              {userLoading && <span className="ml-2 text-xs font-normal text-foreground-muted">(checking session…)</span>}
+            </label>
+            <div className="relative">
+              <input
+                type="email"
+                required
+                readOnly={!!user}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="candidate@nursing.edu"
+                className={`h-11 w-full rounded-xl border border-border px-3.5 pl-10 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-teal ${
+                  user ? 'bg-surface-muted text-foreground-muted cursor-not-allowed' : 'bg-background text-foreground'
+                }`}
+              />
+              <Mail className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            size="lg"
+            disabled={isLoading}
+            isLoading={isLoading}
+            className="h-11 w-full rounded-xl bg-clinical-teal text-white font-semibold shadow-md transition-all hover:bg-clinical-tealHover hover:shadow-lg active:scale-[0.99]"
+          >
+            <span>Send Verification Code</span>
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </form>
+      )}
+
+      {step === 'code' && (
+        <form onSubmit={handleVerifyCode} className="space-y-3">
+          <div className="space-y-1">
+            <label className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary">
+              Verification Code
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                required
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Enter 6-digit code"
+                className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pl-10 text-sm font-mono tracking-widest text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-teal"
+              />
+              <KeyRound className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            size="lg"
+            disabled={isLoading}
+            isLoading={isLoading}
+            className="h-11 w-full rounded-xl bg-clinical-teal text-white font-semibold shadow-md transition-all hover:bg-clinical-tealHover hover:shadow-lg active:scale-[0.99]"
+          >
+            <span>Verify Code</span>
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+
+          <div className="flex justify-between items-center pt-1.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setStep('email')}
+              className="text-foreground-secondary hover:text-foreground inline-flex items-center gap-1"
+            >
+              <ArrowLeft className="h-3 w-3" /> Change email
+            </button>
+            <button
+              type="button"
+              disabled={resendCooldown > 0}
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleRequestCode(e as unknown as React.FormEvent)}
+              className="text-clinical-teal font-semibold hover:underline disabled:opacity-50"
+            >
+              {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend code'}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {step === 'reset' && (
+        <form onSubmit={handleResetCredentials} className="space-y-3">
+          <div className="space-y-1">
+            <label className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary">
+              New Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => handlePasswordInput(e.target.value)}
+                placeholder="At least 6 characters"
+                className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pl-10 pr-11 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-teal"
+              />
+              <Lock className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-foreground-muted hover:text-foreground"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary">
+              Confirm New Password
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Repeat new password"
+                className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pl-10 pr-11 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-teal"
+              />
+              <Lock className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-foreground-muted hover:text-foreground"
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            size="lg"
+            disabled={isLoading}
+            isLoading={isLoading}
+            className="h-11 w-full rounded-xl bg-clinical-teal text-white font-semibold shadow-md transition-all hover:bg-clinical-tealHover hover:shadow-lg active:scale-[0.99]"
+          >
+            <span>Reset Password & Sign In</span>
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </form>
+      )}
+
+      {step === 'done' && (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/90 p-5 text-center space-y-2.5">
+          <FiCheckCircle className="mx-auto h-11 w-11 text-emerald-600" />
+          <h2 className="text-base font-bold text-emerald-950">Password Successfully Reset!</h2>
+          <p className="text-xs text-emerald-800">
+            Redirecting to sign in with your updated credentials...
+          </p>
+        </div>
+      )}
+
+      <p className="mt-4 border-t border-border pt-3.5 text-center text-sm text-foreground-secondary">
+        Remembered your password?{" "}
+        <Link href="/auth/login" className="font-semibold text-clinical-teal underline-offset-4 hover:underline">
+          Return to sign in
+        </Link>
+      </p>
+    </AuthShell>
   )
 }
-
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-// The End By B.L.S.M.C - [SkewBlanc] - The Winds Chase Us ⚓
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

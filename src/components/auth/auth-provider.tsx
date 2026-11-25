@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refresh = React.useCallback(async () => {
     const controller = new AbortController();
     const timer = setTimeout(
-      () => controller.abort(new Error("NURVIA took too long to verify your sign-in status. Check your connection and try again.")),
+      () => controller.abort(new Error("QuizNurse took too long to verify your sign-in status. Check your connection and try again.")),
       SESSION_CHECK_TIMEOUT_MS,
     );
     let response: ApiResponse<AuthUserDto>;

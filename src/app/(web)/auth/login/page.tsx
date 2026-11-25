@@ -1,25 +1,19 @@
 // SkewLine\castoline\src\app\web\(auth)\login\page.tsx
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import 'react-phone-number-input/style.css'
-import { FcGoogle } from 'react-icons/fc'
-import { FaEye, FaEyeSlash } from 'react-icons/fa'
-import { FiCheckCircle } from 'react-icons/fi'
-import { APP_NAME } from '@/lib/config/config'
-import { login, LoginCredentials } from '@/lib/services/auth/loginService' //  use your authService.ts which calls apiFetch to login - avoid direct axios calls to backend
-import { useEffect } from 'react'
-import Image from 'next/image'
-import { session } from '@/lib/services/auth/sessionService'
 import { useSearchParams } from 'next/navigation'
+import { FcGoogle } from 'react-icons/fc'
+import { FiCheckCircle, FiAlertCircle } from 'react-icons/fi'
+import { Eye, EyeOff, Lock, Mail, ArrowRight } from 'lucide-react'
+import { APP_NAME } from '@/lib/config/config'
+import { login, LoginCredentials } from '@/lib/services/auth/loginService'
+import { session } from '@/lib/services/auth/sessionService'
 import { redirectToSocialProvider } from '@/lib/services/auth/socialService'
+import { AuthShell } from '@/components/auth/auth-shell'
+import { Button } from '@/components/ui/button'
 
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
-import { Suspense } from 'react'
-
-// Extract searchParams logic into a child
 function LoginSearchParamsHandler({
   onRegistered,
   onSocialError,
@@ -35,7 +29,7 @@ function LoginSearchParamsHandler({
     if (justRegistered && registeredEmail) {
       onRegistered(
         decodeURIComponent(registeredEmail),
-        `Account created successfully ⚓ You can now log in as ${decodeURIComponent(registeredEmail)}`
+        `Account created successfully. You can now log in as ${decodeURIComponent(registeredEmail)}.`
       );
     }
   }, [justRegistered, registeredEmail, onRegistered]);
@@ -44,7 +38,6 @@ function LoginSearchParamsHandler({
     const match = document.cookie.match(/(?:^|; )socialError=([^;]*)/);
     if (match) {
       onSocialError(decodeURIComponent(match[1]));
-      // clear it so refresh/back doesn't re-show a stale error
       document.cookie = 'socialError=; path=/; max-age=0';
     }
   }, [onSocialError]);
@@ -52,19 +45,12 @@ function LoginSearchParamsHandler({
   return null;
 }
 
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
-// Main Login Page User Inputs and Logic
 export default function WebLoginPage() {
   const [form, setForm] = useState({
     email: '',
     password: '',
-    pin: '',
-    phone: '',
-    remember: false,
+    remember: true,
   })
-
-  // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -72,17 +58,16 @@ export default function WebLoginPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
-  const loginMethod: "password" | "pin" = "password";
-
-  const role = "Learner"; // hidden, fixed role
-  const LANDING_PATH = "/pages/entrance"; // Landing page
+  const role = "Learner";
+  const LANDING_PATH = "/pages/entrance";
 
   const handleSocialClick = (provider: Parameters<typeof redirectToSocialProvider>[0]['provider']) => {
     redirectToSocialProvider({ provider, context: 'login', redirectPath: LANDING_PATH }).catch((err) => {
       console.error(`Social redirect (${provider}) failed:`, err)
-      setError('Could not start social sign-in. Please try again.')
+      setError('Could not connect to Google sign-in. Please try again or use your password.')
     })
   }
+
   const handleRegisteredRedirect = useCallback((email: string, message: string) => {
     setForm(prev => ({ ...prev, email }));
     setSuccess(message);
@@ -92,7 +77,6 @@ export default function WebLoginPage() {
     setError(message);
   }, []);
 
-  // Check if user is already authenticated for him to avoid login again
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
     setForm(prev => ({
@@ -101,330 +85,229 @@ export default function WebLoginPage() {
     }))
   }
 
-  // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  // Check if the User in Logged In
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const data = await session.check()
-
-        // 🔹 Debug log only
-        console.log("➡️ Login status check :", {
-          logged_in: data.logged_in,
-          // user_id: data.user_id,
-          // user_email: data.user_email,
-          redirect_url: data.redirect_url,
-        })
-
-        //  Only update state
         setIsAuthenticated(!!data.logged_in)
       } catch (err) {
         console.error("Session check failed:", err)
         setIsAuthenticated(false)
       }
     }
-
     checkAuth()
-  }, []) // ❗ no router dependency
+  }, [])
 
-  // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
-  // Handle login submission using authService.ts
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
 
     try {
-      // Build credentials object based on selected login method
-      let credentials: LoginCredentials;
-
-      if (loginMethod === "password") {
-        credentials = {
-          email: form.email,
-          password: form.password,
-          pin: "",              // not used for password login
-          loginMethod: "password",
-          LoginProvider: "email",
-          loginProviderPayload: "Void",
-          dashboardName: "web", // hardcoded
-          role: role,           // Predefined
-          challenge: "learner.login.skew8lancasto",
-          remember: form.remember,
-        }
-      } else {
-        credentials = {
-          email: form.email,
-          password: "",         // not used for pin login
-          pin: form.pin!,
-          loginMethod: "pin",
-          LoginProvider: "email",
-          loginProviderPayload: "Void",
-          dashboardName: "web", // hardcoded
-          role: role,           // from dropdown
-          challenge: "learner.login.skew8lancasto",
-          remember: form.remember,
-        }
+      const credentials: LoginCredentials = {
+        email: form.email,
+        password: form.password,
+        pin: "",
+        loginMethod: "password",
+        LoginProvider: "email",
+        loginProviderPayload: "Void",
+        dashboardName: "web",
+        role: role,
+        challenge: "learner.login.skew8lancasto",
+        remember: form.remember,
       }
 
-      // Call authService login function 
-      const data = await login(credentials); // LoginResponse object already
+      const data = await login(credentials);
 
       if (data?.error) {
-        console.warn("⚠️ Login error (400 body):", data.error, data);
         setError(data.error)
         setSuccess('')
         return
       }
 
-      setSuccess("Login Successful ! Redirecting . . . ⚓")
+      setSuccess("Authentication verified! Opening your study workspace...")
       setError('')
       setTimeout(() => {
         window.location.assign(LANDING_PATH)
-      }, 800)
-      return
-
+      }, 700)
     } catch (err: unknown) {
       console.error("Login failed:", err)
-      setError(err instanceof Error ? err.message : "Login failed. Please try again.")
+      setError(err instanceof Error ? err.message : "Unable to sign in. Please verify your details.")
     } finally {
       setIsLoading(false)
     }
   }
 
-  // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
-  // Render the login form
   return (
-    <div className="flex flex-col items-center justify-center bg-[#F8FAFC] dark:bg-[#0B1220] px-4 py-12 min-h-[85vh]">
-
+    <AuthShell mode="sign-in">
       <Suspense fallback={null}>
         <LoginSearchParamsHandler onRegistered={handleRegisteredRedirect} onSocialError={handleSocialError} />
       </Suspense>
 
-      {/* App Title / Branding */}
-      <div className="flex flex-col items-center justify-center mb-6 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-[#0D9488]/25 bg-[#0D9488]/10 px-3.5 py-1 text-xs font-semibold text-[#0D9488] dark:text-teal-300 mb-2">
-          NURVIA Learner Access
+      <div className="mb-4 space-y-1.5">
+        <div className="inline-flex items-center gap-2 rounded-full border border-clinical-teal/30 bg-clinical-mist px-3 py-1 text-xs font-semibold text-clinical-teal">
+          <span className="h-2 w-2 rounded-full bg-clinical-teal animate-pulse" />
+          Learner Sign-In
         </div>
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-2xl md:text-3xl font-extrabold text-slate-600 dark:text-slate-300">
-            Welcome to
-          </span>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-[#142B4A] dark:text-white">
-            {APP_NAME}
-          </h1>
-          <FiCheckCircle
-            className="text-[#0D9488] text-xl md:text-2xl"
-            title="Verified"
-          />
-        </div>
-
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Your clinical education platform for nursing & allied-health exam preparation.
+        <h1 className="font-brand text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          Welcome to {APP_NAME}
+        </h1>
+        <p className="text-sm text-foreground-secondary leading-relaxed">
+          Access your clinical question banks, interactive rationales, and exam simulations.
         </p>
       </div>
 
-      {/* Login Card Container */}
-      <div className="max-w-5xl w-full bg-white dark:bg-[#111C2E] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg grid grid-cols-1 md:grid-cols-2 overflow-hidden">
-
-        {/* LEFT SIDE: Full Image Background + Text at Bottom */}
-        <div className="hidden md:flex relative w-full h-full items-end justify-center overflow-hidden bg-[#142B4A]">
-          {/* Background Image */}
-          <Image
-            src="/web/auth/login/loginFoto.jpg"
-            alt="Welcome"
-            layout="fill"
-            objectFit="cover"
-            priority
-            className="z-0 opacity-85"
-          />
-
-          {/* Top Social Login Buttons Overlay DESKTOP */}
-          <div className="absolute top-0 left-0 z-10 w-full p-6">
-            <div className="bg-[#142B4A]/80 backdrop-blur-md border border-white/15 rounded-2xl p-4 shadow-lg">
-              <p className="text-center text-teal-200 text-[11px] font-semibold tracking-wider uppercase mb-3">
-                Single Sign-On
-              </p>
-              <button
-                type="button"
-                className="w-full flex items-center justify-center gap-2.5 bg-white border border-slate-200 px-4 py-2.5 rounded-xl hover:bg-slate-50 transition text-slate-800 font-semibold text-sm"
-                onClick={() => handleSocialClick('google')}
-              >
-                <FcGoogle className="text-xl" />
-                Continue with Google
-              </button>
-            </div>
-          </div>
-
-          {/* Bottom Text Overlay */}
-          <div className="z-10 w-full p-8 bg-gradient-to-t from-[#142B4A] via-[#142B4A]/70 to-transparent text-white text-left">
-            {isAuthenticated ? (
-              <>
-                <h2 className="text-2xl font-extrabold">Welcome Back!</h2>
-                <p className="text-sm text-slate-200 mt-1.5">
-                  You&apos;re already signed in. Ready to dive into {APP_NAME}?
-                </p>
-              </>
-            ) : (
-              <>
-                <h2 className="text-2xl font-extrabold">Clinical Confidence Starts Here</h2>
-                <p className="text-sm text-slate-200 mt-1.5">
-                  Sign in to continue exploring {APP_NAME}. Structured. Evidence-Based. Reliable.
-                </p>
-              </>
-            )}
-          </div>
+      {isAuthenticated ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/90 p-6 text-center space-y-3 shadow-xs dark:border-emerald-800 dark:bg-emerald-950/40">
+          <FiCheckCircle className="mx-auto h-10 w-10 text-emerald-600" />
+          <h2 className="text-base font-bold text-emerald-950 dark:text-emerald-200">
+            Active Session Detected
+          </h2>
+          <p className="text-xs text-emerald-800/90 dark:text-emerald-300/90">
+            You are already authenticated as an active nursing learner.
+          </p>
+          <Button
+            type="button"
+            className="w-full h-11 bg-clinical-teal text-white font-semibold hover:bg-clinical-tealHover"
+            onClick={() => window.location.assign('/dashboards')}
+          >
+            <span>Proceed to Learner Dashboard</span>
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
         </div>
+      ) : (
+        <div className="space-y-3.5">
+          <button
+            type="button"
+            onClick={() => handleSocialClick('google')}
+            disabled={isLoading}
+            className="flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-border bg-white px-4 text-sm font-semibold text-foreground shadow-xs transition-all hover:border-clinical-teal/60 hover:bg-clinical-mist/50 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-teal disabled:cursor-not-allowed disabled:opacity-60 dark:bg-surface dark:hover:bg-surface-muted"
+          >
+            <FcGoogle className="h-5 w-5" />
+            <span>Continue with Google</span>
+          </button>
 
-        <div className="w-full p-6 md:p-8 space-y-5 border-l border-slate-200 dark:border-slate-800">
-
-          {/* Mobile-only Social Login Buttons */}
-          <div className="md:hidden">
-            <button
-              type="button"
-              className="w-full flex items-center justify-center gap-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-4 py-2.5 rounded-xl hover:bg-slate-50 transition text-slate-700 dark:text-slate-200 font-semibold text-sm"
-              onClick={() => handleSocialClick('google')}
-            >
-              <FcGoogle className="text-xl" />
-              Continue with Google
-            </button>
+          <div className="relative flex items-center justify-center py-0.5">
+            <div className="w-full border-t border-border" />
+            <span className="relative bg-surface-elevated px-3 text-xs sm:text-[13px] font-medium text-foreground-muted whitespace-nowrap">
+              or sign in with email
+            </span>
+            <div className="w-full border-t border-border" />
           </div>
 
-          <div className="text-center text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Sign in with email
-          </div>
-
-          {/* Error Message */}
           {error && (
-            <div className="flex justify-center">
-              <div role="alert" className="relative max-w-md w-full bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 px-4 py-3 rounded-xl text-sm flex items-center gap-3">
-                <span className="flex-1 leading-tight">{error}</span>
-                <button
-                  type="button"
-                  onClick={() => setError("")}
-                  className="opacity-70 hover:opacity-100"
-                >
-                  ✕
-                </button>
-              </div>
+            <div
+              role="alert"
+              className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/80 p-3 text-sm text-rose-900 shadow-xs dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200"
+            >
+              <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+              <span className="leading-snug">{error}</span>
             </div>
           )}
 
-          {/* Success Message */}
           {success && (
-            <div className="flex justify-center">
-              <div role="status" className="relative max-w-md w-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 px-4 py-3 rounded-xl text-sm flex items-center gap-3">
-                <FiCheckCircle className="text-emerald-600 text-base shrink-0" />
-                <span className="flex-1 leading-tight">{success}</span>
-                <button
-                  type="button"
-                  onClick={() => setSuccess("")}
-                  className="opacity-70 hover:opacity-100"
-                >
-                  ✕
-                </button>
-              </div>
+            <div
+              role="status"
+              className="flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50/80 p-3 text-sm text-emerald-900 shadow-xs dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
+            >
+              <FiCheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+              <span className="leading-snug">{success}</span>
             </div>
           )}
 
-          {/* If authenticated, show dashboard button */}
-          {isAuthenticated ? (
-            <div className="text-center py-4">
-              <button
-                onClick={() => window.location.assign('/dashboards')}
-                className="w-full bg-[#0D9488] text-white py-3 rounded-xl hover:bg-[#0F766E] font-semibold text-sm transition"
-              >
-                Continue to Learner Dashboard →
-              </button>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
-                Your active session is ready.
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">Email Address</label>
+          <form onSubmit={handleLogin} className="space-y-3" noValidate>
+            <div className="space-y-1">
+              <label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary">
+                Email address
+              </label>
+              <div className="relative">
                 <input
-                  type="email"
+                  id="email"
                   name="email"
+                  type="email"
                   autoComplete="username"
                   required
                   value={form.email}
                   onChange={handleChange}
-                  className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
+                  placeholder="nurse@example.com"
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pl-10 text-sm text-foreground placeholder:text-foreground-muted/60 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-teal"
                 />
+                <Mail className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
               </div>
+            </div>
 
-              {/* PASSWORD FIELD */}
-              <div className={`mb-4 relative ${loginMethod !== "password" ? "hidden" : ""}`}>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary">
                   Password
                 </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    autoComplete="current-password"
-                    required={loginMethod === "password"}
-                    value={form.password}
-                    onChange={handleChange}
-                    maxLength={32}
-                    className="w-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 pr-10 text-sm text-[#0F172A] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
-                  >
-                    {showPassword ? <FaEyeSlash /> : <FaEye />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    id="remember"
-                    name="remember"
-                    checked={form.remember}
-                    onChange={handleChange}
-                    className="accent-[#0D9488]"
-                  />
-                  Remember me
-                </label>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-[#142B4A] text-white py-3 rounded-xl hover:bg-[#1E3A5F] text-sm font-semibold transition disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {isLoading ? 'Signing in…' : 'Sign In'}
-              </button>
-
-              {/* Links */}
-              <div className="pt-2 flex flex-row gap-3 w-full">
                 <Link
                   href="/auth/recovery/password"
-                  className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
+                  className="text-xs font-semibold text-clinical-teal underline-offset-4 hover:underline"
                 >
-                  Forgot Password?
-                </Link>
-                <Link
-                  href="/auth/register"
-                  className="flex-1 text-center bg-[#F8FAFC] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:border-[#0D9488] hover:text-[#0D9488] transition"
-                >
-                  Register Instead?
+                  Forgot password?
                 </Link>
               </div>
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={form.password}
+                  onChange={handleChange}
+                  maxLength={128}
+                  placeholder="Enter your password"
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3.5 pl-10 pr-11 text-sm text-foreground placeholder:text-foreground-muted/60 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-teal"
+                />
+                <Lock className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-foreground-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-teal transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
 
-            </form>
-          )}
+            <div className="flex items-center justify-between pt-0.5">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  name="remember"
+                  checked={form.remember}
+                  onChange={handleChange}
+                  className="h-4 w-4 rounded border-border text-clinical-teal focus:ring-clinical-teal focus-visible:ring-2 focus-visible:ring-clinical-teal"
+                />
+                <span className="text-xs text-foreground-secondary">
+                  Remember me on this device
+                </span>
+              </label>
+            </div>
+
+            <Button
+              type="submit"
+              size="lg"
+              className="h-11 w-full rounded-xl bg-clinical-teal text-white font-semibold shadow-md transition-all hover:bg-clinical-tealHover hover:shadow-lg active:scale-[0.99] disabled:cursor-not-allowed"
+              isLoading={isLoading}
+              disabled={isLoading}
+            >
+              <span>Sign In to Learner Sanctuary</span>
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </form>
         </div>
-      </div>
+      )}
 
-    </div>
+      <p className="mt-4 border-t border-border pt-3.5 text-center text-sm text-foreground-secondary">
+        Need a learner account?{" "}
+        <Link href="/auth/register" className="font-semibold text-clinical-teal underline-offset-4 hover:underline">
+          Create an account
+        </Link>
+      </p>
+    </AuthShell>
   )
 }

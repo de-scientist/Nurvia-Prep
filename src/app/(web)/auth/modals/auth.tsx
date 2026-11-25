@@ -341,10 +341,10 @@ export default function AuthModal({
           Continue with Google
         </button>
 
-        <div className="relative my-4 flex items-center justify-center">
+        <div className="relative my-3 flex items-center justify-center">
           <div className="w-full border-t border-slate-200 dark:border-slate-800" />
           <span className="bg-white dark:bg-[#111C2E] px-3 text-xs text-slate-400 whitespace-nowrap">
-            {isLogin ? "or sign in with email" : "or sign up with email"}
+            {isLogin ? "or sign in with email" : "or create account with email"}
           </span>
           <div className="w-full border-t border-slate-200 dark:border-slate-800" />
         </div>
