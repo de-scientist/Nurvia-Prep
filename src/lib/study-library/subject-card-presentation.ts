@@ -14,7 +14,7 @@ export type PathwayBadgeLabel = 'Shared: RN & LPN' | 'RN' | 'LPN';
 
 export interface SubjectPathwayOption {
   pathway: 'RN' | 'PN_LPN';
-  label: 'RN Pathway' | 'LPN / PN Pathway';
+  label: 'RN Pathway' | 'LPN Pathway';
   shortLabel: 'RN' | 'LPN';
   programId: AuthorizedProgramId;
   examCount: number;
@@ -245,7 +245,7 @@ export function buildSubjectCardPresentation(
         },
         {
           pathway: 'PN_LPN',
-          label: 'LPN / PN Pathway',
+          label: 'LPN Pathway',
           shortLabel: 'LPN',
           programId: LPN_PROGRAM_ID,
           examCount: Math.max(0, pnCount),

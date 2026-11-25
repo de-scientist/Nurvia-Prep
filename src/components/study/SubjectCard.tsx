@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   BookOpen,
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { SubjectCardDto } from "@/lib/api-types";
+import { useAuth } from "@/components/auth/auth-provider";
 import {
   buildSubjectCardPresentation,
   buildSubjectSelectionContext,
@@ -58,15 +60,75 @@ export function SubjectCard({
     ? metrics.rnExamCount + metrics.pnExamCount
     : Math.max(0, subject.totalExams);
 
+  const router = useRouter();
+  const { status, user } = useAuth();
+  const isAuthenticated = Boolean(user && status === "authenticated");
+
   const selectPathway = (targetPathway: string) => {
+    const isExit =
+      presentation.isExitPathway ||
+      subject.pathway === "RN_Exit" ||
+      subject.pathway === "PN_Exit" ||
+      subject.category === "ExitPredictor";
+
+    const target =
+      targetPathway ||
+      (isExit
+        ? metrics.rnExamCount > 0
+          ? "RN_Exit"
+          : "PN_Exit"
+        : metrics.rnExamCount > 0
+          ? "RN"
+          : "PN_LPN");
+
+    const selection = buildSubjectSelectionContext(subject, target);
+    const params = new URLSearchParams();
+    params.set("track", targetPathway);
+    params.set("subject", subject.title);
+    if (selection.subjectIds && selection.subjectIds.length > 0) {
+      params.set("subjectIds", selection.subjectIds.join(","));
+    }
+    if (selection.programId) {
+      params.set("programId", String(selection.programId));
+    }
+    if (selection.examId) {
+      params.set("examId", selection.examId);
+    }
+    const destination = `/learner/library?${params.toString()}`;
+
+    // STAGE 4 — Authentication gate when accessing an examination through an individual subject
+    if (!isAuthenticated) {
+      router.push(`/sign-in?returnTo=${encodeURIComponent(destination)}`);
+      return;
+    }
+
+    if (user?.emailVerified === false) {
+      router.push(destination);
+      return;
+    }
+
+    if (_isPublic) {
+      router.push(destination);
+      return;
+    }
+
     if (onSelectSubjectSource) {
-      onSelectSubjectSource(
-        buildSubjectSelectionContext(subject, targetPathway)
-      );
+      onSelectSubjectSource(selection);
       return;
     }
     onSelectSubject(subject.title, targetPathway);
   };
+
+  const isExit =
+    presentation.isExitPathway ||
+    subject.pathway === "RN_Exit" ||
+    subject.pathway === "PN_Exit" ||
+    subject.category === "ExitPredictor";
+
+  const rnTargetPathway = isExit ? "RN_Exit" : "RN";
+  const lpnTargetPathway = isExit ? "PN_Exit" : "PN_LPN";
+  const rnLabel = isExit ? "RN Exit" : "RN";
+  const lpnLabel = isExit ? "LPN Exit" : "LPN";
 
   const categoryLabel = presentation.categoryLabel || subject.category || "HESI";
 
@@ -74,9 +136,9 @@ export function SubjectCard({
     <Card
       data-testid="subject-card"
       data-classification={classification}
-      className="flex h-full flex-col justify-between gap-3 border border-border bg-surface p-4 shadow-xs transition-[border-color,box-shadow] hover:border-brand-teal/50 hover:shadow-md"
+      className="flex h-full flex-col justify-between gap-2.5 border border-border bg-surface p-3.5 shadow-xs transition-[border-color,box-shadow] hover:border-brand-teal/50 hover:shadow-md"
     >
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {/* 1. Subject Category / Small Label */}
         <div className="flex items-center justify-between gap-2 text-xs font-semibold text-foreground-muted">
           <span className="inline-flex items-center gap-1.5 text-brand-teal">
@@ -94,7 +156,7 @@ export function SubjectCard({
         <h3 className="min-w-0">
           <button
             type="button"
-            onClick={() => selectPathway(metrics.rnExamCount > 0 ? "RN" : "PN_LPN")}
+            onClick={() => selectPathway(metrics.rnExamCount > 0 ? rnTargetPathway : lpnTargetPathway)}
             title={`View Examinations: ${subject.title}`}
             className="w-full text-left font-brand text-base font-bold leading-snug text-foreground break-words line-clamp-2 transition-colors hover:text-brand-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal rounded-sm"
           >
@@ -115,18 +177,18 @@ export function SubjectCard({
         <Button
           type="button"
           size="sm"
-          aria-label={metrics.rnExamCount > 0 ? "RN Pathway" : "RN Pathway (No exams)"}
+          aria-label={metrics.rnExamCount > 0 ? `${rnLabel} Pathway` : `${rnLabel} Pathway (No exams)`}
           disabled={metrics.rnExamCount === 0}
-          onClick={() => selectPathway("RN")}
-          title={metrics.rnExamCount > 0 ? `RN · ${metrics.rnExamCount} exams` : "No RN exams available"}
+          onClick={() => selectPathway(rnTargetPathway)}
+          title={metrics.rnExamCount > 0 ? `${rnLabel} · ${metrics.rnExamCount} exams` : `No ${rnLabel} exams available`}
           className={cn(
-            "h-9 w-full text-xs font-semibold rounded-lg flex items-center justify-center gap-1",
+            "h-8 w-full text-xs font-semibold rounded-lg flex items-center justify-center gap-1",
             metrics.rnExamCount > 0
               ? "bg-brand-teal hover:bg-brand-tealDark text-white shadow-2xs"
               : "opacity-50 cursor-not-allowed bg-surface-muted text-foreground-muted"
           )}
         >
-          <span>{metrics.rnExamCount > 0 ? `RN · ${metrics.rnExamCount} exams` : "No RN exams"}</span>
+          <span>{metrics.rnExamCount > 0 ? `${rnLabel} · ${metrics.rnExamCount} exams` : `No ${rnLabel} exams`}</span>
           {metrics.rnExamCount > 0 && <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
         </Button>
 
@@ -134,18 +196,18 @@ export function SubjectCard({
           type="button"
           variant="outline"
           size="sm"
-          aria-label={metrics.pnExamCount > 0 ? "LPN / PN Pathway" : "LPN / PN Pathway (No exams)"}
+          aria-label={metrics.pnExamCount > 0 ? `${lpnLabel} Pathway` : `${lpnLabel} Pathway (No exams)`}
           disabled={metrics.pnExamCount === 0}
-          onClick={() => selectPathway("PN_LPN")}
-          title={metrics.pnExamCount > 0 ? `LPN/PN · ${metrics.pnExamCount} exams` : "No LPN/PN exams available"}
+          onClick={() => selectPathway(lpnTargetPathway)}
+          title={metrics.pnExamCount > 0 ? `${lpnLabel} · ${metrics.pnExamCount} exams` : `No ${lpnLabel} exams available`}
           className={cn(
-            "h-9 w-full text-xs font-semibold rounded-lg flex items-center justify-center gap-1",
+            "h-8 w-full text-xs font-semibold rounded-lg flex items-center justify-center gap-1",
             metrics.pnExamCount > 0
               ? "border-purple-500/40 text-purple-700 dark:text-purple-300 hover:bg-purple-500/10 hover:border-purple-500"
               : "opacity-50 cursor-not-allowed border-border text-foreground-muted"
           )}
         >
-          <span>{metrics.pnExamCount > 0 ? `LPN/PN · ${metrics.pnExamCount} exams` : "No LPN/PN exams"}</span>
+          <span>{metrics.pnExamCount > 0 ? `${lpnLabel} · ${metrics.pnExamCount} exams` : `No ${lpnLabel} exams`}</span>
           {metrics.pnExamCount > 0 && <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
         </Button>
       </div>

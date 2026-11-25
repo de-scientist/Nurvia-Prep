@@ -2,21 +2,23 @@
 
 import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { nurviaApi } from "@/lib/api-client";
+import { useAuth } from "@/components/auth/auth-provider";
+import { LearnerVerificationModal } from "@/components/auth/LearnerVerificationModal";
 import type {
   StudyLibraryFiltersDto,
   StudyLibrarySummaryDto,
   StudySetCardDto,
   SubjectCardDto,
 } from "@/lib/api-types";
+import type { AdvancedFilterState } from "./StudyLibraryAdvancedFilters";
 import {
-  StudyLibraryAdvancedFilters,
-  type AdvancedFilterState,
-} from "./StudyLibraryAdvancedFilters";
-import { StudyLibraryCategoryTabs } from "./StudyLibraryCategoryTabs";
+  StudyLibraryCategoryTabs,
+  PATHWAY_LABELS,
+} from "./StudyLibraryCategoryTabs";
 import { StudyLibraryHeader } from "./StudyLibraryHeader";
 import { StudyLibrarySearch } from "./StudyLibrarySearch";
 import {
@@ -83,6 +85,9 @@ export function StudyLibraryView({
 
   const [pathway, setPathway] = React.useState<string>(queryTrack);
   const [category, setCategory] = React.useState<string>(queryCategory);
+  const [selectedSubjectFilter, setSelectedSubjectFilter] = React.useState<string>("All");
+  const [exitFilter, setExitFilter] = React.useState<"All" | "RN_Exit" | "PN_Exit">("All");
+
   const [searchInput, setSearchInput] = React.useState(searchParams?.get("q") || "");
   const [debouncedSearch, setDebouncedSearch] = React.useState(searchInput);
   const [selectedSubjectIds, setSelectedSubjectIds] = React.useState<string[]>(() =>
@@ -130,6 +135,17 @@ export function StudyLibraryView({
   const isExamView = Boolean(advanced.subject || advanced.examId || selectedSubjectIds.length > 0);
   const isInitialLoading = loading && !hasLoadedOnceRef.current;
   const isUpdating = loading && hasLoadedOnceRef.current;
+
+  const { status, user } = useAuth();
+
+  // STAGE 3 & 4: Authentication gate when accessing an individual subject's examinations
+  React.useEffect(() => {
+    if (isExamView && status === "unauthenticated") {
+      const qs = searchParams?.toString();
+      const currentUrl = qs ? `${pathname}?${qs}` : pathname;
+      router.push(`/sign-in?returnTo=${encodeURIComponent(currentUrl)}`);
+    }
+  }, [isExamView, status, pathname, searchParams, router]);
 
   // Debounce search input
   React.useEffect(() => {
@@ -345,6 +361,8 @@ export function StudyLibraryView({
 
   const handleClearAllFilters = () => {
     selectedCardRef.current = null;
+    setSelectedSubjectFilter("All");
+    setExitFilter("All");
     setPathway("All");
     setCategory("All");
     setSearchInput("");
@@ -359,306 +377,502 @@ export function StudyLibraryView({
     setPageNumber(1);
   };
 
+  const handleBackToSubjectCatalogue = () => {
+    // Subject Catalogue / Back to Subject Catalogue breadcrumb return flow
+    selectedCardRef.current = null;
+    setSelectedSubjectIds([]);
+    setSelectedProgramId("");
+    setSelectedSubjectFilter("All");
+    setAdvanced((prev) => ({ ...prev, subject: "", examId: "", course: "" }));
+    setCategory("All");
+    setPageNumber(1);
+  };
+
+  const handleSelectPathway = (next: string) => {
+    setPathway(next);
+    setSelectedSubjectFilter("All");
+    if (category === "ExitPredictor" && next !== "All" && next !== "RN_Exit" && next !== "PN_Exit") {
+      setCategory("All");
+    }
+    if (isExamView) {
+      const activeCard =
+        selectedCardRef.current ??
+        subjects.find((s) => s.title === advanced.subject) ??
+        null;
+      if (next === "All") {
+        selectedCardRef.current = null;
+        setSelectedSubjectIds([]);
+        setSelectedProgramId("");
+        setAdvanced((prev) => ({ ...prev, subject: "", examId: "" }));
+      } else if (activeCard) {
+        const candidateSources = [
+          ...(activeCard.sourceSubjects?.rn ?? []),
+          ...(activeCard.sourceSubjects?.lpn ?? []),
+        ].filter((src) => isPathwayMatch(src.pathway, next));
+        if (candidateSources.length > 0) {
+          const nextProgId = candidateSources[0].programId;
+          const nextIds = candidateSources
+            .map((s) => s.subjectGuidId ?? s.subjectId)
+            .filter(Boolean);
+          setSelectedProgramId(String(nextProgId));
+          setSelectedSubjectIds(nextIds);
+          setAdvanced((prev) => ({ ...prev, examId: "" }));
+        } else {
+          selectedCardRef.current = null;
+          setSelectedSubjectIds([]);
+          setSelectedProgramId("");
+          setAdvanced((prev) => ({ ...prev, subject: "", examId: "" }));
+        }
+      } else {
+        const nextProgId = programIdForPathway(next);
+        setSelectedSubjectIds([]);
+        setSelectedProgramId(nextProgId ? String(nextProgId) : "");
+        setAdvanced((prev) => ({ ...prev, examId: "" }));
+      }
+    } else if (advanced.examId) {
+      const selectedExam = filtersData?.exams.find((e) => e.id === advanced.examId);
+      if (!selectedExam || (next !== "All" && !isPathwayMatch(String(selectedExam.pathway ?? ""), next))) {
+        setAdvanced((prev) => ({ ...prev, examId: "" }));
+      }
+    }
+    setPageNumber(1);
+  };
+
+  const isExitSubject = (s: SubjectCardDto) =>
+    s.category === "ExitPredictor" ||
+    s.pathway === "RN_Exit" ||
+    s.pathway === "PN_Exit" ||
+    s.title.toLowerCase().includes("exit");
+
+  const regularSubjects = React.useMemo(() => {
+    return subjects.filter((s) => !isExitSubject(s));
+  }, [subjects]);
+
+  const exitSubjects = React.useMemo(() => {
+    return subjects.filter((s) => isExitSubject(s));
+  }, [subjects]);
+
+  // Dynamic Subject Filters for the active pathway
+  const availableSubjectFilters = React.useMemo(() => {
+    const isRn = pathway === "RN" || pathway === "RN_Exit";
+    const isLpn = pathway === "PN_LPN" || pathway === "PN_Exit";
+
+    let list: string[] = [];
+    if (isRn && filtersData?.rnSubjects && filtersData.rnSubjects.length > 0) {
+      list = filtersData.rnSubjects;
+    } else if (isLpn && filtersData?.lpnSubjects && filtersData.lpnSubjects.length > 0) {
+      list = filtersData.lpnSubjects;
+    } else if (filtersData?.subjects && filtersData.subjects.length > 0) {
+      list = filtersData.subjects;
+    } else {
+      list = regularSubjects.map((s) => s.title);
+    }
+
+    const unique = Array.from(new Set(list.filter(Boolean)));
+    return ["All Subjects", ...unique];
+  }, [pathway, filtersData, regularSubjects]);
+
+  const visibleRegularSubjects = React.useMemo(() => {
+    if (selectedSubjectFilter === "All Subjects" || selectedSubjectFilter === "All") {
+      return regularSubjects;
+    }
+    const target = selectedSubjectFilter.toLowerCase();
+    return regularSubjects.filter((s) =>
+      s.title.toLowerCase() === target || s.title.toLowerCase().includes(target)
+    );
+  }, [regularSubjects, selectedSubjectFilter]);
+
+  const visibleExitSubjects = React.useMemo(() => {
+    return exitSubjects.filter((s) => {
+      if (exitFilter === "RN_Exit") return isPathwayMatch(s.pathway, "RN_Exit");
+      if (exitFilter === "PN_Exit") return isPathwayMatch(s.pathway, "PN_Exit");
+      return true;
+    });
+  }, [exitSubjects, exitFilter]);
+
   const hasActiveFilters =
     pathway !== "All" ||
     category !== "All" ||
     debouncedSearch.trim().length > 0 ||
+    selectedSubjectFilter !== "All" ||
+    exitFilter !== "All" ||
     selectedSubjectIds.length > 0 ||
     Boolean(selectedProgramId) ||
     Object.values(advanced).some(Boolean);
 
-  return (
-    <div className="space-y-6">
-      <StudyLibraryHeader isPublic={isPublic} summary={summary} selectedPathway={pathway} selectedSubject={advanced.subject} />
+  const pathwayOptions = ["All", "RN", "PN_LPN", "RN_Exit", "PN_Exit"];
 
-      {/* Unified Search & Category/Pathway Controls: Search top-left, filters alongside on the right */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex-1 min-w-0">
+  return (
+    <div className="space-y-4">
+      {/* 1. Header with Compact Search on Desktop Right / Mobile Stacked */}
+      <StudyLibraryHeader
+        isPublic={isPublic}
+        summary={summary}
+        selectedPathway={pathway}
+        selectedSubject={advanced.subject}
+        onBackToCatalogue={handleBackToSubjectCatalogue}
+        searchSlot={
           <StudyLibrarySearch
             value={searchInput}
             onChange={setSearchInput}
             isSearching={loading && searchInput !== debouncedSearch}
+            placeholder={isExamView ? "Search examinations..." : "Search subjects, exams, or keywords..."}
           />
-        </div>
+        }
+      />
 
-        <div className="shrink-0">
+      {/* Unauthenticated redirect state */}
+      {isExamView && status === "unauthenticated" && (
+        <div className="py-16 text-center space-y-3">
+          <p className="text-sm font-semibold text-foreground">
+            Sign-in required to view examinations for this subject.
+          </p>
+          <p className="text-xs text-foreground-secondary">
+            Redirecting to sign-in portal...
+          </p>
+        </div>
+      )}
+
+      {/* Authenticated but unverified state */}
+      {isExamView && status === "authenticated" && user?.emailVerified === false && (
+        <div className="py-16 text-center space-y-4 rounded-2xl border border-clinical-teal/30 bg-surface p-8 shadow-sm">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-clinical-mist text-clinical-teal">
+            <Mail className="h-7 w-7" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="font-brand text-xl font-bold text-foreground">
+              Email Verification Required
+            </h2>
+            <p className="text-sm text-foreground-secondary max-w-md mx-auto">
+              Progress is built one step at a time. A small confirmation today brings you closer to the future you&apos;re working towards. Please complete email verification to access examinations in {advanced.subject || "this subject"}.
+            </p>
+          </div>
+          <LearnerVerificationModal isOpen={true} returnTo={searchParams?.toString() ? `${pathname}?${searchParams.toString()}` : pathname} />
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* 2. SUBJECT LIBRARY VIEW (/learner/library)                      */}
+      {/* ============================================================== */}
+      {!isExamView && (
+        <div className="space-y-3.5">
+          {/* A. Pathway Filters — Directly below Subject Library Heading (Visible Chips, Not a Dropdown) */}
+          <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Available pathway filters">
+            {pathwayOptions.map((pathOption) => {
+              const isActive = pathway === pathOption;
+              const label = PATHWAY_LABELS[pathOption] ?? pathOption.replace("_", " ");
+              return (
+                <button
+                  key={pathOption}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => handleSelectPathway(pathOption)}
+                  className={cn(
+                    "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all border shadow-2xs",
+                    isActive
+                      ? "bg-brand-teal text-white border-brand-teal shadow-xs font-bold"
+                      : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted hover:text-foreground"
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* B. Result Count — Directly below Pathway Filters */}
+          {!isInitialLoading && !error && (
+            <StudyLibraryResultsHeader
+              shownCount={visibleRegularSubjects.length}
+              totalCount={regularSubjects.length}
+              pageNumber={pageNumber}
+              totalPages={totalPages}
+              itemLabel="published subject"
+              isUpdating={isUpdating}
+            />
+          )}
+
+          {/* C. Subject Filters — Directly below Result Count (Horizontally Scrollable Chips, Not a Dropdown) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none" role="tablist" aria-label="Available subject filters">
+            {availableSubjectFilters.map((subName) => {
+              const isActive =
+                (subName === "All Subjects" && selectedSubjectFilter === "All") ||
+                selectedSubjectFilter === subName;
+              return (
+                <button
+                  key={subName}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => {
+                    setSelectedSubjectFilter(subName === "All Subjects" ? "All" : subName);
+                    setPageNumber(1);
+                  }}
+                  className={cn(
+                    "shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium transition-all border",
+                    isActive
+                      ? "bg-brand-teal/15 text-brand-tealDark dark:text-teal-200 border-brand-teal/40 font-semibold shadow-2xs"
+                      : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted hover:text-foreground"
+                  )}
+                >
+                  {subName}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Loading, Error, Empty & Regular Subjects Grid */}
+          {isInitialLoading && <StudyLibraryLoadingState />}
+
+          {error && (
+            <div
+              role="alert"
+              className="space-y-3 rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200"
+            >
+              <p>{error}</p>
+              <Button type="button" variant="outline" size="sm" onClick={() => setRetryCount((c) => c + 1)}>
+                Retry
+              </Button>
+            </div>
+          )}
+
+          {!loading && !error && visibleRegularSubjects.length === 0 && exitSubjects.length === 0 && (
+            <StudyLibraryEmptyState
+              hasActiveFilters={hasActiveFilters}
+              onClearFilters={handleClearAllFilters}
+              itemLabel="subjects"
+            />
+          )}
+
+          {!isInitialLoading && !error && visibleRegularSubjects.length > 0 && (
+            <div className={cn("grid gap-3.5 md:grid-cols-2 xl:grid-cols-3 transition-opacity duration-200", isUpdating && "opacity-60 pointer-events-none")}>
+              {visibleRegularSubjects.map((subject) => (
+                <SubjectCard
+                  key={subject.presentationId ?? subject.id}
+                  subject={subject}
+                  isPublic={isPublic}
+                  activePathway={pathway}
+                  onSelectSubjectSource={(selection) => {
+                    selectedCardRef.current = selection.card;
+                    setPathway(selection.pathway);
+                    setSelectedProgramId(String(selection.programId));
+                    setSelectedSubjectIds(selection.subjectIds);
+                    setAdvanced((prev) => ({
+                      ...prev,
+                      subject: selection.subjectName,
+                      examId: selection.examId ?? "",
+                    }));
+                    setPageNumber(1);
+                  }}
+                  onSelectSubject={(subjectName, selectedPathway) => {
+                    if (selectedPathway) {
+                      setPathway(selectedPathway);
+                      const pid = programIdForPathway(selectedPathway);
+                      setSelectedProgramId(pid ? String(pid) : "");
+                    }
+                    setSelectedSubjectIds([]);
+                    setAdvanced((prev) => ({ ...prev, subject: subjectName, examId: "" }));
+                    setPageNumber(1);
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* D. All Exit Exams Section — Positioned below regular RN & LPN subjects */}
+          {!isInitialLoading && !error && exitSubjects.length > 0 && (
+            <div className="pt-6 border-t border-border space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div>
+                  <h2 className="font-brand text-lg sm:text-xl font-bold text-foreground">
+                    All Exit Exams
+                  </h2>
+                  <p className="text-xs text-foreground-secondary">
+                    Comprehensive exit predictor and readiness examinations for RN and LPN nursing candidates.
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0" role="group" aria-label="Exit examination filters">
+                  <button
+                    type="button"
+                    onClick={() => setExitFilter("All")}
+                    className={cn(
+                      "rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors border shadow-2xs",
+                      exitFilter === "All"
+                        ? "bg-brand-teal text-white border-brand-teal shadow-xs"
+                        : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted"
+                    )}
+                  >
+                    All Exit Exams
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExitFilter("RN_Exit")}
+                    className={cn(
+                      "rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors border shadow-2xs",
+                      exitFilter === "RN_Exit"
+                        ? "bg-brand-teal text-white border-brand-teal shadow-xs"
+                        : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted"
+                    )}
+                  >
+                    RN Exit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExitFilter("PN_Exit")}
+                    className={cn(
+                      "rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors border shadow-2xs",
+                      exitFilter === "PN_Exit"
+                        ? "bg-brand-teal text-white border-brand-teal shadow-xs"
+                        : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted"
+                    )}
+                  >
+                    LPN Exit
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-xs text-foreground-muted">
+                Showing <span className="font-semibold text-foreground">{visibleExitSubjects.length}</span> of{" "}
+                <span className="font-semibold text-foreground">{exitSubjects.length}</span> exit examinations
+              </p>
+
+              {visibleExitSubjects.length === 0 ? (
+                <div className="rounded-xl border border-border bg-surface p-6 text-center text-xs text-foreground-secondary">
+                  No exit examinations match the current filter.
+                </div>
+              ) : (
+                <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
+                  {visibleExitSubjects.map((subject) => (
+                    <SubjectCard
+                      key={subject.presentationId ?? subject.id}
+                      subject={subject}
+                      isPublic={isPublic}
+                      activePathway={pathway}
+                      onSelectSubjectSource={(selection) => {
+                        selectedCardRef.current = selection.card;
+                        setPathway(selection.pathway);
+                        setSelectedProgramId(String(selection.programId));
+                        setSelectedSubjectIds(selection.subjectIds);
+                        setAdvanced((prev) => ({
+                          ...prev,
+                          subject: selection.subjectName,
+                          examId: selection.examId ?? "",
+                        }));
+                        setPageNumber(1);
+                      }}
+                      onSelectSubject={(subjectName, selectedPathway) => {
+                        if (selectedPathway) {
+                          setPathway(selectedPathway);
+                          const pid = programIdForPathway(selectedPathway);
+                          setSelectedProgramId(pid ? String(pid) : "");
+                        }
+                        setSelectedSubjectIds([]);
+                        setAdvanced((prev) => ({ ...prev, subject: subjectName, examId: "" }));
+                        setPageNumber(1);
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* 3. EXAMINATION LIBRARY VIEW (/learner/library?track=...&subject=...) */}
+      {/* ============================================================== */}
+      {isExamView && (!user || user?.emailVerified !== false) && (
+        <div className="space-y-3.5">
+          {/* A. Examination Result Count — Directly below Header Area */}
+          {!isInitialLoading && !error && (
+            <StudyLibraryResultsHeader
+              shownCount={studySets.length}
+              totalCount={totalCount}
+              pageNumber={pageNumber}
+              totalPages={totalPages}
+              itemLabel="examination"
+              isUpdating={isUpdating}
+            />
+          )}
+
+          {/* B. Exam Bodies Filters — Directly below Result Count (Inline Chips, Not a Dropdown) */}
           <StudyLibraryCategoryTabs
-            isExamView={isExamView}
+            isExamView={true}
             selectedPathway={pathway}
             selectedCategory={category}
+            selectedSubject={advanced.subject}
+            selectedCourse={advanced.course}
             availablePathways={filtersData?.pathways ?? []}
             availableCategories={filtersData?.categories ?? []}
-        onSelectPathway={(next) => {
-          setPathway(next);
-          if (category === "ExitPredictor" && next !== "All" && next !== "RN_Exit" && next !== "PN_Exit") {
-            setCategory("All");
-          }
-          if (isExamView) {
-            const activeCard =
-              selectedCardRef.current ??
-              subjects.find((s) => s.title === advanced.subject) ??
-              null;
-            if (next === "All") {
-              selectedCardRef.current = null;
-              setSelectedSubjectIds([]);
-              setSelectedProgramId("");
-              setAdvanced((prev) => ({ ...prev, subject: "", examId: "" }));
-            } else if (activeCard) {
-              const candidateSources = [
-                ...(activeCard.sourceSubjects?.rn ?? []),
-                ...(activeCard.sourceSubjects?.lpn ?? []),
-              ].filter((src) => isPathwayMatch(src.pathway, next));
-              if (candidateSources.length > 0) {
-                const nextProgId = candidateSources[0].programId;
-                const nextIds = candidateSources
-                  .map((s) => s.subjectGuidId ?? s.subjectId)
-                  .filter(Boolean);
-                setSelectedProgramId(String(nextProgId));
-                setSelectedSubjectIds(nextIds);
-                setAdvanced((prev) => ({ ...prev, examId: "" }));
-              } else {
-                selectedCardRef.current = null;
-                setSelectedSubjectIds([]);
-                setSelectedProgramId("");
-                setAdvanced((prev) => ({ ...prev, subject: "", examId: "" }));
-              }
-            } else {
-              const nextProgId = programIdForPathway(next);
-              setSelectedSubjectIds([]);
-              setSelectedProgramId(nextProgId ? String(nextProgId) : "");
-              setAdvanced((prev) => ({ ...prev, examId: "" }));
-            }
-          } else if (advanced.examId) {
-            const selectedExam = filtersData?.exams.find((e) => e.id === advanced.examId);
-            if (!selectedExam || (next !== "All" && !isPathwayMatch(String(selectedExam.pathway ?? ""), next))) {
-              setAdvanced((prev) => ({ ...prev, examId: "" }));
-            }
-          }
-          setPageNumber(1);
-        }}
-        onSelectCategory={(next) => {
-          setCategory(next);
-          if (advanced.examId) {
-            const selectedExam = filtersData?.exams.find((e) => e.id === advanced.examId);
-            if (!selectedExam || (next !== "All" && String(selectedExam.category ?? "").toLowerCase() !== next.toLowerCase())) {
-              setAdvanced((prev) => ({ ...prev, examId: "" }));
-            }
-          }
-          setPageNumber(1);
-        }}
-      />
-        </div>
-      </div>
-
-      <StudyLibraryAdvancedFilters
-        filtersData={filtersData}
-        filtersLoading={filtersLoading}
-        selectedPathway={pathway}
-        selectedCategory={category}
-        value={advanced}
-        isPublic={isPublic}
-        onChange={(patch) => {
-          if ("program" in patch || "course" in patch || "subject" in patch) {
-            selectedCardRef.current = null;
-            setSelectedSubjectIds([]);
-            setSelectedProgramId("");
-          }
-          setAdvanced((prev) => {
-            const next = { ...prev, ...patch };
-            // Cascading: clear downstream filters when upstream changes
-            // Hierarchy: GLOBAL -> PROGRAM -> COURSE -> SUBJECT -> YEAR -> SEASON -> SCHOOL -> EXAM
-            if ("program" in patch && patch.program !== prev.program) {
-              next.course = "";
-              next.subject = "";
-              next.academicYear = "";
-              next.season = "";
-              next.school = "";
-              next.topic = "";
-              next.examId = "";
-            } else if ("course" in patch && patch.course !== prev.course) {
-              next.subject = "";
-              next.academicYear = "";
-              next.season = "";
-              next.school = "";
-              next.topic = "";
-              next.examId = "";
-            } else if ("subject" in patch && patch.subject !== prev.subject) {
-              next.academicYear = "";
-              next.season = "";
-              next.school = "";
-              next.topic = "";
-              next.examId = "";
-            } else if ("academicYear" in patch && patch.academicYear !== prev.academicYear) {
-              next.season = "";
-              next.school = "";
-              next.topic = "";
-              next.examId = "";
-            } else if ("season" in patch && patch.season !== prev.season) {
-              next.school = "";
-              next.topic = "";
-              next.examId = "";
-            } else if ("school" in patch && patch.school !== prev.school) {
-              next.examId = "";
-            }
-            return next;
-          });
-          setPageNumber(1);
-        }}
-        onClearAll={handleClearAllFilters}
-      />
-
-      {/* Subject-to-Examination Breadcrumb Context Banner */}
-      {isExamView && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-teal/30 bg-surface p-4 shadow-sm">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2 text-xs text-foreground-muted">
-              <button
-                type="button"
-                onClick={() => {
-                  selectedCardRef.current = null;
-                  setSelectedSubjectIds([]);
-                  setSelectedProgramId("");
-                  setAdvanced((prev) => ({ ...prev, subject: "", examId: "" }));
-                  setPageNumber(1);
-                }}
-                className="font-medium hover:text-brand-teal hover:underline flex items-center gap-1"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-                Subject Catalogue
-              </button>
-              <span>/</span>
-              <span className="font-semibold text-foreground truncate max-w-xs sm:max-w-md">
-                {advanced.subject || "Selected Examination"}
-              </span>
-            </div>
-            <h2 className="font-brand text-lg font-bold text-foreground">
-              {advanced.subject ? `Examinations in ${advanced.subject}` : "Examination Practice Sets"}
-            </h2>
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              selectedCardRef.current = null;
-              setSelectedSubjectIds([]);
-              setSelectedProgramId("");
-              setAdvanced((prev) => ({ ...prev, subject: "", examId: "" }));
+            availableSubjects={filtersData?.subjects ?? []}
+            rnSubjects={filtersData?.rnSubjects ?? []}
+            lpnSubjects={filtersData?.lpnSubjects ?? []}
+            courses={filtersData?.courses}
+            onSelectPathway={handleSelectPathway}
+            onSelectCategory={(nextCat) => {
+              setCategory(nextCat);
               setPageNumber(1);
             }}
-            className="rounded-lg"
-          >
-            <ChevronLeft className="mr-1.5 h-4 w-4 text-brand-teal" />
-            Back to Subject Catalogue
-          </Button>
-        </div>
-      )}
-
-      {!isInitialLoading && !error && (
-        <StudyLibraryResultsHeader
-          shownCount={isExamView ? studySets.length : subjects.length}
-          totalCount={totalCount}
-          pageNumber={pageNumber}
-          totalPages={totalPages}
-          itemLabel={isExamView ? "examination" : "subject"}
-          isUpdating={isUpdating}
-        />
-      )}
-
-      {isInitialLoading && <StudyLibraryLoadingState />}
-
-      {error && (
-        <div
-          role="alert"
-          className="space-y-3 rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200"
-        >
-          <p>{error}</p>
-          <Button type="button" variant="outline" size="sm" onClick={() => setRetryCount((c) => c + 1)}>
-            Retry
-          </Button>
-        </div>
-      )}
-
-      {!loading && !error && isExamView && studySets.length === 0 && (
-        <StudyLibraryEmptyState
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={handleClearAllFilters}
-          itemLabel="examinations"
-        />
-      )}
-
-      {!loading && !error && !isExamView && subjects.length === 0 && (
-        <StudyLibraryEmptyState
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={handleClearAllFilters}
-          itemLabel="subjects"
-        />
-      )}
-
-      {!isInitialLoading && !error && isExamView && studySets.length > 0 && (
-        <>
-          <div className={cn("grid gap-4 md:grid-cols-2 xl:grid-cols-3 transition-opacity duration-200", isUpdating && "opacity-60 pointer-events-none")}>
-            {studySets.map((studySet) => (
-              <StudySetCard
-                key={studySet.id}
-                studySet={studySet}
-                isPublic={isPublic}
-                onToggleSave={handleToggleSave}
-                onNotify={(msg) => showInfo(msg)}
-              />
-            ))}
-          </div>
-
-          <StudyLibraryPagination
-            pageNumber={pageNumber}
-            totalPages={totalPages}
-            onPageChange={setPageNumber}
+            onSelectCourse={(nextCourse) => {
+              setAdvanced((prev) => ({ ...prev, course: nextCourse }));
+              setPageNumber(1);
+            }}
+            onSelectSubject={(nextSub) => {
+              if (!nextSub || nextSub === "All") {
+                handleBackToSubjectCatalogue();
+                return;
+              }
+              setAdvanced((prev) => ({ ...prev, subject: nextSub, examId: "" }));
+              setPageNumber(1);
+            }}
           />
-        </>
-      )}
 
-      {!isInitialLoading && !error && !isExamView && subjects.length > 0 && (
-        <>
-          <div className={cn("grid gap-4 md:grid-cols-2 xl:grid-cols-3 transition-opacity duration-200", isUpdating && "opacity-60 pointer-events-none")}>
-            {subjects.map((subject) => (
-              <SubjectCard
-                key={subject.presentationId ?? subject.id}
-                subject={subject}
-                isPublic={isPublic}
-                activePathway={pathway}
-                onSelectSubjectSource={(selection) => {
-                  selectedCardRef.current = selection.card;
-                  setPathway(selection.pathway);
-                  setSelectedProgramId(String(selection.programId));
-                  setSelectedSubjectIds(selection.subjectIds);
-                  setAdvanced((prev) => ({
-                    ...prev,
-                    subject: selection.subjectName,
-                    examId: selection.examId ?? "",
-                  }));
-                  setPageNumber(1);
-                }}
-                onSelectSubject={(subjectName, selectedPathway) => {
-                  if (selectedPathway) {
-                    setPathway(selectedPathway);
-                    const pid = programIdForPathway(selectedPathway);
-                    setSelectedProgramId(pid ? String(pid) : "");
-                  }
-                  setSelectedSubjectIds([]);
-                  setAdvanced((prev) => ({ ...prev, subject: subjectName, examId: "" }));
-                  setPageNumber(1);
-                }}
+          {isInitialLoading && <StudyLibraryLoadingState />}
+
+          {error && (
+            <div
+              role="alert"
+              className="space-y-3 rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200"
+            >
+              <p>{error}</p>
+              <Button type="button" variant="outline" size="sm" onClick={() => setRetryCount((c) => c + 1)}>
+                Retry
+              </Button>
+            </div>
+          )}
+
+          {!loading && !error && studySets.length === 0 && (
+            <StudyLibraryEmptyState
+              hasActiveFilters={hasActiveFilters}
+              onClearFilters={handleClearAllFilters}
+              itemLabel="examinations"
+            />
+          )}
+
+          {!isInitialLoading && !error && studySets.length > 0 && (
+            <>
+              <div className={cn("grid gap-3.5 md:grid-cols-2 xl:grid-cols-3 transition-opacity duration-200", isUpdating && "opacity-60 pointer-events-none")}>
+                {studySets.map((studySet) => (
+                  <StudySetCard
+                    key={studySet.id}
+                    studySet={studySet}
+                    isPublic={isPublic}
+                    onToggleSave={handleToggleSave}
+                    onNotify={(msg) => showInfo(msg)}
+                  />
+                ))}
+              </div>
+
+              <StudyLibraryPagination
+                pageNumber={pageNumber}
+                totalPages={totalPages}
+                onPageChange={setPageNumber}
               />
-            ))}
-          </div>
-
-          <StudyLibraryPagination
-            pageNumber={pageNumber}
-            totalPages={totalPages}
-            onPageChange={setPageNumber}
-          />
-        </>
+            </>
+          )}
+        </div>
       )}
     </div>
   );

@@ -63,9 +63,22 @@ export function StudySetCardActions({
   const handleLaunchMode = async (mode: "Exam" | "Tutor", e: React.MouseEvent) => {
     e.preventDefault();
     const destination = buildStudySessionHref(studySet.id, mode, studySet.allowedLayouts);
+    const activePathway =
+      studySet.pathway ||
+      (typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("track") || "RN"
+        : "RN");
+    const pathwayParam = encodeURIComponent(activePathway);
+    const activeSubject =
+      studySet.subject ||
+      (typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("subject") || ""
+        : "");
+    const subjectParam = activeSubject ? `&subject=${encodeURIComponent(activeSubject)}` : "";
+    const subDestination = `/learner/subscription?requiredMode=${mode}&examId=${encodeURIComponent(studySet.id)}&pathway=${pathwayParam}${subjectParam}&returnTo=${encodeURIComponent(destination)}`;
 
-    if (status === "unauthenticated") {
-      router.push(`/sign-in?returnTo=${encodeURIComponent(destination)}`);
+    if (status === "unauthenticated" || !user) {
+      router.push(`/sign-in?returnTo=${encodeURIComponent(subDestination)}`);
       return;
     }
 
@@ -79,7 +92,6 @@ export function StudySetCardActions({
 
     setCheckingMode(mode);
     try {
-      const pathwayParam = encodeURIComponent(studySet.pathway || "RN");
       const res = await fetch(`/api/subscriptions/status?mode=${mode}&pathway=${pathwayParam}`, {
         headers: { "Cache-Control": "no-store" },
       });
@@ -90,7 +102,7 @@ export function StudySetCardActions({
         return;
       }
 
-      const subDestination = `/learner/subscription?requiredMode=${mode}&examId=${encodeURIComponent(studySet.id)}&pathway=${pathwayParam}&returnTo=${encodeURIComponent(destination)}`;
+      const subDestination = `/learner/subscription?requiredMode=${mode}&examId=${encodeURIComponent(studySet.id)}&pathway=${pathwayParam}${subjectParam}&returnTo=${encodeURIComponent(destination)}`;
 
       if (data.status === "None" || data.errorCode === "NO_SUBSCRIPTION") {
         feedback.showInfo(
@@ -141,7 +153,7 @@ export function StudySetCardActions({
             variant="outline"
             size="sm"
             disabled={checkingMode !== null}
-            className="w-full h-8 text-xs font-semibold hover:border-brand-teal/60"
+            className="w-full h-7.5 px-2.5 py-1 text-xs font-semibold rounded-md hover:border-brand-teal/60"
           >
             {checkingMode === "Tutor" ? (
               <>
@@ -160,7 +172,7 @@ export function StudySetCardActions({
           size="sm"
           disabled
           title="Tutor mode is not enabled for this examination."
-          className="w-full h-8 text-xs font-semibold opacity-50 cursor-not-allowed"
+          className="w-full h-7.5 px-2.5 py-1 text-xs font-semibold rounded-md opacity-50 cursor-not-allowed"
         >
           Tutor Mode
         </Button>
@@ -175,7 +187,7 @@ export function StudySetCardActions({
           <Button
             size="sm"
             disabled={checkingMode !== null}
-            className="w-full h-8 text-xs font-semibold bg-brand-teal hover:bg-brand-tealDark text-white"
+            className="w-full h-7.5 px-2.5 py-1 text-xs font-semibold rounded-md bg-brand-teal hover:bg-brand-tealDark text-white shadow-2xs"
           >
             {checkingMode === "Exam" ? (
               <>
@@ -193,7 +205,7 @@ export function StudySetCardActions({
           size="sm"
           disabled
           title="Exam mode is not enabled for this examination."
-          className="w-full h-8 text-xs font-semibold opacity-50 cursor-not-allowed"
+          className="w-full h-7.5 px-2.5 py-1 text-xs font-semibold rounded-md opacity-50 cursor-not-allowed"
         >
           Exam Mode
         </Button>

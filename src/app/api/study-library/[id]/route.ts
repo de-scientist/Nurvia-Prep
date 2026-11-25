@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractSiteMetadataFromRequestHeaders, lexmaCastoRequest } from '@/lib/lexmacasto/client';
 import { buildStrataEndpointPath } from '@/lib/lexmacasto/contracts';
 import { getServerCastoSession } from '@/lib/lexmacasto/session';
+import { resolveAttemptLearner } from '@/lib/attempts/auth-helper';
 import { inferExamCategory, inferExamDeliveryMode, inferExamPathway } from '@/lib/api-client';
 import type { StudySetDetailDto, StudySetCardDto, ExamLayoutPolicy, ExamLayout, DifficultyLevel } from '@/lib/api-types';
 import {
@@ -29,6 +30,24 @@ export async function GET(
   }
 
   const session = await getServerCastoSession();
+  if (!session) {
+    return NextResponse.json(
+      { success: false, message: 'Authentication is required to access examination details.', errorCode: 'UNAUTHORIZED' },
+      { status: 401, headers: NO_STORE_HEADERS }
+    );
+  }
+
+  const learner = await resolveAttemptLearner(request);
+  if (learner && learner.emailVerified === false) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Email verification is required before accessing examination details.',
+        errorCode: 'UNVERIFIED_EMAIL',
+      },
+      { status: 403, headers: NO_STORE_HEADERS }
+    );
+  }
   const siteMeta = extractSiteMetadataFromRequestHeaders(
     request.headers,
     `/api/study-library/${trimmedId}`

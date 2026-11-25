@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Bookmark,
@@ -11,6 +12,7 @@ import {
   GraduationCap,
   HelpCircle,
   Star,
+  Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +21,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { nurviaApi } from "@/lib/api-client";
 import type { StudySetDetailDto } from "@/lib/api-types";
 import { buildStudySessionHref, isModeEnabled } from "./StudySetCardActions";
+import { useAuth } from "@/components/auth/auth-provider";
+import { useFeedback } from "@/lib/feedback/feedback-context";
 
 interface StudySetDetailsProps {
   examId: string;
@@ -26,6 +30,11 @@ interface StudySetDetailsProps {
 }
 
 export function StudySetDetails({ examId, isPublic = false }: StudySetDetailsProps) {
+  const router = useRouter();
+  const { status, user } = useAuth();
+  const feedback = useFeedback();
+  const [checkingMode, setCheckingMode] = React.useState<"Exam" | "Tutor" | null>(null);
+
   const [detail, setDetail] = React.useState<StudySetDetailDto | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -67,6 +76,86 @@ export function StudySetDetails({ examId, isPublic = false }: StudySetDetailsPro
       setDetail({ ...detail, isSaved: !detail.isSaved });
     }
     setSavingLibrary(false);
+  };
+
+  const handleLaunchMode = async (mode: "Exam" | "Tutor", e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!detail) return;
+    const destination = buildStudySessionHref(detail.id, mode, detail.allowedLayouts);
+    const activePathway =
+      detail.pathway ||
+      (typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("track") || "RN"
+        : "RN");
+    const pathwayParam = encodeURIComponent(activePathway);
+    const activeSubject =
+      detail.subject ||
+      (typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("subject") || ""
+        : "");
+    const subjectParam = activeSubject ? `&subject=${encodeURIComponent(activeSubject)}` : "";
+    const subDestination = `/learner/subscription?requiredMode=${mode}&examId=${encodeURIComponent(detail.id)}&pathway=${pathwayParam}${subjectParam}&returnTo=${encodeURIComponent(destination)}`;
+
+    if (status === "unauthenticated" || !user) {
+      router.push(`/sign-in?returnTo=${encodeURIComponent(subDestination)}`);
+      return;
+    }
+
+    if (status === "authenticated" && user?.emailVerified === false) {
+      feedback.showWarning(
+        `Please verify your email address before launching ${mode} Mode.`,
+        "Email Verification Required"
+      );
+      return;
+    }
+
+    setCheckingMode(mode);
+    try {
+      const res = await fetch(`/api/subscriptions/status?mode=${mode}&pathway=${pathwayParam}`, {
+        headers: { "Cache-Control": "no-store" },
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.allowed) {
+        router.push(destination);
+        return;
+      }
+
+      if (data.status === "None" || data.errorCode === "NO_SUBSCRIPTION") {
+        feedback.showInfo(
+          `An active subscription is required to access ${mode} Mode. Redirecting to subscription plans…`,
+          "Subscription Required"
+        );
+        router.push(subDestination);
+      } else if (data.status === "Expired" || data.errorCode === "SUBSCRIPTION_EXPIRED") {
+        feedback.showWarning(
+          "Your subscription has expired. Please renew your plan to continue.",
+          "Subscription Expired"
+        );
+        router.push(subDestination);
+      } else if (data.status === "Cancelled" || data.errorCode === "SUBSCRIPTION_CANCELLED") {
+        feedback.showWarning(
+          "Your subscription has been cancelled. Please resubscribe to continue.",
+          "Subscription Cancelled"
+        );
+        router.push(subDestination);
+      } else if (data.errorCode === "ENTITLEMENT_LACKING") {
+        feedback.showWarning(
+          data.message || `Your current plan does not include access to ${mode} Mode. Please upgrade your subscription.`,
+          "Plan Upgrade Required"
+        );
+        router.push(subDestination);
+      } else {
+        feedback.showError(
+          data.message || "Unable to verify subscription status at this time. Please try again.",
+          "Service Unavailable"
+        );
+      }
+    } catch {
+      feedback.showError("Unable to verify subscription status. Please check your connection.", "Network Error");
+    } finally {
+      setCheckingMode(null);
+    }
   };
 
   const handleSubmitReview = async (e: React.FormEvent) => {
@@ -196,8 +285,20 @@ export function StudySetDetails({ examId, isPublic = false }: StudySetDetailsPro
           <h2 className="text-sm font-semibold text-foreground">Launch Learning Mode</h2>
           <div className="grid gap-3 sm:grid-cols-3">
             {canExam ? (
-              <Link href={buildStudySessionHref(detail.id, "Exam", detail.allowedLayouts)}>
-                <Button className="w-full">Launch Exam Mode</Button>
+              <Link
+                href={buildStudySessionHref(detail.id, "Exam", detail.allowedLayouts)}
+                onClick={(e) => handleLaunchMode("Exam", e)}
+              >
+                <Button className="w-full" disabled={checkingMode !== null}>
+                  {checkingMode === "Exam" ? (
+                    <>
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                      Verifying…
+                    </>
+                  ) : (
+                    "Launch Exam Mode"
+                  )}
+                </Button>
               </Link>
             ) : (
               <Button disabled className="w-full" title="Exam mode isn't currently enabled for this exam.">
@@ -223,9 +324,19 @@ export function StudySetDetails({ examId, isPublic = false }: StudySetDetailsPro
             )}
 
             {canTutor ? (
-              <Link href={buildStudySessionHref(detail.id, "Tutor", detail.allowedLayouts)}>
-                <Button variant="outline" className="w-full">
-                  Launch Tutor Mode
+              <Link
+                href={buildStudySessionHref(detail.id, "Tutor", detail.allowedLayouts)}
+                onClick={(e) => handleLaunchMode("Tutor", e)}
+              >
+                <Button variant="outline" className="w-full" disabled={checkingMode !== null}>
+                  {checkingMode === "Tutor" ? (
+                    <>
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                      Verifying…
+                    </>
+                  ) : (
+                    "Launch Tutor Mode"
+                  )}
                 </Button>
               </Link>
             ) : (
