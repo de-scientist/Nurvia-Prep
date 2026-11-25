@@ -26,7 +26,9 @@ export interface StudentTestimonial {
   avatarUrl?: string;
   scoreOrLevel?: string;
   roleOrQualification?: string;
-  source: "verified_backend" | "approved_local";
+  attribution?: string;
+  source: "verified_backend" | "approved_local" | "none";
+  isVerified?: boolean;
   isSample: false;
 }
 

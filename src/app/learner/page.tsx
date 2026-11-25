@@ -13,6 +13,7 @@ import type {
   StudySetCardDto,
   SubjectCardDto,
   StudyLibrarySummaryDto,
+  UserSubscriptionDto,
 } from "@/lib/api-types";
 import { SubjectCard } from "@/components/study/SubjectCard";
 import { TableSkeleton } from "@/components/shared/feedback";
@@ -26,7 +27,9 @@ import {
   Compass,
   BookOpen,
   ArrowRight,
+  CreditCard,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function LearnerDashboardPage() {
   const { user } = useAuth();
@@ -35,13 +38,14 @@ export default function LearnerDashboardPage() {
   const [exams, setExams] = React.useState<StudySetCardDto[]>([]);
   const [subjects, setSubjects] = React.useState<SubjectCardDto[]>([]);
   const [summaryData, setSummaryData] = React.useState<StudyLibrarySummaryDto | null>(null);
+  const [subscription, setSubscription] = React.useState<UserSubscriptionDto | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     let active = true;
     async function loadDashboard() {
-      const [attemptResponse, examResponse, subjectsResponse, summaryResponse] = await Promise.all([
+      const [attemptResponse, examResponse, subjectsResponse, summaryResponse, subResponse] = await Promise.all([
         nurviaApi.getAttemptHistory().catch(() => ({
           success: false,
           data: [] as ExamAttemptSummaryDto[],
@@ -50,6 +54,10 @@ export default function LearnerDashboardPage() {
         nurviaApi.getStudyLibrary({ pageSize: 6 }),
         nurviaApi.getStudyLibrarySubjects({ pageSize: 6 }),
         nurviaApi.getStudyLibrarySummary(),
+        nurviaApi.getMySubscription().catch(() => ({
+          success: false,
+          data: null,
+        })),
       ]);
       if (!active) return;
 
@@ -64,6 +72,9 @@ export default function LearnerDashboardPage() {
       }
       if (summaryResponse.success && summaryResponse.data) {
         setSummaryData(summaryResponse.data);
+      }
+      if (subResponse.success && subResponse.data) {
+        setSubscription(subResponse.data.activeSubscription);
       }
 
       if (!examResponse.success && !attemptResponse.success) {
@@ -227,18 +238,53 @@ export default function LearnerDashboardPage() {
           </div>
         ) : !error && (
           <>
-            <section aria-label="Your progress" className="grid gap-4 sm:grid-cols-3">
-              <Card className="p-5">
-                <p className="text-sm text-foreground-secondary">Completed attempts</p>
-                <p className="mt-2 font-brand text-3xl font-bold text-foreground">{completedAttempts.length}</p>
+            <section aria-label="Your progress" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Card className="p-5 flex flex-col justify-between">
+                <div>
+                  <p className="text-sm text-foreground-secondary">Completed attempts</p>
+                  <p className="mt-2 font-brand text-3xl font-bold text-foreground">{completedAttempts.length}</p>
+                </div>
               </Card>
-              <Card className="p-5">
-                <p className="text-sm text-foreground-secondary">Average recorded score</p>
-                <p className="mt-2 font-brand text-3xl font-bold text-foreground">{averageScore === null ? "—" : `${averageScore}%`}</p>
+              <Card className="p-5 flex flex-col justify-between">
+                <div>
+                  <p className="text-sm text-foreground-secondary">Average recorded score</p>
+                  <p className="mt-2 font-brand text-3xl font-bold text-foreground">{averageScore === null ? "—" : `${averageScore}%`}</p>
+                </div>
               </Card>
-              <Card className="p-5">
-                <p className="text-sm text-foreground-secondary">Available exams</p>
-                <p className="mt-2 font-brand text-3xl font-bold text-foreground">{totalEligibleExams.toLocaleString()}</p>
+              <Card className="p-5 flex flex-col justify-between">
+                <div>
+                  <p className="text-sm text-foreground-secondary">Available exams</p>
+                  <p className="mt-2 font-brand text-3xl font-bold text-foreground">{totalEligibleExams.toLocaleString()}</p>
+                </div>
+              </Card>
+              <Card className="p-5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between gap-1">
+                    <p className="text-sm text-foreground-secondary">Subscription status</p>
+                    <CreditCard className="h-4 w-4 text-brand-teal" />
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-xs font-bold uppercase",
+                        subscription?.status?.toLowerCase() === "active"
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                          : "bg-surface-muted text-foreground-secondary border border-border"
+                      )}
+                    >
+                      {subscription?.status?.toLowerCase() === "active"
+                        ? `${subscription.planName || "Active"}`
+                        : "Starter / Inactive"}
+                    </span>
+                  </div>
+                </div>
+                <Link href="/learner/subscription" className="mt-3 block">
+                  <Button variant="outline" size="sm" className="w-full text-xs h-8">
+                    {subscription?.status?.toLowerCase() === "active"
+                      ? "Manage Subscription"
+                      : "Subscribe Now"}
+                  </Button>
+                </Link>
               </Card>
             </section>
 

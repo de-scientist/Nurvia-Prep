@@ -7,7 +7,7 @@ import { StudyLibraryView } from "@/components/study/study-library-view";
 
 export default function LearnerStudyLibraryPage() {
   return (
-    <LearnerShell>
+    <LearnerShell allowPublic>
       <Suspense fallback={<div className="p-8 text-center text-xs text-foreground-muted">Loading study library...</div>}>
         <StudyLibraryView />
       </Suspense>

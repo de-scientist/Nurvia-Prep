@@ -46,75 +46,46 @@ export function StudySetCardActions({
   studySet,
 }: StudySetCardActionsProps) {
   const canExam = isModeEnabled(studySet.modeAllowed, "Exam");
-  const canReview = isModeEnabled(studySet.modeAllowed, "Review");
   const canTutor = isModeEnabled(studySet.modeAllowed, "Tutor");
 
   return (
-    <div className="space-y-2 pt-1">
-      {canExam ? (
-        <Link href={buildStudySessionHref(studySet.id, "Exam", studySet.allowedLayouts)} className="block">
-          <Button className="w-full">Exam</Button>
+    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60">
+      {canTutor ? (
+        <Link href={buildStudySessionHref(studySet.id, "Tutor", studySet.allowedLayouts)} className="block">
+          <Button variant="outline" size="sm" className="w-full h-8 text-xs font-semibold hover:border-brand-teal/60">
+            Tutor Mode
+          </Button>
         </Link>
       ) : (
         <Button
           type="button"
+          variant="outline"
+          size="sm"
           disabled
-          title="Exam mode isn't currently enabled for this exam."
-          className="w-full"
+          title="Tutor mode is not enabled for this examination."
+          className="w-full h-8 text-xs font-semibold opacity-50 cursor-not-allowed"
         >
-          Exam (Unavailable)
+          Tutor Mode
         </Button>
       )}
 
-      <div className="grid grid-cols-2 gap-2">
-        {canReview ? (
-          <Link href={buildStudySessionHref(studySet.id, "Review", studySet.allowedLayouts)} className="block">
-            <Button variant="outline" size="sm" className="w-full">
-              Review
-            </Button>
-          </Link>
-        ) : (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled
-            title="Review mode isn't currently enabled for this exam."
-            className="w-full"
-          >
-            Review
+      {canExam ? (
+        <Link href={buildStudySessionHref(studySet.id, "Exam", studySet.allowedLayouts)} className="block">
+          <Button size="sm" className="w-full h-8 text-xs font-semibold bg-brand-teal hover:bg-brand-tealDark text-white">
+            Exam Mode
           </Button>
-        )}
-
-        {canTutor ? (
-          <Link href={buildStudySessionHref(studySet.id, "Tutor", studySet.allowedLayouts)} className="block">
-            <Button variant="outline" size="sm" className="w-full">
-              Tutor
-            </Button>
-          </Link>
-        ) : (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled
-            title="Tutor mode isn't currently enabled for this exam."
-            className="w-full"
-          >
-            Tutor
-          </Button>
-        )}
-      </div>
-
-      {!canExam && !canReview && !canTutor ? (
-        <p className="text-[11px] text-foreground-muted">
-          This examination is being prepared for release. Modes are governed by the published configuration.
-        </p>
-      ) : (!canExam || !canReview || !canTutor) ? (
-        <p className="text-[11px] text-foreground-muted">
-          Available modes are governed by the published exam configuration.
-        </p>
-      ) : null}
+        </Link>
+      ) : (
+        <Button
+          type="button"
+          size="sm"
+          disabled
+          title="Exam mode is not enabled for this examination."
+          className="w-full h-8 text-xs font-semibold opacity-50 cursor-not-allowed"
+        >
+          Exam Mode
+        </Button>
+      )}
     </div>
   );
 }

@@ -25,7 +25,11 @@ import type {
   TutorPracticePromptDto,
   TutorStructuredSectionDto,
 } from '../api-types';
-import type { StoredAttempt, StoredAttemptQuestion } from './attempt-store';
+import {
+  attemptStore,
+  type StoredAttempt,
+  type StoredAttemptQuestion,
+} from './attempt-store';
 import {
   isResponseAnswered,
   resolveNormalizedQuestionType,
@@ -916,16 +920,19 @@ export function getTutorConversationForAttempt(
         attemptId: string;
         questionId: string;
         conversation: TutorConversationMessageDto[];
+        practiceChecks?: TutorPracticeCheckResponseDto[];
         aiProviderConfigured: boolean;
         disclosureNotice: string;
         remainingTurns: number;
       };
     }
   | TutorAuthError {
+  attemptStore.restoreTutorState(attempt);
   const auth = authorizeTutorAccess(attempt, userId, questionId);
   if (!auth.ok) return auth;
 
   const conversation = [...(attempt.tutorConversations?.[questionId] ?? [])];
+  const practiceChecks = [...(attempt.tutorPracticeChecks?.[questionId] ?? [])];
   const aiCfg = resolveAiProviderConfig();
   return {
     ok: true,
@@ -934,6 +941,7 @@ export function getTutorConversationForAttempt(
       attemptId: attempt.attemptId,
       questionId,
       conversation,
+      practiceChecks,
       aiProviderConfigured: aiCfg.configured,
       disclosureNotice: OFFICIAL_TUTOR_DISCLAIMER,
       remainingTurns: Math.max(0, Math.floor((MAX_TUTOR_MESSAGES_PER_QUESTION - conversation.length) / 2)),
@@ -1057,6 +1065,7 @@ export async function generateTutorAssistForAttempt(
   };
 
   conv.push(learnerEntry, tutorEntry);
+  attemptStore.syncTutorState(attempt);
 
   return {
     ok: true,
@@ -1123,6 +1132,7 @@ export function checkTutorPracticeForAttempt(
   if (!attempt.tutorPracticeChecks) attempt.tutorPracticeChecks = {};
   if (!attempt.tutorPracticeChecks[req.questionId]) attempt.tutorPracticeChecks[req.questionId] = [];
   attempt.tutorPracticeChecks[req.questionId].push(checkResult);
+  attemptStore.syncTutorState(attempt);
 
   return {
     ok: true,

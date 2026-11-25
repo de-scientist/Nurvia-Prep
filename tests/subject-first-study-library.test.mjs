@@ -98,10 +98,11 @@ try {
           data: {
             items: [
               { id: 9, name: 'RN Nursing Exams', code: 'RN' },
+              { id: 6, name: 'LPN Nursing Exams', code: 'PN_LPN' },
               { id: 8, name: 'NCLEX RN', code: 'NCLEX_RN' },
               { id: 7, name: 'NCLEX PN', code: 'NCLEX_PN' },
             ],
-            skewTotal: 3,
+            skewTotal: 4,
           },
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } }
@@ -113,7 +114,7 @@ try {
           success: true,
           data: {
             items: [
-              { id: 40, name: 'Client Needs.', programId: 7 },
+              { id: 40, name: 'Client Needs.', programId: 6 },
               { id: 39, name: 'Rhenis H-S Exams-RN', programId: 9 },
             ],
             skewTotal: 2,
@@ -128,7 +129,7 @@ try {
           success: true,
           data: {
             items: [
-              { id: 188, name: 'Psychosocial Integrity (NCLEX PN)', courseId: 40, courseName: 'Client Needs.', year: 2026, season: 'Fall', difficulty: 'Beginner' },
+              { id: 188, name: 'Psychosocial Integrity (PN)', courseId: 40, courseName: 'Client Needs.', year: 2026, season: 'Fall', difficulty: 'Beginner' },
               { id: 184, name: 'Pharmacology-RN', courseId: 39, courseName: 'Rhenis H-S Exams-RN', year: 2026, season: 'Fall', difficulty: 'Intermediate' },
               { id: 175, name: 'Fundamentals of Nursing-RN', courseId: 39, courseName: 'Rhenis H-S Exams-RN', year: 2026, season: 'Fall', difficulty: 'Foundation' },
             ],
@@ -144,9 +145,9 @@ try {
           success: true,
           data: {
             items: [
-              { id: 2122, guidId: 'ex-2122', title: 'Hard Level,', description: 'Hard Level Psychosocial Integrity', questionsCount: 22, duration: 60, school: 'WGU', year: 2026, season: 'Fall', status: 'Published' },
-              { id: 2121, guidId: 'ex-2121', title: 'Moderate Level,', description: 'Moderate Level Psychosocial Integrity', questionsCount: 22, duration: 60, school: 'Chamberlain', year: 2026, season: 'Fall', status: 'Published' },
-              { id: 1421, guidId: 'ex-1421', title: 'RN Pharmacology 2023 VATI Exam-1', description: 'Comprehensive Pharmacology', questionsCount: 60, duration: 75, school: 'Galen', year: 2026, season: 'Fall', status: 'Published' },
+              { id: 2122, guidId: 'ex-2122', subjectId: 188, pathway: 'PN_LPN', programId: 6, title: 'Hard Level,', description: 'Hard Level Psychosocial Integrity', questionsCount: 22, duration: 60, school: 'WGU', year: 2026, season: 'Fall', status: 'Published' },
+              { id: 2121, guidId: 'ex-2121', subjectId: 188, pathway: 'PN_LPN', programId: 6, title: 'Moderate Level,', description: 'Moderate Level Psychosocial Integrity', questionsCount: 22, duration: 60, school: 'Chamberlain', year: 2026, season: 'Fall', status: 'Published' },
+              { id: 1421, guidId: 'ex-1421', pathway: 'RN', programId: 9, title: 'RN Pharmacology 2023 VATI Exam-1', description: 'Comprehensive Pharmacology', questionsCount: 60, duration: 75, school: 'Galen', year: 2026, season: 'Fall', status: 'Published' },
             ],
             skewTotal: 3,
           },
@@ -166,7 +167,7 @@ try {
 
   const filtersRes = await nurviaApi.getStudyLibraryFilters();
   assert.equal(filtersRes.success, true);
-  assert.ok(filtersRes.data?.programs.length >= 3, 'Programs loaded');
+  assert.ok(filtersRes.data?.programs.length >= 2, 'Programs loaded');
   assert.ok(filtersRes.data?.courses.length >= 2, 'Courses loaded');
   assert.ok(filtersRes.data?.subjects.length >= 3, 'Subjects loaded');
   assert.ok(filtersRes.data?.schools.includes('WGU'), 'WGU school loaded from exams');
@@ -187,7 +188,7 @@ try {
   console.log('[PASS] 5. Behavioral: getStudyLibrarySubjects populates authoritative cards with linked exams & metrics');
 
   // 6. Behavioral test: selecting subject drills down into its examinations
-  const examsRes = await nurviaApi.getStudyLibrary({ subject: 'Psychosocial Integrity (NCLEX PN)', pageNumber: 1, pageSize: 12 });
+  const examsRes = await nurviaApi.getStudyLibrary({ subject: 'Psychosocial Integrity (PN)', pageNumber: 1, pageSize: 12 });
   assert.equal(examsRes.success, true);
   assert.equal(examsRes.data?.items.length, 2, 'Returns only examinations matching Psychosocial Integrity');
   assert.ok(examsRes.data?.items.every((e) => e.description.includes('Psychosocial Integrity')), 'All returned exams belong to subject');

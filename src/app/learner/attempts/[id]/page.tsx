@@ -14,7 +14,9 @@ import type { ExamLayout, SubmittedExamResultDto } from "@/lib/api-types";
 import {
   canTransitionStage,
   getStageAvailability,
+  loadExamViewState,
   resolveAttemptLifecycleStatus,
+  saveExamViewState,
   type ExamExperienceStage,
   type ReviewFilterKey,
 } from "@/lib/attempts/exam-experience-state";
@@ -40,16 +42,37 @@ export default function AttemptResultPage() {
     layout: ExamLayout;
   } | null>(null);
   const [stageNotice, setStageNotice] = React.useState<string | null>(null);
+  const hasHydratedRef = React.useRef<boolean>(false);
 
   React.useEffect(() => {
     let active = true;
     void nurviaApi.getAttemptReview(attemptId).then((response) => {
       if (!active) return;
       if (response.success && response.data) {
+        const savedView = loadExamViewState(attemptId);
         setResult(response.data);
         const firstId = response.data.reviewQuestions?.[0]?.questionId || "";
-        setCurrentQuestionId(firstId);
-        setTutorQuestionId(firstId);
+        const validCurrentId =
+          savedView?.currentQuestionId &&
+          response.data.reviewQuestions?.some((q) => q.questionId === savedView.currentQuestionId)
+            ? savedView.currentQuestionId
+            : firstId;
+        const validTutorId =
+          savedView?.tutorQuestionId &&
+          response.data.reviewQuestions?.some((q) => q.questionId === savedView.tutorQuestionId)
+            ? savedView.tutorQuestionId
+            : validCurrentId;
+        setCurrentQuestionId(validCurrentId);
+        setTutorQuestionId(validTutorId);
+        if (savedView?.reviewFilter) setReviewFilter(savedView.reviewFilter);
+        if (savedView?.reviewLayout) setReviewLayout(savedView.reviewLayout);
+        if (savedView?.returnQuestionId) {
+          setReturnContext({
+            questionId: savedView.returnQuestionId,
+            filter: savedView.returnFilter || savedView.reviewFilter || "All",
+            layout: savedView.returnLayout || savedView.reviewLayout || "Sequential",
+          });
+        }
         if (typeof window !== "undefined" && response.data.reviewReleased) {
           const sp = new URLSearchParams(window.location.search);
           const requestedStage = (sp.get("stage") || sp.get("mode") || "").toLowerCase();
@@ -57,8 +80,11 @@ export default function AttemptResultPage() {
             setStage("review");
           } else if (requestedStage === "tutor") {
             setStage("tutor");
+          } else if (savedView && savedView.stage !== "assessment") {
+            setStage(savedView.stage);
           }
         }
+        hasHydratedRef.current = true;
       } else {
         setError(response.message || "Unable to load this saved result.");
       }
@@ -68,6 +94,20 @@ export default function AttemptResultPage() {
       active = false;
     };
   }, [attemptId]);
+
+  React.useEffect(() => {
+    if (!attemptId || !hasHydratedRef.current) return;
+    saveExamViewState(attemptId, {
+      stage,
+      currentQuestionId: currentQuestionId || undefined,
+      reviewFilter,
+      reviewLayout,
+      tutorQuestionId: tutorQuestionId || undefined,
+      returnQuestionId: returnContext?.questionId,
+      returnFilter: returnContext?.filter,
+      returnLayout: returnContext?.layout,
+    });
+  }, [attemptId, stage, currentQuestionId, reviewFilter, reviewLayout, tutorQuestionId, returnContext]);
 
   const lifecycleStatus = resolveAttemptLifecycleStatus(result?.status);
   const reviewWithheld = result ? !result.reviewReleased : false;

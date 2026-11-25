@@ -123,17 +123,17 @@ export function PracticeQuestionPreview() {
         aria-hidden="true"
         className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-teal from-45% via-brand-teal/25 to-transparent"
       />
-      <div className="p-5 sm:p-6 pb-4 border-b border-border/60">
+      <div className="p-3.5 sm:p-4 pb-2.5 border-b border-border/60">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-brand-teal text-white flex items-center justify-center">
-              <HeartPulse className="w-5 h-5" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-brand-teal text-white flex items-center justify-center">
+              <HeartPulse className="w-4 h-4" />
             </div>
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-foreground">
                 QUICK PRACTICE
               </span>
-              <span className="text-xs text-foreground-muted block">
+              <span className="text-[11px] text-foreground-muted block">
                 Question {currentIndex + 1} of {heroPracticeQuestions.length}
               </span>
             </div>
@@ -143,31 +143,31 @@ export function PracticeQuestionPreview() {
             type="button"
             onClick={() => setIsTimerRunning(!isTimerRunning)}
             title={isTimerRunning ? "Click to pause timer" : "Click to resume timer"}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-muted border border-border text-foreground-secondary text-xs font-mono font-medium hover:border-brand-teal/50 transition-colors"
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-muted border border-border text-foreground-secondary text-xs font-mono font-medium hover:border-brand-teal/50 transition-colors"
           >
-            <Clock className="w-3.5 h-3.5 text-foreground-muted" />
+            <Clock className="w-3 h-3 text-foreground-muted" />
             <span>{formatTimer(seconds)}</span>
           </button>
         </div>
 
         {/* Eyebrow tags */}
-        <div className="flex flex-wrap items-center gap-2 mt-4">
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-brand-teal/10 text-brand-teal dark:text-teal-300 border border-brand-teal/25 text-[11px] font-semibold">
+        <div className="flex flex-wrap items-center gap-2 mt-2.5">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-teal/10 text-brand-teal dark:text-teal-300 border border-brand-teal/25 text-[10px] font-semibold">
             <Sparkles className="w-3 h-3" />
             {currentQ.modeBadge}
           </span>
-          <span className="px-2.5 py-0.5 rounded-full bg-surface-muted text-foreground-secondary border border-border text-[11px] font-semibold uppercase tracking-wider">
+          <span className="px-2 py-0.5 rounded-full bg-surface-muted text-foreground-secondary border border-border text-[10px] font-semibold uppercase tracking-wider">
             {currentQ.topic}
           </span>
         </div>
       </div>
 
         {/* Card Body */}
-        <div className="p-5 sm:p-6 space-y-5">
+        <div className="p-3.5 sm:p-4 space-y-3">
           {!completed ? (
             <>
               {/* Question Text */}
-              <p className="font-ui text-sm sm:text-base font-semibold text-foreground leading-relaxed">
+              <p className="font-ui text-xs sm:text-sm font-semibold text-foreground leading-relaxed">
                 {currentQ.stem}
               </p>
 
@@ -175,7 +175,7 @@ export function PracticeQuestionPreview() {
               <div
                 role="radiogroup"
                 aria-label={`Question ${currentQ.questionNumber}`}
-                className="space-y-2.5"
+                className="space-y-1.5"
               >
                 {currentQ.options.map((opt, idx) => {
                   const isSelected = selectedOptionIndex === idx;
@@ -212,27 +212,27 @@ export function PracticeQuestionPreview() {
                       aria-checked={isSelected}
                       onClick={() => handleSelectOption(idx)}
                       className={cn(
-                        "w-full text-left p-3.5 sm:p-4 rounded-lg border transition-all flex items-start gap-3.5 group focus:outline-none focus:ring-2 focus:ring-brand-teal/70",
+                        "w-full text-left p-2.5 sm:p-3 rounded-lg border transition-all flex items-start gap-2.5 group focus:outline-none focus:ring-2 focus:ring-brand-teal/70",
                         optionStyle
                       )}
                     >
                       <span
                         className={cn(
-                          "w-7 h-7 shrink-0 rounded-full border text-xs font-bold flex items-center justify-center transition-colors font-mono",
+                          "w-6 h-6 shrink-0 rounded-full border text-xs font-bold flex items-center justify-center transition-colors font-mono",
                           badgeStyle
                         )}
                       >
                         {opt.letter}
                       </span>
-                      <span className="text-xs sm:text-sm font-medium leading-snug flex-1 pt-0.5">
+                      <span className="text-xs font-medium leading-snug flex-1 pt-0.5">
                         {opt.text}
                       </span>
                       {hasSelected && isSelected && (
                         <span className="shrink-0 pt-0.5">
                           {isCorrect ? (
-                            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                           ) : (
-                            <XCircle className="w-5 h-5 text-rose-500" />
+                            <XCircle className="w-4 h-4 text-rose-500" />
                           )}
                         </span>
                       )}
@@ -245,18 +245,18 @@ export function PracticeQuestionPreview() {
               {hasSelected && showRationale && (
                 <div
                   className={cn(
-                    "p-4 rounded-xl border text-xs leading-relaxed space-y-2 animate-in fade-in duration-200",
+                    "p-3 rounded-lg border text-xs leading-relaxed space-y-1.5 animate-in fade-in duration-200",
                     currentQ.options[selectedOptionIndex]?.isCorrect
                       ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-100"
                       : "bg-surface-muted border-border text-foreground"
                   )}
                 >
-                  <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[11px] text-brand-teal dark:text-teal-300">
-                    <BookOpen className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[10px] text-brand-teal dark:text-teal-300">
+                    <BookOpen className="w-3 h-3" />
                     <span>Clinical Reasoning & Rationale</span>
                   </div>
-                  <p>{currentQ.rationale}</p>
-                  <p className="text-foreground-secondary pt-1 border-t border-border/50 text-[11px] italic">
+                  <p className="text-[11px] leading-relaxed">{currentQ.rationale}</p>
+                  <p className="text-foreground-secondary pt-1 border-t border-border/50 text-[10px] italic">
                     💡 {currentQ.clinicalTip}
                   </p>
                 </div>
@@ -307,7 +307,7 @@ export function PracticeQuestionPreview() {
 
         {/* Card Footer matching screenshot */}
         {!completed && (
-          <div className="px-5 sm:px-6 py-4 bg-surface-muted/50 border-t border-border/60 flex items-center justify-between">
+          <div className="px-3.5 sm:px-4 py-2.5 bg-surface-muted/50 border-t border-border/60 flex items-center justify-between">
             {/* Back Button */}
             <button
               type="button"

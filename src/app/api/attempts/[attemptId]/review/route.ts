@@ -22,7 +22,7 @@ export async function GET(
     `/api/attempts/${attemptId}/review`
   );
 
-  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta);
+  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta, 'Review');
   if (!loaded.ok) {
     return NextResponse.json(
       { success: false, message: loaded.message, errorCode: loaded.errorCode },

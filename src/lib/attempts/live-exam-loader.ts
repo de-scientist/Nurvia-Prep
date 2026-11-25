@@ -158,34 +158,56 @@ export function parseDurableAttemptId(
 /**
  * Computes strict server-authoritative Exam / Review / Tutor mode permissions
  * directly from the backend exam record, design rules, and mode configurations.
- * Never bypasses `allowReview: false` or fabricates disabled Tutor permissions.
+ * Distinguishes standalone non-graded study Review (`canReview`) from completed-attempt
+ * post-submission review (`reviewReleased`), because Strata defaults `exam.allowReview`
+ * to `false` on standard published examinations.
  */
 export function resolveExamModePermissions(
   exam?: Partial<StrataSessionExam> | null,
   design?: Partial<StrataSessionExamDesign> | null,
   modes?: StrataSessionExamMode[] | null
 ): ExamModePermissionsDto {
+  const examRecord = (exam ?? {}) as Record<string, unknown>;
   const enabledModes = Array.isArray(modes) ? modes.filter((m) => m && m.isEnabled !== false) : [];
   const hasExplicitReviewMode = enabledModes.some((m) => /review/i.test(String(m.mode ?? '')));
   const hasExplicitTutorMode = enabledModes.some((m) =>
     /tutor|practice|study|learning|guid/i.test(String(m.mode ?? ''))
   );
-  const inferredDelivery = inferExamDeliveryMode((exam ?? {}) as Record<string, unknown>);
+  const inferredDelivery = inferExamDeliveryMode(examRecord);
 
-  const selectedMode = String((exam as Record<string, unknown>)?.selectedMode ?? '').toLowerCase();
+  const selectedMode = String(examRecord.selectedMode ?? '').toLowerCase();
   const hasModeRestrictions = Array.isArray(modes) && modes.length > 0;
 
-  const explicitReviewDisabled =
+  const explicitModeRestrictedToNonReview =
+    typeof examRecord.modeAllowed === 'string' &&
+    examRecord.modeAllowed.trim().length > 0 &&
+    !/^(all|both|review)$/i.test(examRecord.modeAllowed.trim());
+
+  const hasExplicitDisabledReviewMode =
+    Array.isArray(modes) &&
+    modes.some(
+      (m) =>
+        m &&
+        /review/i.test(String(m.mode ?? '')) &&
+        m.isEnabled === false
+    ) &&
+    !hasExplicitReviewMode;
+
+  const postSubmissionReviewWithheld =
     exam?.allowReview === false ||
     design?.reviewable === false ||
-    (Array.isArray(modes) &&
-      modes.some(
-        (m) =>
-          m &&
-          /review/i.test(String(m.mode ?? '')) &&
-          m.isEnabled === false
-      ) &&
-      !hasExplicitReviewMode);
+    hasExplicitDisabledReviewMode ||
+    examRecord.withholdReview === true ||
+    examRecord.reviewReleased === false;
+
+  const explicitReviewDisabled =
+    postSubmissionReviewWithheld ||
+    explicitModeRestrictedToNonReview ||
+    (hasModeRestrictions &&
+      !hasExplicitReviewMode &&
+      exam?.allowReview !== true &&
+      design?.reviewable !== true &&
+      selectedMode !== 'review');
 
   const canExam = hasModeRestrictions
     ? enabledModes.some((m) => /exam/i.test(String(m.mode ?? '')))
@@ -193,11 +215,12 @@ export function resolveExamModePermissions(
 
   const canReview = !explicitReviewDisabled && (
     hasExplicitReviewMode ||
-    exam?.allowReview !== false && design?.reviewable !== false ||
     selectedMode === 'review' ||
     inferredDelivery === 'All' ||
     inferredDelivery === 'Both' ||
-    inferredDelivery === 'Review'
+    inferredDelivery === 'Review' ||
+    exam?.allowReview === true ||
+    design?.reviewable === true
   );
 
   const canTutor = hasModeRestrictions
@@ -206,6 +229,7 @@ export function resolveExamModePermissions(
 
   const allowLayoutSwitching = design?.allowLayoutSwitching !== false;
   const allowModeSwitching = design?.allowModeSwitching !== false && (canReview || canTutor);
+  const reviewReleased = !postSubmissionReviewWithheld;
 
   return {
     canExam,
@@ -220,7 +244,7 @@ export function resolveExamModePermissions(
       : 'Tutor mode is not enabled for this examination by backend policy.',
     allowLayoutSwitching,
     allowModeSwitching,
-    reviewReleased: canReview,
+    reviewReleased,
   };
 }
 
@@ -882,6 +906,14 @@ export async function ensureAttemptLoaded(
     };
   }
 
+  const matchesParsedAttemptNumber = (rawAttemptNum: unknown): boolean => {
+    const num = Number(rawAttemptNum);
+    if (!Number.isFinite(num)) return parsed.attemptNumber === 1;
+    // Strata backend attemptNumber may be 1-based or 0-based (where 0 represents attempt 1)
+    const normalizedOneBased = num > 0 ? num : 1;
+    return normalizedOneBased === parsed.attemptNumber || num + 1 === parsed.attemptNumber;
+  };
+
   // Check if backend distinct results already record this attempt as Completed/Graded
   let completedResultRecord: Record<string, unknown> | undefined;
   try {
@@ -906,9 +938,8 @@ export async function ensureAttemptLoaded(
         [];
       if (Array.isArray(items) && items.length > 0) {
         completedResultRecord =
-          items.find(
-            (item) => Number(item.attemptNumber ?? 1) === parsed.attemptNumber
-          ) ?? (items.length === 1 ? items[0] : undefined);
+          items.find((item) => matchesParsedAttemptNumber(item.attemptNumber)) ??
+          (items.length === 1 ? items[0] : undefined);
       }
     }
   } catch {
@@ -937,17 +968,16 @@ export async function ensureAttemptLoaded(
           relRes.data?.items ??
           [];
         if (Array.isArray(relItems)) {
-          completedResultRecord = relItems.find((item) => {
+          const matchingExamItems = relItems.filter((item) => {
             const detail = item.examDetail as Record<string, unknown> | undefined;
             const itemGuid = String(
               item.examGuidId ?? detail?.guidId ?? item.guidId ?? ''
             ).trim();
-            const itemAttempt = Number(item.attemptNumber ?? 1);
-            return (
-              itemGuid.toLowerCase() === parsed.examGuidId.toLowerCase() &&
-              (itemAttempt === parsed.attemptNumber || relItems.length === 1)
-            );
+            return itemGuid.toLowerCase() === parsed.examGuidId.toLowerCase();
           });
+          completedResultRecord =
+            matchingExamItems.find((item) => matchesParsedAttemptNumber(item.attemptNumber)) ??
+            (matchingExamItems.length === 1 ? matchingExamItems[0] : undefined);
         }
       }
     } catch {
@@ -983,9 +1013,87 @@ export async function ensureAttemptLoaded(
         : totalSecondsAllocated
     : totalSecondsAllocated;
 
+  const hasCompletedAction = loaded.examActions.some((a) => {
+    const rec = a as unknown as Record<string, unknown>;
+    return (
+      /complet|grad|submit|finish|review|actionexamsubmit/i.test(
+        String(
+          rec.action ??
+            rec.actionType ??
+            rec.actionValue ??
+            rec.status ??
+            rec.state ??
+            ''
+        )
+      ) ||
+      Boolean(rec.submittedAt) ||
+      Boolean(rec.completedAt)
+    );
+  });
+
+  const isBackendCompleted =
+    (completedResultRecord != null &&
+      (Boolean(completedResultRecord.reviewedAt) ||
+        Boolean(completedResultRecord.submittedAt) ||
+        completedResultRecord.isAttempted === true ||
+        typeof completedResultRecord.score === 'number' ||
+        typeof completedResultRecord.percentageScore === 'number' ||
+        typeof completedResultRecord.scorePercentage === 'number' ||
+        typeof completedResultRecord.passed === 'boolean' ||
+        /complet|grad|submit|finish|pass|attempt|done/i.test(
+          String(completedResultRecord.status ?? '')
+        ))) ||
+    hasCompletedAction ||
+    (preferredMode === 'Review' && Object.keys(loaded.savedResponses).length > 0);
+
+  // Resolve persisted deliveryMode from backend examActions or exam.selectedMode before falling back
+  const persistedModeAction = loaded.examActions.find((a) => {
+    const rec = a as unknown as Record<string, unknown>;
+    const typeStr = String(rec.actionType ?? rec.action ?? '');
+    const valStr = String(rec.actionValue ?? rec.actionContent ?? '');
+    return /mode/i.test(typeStr) || /^(tutor|exam)$/i.test(valStr.trim());
+  });
+  const persistedModeToken = String(
+    (persistedModeAction as unknown as Record<string, unknown> | undefined)?.actionValue ??
+      (persistedModeAction as unknown as Record<string, unknown> | undefined)?.actionContent ??
+      loaded.exam.selectedMode ??
+      ''
+  )
+    .trim()
+    .toLowerCase();
+
   const inferredDelivery = inferExamDeliveryMode(loaded.exam as unknown as Record<string, unknown>);
+  const canUseTutorMode = loaded.modePermissions.canTutor || isBackendCompleted;
   const deliveryMode: 'Exam' | 'Tutor' =
-    preferredMode === 'Tutor' || inferredDelivery === 'Tutor' ? 'Tutor' : 'Exam';
+    persistedModeToken === 'tutor' ||
+    inferredDelivery === 'Tutor' ||
+    (preferredMode === 'Tutor' && canUseTutorMode)
+      ? 'Tutor'
+      : 'Exam';
+
+  // Resolve persisted layoutMode from backend examActions or exam.selectedLayout
+  const persistedLayoutAction = loaded.examActions.find((a) => {
+    const rec = a as unknown as Record<string, unknown>;
+    const typeStr = String(rec.actionType ?? rec.action ?? '');
+    const valStr = String(rec.actionValue ?? rec.actionContent ?? '');
+    return /layout/i.test(typeStr) || /^(allinone|sequential)$/i.test(valStr.trim());
+  });
+  const persistedLayoutToken = String(
+    (persistedLayoutAction as unknown as Record<string, unknown> | undefined)?.actionValue ??
+      (persistedLayoutAction as unknown as Record<string, unknown> | undefined)?.actionContent ??
+      loaded.exam.selectedLayout ??
+      ''
+  )
+    .trim()
+    .toLowerCase();
+
+  let layoutMode: ExamLayout =
+    persistedLayoutToken === 'allinone' ? 'AllInOne' : 'Sequential';
+  if (loaded.allowedLayouts === 'AllInOneOnly') {
+    layoutMode = 'AllInOne';
+  } else if (loaded.allowedLayouts === 'SequentialOnly') {
+    layoutMode = 'Sequential';
+  }
 
   const storedAttempt: StoredAttempt = {
     attemptId,
@@ -999,15 +1107,14 @@ export async function ensureAttemptLoaded(
     learningObjectives: loaded.learningObjectives,
     userId: learner.userId,
     deliveryMode,
-    layoutMode:
-      loaded.allowedLayouts === 'AllInOneOnly' ? 'AllInOne' : 'Sequential',
+    layoutMode,
     allowedLayouts: loaded.allowedLayouts,
     isTimed: loaded.isTimed,
     timeLimitMinutes: loaded.timeLimitMinutes,
-    remainingSeconds,
+    remainingSeconds: isBackendCompleted ? 0 : remainingSeconds,
     startedAtUtc,
-    status: 'InProgress',
-    allowReview: loaded.modePermissions.canReview,
+    status: isBackendCompleted ? 'Graded' : 'InProgress',
+    allowReview: loaded.modePermissions.reviewReleased,
     configuredQuestionCount: loaded.configuredQuestionCount,
     passingScorePercentage: loaded.passingScorePercentage,
     attemptNumber: parsed.attemptNumber,
@@ -1021,65 +1128,10 @@ export async function ensureAttemptLoaded(
     tutorPracticeChecks: {},
   };
 
-  attemptStore.setAttempt(storedAttempt);
-
-  const hasCompletedAction = loaded.examActions.some((a) => {
-    const rec = a as unknown as Record<string, unknown>;
-    return (
-      /complet|grad|submit|finish|review/i.test(
-        String(rec.action ?? rec.status ?? rec.state ?? '')
-      ) ||
-      Boolean(rec.submittedAt) ||
-      Boolean(rec.completedAt)
-    );
-  });
-
-  const isBackendCompleted =
-    (completedResultRecord != null &&
-      (
-        Boolean(completedResultRecord.reviewedAt) ||
-        Boolean(completedResultRecord.submittedAt) ||
-        completedResultRecord.isAttempted === true ||
-        typeof completedResultRecord.score === 'number' ||
-        typeof completedResultRecord.percentageScore === 'number' ||
-        typeof completedResultRecord.scorePercentage === 'number' ||
-        typeof completedResultRecord.passed === 'boolean' ||
-        /complet|grad|submit|finish|pass|attempt|done/i.test(String(completedResultRecord.status ?? ''))
-      )) ||
-    hasCompletedAction ||
-    (preferredMode === 'Review' && Object.keys(loaded.savedResponses).length > 0);
-
   if (isBackendCompleted) {
-    const submitted = attemptStore.submitAttempt(learner.userId, attemptId);
-    if (submitted.success && submitted.data && completedResultRecord) {
-      const graded = submitted.data;
-      if (typeof completedResultRecord.percentageScore === 'number') {
-        graded.scorePercentage = Math.round(completedResultRecord.percentageScore);
-      }
-      if (typeof completedResultRecord.passed === 'boolean') {
-        graded.passed = completedResultRecord.passed;
-      }
-      if (typeof completedResultRecord.totalCorrect === 'number') {
-        graded.correctQuestions = completedResultRecord.totalCorrect;
-      }
-      if (typeof completedResultRecord.totalWrong === 'number') {
-        graded.totalWrong = completedResultRecord.totalWrong;
-      }
-      if (typeof completedResultRecord.totalAnswered === 'number') {
-        graded.totalAnswered = completedResultRecord.totalAnswered;
-      }
-      if (typeof completedResultRecord.timeTaken === 'number' && completedResultRecord.timeTaken > 0) {
-        graded.timeSpentSeconds = completedResultRecord.timeTaken;
-      }
-      if (typeof completedResultRecord.grade === 'string' && completedResultRecord.grade) {
-        graded.grade = completedResultRecord.grade;
-      }
-      if (typeof completedResultRecord.reviewedAt === 'string' && completedResultRecord.reviewedAt) {
-        graded.submittedAtUtc = completedResultRecord.reviewedAt;
-        storedAttempt.submittedAtUtc = completedResultRecord.reviewedAt;
-      }
-      storedAttempt.result = graded;
-    }
+    attemptStore.reconstructCompletedAttempt(storedAttempt, completedResultRecord);
+  } else {
+    attemptStore.setAttempt(storedAttempt);
   }
 
   return { ok: true, attempt: storedAttempt };

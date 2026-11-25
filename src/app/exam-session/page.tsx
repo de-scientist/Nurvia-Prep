@@ -40,6 +40,7 @@ import {
   ExamLayout,
   ExamModePermissionsDto,
   TutorEvaluateResponseDto,
+  TutorHintResponseDto,
 } from "@/lib/api-types";
 import {
   isResponseAnswered,
@@ -52,6 +53,7 @@ import {
   getStageAvailability,
   loadExamViewState,
   resolveAttemptLifecycleStatus,
+  resolveExamExperiencePermissions,
   saveExamViewState,
   type ExamExperienceStage,
   type ReviewFilterKey,
@@ -59,6 +61,8 @@ import {
 import { QuestionRendererRegistry, RendererQuestion } from "@/components/exam/renderers";
 import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 import { useAuth } from "@/components/auth/auth-provider";
+import { isSataQuestion, validateSataSelection } from "@/lib/attempts/sata-validation";
+import { feedback } from "@/lib/feedback/feedback-context";
 
 type DeliveryMode = "Review" | "Exam" | "Tutor";
 type LayoutPolicy = "AllInOneOnly" | "SequentialOnly" | "Both" | null;
@@ -236,6 +240,7 @@ function ExamSessionContent() {
   const [isPreview, setIsPreview] = React.useState<boolean>(false);
   const [tutorEvaluations, setTutorEvaluations] = React.useState<Record<string, TutorEvaluateResponseDto>>({});
   const [tutorResponseJsons, setTutorResponseJsons] = React.useState<Record<string, string | null>>({});
+  const [tutorHints, setTutorHints] = React.useState<Record<string, TutorHintResponseDto[]>>({});
 
   // Submission & modal state
   const [isSubmitModalOpen, setIsSubmitModalOpen] = React.useState<boolean>(false);
@@ -247,6 +252,7 @@ function ExamSessionContent() {
   const [failedSaveCount, setFailedSaveCount] = React.useState<number>(0);
 
   // Refs for concurrent-safe debounced autosaves without stale closure bugs
+  const hasHydratedSessionRef = React.useRef<boolean>(false);
   const autosaveTimeoutsRef = React.useRef<Record<string, NodeJS.Timeout | null>>({});
   const autosaveRetryTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const allInOneRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
@@ -388,6 +394,7 @@ function ExamSessionContent() {
   }, []);
 
   const hydrateFromReviewContent = (data: ExamReviewContentDto) => {
+    hasHydratedSessionRef.current = true;
     setExamTitle(data.examTitle);
     setPathway(data.pathway ? String(data.pathway) : undefined);
     setExamCategory(data.category ? String(data.category) : undefined);
@@ -453,6 +460,9 @@ function ExamSessionContent() {
   };
 
   const hydrateFromReview = (data: SubmittedExamResultDto, preferredStage?: ExamExperienceStage) => {
+    hasHydratedSessionRef.current = true;
+    const savedView = loadExamViewState(data.attemptId);
+
     setAttemptId(data.attemptId);
     setExamTitle(data.examTitle);
     setPathway(data.pathway ? String(data.pathway) : undefined);
@@ -462,12 +472,24 @@ function ExamSessionContent() {
     setIsSubmitted(true);
     setSubmittedResult(data);
     setDeliveryMode("Review");
-    setLayout(layoutParam === "Sequential" ? "Sequential" : "AllInOne");
+    setLayout(
+      layoutParam === "Sequential"
+        ? "Sequential"
+        : layoutParam === "AllInOne"
+          ? "AllInOne"
+          : savedView?.reviewLayout || "AllInOne"
+    );
     if (data.modePermissions) setModePermissions(data.modePermissions);
 
-    const savedView = loadExamViewState(data.attemptId);
     if (savedView?.reviewFilter) {
       setReviewFilter(savedView.reviewFilter);
+    }
+    if (savedView?.returnQuestionId) {
+      setReturnContext({
+        questionId: savedView.returnQuestionId,
+        filter: savedView.returnFilter || savedView.reviewFilter || "All",
+        layout: savedView.returnLayout || savedView.reviewLayout || "AllInOne",
+      });
     }
 
     if (data.reviewQuestions && data.reviewQuestions.length > 0) {
@@ -559,15 +581,51 @@ function ExamSessionContent() {
         setStage("results");
       } else {
         setStage(savedView.stage);
+        if (savedView.stage === "tutor") {
+          setDeliveryMode("Tutor");
+        }
       }
     } else if (modeParam === "Review" && data.reviewReleased) {
       setStage("review");
     } else {
       setStage("results");
     }
+
+    if (data.reviewReleased) {
+      void (async () => {
+        try {
+          const res = await nurviaApi.getTutorSessionState(data.attemptId);
+          if (res.success && res.data) {
+            const recoveredEvals: Record<string, TutorEvaluateResponseDto> = {};
+            const recoveredHints: Record<string, TutorHintResponseDto[]> = {};
+            res.data.questions.forEach((q) => {
+              if (q.evaluation) recoveredEvals[q.questionId] = q.evaluation;
+              if (Array.isArray(q.hints) && q.hints.length > 0) {
+                recoveredHints[q.questionId] = q.hints;
+              }
+              setTutorResponseJsons((prev) => ({
+                ...prev,
+                [q.questionId]: q.responseJson ?? null,
+              }));
+            });
+            if (Object.keys(recoveredEvals).length > 0) {
+              setTutorEvaluations((prev) => ({ ...recoveredEvals, ...prev }));
+            }
+            if (Object.keys(recoveredHints).length > 0) {
+              setTutorHints((prev) => ({ ...recoveredHints, ...prev }));
+            }
+          }
+        } catch {
+          // Best-effort tutor session recovery on completed review hydration
+        }
+      })();
+    }
   };
 
   const hydrateFromAttempt = (data: StartAttemptResultDto) => {
+    hasHydratedSessionRef.current = true;
+    const savedView = loadExamViewState(data.attemptId);
+
     setAttemptId(data.attemptId);
     setExamTitle(data.examTitle);
     setPathway(data.pathway ? String(data.pathway) : undefined);
@@ -584,7 +642,14 @@ function ExamSessionContent() {
         ? "Review"
         : "Exam";
     setDeliveryMode(effectiveDeliveryMode);
-    setStage("assessment");
+    setStage(
+      effectiveDeliveryMode === "Tutor" && savedView?.stage === "tutor"
+        ? "tutor"
+        : "assessment"
+    );
+    if (savedView?.tutorQuestionId) {
+      setTutorQuestionId(savedView.tutorQuestionId);
+    }
     if (data.modePermissions) setModePermissions(data.modePermissions);
     if (data.configuredQuestionCount) setConfiguredQuestionCount(data.configuredQuestionCount);
     if (Array.isArray(data.integrityWarnings)) setIntegrityWarnings(data.integrityWarnings);
@@ -634,7 +699,6 @@ function ExamSessionContent() {
       }));
       setQuestions(mapped);
 
-      const savedView = loadExamViewState(data.attemptId);
       if (savedView?.currentQuestionId) {
         const idx = mapped.findIndex((q) => q.id === savedView.currentQuestionId);
         if (idx >= 0) setCurrentIndex(idx);
@@ -660,12 +724,19 @@ function ExamSessionContent() {
           const res = await nurviaApi.getTutorSessionState(data.attemptId);
           if (res.success && res.data) {
             const recovered: Record<string, TutorEvaluateResponseDto> = {};
+            const recoveredHints: Record<string, TutorHintResponseDto[]> = {};
             res.data.questions.forEach((q) => {
               if (q.evaluation) recovered[q.questionId] = q.evaluation;
+              if (Array.isArray(q.hints) && q.hints.length > 0) {
+                recoveredHints[q.questionId] = q.hints;
+              }
               setTutorResponseJsons((prev) => ({ ...prev, [q.questionId]: q.responseJson ?? null }));
             });
             if (Object.keys(recovered).length > 0) {
               setTutorEvaluations((prev) => ({ ...recovered, ...prev }));
+            }
+            if (Object.keys(recoveredHints).length > 0) {
+              setTutorHints((prev) => ({ ...recoveredHints, ...prev }));
             }
           }
         } catch {
@@ -677,7 +748,7 @@ function ExamSessionContent() {
 
   // Persist non-sensitive UI view state (current question, stage, active filter/layout)
   React.useEffect(() => {
-    if (!attemptId) return;
+    if (!attemptId || !hasHydratedSessionRef.current) return;
     const currentQId = questions[currentIndex]?.id;
     saveExamViewState(attemptId, {
       stage,
@@ -886,6 +957,11 @@ function ExamSessionContent() {
     [stageContext]
   );
 
+  const effectiveModePermissions = React.useMemo(
+    () => resolveExamExperiencePermissions(stageContext),
+    [stageContext]
+  );
+
   const transitionToStage = (target: ExamExperienceStage, focusQuestionId?: string) => {
     setModeSwitchNotice(null);
     const check = canTransitionStage(stage, target, stageContext);
@@ -980,6 +1056,28 @@ function ExamSessionContent() {
       setSubmissionError("There is no persisted exam attempt to submit.");
       return;
     }
+
+    // Frontend SATA validation: ensure answered SATA questions meet required selection counts
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i];
+      const ans = answers[q.id];
+      if (isSataQuestion(q.questionType) && isResponseAnswered(ans)) {
+        const validation = validateSataSelection(q, ans);
+        if (!validation.isValid) {
+          const msg = validation.message || "Select the required number of answers to continue.";
+          feedback.warn(msg);
+          setSubmissionError(msg);
+          setIsSubmitModalOpen(false);
+          if (layout === "Sequential") {
+            setCurrentIndex(i);
+          } else {
+            scrollToQuestion(q.id);
+          }
+          return;
+        }
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -1265,10 +1363,19 @@ function ExamSessionContent() {
                 key={q.id}
                 attemptId={attemptId}
                 questionId={q.id}
+                question={q}
                 hasSelectedAnswer={isResponseAnswered(answers[q.id])}
                 serializedAnswer={answers[q.id] ?? null}
                 evaluation={tutorEvaluations[q.id] ?? null}
                 responseJson={tutorResponseJsons[q.id] ?? null}
+                initialHints={tutorHints[q.id]}
+                onHintReceived={(hint) =>
+                  setTutorHints((prev) => {
+                    const existing = prev[q.id] ?? [];
+                    if (existing.some((h) => h.hintTier === hint.hintTier)) return prev;
+                    return { ...prev, [q.id]: [...existing, hint] };
+                  })
+                }
                 onEvaluated={(result) =>
                   setTutorEvaluations((prev) => ({ ...prev, [q.id]: result }))
                 }
@@ -1316,7 +1423,7 @@ function ExamSessionContent() {
       }
       mode={deliveryMode}
       onModeChange={handleModeChange}
-      modePermissions={modePermissions}
+      modePermissions={effectiveModePermissions}
       layoutMode={layout}
       allowLayoutSwitching={layoutPolicy !== "AllInOneOnly" && layoutPolicy !== "SequentialOnly"}
       onLayoutChange={(next) => void handleLayoutChange(next)}

@@ -68,7 +68,10 @@ export default function SignUpPage() {
   const [signInHref, setSignInHref] = React.useState("/sign-in");
 
   React.useEffect(() => {
-    const requested = new URLSearchParams(window.location.search).get("returnTo");
+    const params = new URLSearchParams(window.location.search);
+    const requested = params.get("returnTo");
+    const track = params.get("track") || params.get("pathway");
+
     if (requested?.startsWith("/")) {
       try {
         const destination = new URL(requested, window.location.origin);
@@ -76,6 +79,9 @@ export default function SignUpPage() {
           destination.origin === window.location.origin &&
           !["/sign-in", "/sign-up", "/access-denied"].includes(destination.pathname)
         ) {
+          if (track && !destination.searchParams.has("track") && !destination.searchParams.has("pathway")) {
+            destination.searchParams.set("track", track);
+          }
           setSignInHref(
             `/sign-in?returnTo=${encodeURIComponent(`${destination.pathname}${destination.search}${destination.hash}`)}`
           );
@@ -83,6 +89,8 @@ export default function SignUpPage() {
       } catch {
         setSignInHref("/sign-in");
       }
+    } else if (track) {
+      setSignInHref(`/sign-in?returnTo=${encodeURIComponent(`/learner/library?track=${encodeURIComponent(track)}`)}`);
     }
 
     if (status === "authenticated" && user) {

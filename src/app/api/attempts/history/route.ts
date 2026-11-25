@@ -126,16 +126,21 @@ function mapLexmaCastoResultToAttemptSummary(
         ? item.totalAnswered
         : 0;
 
-  const allowReview =
-    typeof item.examDetail?.allowReview === 'boolean'
-      ? item.examDetail.allowReview
-      : undefined;
+  // Strata defaults examDetail.allowReview to false on published exams; completed
+  // attempts always release post-submission Review & Contextual Tutor unless
+  // review is explicitly withheld by policy (`withholdReview: true` or `reviewReleased: false`).
+  const isPostSubmissionWithheld =
+    item.examDetail?.withholdReview === true ||
+    item.examDetail?.reviewReleased === false;
+  const allowReview = isPostSubmissionWithheld ? false : true;
 
   const inferredDelivery = inferExamDeliveryMode(item as Record<string, unknown>);
   const canTutor =
-    inferredDelivery === 'Tutor' ||
-    inferredDelivery === 'Both' ||
-    inferredDelivery === 'All';
+    status !== 'InProgress'
+      ? allowReview !== false
+      : inferredDelivery === 'Tutor' ||
+        inferredDelivery === 'Both' ||
+        inferredDelivery === 'All';
 
   return {
     attemptId,

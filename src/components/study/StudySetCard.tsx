@@ -28,24 +28,26 @@ export function StudySetCard({
   onNotify,
 }: StudySetCardProps) {
   const detailHref = isPublic ? `/exams/${studySet.id}` : `/learner/library/${studySet.id}`;
-  const hasReviews = studySet.reviewCount > 0 && studySet.averageRating != null;
+  const pathLabel = studySet.pathway === "PN_LPN" ? "PN / LPN" : studySet.pathway.replace("_", " ");
+  const examBody = studySet.category === "RegularCourse" || studySet.category === "ExitPredictor" ? "Core" : studySet.category;
+  const examBadgeText = `${pathLabel} · ${examBody}`;
 
   return (
-    <Card className="flex h-full flex-col justify-between gap-4 border border-border bg-surface p-5 transition-colors hover:border-brand-teal/50">
-      <div className="space-y-3">
-        <div className="flex items-start justify-between gap-2">
+    <Card className="flex h-full flex-col justify-between gap-3 border border-border bg-surface p-4 transition-colors hover:border-brand-teal/50 shadow-xs">
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant="teal" className="text-[11px] font-semibold">
-              {formatCategoryBadge(studySet.pathway, studySet.category)}
+            <Badge variant="teal" className="text-[11px] font-bold">
+              {examBadgeText}
             </Badge>
             {studySet.difficulty && (
-              <Badge variant="outline" className="text-[11px] font-medium border-border/80">
+              <Badge variant="outline" className="text-[10px] font-medium border-border/80 text-foreground-secondary">
                 {studySet.difficulty}
               </Badge>
             )}
             {studySet.isSaved && (
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-brand-teal/10 px-2 py-0.5 text-[11px] font-medium text-brand-teal"
+                className="inline-flex items-center gap-1 rounded-full bg-brand-teal/10 px-2 py-0.5 text-[10px] font-medium text-brand-teal"
                 title="Saved to My Library"
               >
                 <BookmarkCheck className="h-3 w-3" aria-hidden="true" />
@@ -62,66 +64,15 @@ export function StudySetCard({
           />
         </div>
 
-        <div>
+        <div className="pt-0.5">
           <Link
             href={detailHref}
-            className="font-brand text-lg font-bold leading-snug text-foreground hover:text-brand-teal focus-visible:outline-none focus-visible:underline"
+            title={studySet.title}
+            className="block truncate font-brand text-base font-bold text-foreground hover:text-brand-teal focus-visible:outline-none focus-visible:underline"
           >
             {studySet.title}
           </Link>
-          <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-foreground-secondary">
-            {studySet.description}
-          </p>
         </div>
-
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-foreground-muted">
-          {studySet.subject && (
-            <span className="font-medium text-foreground-secondary">{studySet.subject}</span>
-          )}
-          <span className="inline-flex items-center gap-1 font-medium text-foreground-secondary">
-            <HelpCircle className="h-3.5 w-3.5 text-brand-teal" aria-hidden="true" />
-            {studySet.totalQuestions} {studySet.totalQuestions === 1 ? "Question" : "Questions"}
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-            {studySet.timeLimitMinutes} min
-          </span>
-          {studySet.school && <span>{studySet.school}</span>}
-          {studySet.academicYear && <span>{studySet.academicYear}</span>}
-        </div>
-
-        {/* Authentic Rating & Reviews */}
-        <div className="flex items-center gap-1.5 text-xs">
-          {hasReviews ? (
-            <>
-              <div className="flex items-center text-amber-500" aria-hidden="true">
-                {Array.from({ length: 5 }).map((_, idx) => (
-                  <Star
-                    key={idx}
-                    className={`h-3.5 w-3.5 ${
-                      idx < Math.round(studySet.averageRating ?? 0)
-                        ? "fill-amber-400 text-amber-400"
-                        : "text-border"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="font-semibold text-foreground">{studySet.averageRating?.toFixed(1)}</span>
-              <span className="text-foreground-muted">
-                ({studySet.reviewCount.toLocaleString()} {studySet.reviewCount === 1 ? "review" : "reviews"})
-              </span>
-            </>
-          ) : (
-            <span className="text-foreground-muted">Not yet rated</span>
-          )}
-        </div>
-
-        {/* Authentic Verified Testimonial (only when present in DB) */}
-        {studySet.featuredTestimonial && (
-          <blockquote className="line-clamp-2 rounded-lg border-l-2 border-brand-teal/50 bg-background/60 px-3 py-2 text-xs italic text-foreground-secondary">
-            &ldquo;{studySet.featuredTestimonial}&rdquo;
-          </blockquote>
-        )}
       </div>
 
       <StudySetCardActions

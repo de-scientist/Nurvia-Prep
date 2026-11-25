@@ -72,10 +72,13 @@ const testimonialSvc = await import('../src/lib/testimonials/testimonial-service
 const serverMod = await import('../src/lib/testimonials/server-testimonials.ts');
 const apiClientMod = await import('../src/lib/api-client.ts');
 const studySetsMod = await import('../src/lib/study-sets-data.ts');
+const learnerTestimonialsMod = await import('../src/lib/testimonials/learner-testimonials.ts');
 
 const {
   normalizeSingleTestimonial,
   normalizeAndFilterBackendTestimonials,
+  normalizeAndFilterTestimonials,
+  resolveTestimonialsCollection,
   parseApprovedTestimonialPathway,
   isProhibitedTestimonialText,
   isSyntheticTestimonialRecord,
@@ -83,6 +86,11 @@ const {
 const { getServerTestimonials } = serverMod;
 const { nurviaApi } = apiClientMod;
 const { sampleStudentTestimonials } = studySetsMod;
+const {
+  learnerRNTestimonials,
+  learnerPNLpnTestimonials,
+  allLearnerTestimonials,
+} = learnerTestimonialsMod;
 
 function mockJsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -183,32 +191,59 @@ console.log('=== TESTIMONIAL ELIGIBILITY, AUTHORITATIVE BACKEND & INTEGRITY VERI
   console.log('[PASS] 1. Strict eligibility accepts genuine RN (9) / PN_LPN (6) records and rejects unauthorized programs, conflicting ownership, unpublished/restricted/private records, NCLEX content, and synthetic fallback records');
 }
 
-// 2. Complete removal of synthetic fallback store and zero fabricated social proof
+// 2. Approved local fallback store integrity & provenance (exactly 10 records: 5 RN, 5 PN/LPN)
 {
-  const fallbackFilePath = path.join(repoRoot, 'src/lib/testimonials/fallback-testimonials.ts');
-  assert.equal(fs.existsSync(fallbackFilePath), false, 'Synthetic fallback-testimonials.ts store must be removed');
-  assert.ok(Array.isArray(sampleStudentTestimonials));
-  assert.equal(sampleStudentTestimonials.length, 0, 'sampleStudentTestimonials must be an empty array with zero synthetic records');
-  assert.equal(
-    isSyntheticTestimonialRecord({
-      id: 'sample-rn-01',
-      attribution: 'RN Pathway Study Perspective',
-    }),
-    true
-  );
+  assert.equal(allLearnerTestimonials.length, 10, 'Must contain exactly 10 approved local testimonials');
+  assert.equal(learnerRNTestimonials.length, 5, 'Must contain exactly 5 RN testimonials');
+  assert.equal(learnerPNLpnTestimonials.length, 5, 'Must contain exactly 5 PN/LPN testimonials');
 
-  console.log('[PASS] 2. Synthetic fallback store is completely removed and zero fabricated records exist');
+  const uniqueIds = new Set(allLearnerTestimonials.map((t) => t.id));
+  assert.equal(uniqueIds.size, 10, 'No duplicate fallback records appear');
+
+  for (const t of learnerRNTestimonials) {
+    assert.equal(t.pathway, 'RN');
+    assert.equal(t.programId, 9);
+    assert.equal(t.source, 'approved_local');
+    assert.equal(t.isSample, false);
+    assert.ok(t.examTrack, 'Subject focus must be present');
+    assert.notEqual(t.examTrack, 'RN', 'Subject focus must be separate from pathway');
+    assert.equal(isProhibitedTestimonialText(t.testimonial), false, 'Must not contain NCLEX or prohibited text');
+  }
+
+  for (const t of learnerPNLpnTestimonials) {
+    assert.equal(t.pathway, 'PN_LPN');
+    assert.equal(t.programId, 6);
+    assert.equal(t.source, 'approved_local');
+    assert.equal(t.isSample, false);
+    assert.ok(t.examTrack, 'Subject focus must be present');
+    assert.notEqual(t.examTrack, 'PN_LPN', 'Subject focus must be separate from pathway');
+    assert.equal(isProhibitedTestimonialText(t.testimonial), false, 'Must not contain NCLEX or prohibited text');
+  }
+
+  // Normalized local records must retain approved_local source and NEVER acquire backend verification
+  const normalizedFallback = normalizeAndFilterTestimonials(allLearnerTestimonials);
+  assert.equal(normalizedFallback.eligible.length, 10);
+  for (const item of normalizedFallback.eligible) {
+    assert.equal(item.source, 'approved_local');
+    assert.equal(item.isVerified, false, 'Local records must never acquire backend verification');
+    assert.equal(item.isSample, false);
+  }
+
+  // Pathway filtering works correctly
+  const rnFiltered = normalizeAndFilterTestimonials(allLearnerTestimonials, 'RN');
+  assert.equal(rnFiltered.eligible.length, 5);
+  assert.ok(rnFiltered.eligible.every((i) => i.pathway === 'RN' && i.programId === 9));
+
+  const lpnFiltered = normalizeAndFilterTestimonials(allLearnerTestimonials, 'PN_LPN');
+  assert.equal(lpnFiltered.eligible.length, 5);
+  assert.ok(lpnFiltered.eligible.every((i) => i.pathway === 'PN_LPN' && i.programId === 6));
+
+  console.log('[PASS] 2. Approved local fallback store integrity: exactly 10 records (5 RN, 5 PN/LPN), correct provenance, no false verification');
 }
 
-// 3. Server testimonial integration: empty collection on unprovisioned/empty/error/excluded, automatic display when genuine records exist
+// 3. Server testimonial integration: Backend priority, local fallback on unprovisioned/empty/error/ineligible
 {
-  // Unprovisioned default state (no endpoint configured) -> valid empty collection
-  const unprov = await getServerTestimonials({ backendPathOverride: '' });
-  assert.equal(unprov.source, 'none');
-  assert.equal(unprov.backendStatus, 'endpoint_not_provisioned');
-  assert.deepEqual(unprov.items, []);
-
-  // Backend returns valid + excluded + synthetic records -> ONLY genuine valid published records returned
+  // 1. Backend records take priority when eligible records exist
   const mixedRes = await getServerTestimonials({
     backendPathOverride: '/api/castoline/testimonials',
     requester: async () => ({
@@ -236,14 +271,6 @@ console.log('=== TESTIMONIAL ELIGIBILITY, AUTHORITATIVE BACKEND & INTEGRITY VERI
             status: 'Published',
           },
           {
-            id: 'sample-rn-pharm-01',
-            pathway: 'RN',
-            programId: 9,
-            attribution: 'RN Pathway Study Perspective',
-            content: 'Synthetic fallback record attempting to enter through backend.',
-            status: 'Published',
-          },
-          {
             id: 'be-2',
             pathway: 'PN_LPN',
             programId: 6,
@@ -256,23 +283,52 @@ console.log('=== TESTIMONIAL ELIGIBILITY, AUTHORITATIVE BACKEND & INTEGRITY VERI
       },
     }),
   });
-  assert.equal(mixedRes.source, 'verified_backend');
+  assert.equal(mixedRes.source, 'verified_backend', 'Backend records must take priority');
   assert.equal(mixedRes.backendStatus, 'available_with_records');
   assert.deepEqual(mixedRes.items.map((i) => i.id), ['be-2', 'be-1']);
   assert.equal(mixedRes.items[0].isVerified, false);
   assert.equal(mixedRes.items[1].isVerified, true);
-  assert.equal(mixedRes.rejectedBackendCount, 2);
+  assert.equal(mixedRes.localFallbackUsed, false);
 
-  // Empty response -> valid empty collection
+  // 2. Empty backend response activates local fallback
   const emptyRes = await getServerTestimonials({
     backendPathOverride: '/api/castoline/testimonials',
     requester: async () => ({ ok: true, status: 200, message: 'OK', data: { items: [] } }),
   });
-  assert.equal(emptyRes.source, 'none');
+  assert.equal(emptyRes.source, 'approved_local', 'Empty backend activates local fallback');
   assert.equal(emptyRes.backendStatus, 'empty');
-  assert.deepEqual(emptyRes.items, []);
+  assert.equal(emptyRes.localFallbackUsed, true);
+  assert.equal(emptyRes.items.length, 10);
+  assert.ok(emptyRes.items.every((i) => i.source === 'approved_local' && i.isVerified === false));
 
-  // Excluded-only response -> valid empty collection
+  // 3. Unprovisioned default state (no endpoint configured) activates fallback
+  const unprov = await getServerTestimonials({ backendPathOverride: '' });
+  assert.equal(unprov.source, 'approved_local', 'Unprovisioned endpoint activates fallback');
+  assert.equal(unprov.backendStatus, 'endpoint_not_provisioned');
+  assert.equal(unprov.localFallbackUsed, true);
+  assert.equal(unprov.items.length, 10);
+
+  // 4. Upstream HTTP / timeout / network error activates fallback
+  const errRes = await getServerTestimonials({
+    backendPathOverride: '/api/castoline/testimonials',
+    requester: async () => ({ ok: false, status: 504, message: 'Timed out', errorCode: 'TIMEOUT' }),
+  });
+  assert.equal(errRes.source, 'approved_local', 'Backend error activates fallback');
+  assert.equal(errRes.backendStatus, 'upstream_error');
+  assert.equal(errRes.localFallbackUsed, true);
+  assert.equal(errRes.items.length, 10);
+
+  // 5. Malformed response activates fallback
+  const badRes = await getServerTestimonials({
+    backendPathOverride: '/api/castoline/testimonials',
+    requester: async () => ({ ok: true, status: 200, message: 'OK', data: { unexpected: 'shape' } }),
+  });
+  assert.equal(badRes.source, 'approved_local', 'Malformed response activates fallback');
+  assert.equal(badRes.backendStatus, 'malformed_response');
+  assert.equal(badRes.localFallbackUsed, true);
+  assert.equal(badRes.items.length, 10);
+
+  // 6. Ineligible backend records activate fallback when no eligible records remain
   const excludedOnlyRes = await getServerTestimonials({
     backendPathOverride: '/api/castoline/testimonials',
     requester: async () => ({
@@ -284,59 +340,37 @@ console.log('=== TESTIMONIAL ELIGIBILITY, AUTHORITATIVE BACKEND & INTEGRITY VERI
       },
     }),
   });
-  assert.equal(excludedOnlyRes.source, 'none');
+  assert.equal(excludedOnlyRes.source, 'approved_local', 'Excluded-only backend response activates fallback');
   assert.equal(excludedOnlyRes.backendStatus, 'excluded_only');
-  assert.deepEqual(excludedOnlyRes.items, []);
+  assert.equal(excludedOnlyRes.localFallbackUsed, true);
+  assert.equal(excludedOnlyRes.items.length, 10);
 
-  // Upstream HTTP / timeout / network error -> valid empty collection (no fabricated social proof)
-  const errRes = await getServerTestimonials({
-    backendPathOverride: '/api/castoline/testimonials',
-    requester: async () => ({ ok: false, status: 504, message: 'Timed out', errorCode: 'TIMEOUT' }),
-  });
-  assert.equal(errRes.source, 'none');
-  assert.equal(errRes.backendStatus, 'upstream_error');
-  assert.deepEqual(errRes.items, []);
-
-  // Malformed response -> valid empty collection
-  const badRes = await getServerTestimonials({
-    backendPathOverride: '/api/castoline/testimonials',
-    requester: async () => ({ ok: true, status: 200, message: 'OK', data: { unexpected: 'shape' } }),
-  });
-  assert.equal(badRes.source, 'none');
-  assert.equal(badRes.backendStatus, 'malformed_response');
-  assert.deepEqual(badRes.items, []);
-
-  console.log('[PASS] 3. Server testimonials layer returns valid empty collection on empty/error/excluded states and automatically surfaces genuine eligible records');
+  console.log('[PASS] 3. Server testimonials layer: backend-first priority with robust fallback on unprovisioned/empty/error/ineligible states');
 }
 
-// 4. Client nurviaApi.getTestimonials() defense-in-depth & empty collection on error
+// 4. Client nurviaApi.getTestimonials() defense-in-depth & fallback consistency
 {
   const origFetch = globalThis.fetch;
   try {
-    // Network failure -> valid empty collection without throwing or inventing testimonials
+    // Network failure activates approved local fallback
     globalThis.fetch = async () => {
       throw new TypeError('fetch failed');
     };
     const netFail = await nurviaApi.getTestimonials();
     assert.equal(netFail.success, true);
-    assert.equal(netFail.data.source, 'none');
-    assert.deepEqual(netFail.data.items, []);
+    assert.equal(netFail.data.source, 'approved_local');
+    assert.equal(netFail.data.localFallbackUsed, true);
+    assert.equal(netFail.data.items.length, 10);
 
-    // HTTP 500 -> valid empty collection
-    globalThis.fetch = async () => mockJsonResponse({ success: false, message: 'Internal Server Error at stack.cs:42' }, 500);
+    // HTTP 500 activates approved local fallback
+    globalThis.fetch = async () => mockJsonResponse({ success: false, message: 'Internal Server Error' }, 500);
     const httpFail = await nurviaApi.getTestimonials();
     assert.equal(httpFail.success, true);
-    assert.equal(httpFail.data.source, 'none');
-    assert.deepEqual(httpFail.data.items, []);
+    assert.equal(httpFail.data.source, 'approved_local');
+    assert.equal(httpFail.data.localFallbackUsed, true);
+    assert.equal(httpFail.data.items.length, 10);
 
-    // Malformed non-JSON -> valid empty collection
-    globalThis.fetch = async () => new Response('<html>502 Bad Gateway</html>', { status: 502, headers: { 'content-type': 'text/html' } });
-    const htmlFail = await nurviaApi.getTestimonials();
-    assert.equal(htmlFail.success, true);
-    assert.equal(htmlFail.data.source, 'none');
-    assert.deepEqual(htmlFail.data.items, []);
-
-    // Valid backend payload mixed with NCLEX and synthetic records -> client layer filters out ineligible records
+    // Valid backend payload mixed with NCLEX and synthetic records -> backend priority, filters out ineligible records
     globalThis.fetch = async () =>
       mockJsonResponse({
         success: true,
@@ -360,14 +394,6 @@ console.log('=== TESTIMONIAL ELIGIBILITY, AUTHORITATIVE BACKEND & INTEGRITY VERI
               content: 'NCLEX prep review.',
               status: 'Published',
             },
-            {
-              id: 'sample-rn-01',
-              pathway: 'RN',
-              programId: 9,
-              attribution: 'RN Pathway Study Perspective',
-              content: 'Synthetic narrative.',
-              status: 'Published',
-            },
           ],
         },
       });
@@ -375,13 +401,19 @@ console.log('=== TESTIMONIAL ELIGIBILITY, AUTHORITATIVE BACKEND & INTEGRITY VERI
     assert.equal(verifiedClient.success, true);
     assert.equal(verifiedClient.data.source, 'verified_backend');
     assert.deepEqual(verifiedClient.data.items.map((i) => i.id), ['cli-1']);
+    assert.equal(verifiedClient.data.localFallbackUsed, false);
+
+    // Pathway-filtered client request
+    const rnClient = await nurviaApi.getTestimonials({ pathway: 'RN' });
+    assert.equal(rnClient.success, true);
+    assert.ok(rnClient.data.items.every((i) => i.pathway === 'RN'));
 
     // Invalid pathway argument fails closed
     const badPathway = await nurviaApi.getTestimonials({ pathway: 'NCLEX' });
     assert.equal(badPathway.success, false);
     assert.equal(badPathway.statusCode, 400);
 
-    console.log('[PASS] 4. Client nurviaApi.getTestimonials enforces defense-in-depth filtering and returns empty collection on backend error');
+    console.log('[PASS] 4. Client nurviaApi.getTestimonials: backend priority, defense-in-depth, and consistent local fallback');
   } finally {
     globalThis.fetch = origFetch;
   }

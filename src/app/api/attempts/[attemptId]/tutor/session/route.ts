@@ -22,7 +22,7 @@ export async function GET(
     `/api/attempts/${attemptId}/tutor/session`
   );
 
-  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta, 'Tutor');
+  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta);
   if (!loaded.ok) {
     return NextResponse.json(
       { success: false, message: loaded.message, errorCode: loaded.errorCode },
@@ -30,14 +30,35 @@ export async function GET(
     );
   }
 
-  if (loaded.attempt.deliveryMode !== 'Tutor' && !loaded.attempt.modePermissions?.canTutor) {
+  const isTerminal =
+    loaded.attempt.status === 'Submitted' ||
+    loaded.attempt.status === 'Graded' ||
+    loaded.attempt.status === 'Expired';
+
+  if (!isTerminal) {
+    if (
+      loaded.attempt.deliveryMode !== 'Tutor' ||
+      (loaded.attempt.modePermissions && !loaded.attempt.modePermissions.canTutor)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            loaded.attempt.modePermissions?.tutorReason ||
+            'Tutor session is not enabled for this examination by backend policy.',
+            errorCode: 'TUTOR_NOT_PERMITTED',
+        },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
+    }
+  } else if (loaded.attempt.allowReview === false) {
     return NextResponse.json(
       {
         success: false,
         message:
-          loaded.attempt.modePermissions?.tutorReason ||
-          'Tutor session is not enabled for this examination by backend policy.',
-        errorCode: 'TUTOR_NOT_PERMITTED',
+          loaded.attempt.modePermissions?.reviewReason ||
+          'Tutor explanations are unavailable because answer review is withheld by this examination’s policy.',
+        errorCode: 'TUTOR_REVIEW_WITHHELD',
       },
       { status: 403, headers: NO_STORE_HEADERS }
     );

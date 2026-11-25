@@ -173,7 +173,13 @@ export const learnerNavigation: NavSection[] = [
   },
 ];
 
-export function LearnerShell({ children }: { children: React.ReactNode }) {
+export function LearnerShell({
+  children,
+  allowPublic = false,
+}: {
+  children: React.ReactNode;
+  allowPublic?: boolean;
+}) {
   const [collapsed, setCollapsed] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({});
@@ -184,7 +190,7 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
   const avatarUrl = status === "authenticated" ? (user?.avatarUrl ?? null) : null;
 
   React.useEffect(() => {
-    if (status === "unauthenticated") {
+    if (status === "unauthenticated" && !allowPublic) {
       const returnTo = typeof window === "undefined"
         ? pathname
         : `${pathname}${window.location.search}`;
@@ -197,7 +203,7 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
     ) {
       router.replace("/access-denied");
     }
-  }, [status, user, pathname, router]);
+  }, [status, user, pathname, router, allowPublic]);
 
   const toggleSubmenu = (itemName: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -217,11 +223,11 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
 
   // Superadmin is explicitly admitted to the learner experience with the same
   // authenticated identity; other staff roles are redirected to access-denied.
-  if (status === "loading") {
+  if (status === "loading" && !allowPublic) {
     return <PageLoader fullscreen message="Verifying your learner session…" />;
   }
 
-  if (status === "unauthenticated") {
+  if (status === "unauthenticated" && !allowPublic) {
     return (
       <RedirectScreen
         heading="Session Expired"
@@ -459,10 +465,18 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
         <div className="p-3 border-t border-border bg-surface-muted/40">
           {!collapsed ? (
             <div className="rounded-xl border border-border bg-surface p-3 space-y-2">
-              <p className="truncate text-xs font-semibold text-foreground">{user?.name}</p>
-              <Link href="/learner/exams">
-                <Button size="sm" className="w-full text-xs h-8">Browse Practice Exams</Button>
-              </Link>
+              <p className="truncate text-xs font-semibold text-foreground">
+                {user ? user.name : "Guest Learner"}
+              </p>
+              {user ? (
+                <Link href="/learner/exams">
+                  <Button size="sm" className="w-full text-xs h-8">Browse Practice Exams</Button>
+                </Link>
+              ) : (
+                <Link href="/sign-in">
+                  <Button size="sm" className="w-full text-xs h-8">Sign In to Save Progress</Button>
+                </Link>
+              )}
             </div>
           ) : (
             <div className="flex justify-center py-2">
@@ -506,9 +520,20 @@ export function LearnerShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-  <SuperadminSwitcher />
+  {user && <SuperadminSwitcher />}
   <ThemeToggle />
-  <UserAccountMenu avatarUrl={avatarUrl} />
+  {user ? (
+    <UserAccountMenu avatarUrl={avatarUrl} />
+  ) : (
+    <div className="flex items-center gap-2">
+      <Link href={`/sign-in?returnTo=${encodeURIComponent(pathname)}`}>
+        <Button variant="ghost" size="sm" className="text-xs">Sign In</Button>
+      </Link>
+      <Link href={`/register?returnTo=${encodeURIComponent(pathname)}`}>
+        <Button size="sm" className="text-xs">Register</Button>
+      </Link>
+    </div>
+  )}
   <Link
     href="/"
     className="ml-4 flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground-secondary hover:bg-surface-muted hover:text-foreground transition-colors"

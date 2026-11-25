@@ -205,6 +205,7 @@ export function SubjectCard({
     setSelectedPathway(pathway);
     setMenuOpen(false);
     triggerRef.current?.focus();
+    selectPathway(pathway);
   };
 
   const handleOptionKeyDown = (
@@ -596,54 +597,6 @@ export function SubjectCard({
           )}
         </div>
 
-        {/* 4. Content Description & Curriculum Notes */}
-        <div className="space-y-2">
-          <p className="line-clamp-2 text-sm leading-relaxed text-foreground-secondary">
-            {subject.description ||
-              "Comprehensive subject study materials, high-yield practice questions, and examination prep."}
-          </p>
-          {subject.ambiguityNotes && subject.ambiguityNotes.length > 0 && (
-            <p className="rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-1.5 text-[11px] font-medium text-amber-800 dark:text-amber-300">
-              {subject.ambiguityNotes[0]}
-            </p>
-          )}
-        </div>
-
-        {/* Featured Examinations Preview (Verified nominal exams only) */}
-        {displayedFeaturedExams.length > 0 && (
-          <div className="space-y-1.5 rounded-lg border border-border/70 bg-background/50 p-2.5 text-xs">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-foreground-muted">
-              Included Examinations:
-            </p>
-            <div className="space-y-1">
-              {displayedFeaturedExams.map((exam) => {
-                const examPathway =
-                  exam.pathway ?? (exam.programId === 6 ? "PN_LPN" : effectivePathway);
-                return (
-                  <div key={exam.id} className="flex items-center justify-between gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        selectPathway(examPathway, {
-                          subjectId: exam.subjectGuidId,
-                          examId: exam.id,
-                          programId: exam.programId,
-                        })
-                      }
-                      className="min-w-0 flex-1 truncate text-left text-xs font-medium text-foreground hover:text-brand-teal hover:underline focus-visible:outline-none focus-visible:underline"
-                      title={exam.title}
-                    >
-                      {exam.title}
-                    </button>
-                    <span className="shrink-0 text-[10px] font-medium text-foreground-muted">
-                      {exam.totalQuestions} Qs
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* 5. Primary Action */}
@@ -656,27 +609,29 @@ export function SubjectCard({
               disabled={!hasExamsForSelection}
               className="min-h-[44px] w-full flex items-center justify-center gap-2 rounded-lg"
             >
-              <span>
-                {hasExamsForSelection
-                  ? `Explore ${selectedOption.shortLabel} Examinations (${selectedOption.examCount})`
-                  : `No ${selectedOption.shortLabel} Examinations Available`}
-              </span>
-              {hasExamsForSelection && <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />}
+              <span>View Examinations</span>
+              <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
             </Button>
           ) : (
-            <Button
-              type="button"
-              onClick={() => openMenuAt(0)}
-              disabled={combinedExamCount === 0}
-              className="min-h-[44px] w-full flex items-center justify-center gap-2 rounded-lg"
-            >
-              <span>
-                {combinedExamCount > 0
-                  ? `Choose RN (${metrics.rnExamCount}) or LPN (${metrics.pnExamCount}) Pathway`
-                  : "No Examinations Available"}
-              </span>
-              {combinedExamCount > 0 && <ChevronDown className="h-4 w-4 shrink-0" aria-hidden="true" />}
-            </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                onClick={() => selectPathway("RN")}
+                className="min-h-[44px] flex items-center justify-center gap-1.5 rounded-lg text-xs font-semibold"
+              >
+                <span>RN ({metrics.rnExamCount})</span>
+                <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => selectPathway("PN_LPN")}
+                className="min-h-[44px] flex items-center justify-center gap-1.5 rounded-lg text-xs font-semibold border-purple-500/40 text-purple-700 dark:text-purple-300 hover:bg-purple-500/10"
+              >
+                <span>LPN ({metrics.pnExamCount})</span>
+                <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              </Button>
+            </div>
           )
         ) : (
           <Button
@@ -685,8 +640,8 @@ export function SubjectCard({
             disabled={!hasExamsForSelection}
             className="min-h-[44px] w-full flex items-center justify-center gap-2 rounded-lg"
           >
-            <span>{formatExclusiveCtaLabel(subject, effectivePathway)}</span>
-            {hasExamsForSelection && <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            <span>View Examinations</span>
+            <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
           </Button>
         )}
       </div>

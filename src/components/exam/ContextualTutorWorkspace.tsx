@@ -22,14 +22,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 import { QuestionRendererRegistry, type RendererQuestion } from "@/components/exam/renderers";
+import { TutorModePanel } from "@/components/exam/TutorModePanel";
 import { nurviaApi } from "@/lib/api-client";
 import type {
   QuestionType,
   ReviewQuestionDto,
   TutorActionType,
   TutorConversationMessageDto,
+  TutorEvaluateResponseDto,
+  TutorHintResponseDto,
   TutorPracticeCheckResponseDto,
 } from "@/lib/api-types";
+import { isResponseAnswered } from "@/lib/attempts/strata-answer-core.mjs";
 import { resolveQuestionReviewStatus } from "@/lib/attempts/exam-experience-state";
 import { cn } from "@/lib/utils";
 
@@ -212,6 +216,13 @@ export function ContextualTutorWorkspace({
   >({});
   const [checkingPracticeId, setCheckingPracticeId] = React.useState<string | null>(null);
 
+  // Progressive hint & immediate answer evaluation state (/tutor/hint, /tutor/evaluate, /tutor/session)
+  const [tutorEval, setTutorEval] = React.useState<TutorEvaluateResponseDto | null>(null);
+  const [tutorRespJson, setTutorRespJson] = React.useState<string | null>(
+    question.learnerResponse ?? null
+  );
+  const [tutorHints, setTutorHints] = React.useState<TutorHintResponseDto[]>([]);
+
   const feedEndRef = React.useRef<HTMLDivElement | null>(null);
 
   const questionStatus = resolveQuestionReviewStatus({
@@ -228,6 +239,9 @@ export function ContextualTutorWorkspace({
     setIsLoadingInitial(true);
     setErrorMsg(null);
     setLastFailedAction(null);
+    setTutorEval(null);
+    setTutorRespJson(question.learnerResponse ?? null);
+    setTutorHints([]);
 
     nurviaApi
       .getTutorConversations(attemptId, question.questionId)
@@ -238,6 +252,9 @@ export function ContextualTutorWorkspace({
           setDisclosureNotice(res.data.disclosureNotice || DEFAULT_DISCLAIMER);
           setAiProviderConfigured(res.data.aiProviderConfigured);
           setRemainingTurns(res.data.remainingTurns);
+          if (res.data.practiceChecks && typeof res.data.practiceChecks === "object") {
+            setPracticeChecks((prev) => ({ ...res.data!.practiceChecks!, ...prev }));
+          }
         } else {
           setErrorMsg(res.message || "Unable to load Tutor conversation for this question.");
         }
@@ -250,10 +267,34 @@ export function ContextualTutorWorkspace({
         if (active) setIsLoadingInitial(false);
       });
 
+    nurviaApi
+      .getTutorSessionState(attemptId)
+      .then((res) => {
+        if (!active || !res.success || !res.data) return;
+        const match = res.data.questions.find(
+          (q) =>
+            q.questionId === question.questionId ||
+            (question.numericId !== undefined && q.questionId === String(question.numericId)) ||
+            (question.guidId && q.questionId === question.guidId)
+        );
+        if (match) {
+          if (match.evaluation) setTutorEval(match.evaluation);
+          if (match.responseJson !== undefined) {
+            setTutorRespJson(match.responseJson ?? question.learnerResponse ?? null);
+          }
+          if (Array.isArray(match.hints) && match.hints.length > 0) {
+            setTutorHints(match.hints);
+          }
+        }
+      })
+      .catch(() => {
+        // Best-effort session state restoration
+      });
+
     return () => {
       active = false;
     };
-  }, [attemptId, question.questionId]);
+  }, [attemptId, question.questionId, question.numericId, question.guidId, question.learnerResponse]);
 
   React.useEffect(() => {
     if (messages.length > 0) {
@@ -515,6 +556,25 @@ export function ContextualTutorWorkspace({
           </div>
         )}
       </div>
+
+      {/* Progressive Hints & Immediate Answer Evaluation Panel */}
+      <TutorModePanel
+        key={question.questionId}
+        attemptId={attemptId}
+        questionId={question.questionId}
+        question={question}
+        hasSelectedAnswer={isResponseAnswered(tutorRespJson ?? question.learnerResponse)}
+        serializedAnswer={tutorRespJson ?? question.learnerResponse ?? null}
+        evaluation={tutorEval}
+        responseJson={tutorRespJson}
+        initialHints={tutorHints}
+        onHintReceived={(hint) =>
+          setTutorHints((prev) =>
+            prev.some((h) => h.hintTier === hint.hintTier) ? prev : [...prev, hint]
+          )
+        }
+        onEvaluated={(evalRes) => setTutorEval(evalRes)}
+      />
 
       {/* 7 Quick Pedagogical Action Buttons */}
       <section className="rounded-2xl border border-border bg-surface p-5 space-y-3">

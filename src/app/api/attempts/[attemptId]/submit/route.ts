@@ -47,6 +47,9 @@ export async function POST(
       );
     }
 
+    const wasAlreadyTerminal =
+      loaded.attempt.status === 'Submitted' || loaded.attempt.status === 'Graded';
+
     const result = attemptStore.submitAttempt(learner.userId, attemptId);
     if (!result.success || !result.data) {
       return NextResponse.json(
@@ -56,6 +59,18 @@ export async function POST(
           errorCode: result.status === 403 ? 'FORBIDDEN' : 'NOT_FOUND',
         },
         { status: result.status, headers: NO_STORE_HEADERS }
+      );
+    }
+
+    // Never re-submit an already-completed backend attempt to the remote lifecycle endpoint
+    if (wasAlreadyTerminal) {
+      return NextResponse.json(
+        {
+          success: true,
+          message: 'Examination submitted and graded successfully.',
+          data: result.data,
+        },
+        { headers: NO_STORE_HEADERS }
       );
     }
 
@@ -102,11 +117,12 @@ export async function POST(
               backendResultRes.data?.items ??
               [];
             const matching = Array.isArray(list)
-              ? list.find((item) =>
-                  raw.attemptNumber
-                    ? Number(item.attemptNumber ?? 1) === raw.attemptNumber
-                    : true
-                )
+              ? list.find((item) => {
+                  if (!raw.attemptNumber) return true;
+                  const num = Number(item.attemptNumber);
+                  if (!Number.isFinite(num)) return true;
+                  return (num > 0 ? num : 1) === raw.attemptNumber || num + 1 === raw.attemptNumber;
+                }) ?? (list.length === 1 ? list[0] : undefined)
               : undefined;
 
             if (matching && typeof matching.percentageScore === 'number') {
@@ -130,7 +146,10 @@ export async function POST(
                 graded.grade = matching.grade;
               }
               const detail = matching.examDetail as Record<string, unknown> | undefined;
-              if (detail && detail.allowReview === false) {
+              if (
+                detail &&
+                (detail.withholdReview === true || detail.reviewReleased === false)
+              ) {
                 graded.reviewReleased = false;
                 graded.reviewQuestions = [];
               }

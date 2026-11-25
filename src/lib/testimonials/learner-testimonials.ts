@@ -86,7 +86,8 @@ export const learnerRNTestimonials: StudentTestimonial[] = [
     avatarUrl: undefined,
     source: "approved_local",
     isSample: false,
-  };
+  },
+];
 
 export const learnerPNLpnTestimonials: StudentTestimonial[] = [
   {
@@ -168,7 +169,8 @@ export const learnerPNLpnTestimonials: StudentTestimonial[] = [
     avatarUrl: undefined,
     source: "approved_local",
     isSample: false,
-  };
+  },
+];
 
 export const allLearnerTestimonials: StudentTestimonial[] = [
   ...learnerRNTestimonials,

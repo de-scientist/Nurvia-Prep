@@ -170,7 +170,7 @@ export async function POST(
     remainingSeconds: loaded.timeLimitMinutes * 60,
     startedAtUtc,
     status: 'InProgress',
-    allowReview: loaded.modePermissions.canReview,
+    allowReview: loaded.modePermissions.reviewReleased,
     configuredQuestionCount: loaded.configuredQuestionCount,
     passingScorePercentage: loaded.passingScorePercentage,
     attemptNumber: loaded.attemptNumber,

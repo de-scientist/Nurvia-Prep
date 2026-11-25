@@ -22,18 +22,30 @@ function defaultDestination(role: string) {
 }
 
 function safeReturnTo() {
-  const requested = new URLSearchParams(window.location.search).get("returnTo");
-  if (!requested || !requested.startsWith("/")) return null;
+  if (typeof window === "undefined") return null;
+  const params = new URLSearchParams(window.location.search);
+  const requested = params.get("returnTo");
+  const track = params.get("track") || params.get("pathway");
+
+  if (!requested || !requested.startsWith("/")) {
+    if (track) return `/learner/library?track=${encodeURIComponent(track)}`;
+    return null;
+  }
   try {
     const destination = new URL(requested, window.location.origin);
     if (
       destination.origin !== window.location.origin ||
       ["/sign-in", "/sign-up", "/access-denied"].includes(destination.pathname)
     ) {
+      if (track) return `/learner/library?track=${encodeURIComponent(track)}`;
       return null;
+    }
+    if (track && !destination.searchParams.has("track") && !destination.searchParams.has("pathway")) {
+      destination.searchParams.set("track", track);
     }
     return `${destination.pathname}${destination.search}${destination.hash}`;
   } catch {
+    if (track) return `/learner/library?track=${encodeURIComponent(track)}`;
     return null;
   }
 }
@@ -326,7 +338,14 @@ export default function SignInPage() {
 
       <p className="mt-6 border-t border-border pt-5 text-center text-sm text-foreground-secondary">
         New to NURVIA?{" "}
-        <Link href="/sign-up" className="font-semibold text-brand-teal underline-offset-4 hover:underline">
+        <Link
+          href={
+            typeof window !== "undefined" && window.location.search
+              ? `/sign-up${window.location.search}`
+              : "/sign-up"
+          }
+          className="font-semibold text-brand-teal underline-offset-4 hover:underline"
+        >
           Create an account
         </Link>
       </p>

@@ -127,6 +127,7 @@ export interface StoredAttempt {
     {
       stage: number;
       hintsRequested: TutorStage[];
+      hints?: TutorHintResponseDto[];
       evaluated?: TutorEvaluateResponseDto;
       responseJson?: string;
     }
@@ -135,8 +136,15 @@ export interface StoredAttempt {
   tutorPracticeChecks?: Record<string, TutorPracticeCheckResponseDto[]>;
 }
 
+export interface PersistedTutorAttemptState {
+  tutorProgression: StoredAttempt['tutorProgression'];
+  tutorConversations: Record<string, TutorConversationMessageDto[]>;
+  tutorPracticeChecks: Record<string, TutorPracticeCheckResponseDto[]>;
+}
+
 const globalAttemptCache = globalThis as typeof globalThis & {
   __nurviaAttemptCache?: Map<string, StoredAttempt>;
+  __nurviaTutorSessionCache?: Map<string, PersistedTutorAttemptState>;
 };
 
 function getHotAttemptCache(): Map<string, StoredAttempt> {
@@ -146,6 +154,13 @@ function getHotAttemptCache(): Map<string, StoredAttempt> {
   return globalAttemptCache.__nurviaAttemptCache;
 }
 
+function getDurableTutorCache(): Map<string, PersistedTutorAttemptState> {
+  if (!globalAttemptCache.__nurviaTutorSessionCache) {
+    globalAttemptCache.__nurviaTutorSessionCache = new Map<string, PersistedTutorAttemptState>();
+  }
+  return globalAttemptCache.__nurviaTutorSessionCache;
+}
+
 class AttemptStore {
   /**
    * Short-lived global hot session cache shared across Next.js route bundles.
@@ -153,6 +168,38 @@ class AttemptStore {
    */
   private get attempts(): Map<string, StoredAttempt> {
     return getHotAttemptCache();
+  }
+
+  private get tutorCache(): Map<string, PersistedTutorAttemptState> {
+    return getDurableTutorCache();
+  }
+
+  private tutorCacheKey(userId: string, attemptId: string): string {
+    return `${userId}::${attemptId}`;
+  }
+
+  syncTutorState(attempt: StoredAttempt): void {
+    if (!attempt.userId || !attempt.attemptId) return;
+    this.tutorCache.set(this.tutorCacheKey(attempt.userId, attempt.attemptId), {
+      tutorProgression: attempt.tutorProgression ?? {},
+      tutorConversations: attempt.tutorConversations ?? {},
+      tutorPracticeChecks: attempt.tutorPracticeChecks ?? {},
+    });
+  }
+
+  restoreTutorState(attempt: StoredAttempt): void {
+    if (!attempt.userId || !attempt.attemptId) return;
+    const saved = this.tutorCache.get(this.tutorCacheKey(attempt.userId, attempt.attemptId));
+    if (!saved) return;
+    if (!attempt.tutorProgression || Object.keys(attempt.tutorProgression).length === 0) {
+      attempt.tutorProgression = saved.tutorProgression;
+    }
+    if (!attempt.tutorConversations || Object.keys(attempt.tutorConversations).length === 0) {
+      attempt.tutorConversations = saved.tutorConversations;
+    }
+    if (!attempt.tutorPracticeChecks || Object.keys(attempt.tutorPracticeChecks).length === 0) {
+      attempt.tutorPracticeChecks = saved.tutorPracticeChecks;
+    }
   }
 
   /**
@@ -166,7 +213,9 @@ class AttemptStore {
    * Registers or restores an attempt in the store.
    */
   setAttempt(attempt: StoredAttempt): void {
+    this.restoreTutorState(attempt);
     this.attempts.set(attempt.attemptId, attempt);
+    this.syncTutorState(attempt);
   }
 
   /**
@@ -361,27 +410,13 @@ class AttemptStore {
   }
 
   /**
-   * Deterministically scores an attempt, marks it graded, and constructs the
-   * canonical SubmittedExamResultDto with complete question rationales.
+   * Computes a deterministic SubmittedExamResultDto for an attempt without
+   * mutating submission state unless explicitly requested by the caller.
    */
-  submitAttempt(
-    userId: string,
-    attemptId: string
-  ): { success: boolean; data?: SubmittedExamResultDto; error?: string; status: number } {
-    const raw = this.attempts.get(attemptId);
-    if (!raw) {
-      return { success: false, error: 'Attempt not found.', status: 404 };
-    }
-    if (raw.userId !== userId && userId !== 'system' && userId !== 'superadmin') {
-      return { success: false, error: 'Forbidden. You do not own this attempt.', status: 403 };
-    }
-
-    // Idempotent: if already graded or submitted, return the cached authoritative result
-    if ((raw.status === 'Graded' || raw.status === 'Submitted') && raw.result) {
-      return { success: true, status: 200, data: raw.result };
-    }
-
-    const submittedAtUtc = new Date().toISOString();
+  private computeGradedResultForAttempt(
+    raw: StoredAttempt,
+    submittedAtUtc: string
+  ): SubmittedExamResultDto {
     let correctQuestions = 0;
     let partiallyCorrectQuestions = 0;
     let incorrectQuestions = 0;
@@ -549,7 +584,7 @@ class AttemptStore {
       })
     );
 
-    const result: SubmittedExamResultDto = {
+    return {
       attemptId: raw.attemptId,
       examId: raw.examId,
       examTitle: raw.examTitle,
@@ -582,6 +617,102 @@ class AttemptStore {
       flaggedQuestionIds: reviewReleased ? flaggedQuestionIds : [],
       reviewQuestions: reviewReleased ? reviewQuestions : [],
     };
+  }
+
+  /**
+   * Reconstructs an already-completed backend attempt directly in Graded state
+   * without treating it as a new live submission or re-submitting it.
+   */
+  reconstructCompletedAttempt(
+    attempt: StoredAttempt,
+    completedResultRecord?: Record<string, unknown>
+  ): SubmittedExamResultDto {
+    const pickTimestamp = (val: unknown): string | undefined => {
+      if (typeof val === 'string' && val.trim() && !val.trim().startsWith('0001')) {
+        return val.trim();
+      }
+      return undefined;
+    };
+
+    const historicalSubmittedAt =
+      pickTimestamp(completedResultRecord?.reviewedAt) ||
+      pickTimestamp(completedResultRecord?.submittedAt) ||
+      pickTimestamp(completedResultRecord?.updatedAt) ||
+      pickTimestamp(completedResultRecord?.attemptedAt) ||
+      attempt.submittedAtUtc ||
+      attempt.startedAtUtc ||
+      new Date().toISOString();
+
+    const graded = this.computeGradedResultForAttempt(attempt, historicalSubmittedAt);
+
+    if (completedResultRecord) {
+      if (typeof completedResultRecord.percentageScore === 'number') {
+        graded.scorePercentage = Math.round(completedResultRecord.percentageScore);
+      } else if (typeof completedResultRecord.scorePercentage === 'number') {
+        graded.scorePercentage = Math.round(completedResultRecord.scorePercentage);
+      }
+      if (
+        typeof completedResultRecord.passMark === 'number' &&
+        completedResultRecord.passMark > 0 &&
+        completedResultRecord.passMark <= 100
+      ) {
+        graded.passingScorePercentage = completedResultRecord.passMark;
+      }
+      if (typeof completedResultRecord.passed === 'boolean') {
+        graded.passed = completedResultRecord.passed;
+      } else if (graded.passingScorePercentage !== null) {
+        graded.passed = graded.scorePercentage >= graded.passingScorePercentage;
+      }
+      if (typeof completedResultRecord.totalCorrect === 'number') {
+        graded.correctQuestions = completedResultRecord.totalCorrect;
+      }
+      if (typeof completedResultRecord.totalWrong === 'number') {
+        graded.totalWrong = completedResultRecord.totalWrong;
+      }
+      if (typeof completedResultRecord.totalAnswered === 'number') {
+        graded.totalAnswered = completedResultRecord.totalAnswered;
+      }
+      if (
+        typeof completedResultRecord.timeTaken === 'number' &&
+        completedResultRecord.timeTaken > 0
+      ) {
+        graded.timeSpentSeconds = completedResultRecord.timeTaken;
+      }
+      if (typeof completedResultRecord.grade === 'string' && completedResultRecord.grade) {
+        graded.grade = completedResultRecord.grade;
+      }
+    }
+
+    attempt.status = 'Graded';
+    attempt.submittedAtUtc = historicalSubmittedAt;
+    attempt.result = graded;
+    this.setAttempt(attempt);
+    return graded;
+  }
+
+  /**
+   * Deterministically scores an attempt, marks it graded, and constructs the
+   * canonical SubmittedExamResultDto with complete question rationales.
+   */
+  submitAttempt(
+    userId: string,
+    attemptId: string
+  ): { success: boolean; data?: SubmittedExamResultDto; error?: string; status: number } {
+    const raw = this.attempts.get(attemptId);
+    if (!raw) {
+      return { success: false, error: 'Attempt not found.', status: 404 };
+    }
+    if (raw.userId !== userId && userId !== 'system' && userId !== 'superadmin') {
+      return { success: false, error: 'Forbidden. You do not own this attempt.', status: 403 };
+    }
+
+    // Idempotent: if already graded or submitted, return the cached authoritative result
+    if ((raw.status === 'Graded' || raw.status === 'Submitted') && raw.result) {
+      return { success: true, status: 200, data: raw.result };
+    }
+
+    const submittedAtUtc = raw.submittedAtUtc || new Date().toISOString();
+    const result = this.computeGradedResultForAttempt(raw, submittedAtUtc);
 
     raw.status = 'Graded';
     raw.submittedAtUtc = submittedAtUtc;
@@ -610,23 +741,7 @@ class AttemptStore {
       return { success: false, error: 'Forbidden. You do not own this attempt.', status: 403 };
     }
 
-    if (raw.result) {
-      // Guarantee answer keys and rationales remain stripped if review is disabled by backend
-      if (raw.allowReview === false) {
-        return {
-          success: true,
-          status: 200,
-          data: {
-            ...raw.result,
-            reviewReleased: false,
-            reviewQuestions: [],
-          },
-        };
-      }
-      return { success: true, status: 200, data: raw.result };
-    }
-
-    if (raw.status !== 'Submitted' && raw.status !== 'Graded') {
+    if (raw.status !== 'Submitted' && raw.status !== 'Graded' && !raw.result) {
       return {
         success: false,
         error: 'Attempt has not been submitted yet. Submit the examination before requesting graded review.',
@@ -634,7 +749,22 @@ class AttemptStore {
       };
     }
 
-    return this.submitAttempt(userId, attemptId);
+    const result = raw.result ?? this.reconstructCompletedAttempt(raw);
+
+    // Guarantee answer keys and rationales remain stripped if review is disabled by policy
+    if (raw.allowReview === false) {
+      return {
+        success: true,
+        status: 200,
+        data: {
+          ...result,
+          reviewReleased: false,
+          reviewQuestions: [],
+        },
+      };
+    }
+
+    return { success: true, status: 200, data: result };
   }
 
   /**
@@ -679,22 +809,32 @@ class AttemptStore {
         'Review the underlying physiological principle and patient safety priority referenced in this question.';
     }
 
+    const hintDto: TutorHintResponseDto = {
+      questionId,
+      stage,
+      title,
+      content,
+      eliminatedOptionIds: [],
+      isAiGenerated: false,
+    };
+
     if (!raw.tutorProgression[questionId]) {
-      raw.tutorProgression[questionId] = { stage: 2, hintsRequested: [] };
+      raw.tutorProgression[questionId] = { stage: 2, hintsRequested: [], hints: [] };
     }
-    raw.tutorProgression[questionId].hintsRequested.push(stage);
+    if (!raw.tutorProgression[questionId].hintsRequested.includes(stage)) {
+      raw.tutorProgression[questionId].hintsRequested.push(stage);
+    }
+    const existingHints = raw.tutorProgression[questionId].hints ?? [];
+    raw.tutorProgression[questionId].hints = [
+      ...existingHints.filter((h) => h.stage !== stage),
+      hintDto,
+    ];
+    this.syncTutorState(raw);
 
     return {
       success: true,
       status: 200,
-      data: {
-        questionId,
-        stage,
-        title,
-        content,
-        eliminatedOptionIds: [],
-        isAiGenerated: false,
-      },
+      data: hintDto,
     };
   }
 
@@ -758,11 +898,12 @@ class AttemptStore {
     };
 
     if (!raw.tutorProgression[questionId]) {
-      raw.tutorProgression[questionId] = { stage: 4, hintsRequested: [], responseJson: undefined };
+      raw.tutorProgression[questionId] = { stage: 4, hintsRequested: [], hints: [], responseJson: undefined };
     }
     raw.tutorProgression[questionId].stage = 4;
     raw.tutorProgression[questionId].evaluated = result;
     raw.tutorProgression[questionId].responseJson = responseJson;
+    this.syncTutorState(raw);
 
     // Tutor answers are persisted exclusively in tutorProgression; they must never
     // be written to savedResponses (which is the examination response contract).
@@ -789,6 +930,7 @@ class AttemptStore {
       return { success: false, error: 'Forbidden.', status: 403 };
     }
 
+    this.restoreTutorState(raw);
     const questions = raw.questions.map((q) => {
       const prog = raw.tutorProgression[q.id];
       return {
@@ -796,6 +938,7 @@ class AttemptStore {
         stageReached: prog?.stage || 1,
         evaluation: prog?.evaluated ?? null,
         responseJson: prog?.responseJson ?? null,
+        hints: prog?.hints ?? [],
       };
     });
 
@@ -817,6 +960,8 @@ class AttemptStore {
     const list: ExamAttemptSummaryDto[] = [];
     for (const a of this.attempts.values()) {
       if (a.userId === userId) {
+        const isCompleted = a.status === 'Submitted' || a.status === 'Graded';
+        const reviewReleased = a.allowReview !== false;
         list.push({
           attemptId: a.attemptId,
           examId: a.examId,
@@ -836,8 +981,8 @@ class AttemptStore {
           timeSpentSeconds: a.result?.timeSpentSeconds,
           attemptNumber: a.attemptNumber,
           allowReview: a.allowReview,
-          canReview: a.modePermissions?.canReview ?? a.allowReview !== false,
-          canTutor: a.modePermissions?.canTutor ?? false,
+          canReview: isCompleted ? reviewReleased : (a.modePermissions?.canReview ?? reviewReleased),
+          canTutor: isCompleted ? reviewReleased : (a.modePermissions?.canTutor ?? false),
           subjectName: a.subjectName,
           topicName: a.topicName,
         });

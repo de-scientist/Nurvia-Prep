@@ -53,7 +53,21 @@ const DEFAULT_ADVANCED: AdvancedFilterState = {
   course: "",
 };
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 100;
+
+function getSubjectSortRank(title: string): number {
+  const lower = title.toLowerCase();
+  if (lower.includes("med-surg") || lower.includes("medical-surgical") || lower.includes("med surg") || lower.includes("medical surgical")) return 1;
+  if (lower.includes("pediatric") || lower.includes("peds") || lower.includes("child")) return 2;
+  if (lower.includes("mental health") || lower.includes("psych")) return 3;
+  if (lower.includes("fundamental")) return 4;
+  if (lower.includes("pharmacol") || lower.includes("dosage") || lower.includes("drug")) return 5;
+  if (lower.includes("leadership") || lower.includes("management") || lower.includes("professional")) return 6;
+  if (lower.includes("adult health")) return 7;
+  if (lower.includes("health assessment") || lower.includes("assessment") || lower.includes("physical assessment")) return 8;
+  if (lower.includes("maternal") || lower.includes("newborn") || lower.includes("obstetric") || lower.includes("maternity") || lower.includes("women")) return 9;
+  return 10;
+}
 
 export function StudyLibraryView({
   isPublic = false,
@@ -288,7 +302,13 @@ export function StudyLibraryView({
           if (!response.success || !response.data) {
             setError(response.message || "Unable to load published subjects.");
           } else {
-            setSubjects(response.data.items);
+            const sorted = [...response.data.items].sort((a, b) => {
+              const rankA = getSubjectSortRank(a.title);
+              const rankB = getSubjectSortRank(b.title);
+              if (rankA !== rankB) return rankA - rankB;
+              return a.title.localeCompare(b.title);
+            });
+            setSubjects(sorted);
             setTotalCount(response.data.totalCount);
             setTotalPages(Math.max(1, response.data.totalPages || Math.ceil(response.data.totalCount / PAGE_SIZE)));
             hasLoadedOnceRef.current = true;

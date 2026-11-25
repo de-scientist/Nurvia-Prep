@@ -866,6 +866,7 @@ export interface TutorQuestionStateDto {
   stageReached: number;
   evaluation?: TutorEvaluateResponseDto | null;
   responseJson?: string | null;
+  hints?: TutorHintResponseDto[];
 }
 
 /** Full Tutor session recovery payload with per-question stage state and already-authorized evaluation content. */

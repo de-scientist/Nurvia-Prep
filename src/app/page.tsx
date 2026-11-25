@@ -46,11 +46,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedCategory, setSelectedCategory] = React.useState<string>("All");
   const { status, user } = useAuth();
-  const startHref = status === "authenticated" && user?.role === "Learner"
-    ? "/learner/library"
-    : status === "authenticated"
-      ? "/access-denied"
-    : "/sign-up?returnTo=%2Flearner%2Flibrary";
+  const startHref = "/learner/library";
 
   const categories = [
     "All",
@@ -105,9 +101,9 @@ export default function HomePage() {
           was deliberately NOT placed in a separate section below the hero. */}
       <section aria-labelledby="hero-heading" className="relative isolate overflow-hidden border-b border-border/70">
         <HeroBackgroundVideo />
-        <div className="relative z-10 mx-auto max-w-7xl px-4 pb-14 pt-10 sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-20">
-          <div className="grid items-center gap-12 md:gap-10 lg:grid-cols-12 lg:gap-12">
-            <div className="min-w-0 space-y-7 lg:col-span-7">
+        <div className="relative z-10 mx-auto max-w-7xl px-4 pb-10 pt-5 sm:px-6 sm:pb-12 sm:pt-7 lg:px-8 lg:pb-14 lg:pt-8">
+          <div className="grid items-center gap-8 md:gap-8 lg:grid-cols-12 lg:gap-10">
+            <div className="min-w-0 space-y-4 sm:space-y-5 lg:col-span-7">
               <p className="flex items-center gap-3 text-[13px] font-bold uppercase tracking-[0.22em] text-brand-teal">
                 <span aria-hidden="true" className="h-px w-10 bg-brand-teal/70" />
                 Built for nursing school exam days
@@ -115,7 +111,7 @@ export default function HomePage() {
               </p>
               <h1
                 id="hero-heading"
-                className="font-brand text-[2.75rem] font-extrabold leading-[1.06] tracking-tight text-foreground sm:text-5xl lg:text-[3.5rem] xl:text-[3.75rem]"
+                className="font-brand text-[2.5rem] font-extrabold leading-[1.06] tracking-tight text-foreground sm:text-5xl lg:text-[3.25rem] xl:text-[3.5rem]"
               >
                 <span className="block">
                   Turn Practice Into <span className="text-brand-teal">ATI</span>
@@ -124,16 +120,16 @@ export default function HomePage() {
                   and <span className="text-brand-teal">HESI</span> Readiness
                 </span>
               </h1>
-              <p className="max-w-lg text-base leading-relaxed text-foreground-secondary sm:text-lg">
+              <p className="max-w-lg text-sm leading-relaxed text-foreground-secondary sm:text-base">
                 Work through ATI, HESI, and exit-exam practice at your own pace. Learn from clear rationales, build comfort with NGN formats, and choose the study mode that fits today.
               </p>
-              <div className="flex flex-col gap-3 pt-1 min-[480px]:flex-row md:flex-col lg:flex-row">
+              <div className="flex flex-col gap-3 pt-0.5 min-[480px]:flex-row md:flex-col lg:flex-row">
                 <Link
                   href={startHref}
                   className={buttonVariants({
                     size: "lg",
                     className:
-                      "h-14 w-full gap-2 rounded-full bg-primary px-8 text-[1.0625rem] font-bold text-primary-foreground shadow-md hover:bg-primary-hover focus-visible:ring-offset-background min-[480px]:w-auto md:w-full lg:w-auto lg:min-w-[230px]",
+                      "h-12 w-full gap-2 rounded-full bg-primary px-7 text-base font-bold text-primary-foreground shadow-md hover:bg-primary-hover focus-visible:ring-offset-background min-[480px]:w-auto md:w-full lg:w-auto lg:min-w-[210px]",
                   })}
                 >
                   Try a Practice Set <ArrowRight className="h-5 w-5" aria-hidden="true" />
@@ -144,13 +140,13 @@ export default function HomePage() {
                     variant: "outline",
                     size: "lg",
                     className:
-                      "h-14 w-full rounded-full border-border bg-surface px-8 text-[1.0625rem] font-bold text-foreground hover:border-brand-teal/60 hover:text-brand-tealDark focus-visible:ring-offset-background min-[480px]:w-auto md:w-full lg:w-auto lg:min-w-[230px]",
+                      "h-12 w-full rounded-full border-border bg-surface px-7 text-base font-bold text-foreground hover:border-brand-teal/60 hover:text-brand-tealDark focus-visible:ring-offset-background min-[480px]:w-auto md:w-full lg:w-auto lg:min-w-[210px]",
                   })}
                 >
                   Explore the Exam Library
                 </Link>
               </div>
-              <div className="flex flex-wrap items-center gap-2 pt-1" aria-label="Rated 4.9 out of 5 by more than 2,000 students">
+              <div className="flex flex-wrap items-center gap-2 pt-0.5" aria-label="Rated 4.9 out of 5 by more than 2,000 students">
                 <span className="flex items-center gap-0.5" aria-hidden="true">
                   {Array.from({ length: 5 }).map((_, index) => (
                     <Star

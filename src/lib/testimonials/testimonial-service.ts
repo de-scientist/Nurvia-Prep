@@ -5,6 +5,7 @@ import {
   RN_PROGRAM_ID,
 } from '../study-library/curriculum-consolidation';
 import type { StudentTestimonial } from '../study-sets-data';
+import { allLearnerTestimonials } from './learner-testimonials';
 
 export type ApprovedTestimonialPathway = 'RN' | 'PN_LPN';
 export type AuthorizedTestimonialProgramId = typeof LPN_PROGRAM_ID | typeof RN_PROGRAM_ID;
@@ -174,6 +175,7 @@ function isPublishedAndVisible(raw: Record<string, unknown>): boolean {
   ];
 
   let hasPositiveStatus =
+    raw.source === 'approved_local' ||
     raw.isPublished === true ||
     raw.published === true ||
     raw.isApproved === true ||
@@ -527,10 +529,25 @@ export function resolveTestimonialsCollection(params: {
     backendPayload,
     backendStatusOverride,
     pathwayFilter,
-    localFallback,
   } = params;
 
+  const activeFallback =
+    params.localFallback !== undefined ? params.localFallback : allLearnerTestimonials;
+
   if (!backendAttempted) {
+    if (activeFallback && activeFallback.length > 0) {
+      const filtered = normalizeAndFilterTestimonials(activeFallback, pathwayFilter);
+      return {
+        items: filtered.eligible,
+        source: 'approved_local',
+        backendStatus: backendStatusOverride ?? 'endpoint_not_provisioned',
+        totalReceivedFromBackend: 0,
+        eligibleBackendCount: 0,
+        rejectedBackendCount: filtered.rejectedCount,
+        endpointChecked: false,
+        localFallbackUsed: true,
+      };
+    }
     return {
       items: [],
       source: 'none',
@@ -545,12 +562,12 @@ export function resolveTestimonialsCollection(params: {
 
   if (!backendOk) {
     // Endpoint error — activate approved local fallback if available
-    if (localFallback && localFallback.length > 0) {
-      const filtered = normalizeAndFilterTestimonials(localFallback, pathwayFilter);
+    if (activeFallback && activeFallback.length > 0) {
+      const filtered = normalizeAndFilterTestimonials(activeFallback, pathwayFilter);
       return {
         items: filtered.eligible,
         source: 'approved_local',
-        backendStatus: 'upstream_error',
+        backendStatus: backendStatusOverride ?? 'upstream_error',
         totalReceivedFromBackend: 0,
         eligibleBackendCount: 0,
         rejectedBackendCount: filtered.rejectedCount,
@@ -561,7 +578,7 @@ export function resolveTestimonialsCollection(params: {
     return {
       items: [],
       source: 'none',
-      backendStatus: 'upstream_error',
+      backendStatus: backendStatusOverride ?? 'upstream_error',
       totalReceivedFromBackend: 0,
       eligibleBackendCount: 0,
       rejectedBackendCount: 0,
@@ -573,15 +590,15 @@ export function resolveTestimonialsCollection(params: {
   const filtered = normalizeAndFilterBackendTestimonials(backendPayload, pathwayFilter);
   if (!filtered.validPayload) {
     // Malformed response — activate approved local fallback if available
-    if (localFallback && localFallback.length > 0) {
-      const filtered = normalizeAndFilterTestimonials(localFallback, pathwayFilter);
+    if (activeFallback && activeFallback.length > 0) {
+      const filteredLocal = normalizeAndFilterTestimonials(activeFallback, pathwayFilter);
       return {
-        items: filtered.eligible,
+        items: filteredLocal.eligible,
         source: 'approved_local',
         backendStatus: 'malformed_response',
         totalReceivedFromBackend: 0,
         eligibleBackendCount: 0,
-        rejectedBackendCount: filtered.rejectedCount,
+        rejectedBackendCount: filteredLocal.rejectedCount,
         endpointChecked: true,
         localFallbackUsed: true,
       };
@@ -612,13 +629,13 @@ export function resolveTestimonialsCollection(params: {
   }
 
   // Backend returned zero eligible records — activate approved local fallback if available
-  if (localFallback && localFallback.length > 0) {
-    const filtered = normalizeAndFilterTestimonials(localFallback, pathwayFilter);
+  if (activeFallback && activeFallback.length > 0) {
+    const filteredLocal = normalizeAndFilterTestimonials(activeFallback, pathwayFilter);
     return {
-      items: filtered.eligible,
+      items: filteredLocal.eligible,
       source: 'approved_local',
-      backendStatus: 'empty',
-      totalReceivedFromBackend: 0,
+      backendStatus: filtered.totalReceived === 0 ? 'empty' : 'excluded_only',
+      totalReceivedFromBackend: filtered.totalReceived,
       eligibleBackendCount: 0,
       rejectedBackendCount: filtered.rejectedCount,
       endpointChecked: true,
