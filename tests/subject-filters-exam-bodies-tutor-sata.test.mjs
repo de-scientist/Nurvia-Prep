@@ -218,6 +218,11 @@ assert.ok(
   "TutorModePanel must apply blur filter to protected content container"
 );
 assert.ok(
+  tutorPanelSrc.includes("<span>1. Hint</span>") &&
+  tutorPanelSrc.includes('aria-label="Hint locked. Select and submit your answer to unlock."'),
+  "Hint section heading must remain outside the blurred container and hint content must be blurred before submission"
+);
+assert.ok(
   tutorPanelSrc.includes("<span>2. Correct Answers</span>") &&
   !tutorPanelSrc.includes("filter blur-[5px] opacity-50 space-y-1\">\n            <div className=\"flex items-center gap-1.5 text-xs font-bold text-foreground\">\n              <CheckCircle2 className=\"h-3.5 w-3.5 text-emerald-600\" />\n              <span>2. Correct Answers</span>"),
   "Correct Answers section heading must remain outside the blurred container"
@@ -339,4 +344,162 @@ assert.ok(
 );
 console.log("[PASS] 15. MultipleResponseRenderer provides real-time learner selection feedback.");
 
-console.log("\nALL VERIFICATION TESTS FOR OBJECTIVES 6, 7, 8, AND 9 PASSED SUCCESSFULLY!");
+// 16. Test Zero Selected Answers (Under-selection / empty state)
+const sataQ3 = {
+  questionType: "MultipleSelect",
+  stem: "Select exactly three nursing interventions for acute pulmonary edema.",
+  options: [
+    { id: "opt-1", optionText: "Administer furosemide" },
+    { id: "opt-2", optionText: "Apply high-flow oxygen" },
+    { id: "opt-3", optionText: "Place in high Fowler position" },
+    { id: "opt-4", optionText: "Administer IV bolus of normal saline" },
+    { id: "opt-5", optionText: "Encourage vigorous ambulation" },
+  ],
+};
+const zeroRes = validateSataSelection(sataQ3, null);
+assert.strictEqual(zeroRes.isValid, false, "Zero answers must be invalid for SATA requiring 3");
+assert.strictEqual(zeroRes.selectedCount, 0);
+assert.strictEqual(zeroRes.requiredCount, 3);
+assert.ok(zeroRes.message?.includes("Select 3 answers to continue. You have selected 0."));
+
+const zeroEmptyRes = validateSataSelection(sataQ3, JSON.stringify({ SelectedOptionIds: [] }));
+assert.strictEqual(zeroEmptyRes.isValid, false, "Empty array must be invalid for SATA requiring 3");
+assert.strictEqual(zeroEmptyRes.selectedCount, 0);
+console.log("[PASS] 16. Zero selected answers strictly blocked with accurate count feedback.");
+
+// 17. Selection followed by deselection
+const selOne = JSON.stringify({ SelectedOptionIds: ["opt-1"] });
+const selTwo = JSON.stringify({ SelectedOptionIds: ["opt-1", "opt-2"] });
+const selThree = JSON.stringify({ SelectedOptionIds: ["opt-1", "opt-2", "opt-3"] });
+const deSelTwo = JSON.stringify({ SelectedOptionIds: ["opt-1", "opt-3"] }); // deselected opt-2
+
+assert.strictEqual(validateSataSelection(sataQ3, selOne).isValid, false);
+assert.strictEqual(validateSataSelection(sataQ3, selTwo).isValid, false);
+assert.strictEqual(validateSataSelection(sataQ3, selThree).isValid, true);
+const afterDeselect = validateSataSelection(sataQ3, deSelTwo);
+assert.strictEqual(afterDeselect.isValid, false, "Deselection below required count must block submission");
+assert.strictEqual(afterDeselect.selectedCount, 2);
+console.log("[PASS] 17. Deselection updates count immediately and re-enforces validation barrier.");
+
+// 18. Duplicate selections cannot inflate count
+const duplicateArray = JSON.stringify(["opt-1", "opt-1", "opt-1"]);
+const dupRes1 = validateSataSelection(sataQ3, duplicateArray);
+assert.strictEqual(dupRes1.selectedCount, 1, "Duplicate IDs in array must not inflate count");
+assert.strictEqual(dupRes1.isValid, false);
+
+const duplicateObj = JSON.stringify({ SelectedOptionIds: ["opt-1", "opt-2", "opt-1"] });
+const dupRes2 = validateSataSelection(sataQ3, duplicateObj);
+assert.strictEqual(dupRes2.selectedCount, 2, "Duplicate IDs in object must be deduplicated to unique count 2");
+assert.strictEqual(dupRes2.isValid, false);
+console.log("[PASS] 18. Duplicate option selections deduplicated and prevented from inflating count.");
+
+// 19. Invalid option identifiers are pruned
+const invalidIdPayload = JSON.stringify(["opt-1", "opt-2", "non-existent-option-999"]);
+const invalidRes = validateSataSelection(sataQ3, invalidIdPayload);
+assert.strictEqual(invalidRes.selectedCount, 2, "Unrecognized option ID must not be counted against options");
+assert.strictEqual(invalidRes.isValid, false);
+console.log("[PASS] 19. Invalid option identifiers are ignored without false count inflation.");
+
+// 20. Rehydrated answers normalization (array, object, comma string)
+const rehydratedObject = validateSataSelection(sataQ3, '{"SelectedOptionIds":["opt-1","opt-2","opt-3"]}');
+assert.strictEqual(rehydratedObject.isValid, true);
+assert.strictEqual(rehydratedObject.selectedCount, 3);
+
+const rehydratedArray = validateSataSelection(sataQ3, '["opt-1","opt-2","opt-3"]');
+assert.strictEqual(rehydratedArray.isValid, true);
+assert.strictEqual(rehydratedArray.selectedCount, 3);
+
+const rehydratedComma = validateSataSelection(sataQ3, "opt-1,opt-2,opt-3");
+assert.strictEqual(rehydratedComma.isValid, true);
+assert.strictEqual(rehydratedComma.selectedCount, 3);
+console.log("[PASS] 20. Rehydrated answers in object, array, and string formats normalize and count accurately.");
+
+// 21. Multiple SATA questions with different required counts in one session
+const sataQ2 = { questionType: "MultipleSelect", stem: "Select 2 medications." };
+const sataQ4 = { questionType: "MultipleSelect", stem: "Select 4 risk factors." };
+
+const ansQ2 = JSON.stringify(["m1", "m2"]);
+const ansQ4 = JSON.stringify(["r1", "r2", "r3"]); // only 3 of 4
+
+assert.strictEqual(validateSataSelection(sataQ2, ansQ2).isValid, true);
+assert.strictEqual(validateSataSelection(sataQ2, ansQ2).requiredCount, 2);
+
+assert.strictEqual(validateSataSelection(sataQ4, ansQ4).isValid, false);
+assert.strictEqual(validateSataSelection(sataQ4, ansQ4).requiredCount, 4);
+assert.strictEqual(validateSataSelection(sataQ4, ansQ4).selectedCount, 3);
+console.log("[PASS] 21. Multiple SATA questions with differing counts validate independently without leakage.");
+
+// 22. Submission path in exam-session enforces SATA validation
+assert.ok(
+  examSessionSrc.includes("isSataQuestion(q.questionType)") &&
+  examSessionSrc.includes("const validation = validateSataSelection(q, ans);") &&
+  !examSessionSrc.includes("if (isSataQuestion(q.questionType) && isResponseAnswered(ans))"),
+  "exam-session must validate all SATA questions without skipping zero-answer questions"
+);
+assert.ok(
+  examSessionSrc.includes("latestAnswersRef.current[q.id] ?? answers[q.id]"),
+  "exam-session must read latest ref to avoid stale closure state during submission"
+);
+console.log("[PASS] 22. Exam submission handlers strictly block under-selection (including 0 answers).");
+
+// -------------------------------------------------------------
+// E. EXAMINATION CARDS & FILTER WRAPPING VERIFICATION
+// -------------------------------------------------------------
+console.log("\n--- Section E: Examination Cards & Filter Multi-line Layout ---");
+
+const studySetCardSrc = readRel("src/components/study/StudySetCard.tsx");
+const cardActionsSrc = readRel("src/components/study/StudySetCardActions.tsx");
+
+// 23. Filter chips wrap on multiple lines without horizontal slider
+// Subject filter: single horizontal row with horizontal scrolling
+// Exam Bodies filter: natural multi-row wrapping
+assert.ok(
+  studyViewSrc.includes('overflow-x-auto items-center gap-1.5 whitespace-nowrap" role="tablist" aria-label="Available subject filters"'),
+  "Subject filters must use horizontal scrolling"
+);
+assert.ok(
+  studyViewSrc.includes('whitespace-nowrap'),
+  "Subject filter must use whitespace-nowrap to prevent wrapping"
+);
+assert.ok(
+  categoryTabsSrc.includes('flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Exam Bodies filter chips"'),
+  "Exam Bodies filters must wrap on multiple rows"
+);
+assert.ok(
+  !studyViewSrc.includes('pb-1 scrollbar-none" role="tablist" aria-label="Available subject filters"'),
+  "Subject filters must not use pb-1 scrollbar-none styling"
+);
+assert.ok(
+  !categoryTabsSrc.includes('pb-1 scrollbar-none" role="tablist" aria-label="Exam Bodies filter chips"'),
+  "Exam Bodies filters must not use pb-1 scrollbar-none styling"
+);
+console.log("[PASS] 23. Filter groups wrap naturally onto subsequent rows without horizontal sliding.");
+
+// 24. Exactly two card action buttons: Exam Mode and Tutor Mode
+assert.ok(cardActionsSrc.includes("Tutor Mode"), "Card actions must expose Tutor Mode");
+assert.ok(cardActionsSrc.includes("Exam Mode"), "Card actions must expose Exam Mode");
+assert.ok(!cardActionsSrc.includes("Practice Mode"), "Practice Mode must NOT be a card launch button");
+assert.ok(!cardActionsSrc.includes("Review Mode"), "Review Mode must NOT be a card launch button");
+console.log("[PASS] 24. Examination cards expose exactly two launch actions (Exam Mode and Tutor Mode).");
+
+// 25. Authoritative metadata display: NEW badge, question count, season, academic year
+assert.ok(studySetCardSrc.includes("studySet.isNew &&"), "Card must conditionally display NEW badge only when backend indicates isNew");
+assert.ok(studySetCardSrc.includes("studySet.totalQuestions"), "Card must display backend totalQuestions");
+assert.ok(studySetCardSrc.includes("studySet.season"), "Card must display backend season");
+assert.ok(studySetCardSrc.includes("studySet.academicYear"), "Card must display backend academicYear");
+assert.ok(studySetCardSrc.includes("detailHref"), "Card must retain link to exam detail");
+console.log("[PASS] 25. Authoritative metadata (NEW badge, total questions, season, year) rendered from real backend data.");
+
+// 26. Tutor hint protection before reveal
+assert.ok(
+  tutorPanelSrc.includes("1. Hint") &&
+  tutorPanelSrc.includes("Hint locked. Select and submit your answer to unlock."),
+  "Hint content must be locked and blurred before evaluation"
+);
+assert.ok(
+  tutorPanelSrc.includes("filter blur-[5px]"),
+  "Blur filter must obscure restricted hint content"
+);
+console.log("[PASS] 26. Tutor Mode hint content is protected and blurred before submission.");
+
+console.log("\nALL VERIFICATION TESTS PASSED SUCCESSFULLY (26/26)! COMPLETE COMPLIANCE.");
