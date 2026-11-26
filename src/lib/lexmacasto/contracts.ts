@@ -237,13 +237,36 @@ export function buildSupportEndpointPath(
 
 export function buildSubscriptionEndpointPath(
   resource: 'packages' | 'items',
-  fetchtype: 'absolute' | 'distinct' | 'relative' | 'discrete' = 'discrete'
+  fetchtype: 'absolute' | 'distinct' | 'relative' | 'discrete' = 'discrete',
+  queryParams?: Record<string, string | number | boolean | undefined | null>
 ): string {
   const base =
     resource === 'packages'
       ? LEXMACASTO_EXTRA_ENDPOINTS.SUBSCRIPTION_PACKAGES_BASE
       : LEXMACASTO_EXTRA_ENDPOINTS.SUBSCRIPTION_ITEMS_BASE;
-  return `${base}/list/${fetchtype}?fetchtype=${fetchtype}`;
+  const params = new URLSearchParams();
+  if (queryParams) {
+    for (const [k, v] of Object.entries(queryParams)) {
+      if (k === 'fetchtype') continue;
+      if (v !== undefined && v !== null && v !== '') {
+        params.set(k, String(v).slice(0, 256));
+      }
+    }
+    const pageAlias = queryParams.page ?? queryParams.skewPage;
+    if (!params.has('dynamicPage') && pageAlias !== undefined && pageAlias !== null && pageAlias !== '') {
+      params.set('dynamicPage', String(pageAlias));
+    }
+    const perPageAlias = queryParams.perPage ?? queryParams.skewPerPage ?? queryParams.limit;
+    if (!params.has('dynamicPerPage') && perPageAlias !== undefined && perPageAlias !== null && perPageAlias !== '') {
+      params.set('dynamicPerPage', String(perPageAlias));
+    }
+    const searchAlias = queryParams.search ?? queryParams.q;
+    if (!params.has('dynamicSearch') && searchAlias !== undefined && searchAlias !== null && searchAlias !== '') {
+      params.set('dynamicSearch', String(searchAlias).slice(0, 256));
+    }
+  }
+  params.set('fetchtype', fetchtype);
+  return `${base}/list/${fetchtype}?${params.toString()}`;
 }
 
 export const LEXMACASTO_STRATA_ENDPOINTS = {

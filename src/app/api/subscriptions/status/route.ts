@@ -53,8 +53,10 @@ export async function GET(request: NextRequest) {
       errorCode: check.errorCode,
       message: check.reason || 'Subscription status resolved.',
       planName: check.planName,
+      programName: check.programName,
       expiresAt: check.expiresAt,
       entitlements: check.entitlements,
+      activeSubscriptions: check.activeSubscriptions ?? [],
     },
     {
       status: check.status === 'Error' ? 503 : 200,

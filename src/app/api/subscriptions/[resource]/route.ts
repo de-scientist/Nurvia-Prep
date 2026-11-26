@@ -9,6 +9,19 @@ const NO_STORE_HEADERS = {
 };
 
 const VALID_FETCHTYPES = new Set(['absolute', 'distinct', 'relative', 'discrete']);
+const ALLOWED_FORWARD_PARAMS = [
+  'parentTableName',
+  'parentName',
+  'identifier',
+  'dynamicPage',
+  'dynamicPerPage',
+  'dynamicSearch',
+  'dynamicSortColumn',
+  'dynamicSortDirection',
+  'page',
+  'perPage',
+  'search',
+] as const;
 
 export async function GET(
   request: NextRequest,
@@ -23,8 +36,11 @@ export async function GET(
   }
 
   const session = await getServerCastoSession();
-  const rawFetchType = request.nextUrl.searchParams.get('fetchtype') || (resource === 'packages' ? 'discrete' : 'relative');
-  const fetchtype = (VALID_FETCHTYPES.has(rawFetchType) ? rawFetchType : 'discrete') as
+  const hasParentTable = Boolean(request.nextUrl.searchParams.get('parentTableName'));
+  const defaultFetchType =
+    resource === 'packages' ? 'discrete' : hasParentTable ? 'distinct' : 'absolute';
+  const rawFetchType = request.nextUrl.searchParams.get('fetchtype') || defaultFetchType;
+  const fetchtype = (VALID_FETCHTYPES.has(rawFetchType) ? rawFetchType : defaultFetchType) as
     | 'absolute'
     | 'distinct'
     | 'relative'
@@ -37,7 +53,15 @@ export async function GET(
     );
   }
 
-  const targetPath = buildSubscriptionEndpointPath(resource, fetchtype);
+  const forwardedQuery: Record<string, string> = {};
+  for (const key of ALLOWED_FORWARD_PARAMS) {
+    const val = request.nextUrl.searchParams.get(key);
+    if (val !== null && val.trim() !== '') {
+      forwardedQuery[key] = val.trim();
+    }
+  }
+
+  const targetPath = buildSubscriptionEndpointPath(resource, fetchtype, forwardedQuery);
   const siteMeta = extractSiteMetadataFromRequestHeaders(request.headers, `/api/subscriptions/${resource}`);
   const result = await lexmaCastoRequest(targetPath, {
     method: 'GET',

@@ -1,0 +1,42 @@
+# QLEX TO QUIZNURSE COMPREHENSIVE AUDIT & MAPPING
+
+**Git Baseline Verified:** `de4c027` (`main`, up to date with `upstream/main`)  
+**Canonical Domain:** `https://quiznurse.com`  
+**Working Tree Note:** Existing uncommitted examination-refinement changes (`CaseStudyRenderer.tsx`, `MultipleResponseRenderer.tsx`, `case-study-normalizer.ts`, `sata-validation.ts`, `strata-answer-core.mjs`, and associated tests) are preserved intact.
+
+---
+
+## 1. Required Qlex-to-QuizNurse Mapping Table
+
+| Capability | Qlex source | QuizNurse source | Required adaptation |
+|---|---|---|---|
+| Package discovery | `src/app/(web)/pages/subscription/item/SubscriptionItem.tsx`, `src/lib/hooks/nexus/subscription/items/distinct/useDistinctDominionSubscriptionItems.tsx`, `src/lib/hooks/nexus/subscription/packages/dicreate/useDiscreteDominionSubscriptionPackages.tsx` | `src/app/learner/subscription/page.tsx`, `src/app/api/subscriptions/[resource]/route.ts`, `src/lib/lexmacasto/contracts.ts` | Forward filter/pagination query params (`parentTableName`, `parentName`, `dynamicPage`, `dynamicPerPage`, `dynamicSearch`) through `/api/subscriptions/[resource]` to `/api/castoline/nexus/subscription/{items|packages}/list/{fetchtype}`; display all real backend items and packages without hardcoded `$49` prices or infinite fetch loops. |
+| Package details | `src/app/(web)/pages/subscription/item/SubscriptionItem.tsx`, `src/app/dashboards/rn-nursing/vista/subscriptions/packages/page.tsx` | `src/app/learner/subscription/page.tsx`, `src/app/(web)/pages/subscription/item/SubscriptionItem.tsx` | Render backend-derived name, price, currency, program/curriculum target (`RN_NURSING` / `LPN_NURSING`, `terminalClusterName`), duration/validity (`priceDuration` minutes & `duration`), HTML/list features, examination & mode entitlements, availability, active status, and expandable package details modal/panel. |
+| Cart | Direct store invocation in `src/app/(web)/pages/subscription/item/SubscriptionItem.tsx` (Qlex has no standalone ecommerce cart) | `src/lib/subscriptions/subscriptionCart.ts`, `src/lib/subscriptions/cart-store.ts`, `src/app/learner/subscription/page.tsx` | Provide dedicated `subscriptionCart` abstraction supporting add, display, replace, remove, duplicate prevention, cross-navigation persistence, user-ownership binding, TTL validation, and learning-context restoration across authentication. |
+| Checkout | `src/lib/services/nexus/dominion/dominionService.ts` (`SubscriptionPackage`, `Store`) -> `POST /api/nexus/dominion/subscription/package` -> `/api/castoline/nexus/subscription/packages/store` | `src/app/api/nexus/dominion/subscription/package/route.ts`, `src/app/learner/subscription/page.tsx`, `src/app/(web)/pages/subscription/item/SubscriptionItem.tsx` | Reconcile route to authoritative `POST /api/nexus/dominion/subscription/package` forwarding to `/api/castoline/nexus/subscription/packages/store`; enforce same-origin CSRF, server HttpOnly session precedence, server-side `returnUrl` validation, and backend price authority (strip any client price fields). |
+| Payment callback | `src/app/(web)/pages/subscription/package/page.tsx` (`SubscriptionPackageCallbackContent`) | `src/app/(web)/pages/subscription/package/page.tsx`, `src/app/api/subscriptions/status/route.ts`, `src/lib/subscriptions/entitlement-service.ts` | Handle pending, provisioned, failed, cancelled, expired, and entitlement-lacking states; never show green success or launch protected modes until `/api/subscriptions/status` confirms active program + mode entitlement; clear cart idempotently and resume exact examination and mode (`Exam` or `Tutor`). |
+| Session bridge | `src/lib/lexmacasto/qlexSessionBridge.ts`, `src/lib/services/partial/helper/systemSessionHeaders.ts` | `src/lib/lexmacasto/qlexSessionBridge.ts`, `src/lib/lexmacasto/session.ts`, `src/lib/api-client.ts` | Preserve `getNurviaCastoSessionHeaders`, `nurvia_casto_line`, `nurvia_casto_badge`, `x-nurvia-qotd-anon`, `x-nurvia-test-partition`, caches, and `nurviaApi` alias; prioritize server-side HttpOnly cookies over client headers. |
+| Email verification | `src/app/(web)/auth/validate/ValidateClient.tsx`, `src/app/api/auth/validate/route.ts`, `src/lib/services/auth/supportService.ts` (`SupportEmail`) | `src/app/(web)/auth/validate/ValidateClient.tsx`, `src/components/auth/LearnerVerificationModal.tsx`, `src/app/sign-up/page.tsx`, `src/components/study/StudySetCardActions.tsx`, `src/components/study/StudySetDetails.tsx` | Preserve validated `returnTo` / `redirectPath` and persisted user-bound return context across registration, resend, manual code entry, and email link clicks so verified learners return to their intended exam/checkout rather than defaulting to `/learner/library`. |
+| Google OAuth | `src/lib/services/auth/socialService.ts` (`redirectToSocialProvider`), `src/app/api/auth/social/google/route.ts`, `src/app/(web)/auth/social/complete/page.tsx` | `src/lib/services/auth/socialService.ts`, `src/app/api/auth/social/google/route.ts`, `src/app/(web)/auth/social/complete/page.tsx`, `src/app/api/auth/session/route.ts`, `src/app/sign-in/page.tsx`, `src/app/sign-up/page.tsx` | Persist validated pre-OAuth return context; validate `POST /api/auth/session` with same-origin CSRF, header sanitization, and backend user verification; establish HttpOnly `nurvia_casto_*` cookies without exposing credentials in `document.cookie` or URL hash; handle cancellation/errors/unverified state cleanly. |
+| Support inbox | `src/app/dashboards/rn-nursing/includes/navbar/partials/HeedMessageBell.tsx`, `src/app/(web)/pages/heed/relative/page.tsx`, `src/app/(web)/pages/heed/current/page.tsx` | `src/components/support/NavbarSupportMessaging.tsx`, `src/components/layout/public-shell.tsx`, `src/app/(web)/includes/navbar/index.tsx`, `src/components/layout/learner-shell.tsx`, `src/app/(web)/pages/heed/relative/page.tsx`, `src/app/(web)/pages/heed/current/page.tsx` | Mount `NavbarSupportMessaging` in `PublicShell` (actual QuizNurse `/` homepage navbar), `(web)` navbar, and `LearnerShell` while preserving existing announcements and `/learner/notifications`; avoid unauthenticated `RelativeFetch` 401 calls for guests while allowing guest inquiry creation and safe sign-in continuation for inbox viewing; style full inbox with Clinical Warmth tokens. |
+| Conversation management | `src/lib/services/auth/supportService.ts` (`SupportMessage` -> `Store`, `RelativeFetch`, `CurrentFetch`, `DistinctFetch`, `Update`), `src/app/(web)/pages/heed/partials/HeedReplyBox.tsx` | `src/lib/services/auth/supportService.ts`, `src/app/api/auth/support/message/route.ts`, `src/lib/lexmacasto/support-proxy.ts`, `src/components/support/NavbarSupportMessaging.tsx` | Reuse `/api/castoline/strata/support/message/{list/relative|list/current|store|update}` for All/Unread/Later/Starred filters, debounced search, accurate unread counts independent of active tab, new conversations, replies, mark read/unread, star/unstar, and move to/remove from Later. |
+
+---
+
+## 2. Reconciled Endpoint Contracts
+
+1. **Subscription Catalogue Discovery:**
+   - `GET /api/subscriptions/items?fetchtype=distinct&parentTableName=program&parentName=RN_NURSING|LPN_NURSING` -> `/api/castoline/nexus/subscription/items/list/distinct`
+   - `GET /api/subscriptions/items?fetchtype=absolute` -> `/api/castoline/nexus/subscription/items/list/absolute`
+   - `GET /api/subscriptions/packages?fetchtype=discrete` -> `/api/castoline/nexus/subscription/packages/list/discrete`
+2. **Checkout Initiation (Reconciled Section 6.1):**
+   - Client calls `dominionService("SubscriptionPackage", "Store", { subscriptionItemId, subscriptionItemGuidId, returnUrl })`
+   - Next.js BFF route is `POST /api/nexus/dominion/subscription/package` (`src/app/api/nexus/dominion/subscription/package/route.ts`)
+   - Upstream LexmaCasto endpoint is `POST /api/castoline/nexus/subscription/packages/store`
+3. **Entitlement & Active Subscription Verification:**
+   - `GET /api/subscriptions/status?mode={Exam|Tutor}&pathway={RN|PN_LPN|RN_Exit|PN_Exit}`
+4. **Support Messaging:**
+   - `GET /api/auth/support/message?fetchtype=relative&dynamicItems=...&dynamicSearch=...&dynamicClientStatus=...` -> `/api/castoline/strata/support/message/list/relative`
+   - `GET /api/auth/support/message?fetchtype=current&identifier=...` -> `/api/castoline/strata/support/message/list/current`
+   - `POST /api/auth/support/message` -> `/api/castoline/strata/support/message/store`
+   - `PUT /api/auth/support/message` -> `/api/castoline/strata/support/message/update`

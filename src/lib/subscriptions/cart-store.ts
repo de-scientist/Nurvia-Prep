@@ -1,0 +1,37 @@
+"use client";
+
+export {
+  type LearnerProtectedMode,
+  type LearnerSessionMode,
+  type LearnerExamLayout,
+  type ValidatedLearningContext,
+  type SubscriptionCartItem,
+  type AddToCartResult,
+  CART_STORAGE_KEY,
+  AUTH_RETURN_CONTEXT_KEY,
+  PROCESSED_CHECKOUT_REFS_KEY,
+  CART_CHANGE_EVENT,
+  sanitizeExamIdentifier,
+  sanitizeLearningMode,
+  sanitizeExamLayout,
+  sanitizePathwayIdentifier,
+  sanitizeSubjectLabel,
+  sanitizeInternalDestination,
+  buildValidatedLearningContext,
+  isContextValidForUser,
+  saveAuthReturnContext,
+  getAuthReturnContext,
+  clearAuthReturnContext,
+  getSubscriptionCart,
+  saveSubscriptionCart,
+  clearSubscriptionCart,
+  subscriptionCart,
+  formatActiveSubscriptionExpiryUtc,
+  buildActiveSubscriptionMessage,
+} from "./subscriptionCart";
+export {
+  isPermittedLearnerCataloguePackage,
+  classifyPermittedCatalogueCategory,
+  deduplicateCataloguePackages,
+  matchActiveSubscriptionForPackage,
+} from "./catalogue-normalizer";
