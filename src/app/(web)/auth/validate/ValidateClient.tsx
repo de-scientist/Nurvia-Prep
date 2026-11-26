@@ -3,12 +3,29 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CheckCircle2, AlertCircle, Loader2, ArrowRight, ShieldCheck, Mail, KeyRound } from "lucide-react";
+import {
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  ArrowRight,
+  ShieldCheck,
+  Mail,
+  KeyRound,
+  RefreshCw,
+} from "lucide-react";
 import { resolveValidation } from "@/lib/services/auth/validateService";
 import { confirmEmailVerificationCode, resetCredentials } from "@/lib/services/auth/supportService";
 import { useAuth } from "@/components/auth/auth-provider";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
+import {
+  sanitizeInternalDestination,
+  getAuthReturnContext,
+  saveAuthReturnContext,
+  clearAuthReturnContext,
+  getSubscriptionCart,
+  buildValidatedLearningContext,
+} from "@/lib/subscriptions/cart-store";
 
 type Phase = "form" | "checking" | "credentials" | "success" | "error";
 type Method = "password" | "pin" | "both";
@@ -40,29 +57,8 @@ interface Ctx {
 export default function ValidateClient({ reason: reasonProp, userGuid, token }: Props) {
   const params = useSearchParams();
   const router = useRouter();
-  const { status: authStatus, refresh } = useAuth();
+  const { status: authStatus, user: authUser, refresh } = useAuth();
   const isLink = Boolean(reasonProp && userGuid && token);
-
-  const safeDestination = useMemo(() => {
-    const requested = params.get("returnTo");
-    const track = params.get("track") || params.get("pathway");
-
-    if (requested && requested.startsWith("/") && !requested.startsWith("//")) {
-      try {
-        const url = new URL(requested, "http://localhost");
-        if (!["/sign-in", "/sign-up", "/access-denied"].includes(url.pathname)) {
-          if (track && !url.searchParams.has("track") && !url.searchParams.has("pathway")) {
-            url.searchParams.set("track", track);
-          }
-          return `${url.pathname}${url.search}${url.hash}`;
-        }
-      } catch {
-        // Ignore parse errors
-      }
-    }
-    if (track) return `/learner/library?track=${encodeURIComponent(track)}`;
-    return "/learner/library";
-  }, [params]);
 
   const [reason, setReason] = useState(
     (reasonProp ?? params.get("reason") ?? "verification").toLowerCase()
@@ -75,6 +71,11 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
   const [email, setEmail] = useState(params.get("email") ?? "");
   const [code, setCode] = useState(params.get("code") ?? "");
 
+  // resend throttling state
+  const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendFeedback, setResendFeedback] = useState<string | null>(null);
+
   // credentials form
   const [method, setMethod] = useState<Method>("password");
   const [password, setPassword] = useState("");
@@ -86,52 +87,131 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
 
   const ran = useRef(false);
 
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setInterval(() => {
+      setResendCooldown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [resendCooldown]);
+
+  const safeDestination = useMemo(() => {
+    const requested =
+      params.get("returnTo") || params.get("redirectPath") || params.get("next");
+    const track = params.get("track") || params.get("pathway");
+
+    const sanitizedRequested = sanitizeInternalDestination(requested);
+    if (sanitizedRequested) {
+      try {
+        const url = new URL(sanitizedRequested, "https://quiznurse.com");
+        if (track && !url.searchParams.has("track") && !url.searchParams.has("pathway")) {
+          url.searchParams.set("track", track);
+        }
+        return `${url.pathname}${url.search}${url.hash}`;
+      } catch {
+        return sanitizedRequested;
+      }
+    }
+
+    // Recover persisted destination when verification was opened from an email link without query params
+    const identityHint = {
+      id: userGuid || ctx?.userGuidId || authUser?.id || null,
+      email: ctx?.email || email || authUser?.email || null,
+    };
+    const storedReturn = getAuthReturnContext(identityHint);
+    if (storedReturn?.returnTo) {
+      return storedReturn.returnTo;
+    }
+
+    const storedCart = getSubscriptionCart(identityHint);
+    if (storedCart?.learningContext?.returnTo) {
+      const cartDest = sanitizeInternalDestination(storedCart.learningContext.returnTo);
+      if (cartDest) return cartDest;
+    }
+
+    if (track) return `/learner/library?track=${encodeURIComponent(track)}`;
+    return "/learner/library";
+  }, [params, userGuid, ctx?.userGuidId, ctx?.email, email, authUser?.id, authUser?.email]);
+
+  const continueLabel = useMemo(() => {
+    if (safeDestination.startsWith("/learner/subscription")) {
+      return "Continue to Subscription Checkout";
+    }
+    if (safeDestination.startsWith("/exam-session")) {
+      return "Continue to Selected Examination";
+    }
+    return "Continue to Study Library";
+  }, [safeDestination]);
+
+  // Persist URL-supplied returnTo into storage so manual retries or subsequent sign-in never lose it
+  useEffect(() => {
+    const requested =
+      params.get("returnTo") || params.get("redirectPath") || params.get("next");
+    const sanitized = sanitizeInternalDestination(requested);
+    if (sanitized) {
+      saveAuthReturnContext(
+        buildValidatedLearningContext({
+          returnTo: sanitized,
+          ownerUserId: userGuid || authUser?.id,
+          ownerEmail: email || authUser?.email,
+        })
+      );
+    }
+  }, [params, userGuid, email, authUser?.id, authUser?.email]);
+
   const fail = (msg: string) => {
     setMessage(msg);
     setPhase("error");
   };
 
-  const run = useCallback(async (r: string, token: string, who: { userGuidId?: string; email?: string }) => {
-    setPhase("checking");
-    setMessage("");
+  const run = useCallback(
+    async (r: string, rawToken: string, who: { userGuidId?: string; email?: string }) => {
+      setPhase("checking");
+      setMessage("");
 
-    const resolved = await resolveValidation({ context: r, token, ...who });
-    if (resolved.error || !resolved.data) {
-      fail(resolved.error ?? "This verification link or code is invalid or has already been used.");
-      return;
-    }
-
-    const c: Ctx = {
-      reason: r,
-      email: resolved.data.email,
-      userGuidId: resolved.data.userGuidId,
-      code: token.trim(),
-    };
-    setCtx(c);
-
-    if (CRED_REASONS.includes(r)) {
-      setPhase("credentials");
-      return;
-    }
-
-    if (EMAIL_REASONS.includes(r)) {
-      const res = await confirmEmailVerificationCode(c.userGuidId, c.email, c.code, c.reason);
-      if (res.error || res.success === false) {
-        fail(res.error ?? res.message ?? "Email verification could not be completed. Please request a new link.");
+      const resolved = await resolveValidation({ context: r, token: rawToken, ...who });
+      if (resolved.error || !resolved.data) {
+        fail(resolved.error ?? "This verification link or code is invalid or has already been used.");
         return;
       }
-      setMessage(res.message ?? "Your email has been verified successfully. Welcome to the study library!");
-      setPhase("success");
-      return;
-    }
 
-    fail("Unknown validation request type.");
-  }, []);
+      const c: Ctx = {
+        reason: r,
+        email: resolved.data.email,
+        userGuidId: resolved.data.userGuidId,
+        code: rawToken.trim(),
+      };
+      setCtx(c);
+
+      if (CRED_REASONS.includes(r)) {
+        setPhase("credentials");
+        return;
+      }
+
+      if (EMAIL_REASONS.includes(r)) {
+        const res = await confirmEmailVerificationCode(c.userGuidId, c.email, c.code, c.reason);
+        if (res.error || res.success === false) {
+          fail(
+            res.error ??
+              res.message ??
+              "Email verification could not be completed. Please request a new link."
+          );
+          return;
+        }
+        setMessage(res.message ?? "Your email has been verified successfully.");
+        setPhase("success");
+        return;
+      }
+
+      fail("Unknown validation request type.");
+    },
+    []
+  );
 
   useEffect(() => {
     if (!isLink || ran.current) return;
     ran.current = true;
-    run(reasonProp!.toLowerCase(), token!, { userGuidId: userGuid });
+    void run(reasonProp!.toLowerCase(), token!, { userGuidId: userGuid });
   }, [isLink, reasonProp, token, userGuid, run]);
 
   useEffect(() => {
@@ -140,14 +220,50 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
     const c = params.get("code");
     if (e && c) {
       ran.current = true;
-      run(reason, c, { email: e });
+      void run(reason, c, { email: e });
     }
   }, [isLink, params, reason, run]);
 
   const submitCode = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !code.trim()) return;
-    run(reason, code, { email });
+    void run(reason, code, { email: email.trim() });
+  };
+
+  const handleResendVerification = async () => {
+    const targetEmail = (ctx?.email || email || authUser?.email || "").trim();
+    if (!targetEmail || !targetEmail.includes("@")) {
+      setResendFeedback("Enter your candidate email address above so we can send a fresh verification link.");
+      return;
+    }
+    if (resending || resendCooldown > 0) return;
+
+    setResending(true);
+    setResendFeedback(null);
+    try {
+      const res = await fetch("/api/auth/support/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: targetEmail,
+          userGuidId: ctx?.userGuidId || userGuid || authUser?.id || undefined,
+          context: "verification",
+          action: "resend-verification",
+          returnTo: safeDestination,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success !== false) {
+        setResendCooldown(60);
+        setResendFeedback(`Verification code sent to ${targetEmail}. Check your inbox and spam folder.`);
+      } else {
+        setResendFeedback(data.message || data.error || "Unable to resend verification code right now.");
+      }
+    } catch {
+      setResendFeedback("Network error while requesting a new verification code.");
+    } finally {
+      setResending(false);
+    }
   };
 
   const submitCredentials = async (e: React.FormEvent) => {
@@ -189,14 +305,26 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
   useEffect(() => {
     if (phase === "success") {
       void refresh();
-      if (authStatus === "authenticated") {
-        const timer = setTimeout(() => {
-          router.push(safeDestination);
-        }, 2200);
-        return () => clearTimeout(timer);
-      }
     }
-  }, [phase, authStatus, refresh, router, safeDestination]);
+  }, [phase, refresh]);
+
+  useEffect(() => {
+    if (phase === "success" && authStatus === "authenticated") {
+      const timer = setTimeout(() => {
+        clearAuthReturnContext();
+        router.push(safeDestination);
+      }, 1800);
+      return () => clearTimeout(timer);
+    }
+  }, [phase, authStatus, router, safeDestination]);
+
+  const signInContinuationHref = useMemo(() => {
+    const qs = new URLSearchParams();
+    if (safeDestination) qs.set("returnTo", safeDestination);
+    const candidateEmail = ctx?.email || email;
+    if (candidateEmail) qs.set("email", candidateEmail);
+    return `/sign-in?${qs.toString()}`;
+  }, [safeDestination, ctx?.email, email]);
 
   const inputClass =
     "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-foreground-muted/60 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clinical-teal";
@@ -206,13 +334,13 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
       <div className="mb-4 space-y-1.5">
         <div className="inline-flex items-center gap-2 rounded-full border border-clinical-teal/30 bg-clinical-mist px-3 py-1 text-xs font-semibold text-clinical-teal">
           <ShieldCheck className="h-3.5 w-3.5" />
-          Security & Identity Verification
+          Security &amp; Identity Verification
         </div>
         <h1 className="font-brand text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
           {REASON_LABEL[reason] ?? "Candidate Verification"}
         </h1>
         <p className="text-sm text-foreground-secondary leading-relaxed">
-          Progress is built one step at a time. A small confirmation today brings you closer to the future you&apos;re working towards. Verifying your nursing learner credentials ensures secure access to curriculum simulations.
+          Progress is built one step at a time. Verifying your nursing learner credentials ensures uninterrupted access to your selected examination and study mode.
         </p>
       </div>
 
@@ -220,9 +348,7 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
         <div className="py-8 text-center space-y-3">
           <Loader2 className="mx-auto h-10 w-10 animate-spin text-clinical-teal" />
           <div className="space-y-1">
-            <h3 className="font-brand text-lg font-bold text-foreground">
-              Verifying your access token
-            </h3>
+            <h3 className="font-brand text-lg font-bold text-foreground">Verifying your access token</h3>
             <p className="text-xs text-foreground-secondary">
               Connecting with the candidate registry. This will take just a moment...
             </p>
@@ -249,18 +375,19 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
               <div className="space-y-2">
                 <Link
                   href={safeDestination}
+                  onClick={() => clearAuthReturnContext()}
                   className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-clinical-teal px-5 text-sm font-semibold text-white shadow-md transition-all hover:bg-clinical-tealHover"
                 >
-                  <span>Continue to Study Library</span>
+                  <span>{continueLabel}</span>
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
                 <p className="text-center text-xs text-emerald-700/80">
-                  Redirecting automatically in a moment...
+                  Redirecting automatically to your destination...
                 </p>
               </div>
             ) : (
               <Link
-                href={`/sign-in?returnTo=${encodeURIComponent(safeDestination)}${ctx?.email ? `&email=${encodeURIComponent(ctx.email)}` : ""}`}
+                href={signInContinuationHref}
                 className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-clinical-teal px-5 text-sm font-semibold text-white shadow-md transition-all hover:bg-clinical-tealHover"
               >
                 <span>Sign In to Continue</span>
@@ -279,11 +406,15 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
               <h2 className="font-bold text-base text-rose-900 dark:text-rose-200">
                 Verification Incomplete
               </h2>
-              <p className="text-xs leading-relaxed text-rose-800/90 dark:text-rose-300/90">
-                {message}
-              </p>
+              <p className="text-xs leading-relaxed text-rose-800/90 dark:text-rose-300/90">{message}</p>
             </div>
           </div>
+
+          {resendFeedback && (
+            <p className="text-xs font-medium text-clinical-teal bg-white/80 dark:bg-slate-900/60 rounded-lg p-2.5 border border-border">
+              {resendFeedback}
+            </p>
+          )}
 
           <div className="flex flex-col gap-2.5 pt-1.5 sm:flex-row">
             <button
@@ -293,16 +424,34 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
                 setPhase("form");
                 setMessage("");
               }}
-              className="flex-1 h-11 rounded-xl border border-border bg-white px-4 text-xs font-semibold text-foreground hover:bg-surface-muted transition-all"
+              className="flex-1 h-11 rounded-xl border border-border bg-white dark:bg-surface px-4 text-xs font-semibold text-foreground hover:bg-surface-muted transition-all"
             >
               Enter Code Manually
             </button>
-            <Link
-              href="/forgot-password"
-              className="flex-1 inline-flex h-11 items-center justify-center rounded-xl bg-clinical-teal px-4 text-xs font-semibold text-white hover:bg-clinical-tealHover transition-all"
-            >
-              Request New Link
-            </Link>
+            {EMAIL_REASONS.includes(reason) ? (
+              <button
+                type="button"
+                disabled={resending || resendCooldown > 0}
+                onClick={() => void handleResendVerification()}
+                className="flex-1 inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-clinical-teal px-4 text-xs font-semibold text-white hover:bg-clinical-tealHover transition-all disabled:opacity-60"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${resending ? "animate-spin" : ""}`} />
+                <span>
+                  {resending
+                    ? "Sending…"
+                    : resendCooldown > 0
+                      ? `Resend in ${resendCooldown}s`
+                      : "Resend Verification"}
+                </span>
+              </button>
+            ) : (
+              <Link
+                href="/forgot-password"
+                className="flex-1 inline-flex h-11 items-center justify-center rounded-xl bg-clinical-teal px-4 text-xs font-semibold text-white hover:bg-clinical-tealHover transition-all"
+              >
+                Request New Link
+              </Link>
+            )}
           </div>
         </div>
       )}
@@ -344,9 +493,25 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary">
-              Verification Code
-            </label>
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-foreground-secondary">
+                Verification Code
+              </label>
+              {EMAIL_REASONS.includes(reason) && (
+                <button
+                  type="button"
+                  disabled={resending || resendCooldown > 0}
+                  onClick={() => void handleResendVerification()}
+                  className="text-xs font-semibold text-clinical-teal hover:underline disabled:opacity-50"
+                >
+                  {resending
+                    ? "Sending code…"
+                    : resendCooldown > 0
+                      ? `Resend in ${resendCooldown}s`
+                      : "Resend code"}
+                </button>
+              )}
+            </div>
             <div className="relative">
               <input
                 required
@@ -362,6 +527,9 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
             <p className="text-[11px] text-foreground-muted">
               Check the confirmation message sent to your registered inbox.
             </p>
+            {resendFeedback && (
+              <p className="text-xs font-medium text-clinical-teal pt-0.5">{resendFeedback}</p>
+            )}
           </div>
 
           <Button
@@ -462,7 +630,10 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
           )}
 
           {formError && (
-            <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50/80 p-3 text-xs text-rose-900 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-200">
+            <p
+              role="alert"
+              className="rounded-xl border border-rose-200 bg-rose-50/80 p-3 text-xs text-rose-900 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-200"
+            >
               {formError}
             </p>
           )}
@@ -474,7 +645,7 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
             isLoading={saving}
             className="h-11 w-full rounded-xl bg-clinical-teal text-white font-semibold shadow-md transition-all hover:bg-clinical-tealHover hover:shadow-lg active:scale-[0.99]"
           >
-            <span>Save & Access Study Sanctuary</span>
+            <span>Save &amp; Access Study Sanctuary</span>
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </form>
@@ -482,7 +653,10 @@ export default function ValidateClient({ reason: reasonProp, userGuid, token }: 
 
       <p className="mt-4 border-t border-border pt-3.5 text-center text-sm text-foreground-secondary">
         Return to{" "}
-        <Link href="/sign-in" className="font-semibold text-clinical-teal underline-offset-4 hover:underline">
+        <Link
+          href={signInContinuationHref}
+          className="font-semibold text-clinical-teal underline-offset-4 hover:underline"
+        >
           Sign In
         </Link>{" "}
         or{" "}

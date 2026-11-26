@@ -13,6 +13,7 @@ import { session } from '@/lib/services/auth/sessionService'
 import { redirectToSocialProvider } from '@/lib/services/auth/socialService'
 import { AuthShell } from '@/components/auth/auth-shell'
 import { Button } from '@/components/ui/button'
+import { sanitizeInternalDestination, getAuthReturnContext } from '@/lib/subscriptions/cart-store'
 
 function LoginSearchParamsHandler({
   onRegistered,
@@ -59,10 +60,19 @@ export default function WebLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
 
   const role = "Learner";
-  const LANDING_PATH = "/pages/entrance";
+  const resolveLandingPath = () => {
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      const fromUrl = sanitizeInternalDestination(
+        sp.get("returnTo") || sp.get("redirectPath") || sp.get("next")
+      );
+      if (fromUrl) return fromUrl;
+    }
+    return getAuthReturnContext()?.returnTo || "/learner";
+  };
 
   const handleSocialClick = (provider: Parameters<typeof redirectToSocialProvider>[0]['provider']) => {
-    redirectToSocialProvider({ provider, context: 'login', redirectPath: LANDING_PATH }).catch((err) => {
+    redirectToSocialProvider({ provider, context: 'login', redirectPath: resolveLandingPath() }).catch((err) => {
       console.error(`Social redirect (${provider}) failed:`, err)
       setError('Could not connect to Google sign-in. Please try again or use your password.')
     })
@@ -127,8 +137,9 @@ export default function WebLoginPage() {
 
       setSuccess("Authentication verified! Opening your study workspace...")
       setError('')
+      const targetDest = resolveLandingPath();
       setTimeout(() => {
-        window.location.assign(LANDING_PATH)
+        window.location.assign(targetDest)
       }, 700)
     } catch (err: unknown) {
       console.error("Login failed:", err)

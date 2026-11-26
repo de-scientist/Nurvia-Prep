@@ -9,6 +9,14 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth/auth-provider";
 import { RedirectScreen } from "@/components/shared/feedback/RedirectScreen";
 import { redirectToSocialProvider } from "@/lib/services/auth/socialService";
+import {
+  sanitizeInternalDestination,
+  getAuthReturnContext,
+  saveAuthReturnContext,
+  clearAuthReturnContext,
+  subscriptionCart,
+  buildValidatedLearningContext,
+} from "@/lib/subscriptions/cart-store";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -23,30 +31,29 @@ function defaultDestination(role: string) {
 function safeReturnTo() {
   if (typeof window === "undefined") return null;
   const params = new URLSearchParams(window.location.search);
-  const requested = params.get("returnTo");
+  const requested = params.get("returnTo") || params.get("redirectPath") || params.get("next");
   const track = params.get("track") || params.get("pathway");
 
-  if (!requested || !requested.startsWith("/")) {
-    if (track) return `/learner/library?track=${encodeURIComponent(track)}`;
-    return null;
-  }
-  try {
-    const destination = new URL(requested, window.location.origin);
-    if (
-      destination.origin !== window.location.origin ||
-      ["/sign-in", "/sign-up", "/access-denied"].includes(destination.pathname)
-    ) {
-      if (track) return `/learner/library?track=${encodeURIComponent(track)}`;
-      return null;
+  const cleanRequested = sanitizeInternalDestination(requested);
+  if (cleanRequested) {
+    try {
+      const destination = new URL(cleanRequested, window.location.origin);
+      if (track && !destination.searchParams.has("track") && !destination.searchParams.has("pathway")) {
+        destination.searchParams.set("track", track);
+      }
+      return `${destination.pathname}${destination.search}${destination.hash}`;
+    } catch {
+      return cleanRequested;
     }
-    if (track && !destination.searchParams.has("track") && !destination.searchParams.has("pathway")) {
-      destination.searchParams.set("track", track);
-    }
-    return `${destination.pathname}${destination.search}${destination.hash}`;
-  } catch {
-    if (track) return `/learner/library?track=${encodeURIComponent(track)}`;
-    return null;
   }
+
+  const storedCtx = getAuthReturnContext();
+  if (storedCtx?.returnTo) {
+    return storedCtx.returnTo;
+  }
+
+  if (track) return `/learner/library?track=${encodeURIComponent(track)}`;
+  return null;
 }
 
 function formatServerLoginError(errorCode?: string, message?: string): string {
@@ -112,6 +119,25 @@ export default function SignInPage() {
         document.cookie = "socialError=; path=/; max-age=0";
       }
     }
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      const prefillEmail = sp.get("email");
+      if (prefillEmail && !email) {
+        setEmail(prefillEmail);
+      }
+      const urlReturn = sanitizeInternalDestination(
+        sp.get("returnTo") || sp.get("redirectPath") || sp.get("next")
+      );
+      if (urlReturn) {
+        saveAuthReturnContext(
+          buildValidatedLearningContext({
+            returnTo: urlReturn,
+            ownerEmail: prefillEmail || undefined,
+          })
+        );
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   React.useEffect(() => {
@@ -180,7 +206,15 @@ export default function SignInPage() {
     }
 
     completedSignIn.current = true;
-    router.replace(safeReturnTo() || defaultDestination(response.data.role));
+    subscriptionCart.bindToAuthenticatedUser({
+      id: response.data.id,
+      email: response.data.email,
+    });
+    const dest = safeReturnTo() || defaultDestination(response.data.role);
+    if (response.data.emailVerified !== false) {
+      clearAuthReturnContext();
+    }
+    router.replace(dest);
   }
 
   return (

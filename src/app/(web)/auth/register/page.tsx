@@ -15,6 +15,7 @@ import { session } from '@/lib/services/auth/sessionService'
 import { redirectToSocialProvider } from '@/lib/services/auth/socialService'
 import { AuthShell } from '@/components/auth/auth-shell'
 import { Button } from '@/components/ui/button'
+import { sanitizeInternalDestination, getAuthReturnContext } from '@/lib/subscriptions/cart-store'
 
 const role = "Learner";
 const LOGIN_PATH = "/auth/login";
@@ -58,8 +59,19 @@ export default function RegisterPage() {
   const [userCountry] = useState<CountryCode | undefined>("US")
   const router = useRouter()
 
+  const resolveReturnPath = () => {
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      const fromUrl = sanitizeInternalDestination(
+        sp.get("returnTo") || sp.get("redirectPath") || sp.get("next")
+      );
+      if (fromUrl) return fromUrl;
+    }
+    return getAuthReturnContext()?.returnTo || "/learner";
+  };
+
   const handleSocialClick = (provider: Parameters<typeof redirectToSocialProvider>[0]['provider']) => {
-    redirectToSocialProvider({ provider, context: 'register' }).catch((err) => {
+    redirectToSocialProvider({ provider, context: 'register', redirectPath: resolveReturnPath() }).catch((err) => {
       console.error(`Social redirect (${provider}) failed:`, err)
       setError('Could not connect to Google sign-up. Please try again or create an account with email.')
     })
@@ -145,8 +157,10 @@ export default function RegisterPage() {
       }
 
       setSuccess('Account created successfully! Preparing your access...')
+      const ret = resolveReturnPath();
+      const retParam = ret && ret !== "/learner" ? `&returnTo=${encodeURIComponent(ret)}` : "";
       setTimeout(() => {
-        router.push(`${LOGIN_PATH}?registered=true&email=${encodeURIComponent(form.email)}`)
+        router.push(`${LOGIN_PATH}?registered=true&email=${encodeURIComponent(form.email)}${retParam}`)
       }, 1000)
     } catch (err: unknown) {
       console.error('Registration failed:', err)

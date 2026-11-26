@@ -49,16 +49,21 @@ export interface LoginResponse {
 // SESSION HELPERS
 // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
+/**
+ * QuizNurse uses its own authoritative HttpOnly session cookies for authentication.
+ * Qlex-specific skew_blanc_session_* cookies are intentionally not read here to prevent
+ * conflicts with QuizNurse session state. Authentication state should come from
+ * useOptionalAuth() or the backend session via credentials: "include".
+ */
 export const getSessionFromCookies = (): {
   sessions: Record<string, string>;
   current_user: string | null;
 } => {
-  const sessionsRaw = getCookie("skew_blanc_session_line");
-  const currentUser = getCookie("skew_blanc_session_badge");
-
+  // Qlex skew_blanc_session_* cookies are intentionally not read.
+  // Rely on QuizNurse auth state (useOptionalAuth) or backend session cookies.
   return {
-    sessions: sessionsRaw ? JSON.parse(sessionsRaw) : {},
-    current_user: currentUser,
+    sessions: {},
+    current_user: null,
   };
 };
 

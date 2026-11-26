@@ -1,49 +1,65 @@
-// src/app/api/auth/social/google/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getBackendBaseUrl } from "@/lib/api/api/api";
+import { resolveBackendBaseUrl } from "@/lib/api-config.mjs";
 import { getSiteHeaders } from "@/lib/config/siteHeaders";
 
+function resolveSafeBackendOrigin(): string {
+  try {
+    return resolveBackendBaseUrl(process.env);
+  } catch {
+    return getBackendBaseUrl();
+  }
+}
+
 export async function GET(req: NextRequest) {
-  const backendBaseUrl = getBackendBaseUrl();
-  const searchParams = req.nextUrl.searchParams; // already carries fingerprint/ipAddress/context/etc, forwarded as-is below
+  const searchParams = req.nextUrl.searchParams;
+  const redirectPath = searchParams.get("redirectPath") || searchParams.get("returnTo") || "";
 
-  const backendUrl = `${backendBaseUrl}/api/castoline/auth/social/google?${searchParams.toString()}`;
+  let providerUrl: string | null = null;
+  try {
+    const backendBaseUrl = resolveSafeBackendOrigin();
+    const backendUrl = `${backendBaseUrl}/api/castoline/auth/social/google?${searchParams.toString()}`;
 
-  const backendResponse = await fetch(backendUrl, {
-    redirect: "manual",
-    headers: { ...(await getSiteHeaders()) },
-  });
-  
-  const providerUrl = backendResponse.headers.get("location");
-
-  if (!providerUrl) {
-    console.error("Social route (Google): backend did not return a Location header", {
-      status: backendResponse.status,
+    const backendResponse = await fetch(backendUrl, {
+      redirect: "manual",
+      headers: { ...(await getSiteHeaders()) },
+      cache: "no-store",
     });
 
-    // Send the user back to whichever page initiated the OAuth flow (login, register, etc.)
+    providerUrl = backendResponse.headers.get("location");
+  } catch (err) {
+    console.error("Social route (Google) upstream connection failed:", err);
+  }
+
+  if (!providerUrl) {
     const referer = req.headers.get("referer");
     let target: URL;
     try {
-      target = referer ? new URL(referer) : new URL("/auth/login", req.url);
+      target = referer ? new URL(referer) : new URL("/sign-in", req.url);
       if (target.origin !== req.nextUrl.origin) {
-        target = new URL("/auth/login", req.url);
+        target = new URL("/sign-in", req.url);
       }
     } catch {
-      target = new URL("/auth/login", req.url);
+      target = new URL("/sign-in", req.url);
+    }
+
+    if (
+      redirectPath &&
+      redirectPath.startsWith("/") &&
+      !redirectPath.startsWith("//") &&
+      !target.searchParams.has("returnTo")
+    ) {
+      target.searchParams.set("returnTo", redirectPath);
     }
 
     const response = NextResponse.redirect(target, { status: 302 });
     response.cookies.set("socialError", "Failed Sign In with Google - Kindly Continue with Email.", {
-      maxAge: 30, // short-lived, just long enough to survive the redirect
+      maxAge: 45,
       path: "/",
+      sameSite: "lax",
     });
     return response;
   }
 
   return NextResponse.redirect(providerUrl, { status: 302 });
 }
-
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-// The End By : B.L.S.M.C ; - SkewBlanc - The Winds Chase Us ⚓
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

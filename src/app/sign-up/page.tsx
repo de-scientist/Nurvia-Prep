@@ -13,6 +13,12 @@ import { nurviaApi } from "@/lib/api-client";
 import { DEFAULT_PHONE_COUNTRY, normalizePhoneNumber, type CountryCode } from "@/lib/phone";
 import { redirectToSocialProvider } from "@/lib/services/auth/socialService";
 import { cn } from "@/lib/utils";
+import {
+  sanitizeInternalDestination,
+  getAuthReturnContext,
+  saveAuthReturnContext,
+  buildValidatedLearningContext,
+} from "@/lib/subscriptions/cart-store";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -83,39 +89,43 @@ export default function SignUpPage() {
   const [serverError, setServerError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState(false);
   const [signInHref, setSignInHref] = React.useState("/sign-in");
+  const [verifyHref, setVerifyHref] = React.useState("/auth/validate?reason=verification");
+  const [resolvedReturnTarget, setResolvedReturnTarget] = React.useState<string>("/learner");
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const requested = params.get("returnTo");
+    const requested = params.get("returnTo") || params.get("redirectPath") || params.get("next");
     const track = params.get("track") || params.get("pathway");
 
-    if (requested?.startsWith("/")) {
+    let safeDest = sanitizeInternalDestination(requested);
+    if (safeDest && track) {
       try {
-        const destination = new URL(requested, window.location.origin);
-        if (
-          destination.origin === window.location.origin &&
-          !["/sign-in", "/sign-up", "/access-denied"].includes(destination.pathname)
-        ) {
-          if (track && !destination.searchParams.has("track") && !destination.searchParams.has("pathway")) {
-            destination.searchParams.set("track", track);
-          }
-          setSignInHref(
-            `/sign-in?returnTo=${encodeURIComponent(`${destination.pathname}${destination.search}${destination.hash}`)}`
-          );
+        const u = new URL(safeDest, window.location.origin);
+        if (!u.searchParams.has("track") && !u.searchParams.has("pathway")) {
+          u.searchParams.set("track", track);
         }
+        safeDest = `${u.pathname}${u.search}${u.hash}`;
       } catch {
-        setSignInHref("/sign-in");
+        // Ignore
       }
-    } else if (track) {
-      setSignInHref(`/sign-in?returnTo=${encodeURIComponent(`/learner/library?track=${encodeURIComponent(track)}`)}`);
+    }
+    if (!safeDest) {
+      const stored = getAuthReturnContext();
+      if (stored?.returnTo) {
+        safeDest = stored.returnTo;
+      } else if (track) {
+        safeDest = `/learner/library?track=${encodeURIComponent(track)}`;
+      }
+    }
+
+    if (safeDest) {
+      setResolvedReturnTarget(safeDest);
+      setSignInHref(`/sign-in?returnTo=${encodeURIComponent(safeDest)}`);
+      saveAuthReturnContext(buildValidatedLearningContext({ returnTo: safeDest }));
     }
 
     if (status === "authenticated" && user) {
-      const targetDestination = requested?.startsWith("/")
-        ? requested
-        : track
-          ? `/learner/library?track=${encodeURIComponent(track)}`
-          : "/learner";
+      const targetDestination = safeDest || "/learner";
       router.replace(user.role === "Learner" ? targetDestination : "/access-denied");
     }
   }, [status, user, router]);
@@ -167,11 +177,7 @@ export default function SignUpPage() {
     setServerError(null);
 
     try {
-      const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
-      const requested = params.get("returnTo");
-      const track = params.get("track") || params.get("pathway");
-      const target = requested?.startsWith("/") ? requested : track ? `/learner/library?track=${encodeURIComponent(track)}` : "/learner";
-
+      const target = resolvedReturnTarget || "/learner";
       await redirectToSocialProvider({
         provider: "google",
         context: "register",
@@ -216,6 +222,25 @@ export default function SignUpPage() {
       return;
     }
 
+    // Persist return context bound to the newly registered candidate email
+    const cleanEmail = email.trim();
+    if (resolvedReturnTarget && resolvedReturnTarget !== "/learner") {
+      saveAuthReturnContext(
+        buildValidatedLearningContext({
+          returnTo: resolvedReturnTarget,
+          ownerEmail: cleanEmail,
+        })
+      );
+      setSignInHref(
+        `/sign-in?returnTo=${encodeURIComponent(resolvedReturnTarget)}&email=${encodeURIComponent(cleanEmail)}`
+      );
+      setVerifyHref(
+        `/auth/validate?reason=verification&email=${encodeURIComponent(cleanEmail)}&returnTo=${encodeURIComponent(resolvedReturnTarget)}`
+      );
+    } else {
+      setVerifyHref(`/auth/validate?reason=verification&email=${encodeURIComponent(cleanEmail)}`);
+    }
+
     // Automatically initiate email-verification process for new learner
     try {
       const userObj = response.data as Record<string, unknown> | undefined;
@@ -224,9 +249,11 @@ export default function SignUpPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: email.trim(),
+          email: cleanEmail,
           userGuidId,
+          context: "verification",
           action: "resend-verification",
+          returnTo: resolvedReturnTarget !== "/learner" ? resolvedReturnTarget : undefined,
         }),
       });
     } catch {
@@ -278,13 +305,19 @@ export default function SignUpPage() {
               </p>
             </div>
           </div>
-          <div className="pt-2">
+          <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+            <Link
+              href={verifyHref}
+              className="inline-flex h-11 flex-1 items-center justify-center rounded-xl bg-clinical-teal px-5 text-sm font-semibold text-white shadow-md transition-all hover:bg-clinical-tealHover"
+            >
+              <span>Enter Verification Code</span>
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
             <Link
               href={signInHref}
-              className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-clinical-teal px-5 text-sm font-semibold text-white shadow-md transition-all hover:bg-clinical-tealHover"
+              className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-clinical-teal/40 bg-white dark:bg-surface px-5 text-sm font-semibold text-clinical-teal transition-all hover:bg-clinical-mist"
             >
               <span>Continue to Sign In</span>
-              <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </div>
         </div>
