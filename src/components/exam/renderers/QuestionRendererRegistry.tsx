@@ -164,7 +164,7 @@ export const QuestionRendererRegistry: React.FC<QuestionRendererProps> = (props)
     resolved.baseType === "unfoldingcasestudy";
 
   const content = resolved.isCaseBased || isLegacyCaseStudy ? (
-    <CaseStudyRenderer {...innerProps}>
+    <CaseStudyRenderer {...innerProps} suppressCaseContext={props.suppressCaseContext}>
       {renderBaseQuestionType(isLegacyCaseStudy ? "singlechoice" : resolved.baseType, innerProps)}
     </CaseStudyRenderer>
   ) : (

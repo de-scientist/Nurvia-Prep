@@ -121,6 +121,8 @@ export interface QuestionOptionDto {
 
 export interface QuestionExhibitDto {
   id?: string;
+  guidId?: string;
+  numericId?: number;
   type: ExhibitType;
   title: string;
   content: string;
@@ -139,6 +141,8 @@ export interface QuestionReviewDto {
 export interface QuestionVersionDto {
   id: string;
   versionNumber: number;
+  caseStudyId?: string;
+  caseStudyTitle?: string;
   stem: string;
   questionType: QuestionType;
   cognitiveSkill: CognitiveSkill;
@@ -355,6 +359,8 @@ export interface ActiveExamQuestionDto {
   numericId?: number;
   guidId?: string;
   examGuidId?: string;
+  caseStudyId?: string;
+  caseStudyTitle?: string;
   sectionId?: number;
   sectionGuidId?: string;
   sectionName?: string;
@@ -461,6 +467,8 @@ export interface ReviewQuestionDto {
   questionId: string;
   numericId?: number;
   guidId?: string;
+  caseStudyId?: string;
+  caseStudyTitle?: string;
   sectionId?: number;
   sectionGuidId?: string;
   sectionName?: string;

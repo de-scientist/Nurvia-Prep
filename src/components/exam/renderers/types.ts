@@ -22,6 +22,8 @@ export interface RendererOption {
 
 export interface RendererExhibit {
   id?: string;
+  guidId?: string;
+  numericId?: number;
   type: string | number;
   title: string;
   content: string;
@@ -32,6 +34,8 @@ export interface RendererQuestion {
   id: string;
   numericId?: number;
   guidId?: string;
+  caseStudyId?: string;
+  caseStudyTitle?: string;
   sectionId?: number;
   sectionGuidId?: string;
   sectionName?: string;
@@ -72,6 +76,7 @@ export interface QuestionRendererProps {
   disabled?: boolean;
   isReview?: boolean;
   hideRationaleBox?: boolean;
+  suppressCaseContext?: boolean;
   onAskTutor?: (questionId: string) => void;
   canAskTutor?: boolean;
 }

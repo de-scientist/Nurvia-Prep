@@ -8,6 +8,7 @@ import {
 } from '@/lib/attempts/strata-answer-adapter';
 import { extractSiteMetadataFromRequestHeaders } from '@/lib/lexmacasto/client';
 import type { ExamReviewContentDto, ReviewQuestionDto } from '@/lib/api-types';
+import { normalizeExhibits, resolveAuthoritativeCaseStudyId } from '@/lib/content/case-study-normalizer';
 import { verifyLearnerEntitlement } from '@/lib/subscriptions/entitlement-service';
 
 /**
@@ -111,6 +112,8 @@ export async function GET(
       questionId: q.id,
       numericId: q.numericId,
       guidId: q.guidId,
+      caseStudyId: q.caseStudyId || resolveAuthoritativeCaseStudyId(q as any) || undefined,
+      caseStudyTitle: q.caseStudyTitle,
       sectionId: q.sectionId,
       sectionGuidId: q.sectionGuidId,
       sectionName: q.sectionName,
@@ -145,7 +148,7 @@ export async function GET(
           (opt.numericId !== undefined &&
             wasCanonicalOptionSelected(String(opt.numericId), learnerResponse)),
       })),
-      exhibits: q.exhibits,
+      exhibits: normalizeExhibits(q.exhibits) as ReviewQuestionDto['exhibits'],
       media: q.media,
       matrix: q.matrix,
       blankSelectPassage: q.blankSelectPassage,

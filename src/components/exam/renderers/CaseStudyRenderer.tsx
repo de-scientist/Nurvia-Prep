@@ -8,35 +8,69 @@ import { Badge } from "@/components/ui/badge";
 import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 import { SingleChoiceRenderer } from "./SingleChoiceRenderer";
 import { ReviewRationaleBox } from "./ReviewRationaleBox";
+import { normalizeExhibits } from "@/lib/content/case-study-normalizer";
 
 export interface CaseStudyRendererProps extends QuestionRendererProps {
   children?: React.ReactNode;
+  /** When true, suppresses duplicate left-hand exhibit panel (e.g. in grouped All-In-One view) */
+  suppressCaseContext?: boolean;
 }
 
 /**
  * Unfolding Case Study & CaseBased* Clinical Scenario wrapper.
- * Renders real backend `question.exhibits` (`questionContents`) and `question.metaStem`
+ * Renders normalized `question.exhibits` and `question.metaStem`
  * in a sticky left/top chart viewer alongside the active question-type renderer.
- * Never fabricates hardcoded clinical notes, vitals, or lab values.
+ *
+ * Guarantees:
+ * - Normalizes exhibits to prevent duplicate tabs for identical exhibit references.
+ * - Preserves genuinely distinct exhibits, including distinct notes with identical titles.
+ * - Preserves original exhibit ordering and active tab switching.
+ * - Preserves active tab when navigating across questions within the same case study.
+ * - Never fabricates hardcoded clinical notes, vitals, or lab values.
  */
 export function CaseStudyRenderer(props: CaseStudyRendererProps) {
-  const { question, value, isReview = false, hideRationaleBox = false, children } = props;
+  const {
+    question,
+    value,
+    isReview = false,
+    hideRationaleBox = false,
+    suppressCaseContext = false,
+    children,
+  } = props;
+
   const exhibits = React.useMemo(
     () =>
-      (question.exhibits ?? []).filter(
-        (ex) => Boolean(ex.content?.trim() || ex.title?.trim())
+      normalizeExhibits(
+        (question.exhibits ?? []).filter(
+          (ex) => Boolean(ex.content?.trim() || ex.title?.trim())
+        )
       ),
     [question.exhibits]
   );
 
+  const caseId =
+    question.caseStudyId ||
+    (question as any).caseId ||
+    (question.metaStem ? question.metaStem.trim().slice(0, 100) : null) ||
+    question.id;
+  const prevCaseRef = React.useRef(caseId);
+
   const [activeIndex, setActiveIndex] = React.useState(0);
 
   React.useEffect(() => {
-    setActiveIndex(0);
-  }, [question.id]);
+    // Only reset active exhibit tab when switching to a DIFFERENT case study
+    if (prevCaseRef.current !== caseId) {
+      prevCaseRef.current = caseId;
+      setActiveIndex(0);
+    } else if (activeIndex >= exhibits.length && exhibits.length > 0) {
+      setActiveIndex(0);
+    }
+  }, [caseId, exhibits.length, activeIndex]);
 
-  const activeExhibit = exhibits[activeIndex];
-  const hasCaseContext = exhibits.length > 0 || Boolean(question.metaStem?.trim());
+  const activeExhibit = exhibits[activeIndex] ?? exhibits[0];
+  const hasCaseContext =
+    !suppressCaseContext &&
+    (exhibits.length > 0 || Boolean(question.metaStem?.trim()));
 
   const innerContent = children ?? (
     <SingleChoiceRenderer {...props} hideRationaleBox />
@@ -59,22 +93,25 @@ export function CaseStudyRenderer(props: CaseStudyRendererProps) {
 
               {exhibits.length > 0 && (
                 <div className="flex border-b border-border text-xs font-semibold overflow-x-auto">
-                  {exhibits.map((ex, idx) => (
-                    <button
-                      key={ex.id || idx}
-                      type="button"
-                      onClick={() => setActiveIndex(idx)}
-                      className={cn(
-                        "px-3 py-2 flex items-center gap-1.5 border-b-2 transition-colors whitespace-nowrap",
-                        activeIndex === idx
-                          ? "border-brand-teal text-brand-teal bg-surface"
-                          : "border-transparent text-foreground-secondary hover:text-foreground"
-                      )}
-                    >
-                      <FileText className="w-3.5 h-3.5 shrink-0" />
-                      <span>{ex.title || `Exhibit ${idx + 1}`}</span>
-                    </button>
-                  ))}
+                  {exhibits.map((ex, idx) => {
+                    const tabKey = ex.id ? `exhibit-id-${ex.id}` : `exhibit-idx-${idx}`;
+                    return (
+                      <button
+                        key={tabKey}
+                        type="button"
+                        onClick={() => setActiveIndex(idx)}
+                        className={cn(
+                          "px-3 py-2 flex items-center gap-1.5 border-b-2 transition-colors whitespace-nowrap",
+                          activeIndex === idx
+                            ? "border-brand-teal text-brand-teal bg-surface"
+                            : "border-transparent text-foreground-secondary hover:text-foreground"
+                        )}
+                      >
+                        <FileText className="w-3.5 h-3.5 shrink-0" />
+                        <span>{ex.title || `Exhibit ${idx + 1}`}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
