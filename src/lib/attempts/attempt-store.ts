@@ -33,6 +33,7 @@ import type {
   TutorConversationMessageDto,
   TutorPracticeCheckResponseDto,
 } from '../api-types';
+import { normalizeExhibits } from '../content/case-study-normalizer-core.mjs';
 import {
   evaluateCanonicalQuestion,
   isResponseAnswered,
@@ -45,6 +46,8 @@ export interface StoredAttemptQuestion {
   numericId?: number;
   guidId?: string;
   examGuidId?: string;
+  caseStudyId?: string;
+  caseStudyTitle?: string;
   sectionId?: number;
   sectionGuidId?: string;
   sectionName?: string;
@@ -277,6 +280,8 @@ class AttemptStore {
         numericId: q.numericId,
         guidId: q.guidId,
         examGuidId: q.examGuidId ?? attempt.examId,
+        caseStudyId: q.caseStudyId,
+        caseStudyTitle: q.caseStudyTitle,
         sectionId: q.sectionId,
         sectionGuidId: q.sectionGuidId,
         sectionName: q.sectionName,
@@ -310,7 +315,7 @@ class AttemptStore {
           isCorrect: isTutor ? o.isCorrect : undefined,
           specificRationale: isTutor ? o.specificRationale : undefined,
         })),
-        exhibits: q.exhibits,
+        exhibits: normalizeExhibits(q.exhibits) as QuestionExhibitDto[],
         media: q.media,
         matrix: sanitizedMatrix,
         blankSelectPassage: q.blankSelectPassage,
@@ -516,6 +521,8 @@ class AttemptStore {
         questionId: q.id,
         numericId: q.numericId,
         guidId: q.guidId,
+        caseStudyId: q.caseStudyId,
+        caseStudyTitle: q.caseStudyTitle,
         sectionId: q.sectionId,
         sectionGuidId: q.sectionGuidId,
         sectionName: q.sectionName,
@@ -541,7 +548,7 @@ class AttemptStore {
         pointsAwarded: scored.pointsAwarded,
         maxPoints: scored.maxPoints,
         options: mappedOptions,
-        exhibits: q.exhibits,
+        exhibits: normalizeExhibits(q.exhibits) as QuestionExhibitDto[],
         media: q.media,
         matrix: q.matrix,
         blankSelectPassage: q.blankSelectPassage,

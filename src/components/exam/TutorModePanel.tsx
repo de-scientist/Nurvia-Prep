@@ -238,21 +238,56 @@ export function TutorModePanel({
             <Lightbulb className="h-4 w-4 text-amber-500" />
             <span>1. Hint</span>
           </div>
-          {hints.length > 0 ? (
-            <div className="space-y-2">
-              {hints.map((hint) => (
-                <div key={hint.stage} className="rounded-md bg-amber-500/10 p-2.5 text-xs text-foreground-secondary space-y-1">
-                  <p className="font-semibold text-foreground">{hint.title}</p>
-                  <RichQuestionContent content={hint.content} className="leading-relaxed" />
+
+          {!isCurrentAnswerEvaluated ? (
+            /* Protected State: Content selectively blurred; section heading remains readable and unblurred */
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Hint locked. Select and submit your answer to unlock."
+              onClick={handleLockedGuidanceClick}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleLockedGuidanceClick();
+                }
+              }}
+              className="relative cursor-pointer select-none rounded-lg border border-dashed border-border/80 bg-surface-muted/30 p-3 transition-colors hover:bg-surface-muted/50 focus:outline-none focus:ring-2 focus:ring-brand-teal"
+            >
+              <div className="filter blur-[5px] select-none pointer-events-none opacity-50 space-y-1">
+                <p className="font-semibold text-foreground">Clinical Guidance &amp; Diagnostic Hint</p>
+                <p className="text-xs text-foreground-secondary leading-relaxed">
+                  Focus on airway, breathing, circulation (ABCs) and differentiating acute physiological compromise from expected clinical findings.
+                </p>
+                <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-2 text-xs">
+                  <span className="font-semibold text-amber-800 dark:text-amber-300">Protected Pedagogical Hint</span>
                 </div>
-              ))}
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-background/50 backdrop-blur-[2px]">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-semibold text-foreground shadow-xs">
+                  <Lock className="h-3.5 w-3.5 text-brand-teal" />
+                  <span>Hint Locked</span>
+                </div>
+              </div>
             </div>
           ) : (
-            <div className="rounded-md bg-amber-500/10 p-2.5 text-xs text-foreground-secondary">
-              <p className="font-semibold text-foreground">Clinical Guidance</p>
-              <p className="leading-relaxed mt-0.5">
-                Focus on airway, breathing, circulation (ABCs) and differentiating acute physiological compromise from expected clinical findings.
-              </p>
+            /* Revealed State: Render actual hint content normally */
+            <div className="space-y-2 animate-in fade-in duration-300">
+              {hints.length > 0 ? (
+                hints.map((hint) => (
+                  <div key={hint.stage} className="rounded-md bg-amber-500/10 p-2.5 text-xs text-foreground-secondary space-y-1">
+                    <p className="font-semibold text-foreground">{hint.title}</p>
+                    <RichQuestionContent content={hint.content} className="leading-relaxed" />
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-md bg-amber-500/10 p-2.5 text-xs text-foreground-secondary">
+                  <p className="font-semibold text-foreground">Clinical Guidance</p>
+                  <p className="leading-relaxed mt-0.5">
+                    Focus on airway, breathing, circulation (ABCs) and differentiating acute physiological compromise from expected clinical findings.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

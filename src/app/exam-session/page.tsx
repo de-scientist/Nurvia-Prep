@@ -63,6 +63,12 @@ import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 import { useAuth } from "@/components/auth/auth-provider";
 import { isSataQuestion, validateSataSelection } from "@/lib/attempts/sata-validation";
 import { feedback } from "@/lib/feedback/feedback-context";
+import {
+  normalizeExhibits,
+  isCaseStudyQuestion,
+  resolveAuthoritativeCaseStudyId,
+  getCaseStudyNavigation,
+} from "@/lib/content/case-study-normalizer";
 
 type DeliveryMode = "Review" | "Exam" | "Tutor";
 type LayoutPolicy = "AllInOneOnly" | "SequentialOnly" | "Both" | null;
@@ -166,13 +172,9 @@ function toReviewQuestionDto(
         (o.numericId !== undefined &&
           wasCanonicalOptionSelected(String(o.numericId), effectiveAnswer)),
     })),
-    exhibits: (q.exhibits ?? []).map((ex, idx) => ({
-      id: ex.id,
-      type: ex.type as ReviewQuestionDto["exhibits"][number]["type"],
-      title: ex.title,
-      content: ex.content,
-      displayOrder: ex.displayOrder ?? idx,
-    })),
+    caseStudyId: q.caseStudyId || resolveAuthoritativeCaseStudyId(q as any) || undefined,
+    caseStudyTitle: q.caseStudyTitle,
+    exhibits: (normalizeExhibits(q.exhibits) as ReviewQuestionDto["exhibits"]),
     media: q.media,
     matrix: q.matrix,
     blankSelectPassage: q.blankSelectPassage,
@@ -413,6 +415,8 @@ function ExamSessionContent() {
       id: q.questionId,
       numericId: q.numericId,
       guidId: q.guidId,
+      caseStudyId: q.caseStudyId || resolveAuthoritativeCaseStudyId(q as any) || undefined,
+      caseStudyTitle: q.caseStudyTitle,
       sectionId: q.sectionId,
       sectionGuidId: q.sectionGuidId,
       sectionName: q.sectionName,
@@ -450,7 +454,7 @@ function ExamSessionContent() {
         wasSelected: o.wasSelected,
         displayOrder: o.optionIndex,
       })),
-      exhibits: q.exhibits,
+      exhibits: normalizeExhibits(q.exhibits),
       media: q.media,
       matrix: q.matrix,
       blankSelectPassage: q.blankSelectPassage,
@@ -499,6 +503,8 @@ function ExamSessionContent() {
         id: q.questionId,
         numericId: q.numericId,
         guidId: q.guidId,
+        caseStudyId: q.caseStudyId || resolveAuthoritativeCaseStudyId(q as any) || undefined,
+        caseStudyTitle: q.caseStudyTitle,
         sectionId: q.sectionId,
         sectionGuidId: q.sectionGuidId,
         sectionName: q.sectionName,
@@ -536,7 +542,7 @@ function ExamSessionContent() {
           wasSelected: o.wasSelected,
           displayOrder: o.optionIndex,
         })),
-        exhibits: q.exhibits,
+        exhibits: normalizeExhibits(q.exhibits),
         media: q.media,
         matrix: q.matrix,
         blankSelectPassage: q.blankSelectPassage,
@@ -661,6 +667,8 @@ function ExamSessionContent() {
         id: q.id,
         numericId: q.numericId,
         guidId: q.guidId,
+        caseStudyId: q.caseStudyId || resolveAuthoritativeCaseStudyId(q as any) || undefined,
+        caseStudyTitle: q.caseStudyTitle,
         sectionId: q.sectionId,
         sectionGuidId: q.sectionGuidId,
         sectionName: q.sectionName,
@@ -691,7 +699,7 @@ function ExamSessionContent() {
           isCorrect: o.isCorrect,
           specificRationale: o.specificRationale,
         })),
-        exhibits: q.exhibits,
+        exhibits: normalizeExhibits(q.exhibits),
         media: q.media,
         matrix: q.matrix,
         blankSelectPassage: q.blankSelectPassage,
@@ -1059,11 +1067,11 @@ function ExamSessionContent() {
       return;
     }
 
-    // Frontend SATA validation: ensure answered SATA questions meet required selection counts
+    // Frontend SATA validation: strictly ensure all SATA questions meet exact required selection counts
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
-      const ans = answers[q.id];
-      if (isSataQuestion(q.questionType) && isResponseAnswered(ans)) {
+      if (isSataQuestion(q.questionType)) {
+        const ans = latestAnswersRef.current[q.id] ?? answers[q.id] ?? null;
         const validation = validateSataSelection(q, ans);
         if (!validation.isValid) {
           const msg = validation.message || "Select the required number of answers to continue.";
@@ -1215,7 +1223,12 @@ function ExamSessionContent() {
     );
   }
 
-  const renderAssessmentQuestion = (q: RendererQuestion, index: number, isSequential: boolean) => {
+  const renderAssessmentQuestion = (
+    q: RendererQuestion,
+    index: number,
+    isSequential: boolean,
+    suppressCaseContext = false
+  ) => {
     const showReview = reviewStateFor(q);
     return (
       <div
@@ -1317,19 +1330,16 @@ function ExamSessionContent() {
 
             {q.exhibits &&
               q.exhibits.length > 0 &&
-              !resolveNormalizedQuestionType(q.questionType).isCaseBased &&
-              q.questionType !== 9 &&
-              q.questionType !== "CaseStudy" &&
-              q.questionType !== "UnfoldingCaseStudy" && (
+              !isCaseStudyQuestion(q.questionType) && (
                 <div className="rounded-xl border border-border bg-surface-muted overflow-hidden text-xs">
                   <div className="bg-surface border-b border-border px-3 py-2 flex items-center gap-1.5 font-bold text-foreground">
                     <ClipboardList className="w-3.5 h-3.5 text-brand-teal" />
-                    <span>EHR Clinical Exhibits ({q.exhibits.length})</span>
+                    <span>EHR Clinical Exhibits ({normalizeExhibits(q.exhibits).length})</span>
                   </div>
                   <div className="p-3 space-y-2">
-                    {q.exhibits.map((exh, eIdx) => (
+                    {normalizeExhibits(q.exhibits).map((exh, eIdx) => (
                       <div
-                        key={exh.id || eIdx}
+                        key={exh.id ? `ehr-exh-${exh.id}` : `ehr-exh-idx-${eIdx}`}
                         className="rounded-lg border border-border/70 bg-surface p-2.5 space-y-1"
                       >
                         <p className="font-semibold text-foreground flex items-center gap-1 text-[11px]">
@@ -1356,6 +1366,7 @@ function ExamSessionContent() {
               hideRationaleBox={deliveryMode === "Tutor" || !showReview}
               canAskTutor={stageAvailability.tutor.canEnter}
               onAskTutor={(qid) => handleOpenTutorFromReview(qid)}
+              suppressCaseContext={suppressCaseContext}
             />
           </div>
 
@@ -1433,6 +1444,25 @@ function ExamSessionContent() {
       isFlagged={isCurrentFlagged}
       onToggleFlag={handleToggleFlag}
       onSubmitExam={() => {
+        // Pre-validate SATA questions before opening submit confirmation modal
+        for (let i = 0; i < questions.length; i++) {
+          const q = questions[i];
+          if (isSataQuestion(q.questionType)) {
+            const ans = latestAnswersRef.current[q.id] ?? answers[q.id] ?? null;
+            const validation = validateSataSelection(q, ans);
+            if (!validation.isValid) {
+              const msg = validation.message || "Select the required number of answers to continue.";
+              feedback.warn(msg);
+              setSubmissionError(msg);
+              if (layout === "Sequential") {
+                setCurrentIndex(i);
+              } else {
+                scrollToQuestion(q.id);
+              }
+              return;
+            }
+          }
+        }
         setIsSubmitModalOpen(true);
       }}
       secondsRemaining={secondsRemaining}
@@ -1633,6 +1663,17 @@ function ExamSessionContent() {
                     <Badge variant="outline" className="text-xs font-mono">
                       Item {currentIndex + 1} of {questions.length}
                     </Badge>
+                    {(() => {
+                      const nav = getCaseStudyNavigation(questions, currentIndex);
+                      if (nav.isCaseStudy && nav.totalQuestionsInCase > 1) {
+                        return (
+                          <Badge variant="teal" className="text-xs font-sans">
+                            Case Item {nav.questionIndexInCase + 1} of {nav.totalQuestionsInCase}
+                          </Badge>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -1723,7 +1764,17 @@ function ExamSessionContent() {
                 </div>
 
                 <div className="space-y-6">
-                  {questions.map((q, idx) => renderAssessmentQuestion(q, idx, false))}
+                  {questions.map((q, idx) => {
+                    const prevQ = idx > 0 ? questions[idx - 1] : null;
+                    const qCaseId = q.caseStudyId || resolveAuthoritativeCaseStudyId(q as any);
+                    const prevCaseId = prevQ
+                      ? prevQ.caseStudyId || resolveAuthoritativeCaseStudyId(prevQ as any)
+                      : null;
+                    const isSharedContinuation = Boolean(
+                      qCaseId && prevCaseId && qCaseId === prevCaseId
+                    );
+                    return renderAssessmentQuestion(q, idx, false, isSharedContinuation);
+                  })}
                 </div>
               </>
             )}

@@ -41,20 +41,82 @@ export function isSataQuestion(questionType: string | number | undefined | null)
   );
 }
 
-export function getSelectedOptionCount(serializedAnswer: string | null | undefined): number {
-  if (!serializedAnswer) return 0;
+export function normalizeSelectedOptionIds(
+  serializedAnswer: string | null | undefined,
+  validOptions?: Array<{ id: string; numericId?: number | string }>
+): string[] {
+  if (!serializedAnswer || (typeof serializedAnswer !== 'string' && typeof serializedAnswer !== 'object')) {
+    return [];
+  }
   try {
     const parsed = typeof serializedAnswer === 'string' ? JSON.parse(serializedAnswer) : serializedAnswer;
-    if (Array.isArray(parsed)) return parsed.length;
-    if (parsed && typeof parsed === 'object') {
-      const list = parsed.SelectedOptionIds ?? parsed.selectedOptionIds ?? parsed.SelectedMediaIds;
-      if (Array.isArray(list)) return list.length;
-      if (parsed.SelectedOptionId || parsed.selectedOptionId) return 1;
+    let rawList: unknown[] = [];
+    if (Array.isArray(parsed)) {
+      rawList = parsed;
+    } else if (parsed && typeof parsed === 'object') {
+      const list = parsed.SelectedOptionIds ?? parsed.selectedOptionIds ?? parsed.SelectedMediaIds ?? parsed.selectedMediaIds;
+      if (Array.isArray(list)) {
+        rawList = list;
+      } else if (parsed.SelectedOptionId || parsed.selectedOptionId) {
+        rawList = [parsed.SelectedOptionId || parsed.selectedOptionId];
+      }
     }
+
+    // Clean and deduplicate strings
+    const uniqueStrings = Array.from(
+      new Set(
+        rawList
+          .map((item) => (item === null || item === undefined ? '' : String(item).trim()))
+          .filter((s) => s.length > 0)
+      )
+    );
+
+    // If authoritative question options are provided, normalize against valid options
+    if (validOptions && Array.isArray(validOptions) && validOptions.length > 0) {
+      const canonicalIds = new Set<string>();
+      for (const sel of uniqueStrings) {
+        const matchingOpt = validOptions.find(
+          (opt) => opt.id === sel || (opt.numericId !== undefined && String(opt.numericId) === sel)
+        );
+        if (matchingOpt) {
+          canonicalIds.add(matchingOpt.id);
+        }
+      }
+      return Array.from(canonicalIds);
+    }
+
+    return uniqueStrings;
   } catch {
-    // Non-JSON string answer
+    // Non-JSON string or malformed JSON
+    if (typeof serializedAnswer === 'string') {
+      const trimmed = serializedAnswer.trim();
+      // If it looks like JSON or contains whitespace like "invalid json", it is invalid
+      if (trimmed.startsWith('{') || trimmed.startsWith('[') || /\s/.test(trimmed)) {
+        return [];
+      }
+      if (validOptions && Array.isArray(validOptions) && validOptions.length > 0) {
+        const items = trimmed.split(',').map((s) => s.trim()).filter(Boolean);
+        const matched = items.filter((item) =>
+          validOptions.some(
+            (opt) => opt.id === item || (opt.numericId !== undefined && String(opt.numericId) === item)
+          )
+        );
+        return Array.from(new Set(matched));
+      }
+      // Single token without whitespace
+      if (trimmed.length > 0 && !/\s/.test(trimmed)) {
+        return Array.from(new Set(trimmed.split(',').map((s) => s.trim()).filter(Boolean)));
+      }
+    }
   }
-  return 0;
+  return [];
+}
+
+export function getSelectedOptionCount(
+  serializedAnswer: string | null | undefined,
+  validOptions?: Array<{ id: string; numericId?: number | string }>
+): number {
+  return normalizeSelectedOptionIds(serializedAnswer, validOptions).length;
 }
 
 export function extractRequiredSataCount(question: {
@@ -62,7 +124,7 @@ export function extractRequiredSataCount(question: {
   instructions?: string;
   metaStem?: string;
   correctAnswerMeta?: { correctOptionIds?: string[]; correctCellIds?: string[] };
-  options?: Array<{ id: string; optionIndex?: number | string; optionText?: string; isCorrect?: boolean }>;
+  options?: Array<{ id: string; optionIndex?: number | string; optionText?: string; isCorrect?: boolean; numericId?: number | string }>;
   requiredSelections?: number;
   expectedCount?: number;
   correctCount?: number;
@@ -83,15 +145,19 @@ export function extractRequiredSataCount(question: {
 
   const textToSearch = `${question.instructions || ''} ${question.metaStem || ''} ${question.stem || ''}`;
 
-  // Pattern 1: "(Select 4)" or "(Choose 3)" or "(Select three)"
-  const parenMatch = textToSearch.match(/\((?:select|choose|pick)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\)/i);
+  // Pattern 1: "(Select 4)" or "(Choose 3)" or "[Select 3]" or "(Select exactly 4)"
+  const parenMatch = textToSearch.match(
+    /[([{](?:select|choose|pick)\s+(?:all\s+that\s+apply[.,;]?\s*)?(?:exactly\s+)?(\d+|one|two|three|four|five|six|seven|eight|nine|ten)[)\]}]/i
+  );
   if (parenMatch) {
     const parsed = parseNumOrWord(parenMatch[1]);
     if (parsed !== null) return parsed;
   }
 
   // Pattern 2: "Select 4 findings", "Select all that apply. (Select 4)", "Select 3 interventions"
-  const selectMatch = textToSearch.match(/\b(?:select|choose|pick)\s+(?:all\s+that\s+apply[.,;]?\s*(?:\()?)?(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b/i);
+  const selectMatch = textToSearch.match(
+    /\b(?:select|choose|pick)\s+(?:all\s+that\s+apply[.,;]?\s*(?:\()?)?(?:exactly\s+)?(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b/i
+  );
   if (selectMatch) {
     const parsed = parseNumOrWord(selectMatch[1]);
     if (parsed !== null) return parsed;
@@ -141,7 +207,7 @@ export function validateSataSelection(
     instructions?: string;
     metaStem?: string;
     correctAnswerMeta?: { correctOptionIds?: string[]; correctCellIds?: string[] };
-    options?: Array<{ id: string; optionIndex?: number | string; optionText?: string; isCorrect?: boolean }>;
+    options?: Array<{ id: string; optionIndex?: number | string; optionText?: string; isCorrect?: boolean; numericId?: number | string }>;
     requiredSelections?: number;
     expectedCount?: number;
     correctCount?: number;
@@ -149,10 +215,14 @@ export function validateSataSelection(
   serializedAnswer: string | null | undefined
 ): SataValidationResult {
   if (!isSataQuestion(question.questionType)) {
-    return { isValid: true, requiredCount: null, selectedCount: getSelectedOptionCount(serializedAnswer) };
+    return {
+      isValid: true,
+      requiredCount: null,
+      selectedCount: getSelectedOptionCount(serializedAnswer, question.options),
+    };
   }
 
-  const selectedCount = getSelectedOptionCount(serializedAnswer);
+  const selectedCount = getSelectedOptionCount(serializedAnswer, question.options);
   const requiredCount = extractRequiredSataCount(question);
 
   if (requiredCount !== null && requiredCount > 0) {

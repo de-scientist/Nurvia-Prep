@@ -259,7 +259,22 @@ export function ExamLoadingScreen({
               </Link>
               {error.toLowerCase().includes("subscription") && (
                 <Link
-                  href={`/learner/subscription?returnTo=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "/learner/library")}`}
+                  href={(() => {
+                    if (typeof window === "undefined") {
+                      return `/learner/subscription?returnTo=${encodeURIComponent("/learner/library")}`;
+                    }
+                    const currentFull = window.location.pathname + window.location.search;
+                    const sp = new URLSearchParams(window.location.search);
+                    const qs = new URLSearchParams({ returnTo: currentFull });
+                    if (mode === "Exam" || mode === "Tutor") qs.set("requiredMode", mode);
+                    const exId = sp.get("examId");
+                    const ly = sp.get("layout");
+                    const attId = sp.get("attemptId");
+                    if (exId) qs.set("examId", exId);
+                    if (ly) qs.set("layout", ly);
+                    if (attId) qs.set("attemptId", attId);
+                    return `/learner/subscription?${qs.toString()}`;
+                  })()}
                   className="w-full sm:w-auto"
                 >
                   <Button className="w-full text-xs bg-brand-teal hover:bg-brand-tealDeep text-white">

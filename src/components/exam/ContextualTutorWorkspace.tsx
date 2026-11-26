@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 import { QuestionRendererRegistry, type RendererQuestion } from "@/components/exam/renderers";
+import { normalizeExhibits } from "@/lib/content/case-study-normalizer";
 import { TutorModePanel } from "@/components/exam/TutorModePanel";
 import { nurviaApi } from "@/lib/api-client";
 import type {
@@ -507,27 +508,31 @@ export function ContextualTutorWorkspace({
               className="text-sm leading-relaxed text-foreground font-medium"
             />
 
-            {question.exhibits && question.exhibits.length > 0 && (
-              <div className="space-y-2">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-foreground-secondary">
-                  Question Exhibits ({question.exhibits.length})
+            {(() => {
+              const exhibits = normalizeExhibits(question.exhibits);
+              if (exhibits.length === 0) return null;
+              return (
+                <div className="space-y-2">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-foreground-secondary">
+                    Question Exhibits ({exhibits.length})
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {exhibits.map((ex, i) => (
+                      <div
+                        key={ex.id ? `tutor-exh-${ex.id}` : `tutor-exh-idx-${i}`}
+                        className="rounded-xl border border-border bg-background p-3 text-xs space-y-1 max-h-48 overflow-y-auto"
+                      >
+                        <div className="font-bold text-foreground">{ex.title || `Exhibit ${i + 1}`}</div>
+                        <RichQuestionContent
+                          content={ex.content}
+                          className="text-foreground-secondary"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {question.exhibits.map((ex, i) => (
-                    <div
-                      key={ex.id || i}
-                      className="rounded-xl border border-border bg-background p-3 text-xs space-y-1 max-h-48 overflow-y-auto"
-                    >
-                      <div className="font-bold text-foreground">{ex.title || `Exhibit ${i + 1}`}</div>
-                      <RichQuestionContent
-                        content={ex.content}
-                        className="text-foreground-secondary"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Interactive / Read-Only Answer-State Breakdown Across All 18 Question Types */}
             <div className="pt-2 border-t border-border/70">

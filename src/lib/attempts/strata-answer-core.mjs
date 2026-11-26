@@ -75,8 +75,17 @@ export function resolveNormalizedQuestionType(questionType) {
     rawStr = String(questionType || 'SingleChoice').trim();
   }
   const lower = rawStr.toLowerCase();
-  const isCaseBased = lower.startsWith('casebased');
-  const baseType = isCaseBased ? lower.slice('casebased'.length) || 'singlechoice' : lower;
+  const isCaseStudyAlias =
+    lower === 'clinicalcasestudy' ||
+    lower === 'unfoldingcasestudy' ||
+    lower === 'casestudy' ||
+    lower === '9';
+  const isCaseBased = lower.startsWith('casebased') || isCaseStudyAlias;
+  const baseType = lower.startsWith('casebased')
+    ? lower.slice('casebased'.length) || 'singlechoice'
+    : isCaseStudyAlias
+      ? 'singlechoice'
+      : lower;
   return { raw: rawStr, isCaseBased, baseType };
 }
 

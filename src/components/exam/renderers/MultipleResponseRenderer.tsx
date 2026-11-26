@@ -7,7 +7,10 @@ import { CheckSquare, Square, CheckCircle2, XCircle, Info } from "lucide-react";
 import { RichQuestionContent } from "@/components/exam/RichQuestionContent";
 import { ContentIntegrityAlert } from "./ContentIntegrityAlert";
 import { ReviewRationaleBox } from "./ReviewRationaleBox";
-import { validateSataSelection } from "@/lib/attempts/sata-validation";
+import {
+  normalizeSelectedOptionIds,
+  validateSataSelection,
+} from "@/lib/attempts/sata-validation";
 
 export function MultipleResponseRenderer({
   question,
@@ -18,27 +21,15 @@ export function MultipleResponseRenderer({
   hideRationaleBox = false,
 }: QuestionRendererProps) {
   const selectedIds = React.useMemo<string[]>(() => {
-    if (!value) return [];
-    try {
-      if (value.startsWith("{")) {
-        const parsed = JSON.parse(value);
-        const list = parsed.SelectedOptionIds || parsed.selectedOptionIds;
-        return Array.isArray(list) ? list.map(String) : [];
-      }
-      if (value.startsWith("[")) {
-        return (JSON.parse(value) as unknown[]).map(String);
-      }
-      return [value];
-    } catch {
-      return [];
-    }
-  }, [value]);
+    return normalizeSelectedOptionIds(value, question.options);
+  }, [value, question.options]);
 
   const handleToggle = (optId: string) => {
     if (disabled) return;
     const exists = selectedIds.includes(optId);
     const updated = exists ? selectedIds.filter((id) => id !== optId) : [...selectedIds, optId];
-    onChange?.(JSON.stringify({ SelectedOptionIds: updated }));
+    const deduplicated = Array.from(new Set(updated));
+    onChange?.(JSON.stringify({ SelectedOptionIds: deduplicated }));
   };
 
   const validation = React.useMemo(() => {
@@ -148,6 +139,12 @@ export function MultipleResponseRenderer({
                 disabled={disabled}
                 aria-pressed={isSelected}
                 onClick={() => handleToggle(opt.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleToggle(opt.id);
+                  }
+                }}
                 className={cn(
                   "w-full text-left p-4 rounded-xl border text-sm transition-all flex items-start gap-3.5",
                   disabled && "cursor-default",

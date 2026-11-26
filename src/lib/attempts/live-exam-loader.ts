@@ -35,6 +35,10 @@ import {
   normalizeMediaUrl,
 } from '@/lib/content/html-normalizer';
 import {
+  normalizeExhibits,
+  resolveAuthoritativeCaseStudyId,
+} from '../content/case-study-normalizer-core.mjs';
+import {
   lexmaCastoRequest,
   type LexmaCastoRequestOptions,
 } from '@/lib/lexmacasto/client';
@@ -489,20 +493,30 @@ function mapStrataQuestion(
     link: opt.link,
   }));
 
-  const exhibits: QuestionExhibitDto[] = Array.isArray(q.questionContents)
-    ? q.questionContents.map((c, cIdx) => {
-        const parts = [cleanWordHtml(c.description || '')];
-        if (c.instructions) parts.push(cleanWordHtml(c.instructions));
-        if (c.prerequisites) parts.push(cleanWordHtml(c.prerequisites));
-        return {
-          id: String(c.guidId || c.id || `exh-${cIdx + 1}`),
-          type: 'ClinicalScenario' as QuestionExhibitDto['type'],
-          title: cleanWordHtml(c.title || `Clinical Exhibit ${cIdx + 1}`),
-          content: parts.filter(Boolean).join('\n'),
-          displayOrder: cIdx + 1,
-        };
-      })
-    : [];
+  const rawContents = Array.isArray(q.questionContents) ? q.questionContents : [];
+  const mappedExhibits = rawContents.map((c, cIdx) => {
+    const parts = [cleanWordHtml(c.description || '')];
+    if (c.instructions) parts.push(cleanWordHtml(c.instructions));
+    if (c.prerequisites) parts.push(cleanWordHtml(c.prerequisites));
+    return {
+      id: String(c.guidId || c.id || `exh-${cIdx + 1}`),
+      guidId: c.guidId ? String(c.guidId).trim() : undefined,
+      numericId: typeof c.id === 'number' ? c.id : undefined,
+      type: 'ClinicalScenario' as QuestionExhibitDto['type'],
+      title: cleanWordHtml(c.title || `Clinical Exhibit ${cIdx + 1}`),
+      content: parts.filter(Boolean).join('\n'),
+      displayOrder: cIdx + 1,
+    };
+  });
+  const exhibits: QuestionExhibitDto[] = normalizeExhibits(mappedExhibits).map((ex) => ({
+    id: ex.id,
+    guidId: ex.guidId,
+    numericId: ex.numericId,
+    type: ex.type as QuestionExhibitDto['type'],
+    title: ex.title,
+    content: ex.content,
+    displayOrder: ex.displayOrder,
+  }));
 
   const media: QuestionMediaDto[] | undefined =
     Array.isArray(q.questionMedias) && q.questionMedias.length > 0
@@ -574,6 +588,7 @@ function mapStrataQuestion(
     numericId: typeof q.id === 'number' ? q.id : undefined,
     guidId: q.guidId || undefined,
     examGuidId,
+    caseStudyId: resolveAuthoritativeCaseStudyId(q as any) || undefined,
     sectionId: section.id,
     sectionGuidId: section.guidId,
     sectionName: section.name,
