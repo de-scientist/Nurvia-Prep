@@ -38,13 +38,31 @@ export function StudySetCard({
   const examBadgeText = `${pathLabel} · ${examBody}`;
 
   return (
-    <Card className="flex h-full flex-col justify-between gap-2.5 border border-border bg-surface p-3.5 transition-colors hover:border-brand-teal/50 shadow-xs">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant="teal" className="text-[11px] font-bold">
-              {examBadgeText}
-            </Badge>
+    <Card className="flex h-full flex-col justify-between gap-3 rounded-2xl border border-border/80 bg-surface p-4 transition-all hover:border-brand-teal/50 hover:shadow-xs">
+      <div className="space-y-2.5">
+        {/* Top: Examination Title, NEW Badge, and Overflow Menu */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0 pr-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Link
+                href={detailHref}
+                title={studySet.title}
+                className="font-brand text-sm sm:text-base font-bold text-foreground hover:text-brand-teal focus-visible:outline-none focus-visible:underline transition-colors line-clamp-1"
+              >
+                {studySet.title}
+              </Link>
+              {studySet.isNew && (
+                <span
+                  data-testid="exam-card-new-badge"
+                  className="inline-flex items-center rounded-md bg-brand-teal px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-2xs"
+                >
+                  NEW
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0">
             {studySet.isSaved && (
               <span
                 className="inline-flex items-center gap-1 rounded-full bg-brand-teal/10 px-2 py-0.5 text-[10px] font-medium text-brand-teal"
@@ -54,30 +72,48 @@ export function StudySetCard({
                 Saved
               </span>
             )}
+            <StudySetOverflowMenu
+              studySet={studySet}
+              detailHref={detailHref}
+              isPublic={isPublic}
+              onToggleSave={onToggleSave}
+              onNotify={onNotify}
+            />
           </div>
-          <StudySetOverflowMenu
-            studySet={studySet}
-            detailHref={detailHref}
-            isPublic={isPublic}
-            onToggleSave={onToggleSave}
-            onNotify={onNotify}
-          />
         </div>
 
-        <div className="pt-0.5">
-          <Link
-            href={detailHref}
-            title={studySet.title}
-            className="block truncate font-brand text-sm sm:text-base font-bold text-foreground hover:text-brand-teal focus-visible:outline-none focus-visible:underline"
-          >
-            {studySet.title}
-          </Link>
-          {studySet.description && (
-            <p className="mt-1 line-clamp-2 text-xs text-foreground-secondary">
-              {studySet.description}
-            </p>
+        {/* Compact Metadata Row: Category/Pathway, Question Count, Season, Academic Year */}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-foreground-secondary">
+          <Badge variant="teal" className="text-[11px] font-semibold px-2 py-0.5">
+            {examBadgeText}
+          </Badge>
+          {typeof studySet.totalQuestions === "number" && (
+            <span className="inline-flex items-center gap-1 font-medium">
+              <span className="text-foreground-muted/60" aria-hidden="true">·</span>
+              <span>
+                {studySet.totalQuestions} {studySet.totalQuestions === 1 ? "question" : "questions"}
+              </span>
+            </span>
+          )}
+          {Boolean(studySet.season) && (
+            <span className="inline-flex items-center gap-1 font-medium">
+              <span className="text-foreground-muted/60" aria-hidden="true">·</span>
+              <span>{studySet.season}</span>
+            </span>
+          )}
+          {studySet.academicYear != null && (
+            <span className="inline-flex items-center gap-1 font-medium">
+              <span className="text-foreground-muted/60" aria-hidden="true">·</span>
+              <span>{studySet.academicYear}</span>
+            </span>
           )}
         </div>
+
+        {studySet.description && (
+          <p className="line-clamp-2 text-xs text-foreground-secondary leading-relaxed pt-0.5">
+            {studySet.description}
+          </p>
+        )}
       </div>
 
       <StudySetCardActions studySet={studySet} />

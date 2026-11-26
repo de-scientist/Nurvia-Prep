@@ -9,6 +9,10 @@ import type { ExamDeliveryMode, ExamLayoutPolicy, StudySetCardDto } from "@/lib/
 import { isModeEnabled as sharedIsModeEnabled } from "@/lib/api-client";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useFeedback } from "@/lib/feedback/feedback-context";
+import {
+  buildValidatedLearningContext,
+  saveAuthReturnContext,
+} from "@/lib/subscriptions/cart-store";
 
 export function isModeEnabled(
   modeAllowed: ExamDeliveryMode | string | undefined | null,
@@ -63,6 +67,8 @@ export function StudySetCardActions({
   const handleLaunchMode = async (mode: "Exam" | "Tutor", e: React.MouseEvent) => {
     e.preventDefault();
     const destination = buildStudySessionHref(studySet.id, mode, studySet.allowedLayouts);
+    const resolvedLayout =
+      studySet.allowedLayouts === "AllInOneOnly" ? "AllInOne" : "Sequential";
     const activePathway =
       studySet.pathway ||
       (typeof window !== "undefined"
@@ -75,17 +81,37 @@ export function StudySetCardActions({
         ? new URLSearchParams(window.location.search).get("subject") || ""
         : "");
     const subjectParam = activeSubject ? `&subject=${encodeURIComponent(activeSubject)}` : "";
-    const subDestination = `/learner/subscription?requiredMode=${mode}&examId=${encodeURIComponent(studySet.id)}&pathway=${pathwayParam}${subjectParam}&returnTo=${encodeURIComponent(destination)}`;
+    const subDestination = `/learner/subscription?requiredMode=${mode}&examId=${encodeURIComponent(studySet.id)}&pathway=${pathwayParam}${subjectParam}&layout=${resolvedLayout}&returnTo=${encodeURIComponent(destination)}`;
+
+    const persistReturnCtx = () => {
+      saveAuthReturnContext(
+        buildValidatedLearningContext({
+          returnTo: subDestination,
+          requiredMode: mode,
+          examId: studySet.id,
+          pathway: activePathway,
+          subject: activeSubject || undefined,
+          layout: resolvedLayout,
+          ownerUserId: user?.id,
+          ownerEmail: user?.email,
+        })
+      );
+    };
 
     if (status === "unauthenticated" || !user) {
+      persistReturnCtx();
       router.push(`/sign-in?returnTo=${encodeURIComponent(subDestination)}`);
       return;
     }
 
     if (status === "authenticated" && user?.emailVerified === false) {
+      persistReturnCtx();
       feedback.showWarning(
         "Please verify your email address before launching " + mode + " Mode.",
         "Email Verification Required"
+      );
+      router.push(
+        `/auth/validate?reason=verification&email=${encodeURIComponent(user.email || "")}&returnTo=${encodeURIComponent(subDestination)}`
       );
       return;
     }
@@ -102,7 +128,7 @@ export function StudySetCardActions({
         return;
       }
 
-      const subDestination = `/learner/subscription?requiredMode=${mode}&examId=${encodeURIComponent(studySet.id)}&pathway=${pathwayParam}${subjectParam}&returnTo=${encodeURIComponent(destination)}`;
+      persistReturnCtx();
 
       if (data.status === "None" || data.errorCode === "NO_SUBSCRIPTION") {
         feedback.showInfo(
