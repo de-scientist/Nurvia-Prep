@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { APP_NAME } from "@/lib/config/config";
 import SeekModal from "@/components/common/modals/seek/SeekModal";
 import { NurviaLogo } from "@/components/common/NurviaLogo";
+import { NavbarSupportMessaging } from "@/components/support/NavbarSupportMessaging";
 import { useCurrentSystemUser } from "@/lib/hooks/users/account/current/useCurrentSystemUser";
 import { useRelativeStrataPrograms } from "@/lib/hooks/nexus/strata/learning/programs/relative/useRelativeStrataPrograms";
 import { useThemeContext } from "@/lib/contexts/panel/layout/theme/PanelThemeContext";
@@ -228,7 +229,7 @@ export default function Navbar() {
                   key={item.name}
                   href={item.href}
                   onClick={() => setActiveDropdown(null)}
-                  className={`px-2.5 py-1.5 rounded-md text-xs lg:text-[13px] font-medium transition-colors whitespace-nowrap ${
+                  className={`px-2.5 py-1.5 rounded-md text-xs lg:text-[13px] font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                     isActive
                       ? "text-[#0D9488] dark:text-teal-400 font-bold bg-[#0D9488]/10"
                       : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -313,6 +314,9 @@ export default function Navbar() {
                 Ctrl K
               </kbd>
             </button>
+
+            {/* Support Messaging Interface */}
+            <NavbarSupportMessaging />
 
             {/* Theme Toggle */}
             <button
