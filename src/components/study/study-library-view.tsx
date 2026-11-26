@@ -593,8 +593,8 @@ export function StudyLibraryView({
             />
           )}
 
-          {/* C. Subject Filters — Directly below Result Count (Horizontally Scrollable Chips, Not a Dropdown) */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none" role="tablist" aria-label="Available subject filters">
+          {/* C. Subject Filters — Directly below Result Count (Wrapped Multi-line Chips, Not a Dropdown) */}
+          <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Available subject filters">
             {availableSubjectFilters.map((subName) => {
               const isActive =
                 (subName === "All Subjects" && selectedSubjectFilter === "All") ||
@@ -610,7 +610,7 @@ export function StudyLibraryView({
                     setPageNumber(1);
                   }}
                   className={cn(
-                    "shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium transition-all border",
+                    "rounded-lg px-2.5 py-1 text-xs font-medium transition-all border",
                     isActive
                       ? "bg-brand-teal/15 text-brand-tealDark dark:text-teal-200 border-brand-teal/40 font-semibold shadow-2xs"
                       : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted hover:text-foreground"
