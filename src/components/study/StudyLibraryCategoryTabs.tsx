@@ -191,10 +191,10 @@ export function StudyLibraryCategoryTabs({
         </div>
       )}
 
-      {/* 2. Visible Exam Bodies Filters — For Examination Library (Inline horizontal row, NOT a dropdown) */}
+      {/* 2. Visible Exam Bodies Filters — For Examination Library (Inline wrapped row, NOT a dropdown) */}
       {isExamView && (
         <div className="space-y-1.5">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none" role="tablist" aria-label="Exam Bodies filter chips">
+          <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Exam Bodies filter chips">
             {examBodyOptions.map((body) => {
               const isActive =
                 (body.id === "All" && selectedCategory === "All" && (!selectedCourse || selectedCourse === "All")) ||
@@ -220,7 +220,7 @@ export function StudyLibraryCategoryTabs({
                     }
                   }}
                   className={cn(
-                    "shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all border",
+                    "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all border",
                     isActive
                       ? "bg-brand-teal text-white border-brand-teal shadow-xs font-bold"
                       : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted hover:text-foreground"
