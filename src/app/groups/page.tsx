@@ -20,8 +20,8 @@ import {
 
 const EXAM_PILLS = [
   "All",
-  "NCLEX-RN",
-  "NCLEX-PN",
+  "RN Licensure",
+  "LPN Licensure",
   "HESI Exit",
   "ATI Predictor",
   "TEAS",
@@ -43,7 +43,7 @@ export default function StudyGroupsPage() {
   // Form fields
   const [newTitle, setNewTitle] = React.useState("");
   const [newDesc, setNewDesc] = React.useState("");
-  const [newTrack, setNewTrack] = React.useState("NCLEX-RN");
+  const [newTrack, setNewTrack] = React.useState("RN Licensure");
   const [newCadence, setNewCadence] = React.useState("Tue & Thu 8:00 PM EST");
   const [newTimezone, setNewTimezone] = React.useState("America/New_York");
   const [newMaxMembers] = React.useState(8);
@@ -278,7 +278,7 @@ export default function StudyGroupsPage() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. NCLEX-RN January High-Yield Study Pod"
+                    placeholder="e.g. RN Licensure January High-Yield Study Pod"
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"

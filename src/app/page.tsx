@@ -113,7 +113,7 @@ export default function HomePage() {
       mode: "Exam Mode",
       badge: "Simulation",
       icon: Clock,
-      desc: "Timed, proctored environment mirroring actual ATI, HESI, and NCLEX interface rules. Deferred results for true readiness testing.",
+      desc: "Timed, proctored environment mirroring actual ATI, HESI, and standardized licensure interface rules. Deferred results for true readiness testing.",
     },
     {
       mode: "Tutor Mode",
@@ -317,7 +317,7 @@ export default function HomePage() {
                 </div>
 
                 <p className="text-sm text-foreground-secondary leading-relaxed">
-                  Prepare sit for the NCLEX RN Exit exam, rehearse the full exit-exam experience, then review the reasoning behind every answer you submit.
+                  Prepare for the RN Exit exam, rehearse the full exit-exam experience, then review the reasoning behind every answer you submit.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
@@ -356,7 +356,7 @@ export default function HomePage() {
                 </div>
 
                 <p className="text-sm text-foreground-secondary leading-relaxed">
-                  Prepare sit for the NCLEX PN Exit exam, rehearse the full exit-exam experience, then review the reasoning behind every answer you submit.
+                  Prepare for the LPN Exit exam, rehearse the full exit-exam experience, then review the reasoning behind every answer you submit.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
@@ -601,7 +601,7 @@ export default function HomePage() {
             <div className="space-y-4">
               <Badge variant="teal">Clinical Judgment Measurement Model</Badge>
               <h2 className="font-brand text-3xl sm:text-4xl font-extrabold text-foreground leading-tight">
-                Next Generation NCLEX (NGN) Formats Fully Supported
+                Next Generation Clinical Judgment (NGN) Formats Fully Supported
               </h2>
               <p className="text-foreground-secondary leading-relaxed text-sm">
                 Modern nursing assessments demand more than rote memorization. QuizNurse’s question engine evaluates the six clinical judgment cognitive skills:

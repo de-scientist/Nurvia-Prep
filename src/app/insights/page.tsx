@@ -27,7 +27,7 @@ export default function InsightsPage() {
   const [toastMessage, setToastMessage] = React.useState<string | null>(null);
 
   // Modal Form State
-  const [examType, setExamType] = React.useState("NCLEX-RN");
+  const [examType, setExamType] = React.useState("RN Licensure");
   const [outcome, setOutcome] = React.useState<"Pass" | "Fail" | "Waiting">("Pass");
   const [questionCount, setQuestionCount] = React.useState<number>(85);
   const [weeksStudied, setWeeksStudied] = React.useState<number>(8);
@@ -44,7 +44,7 @@ export default function InsightsPage() {
     "Saunders Comprehensive Review",
     "UWorld",
     "Archer Review",
-    "NCLEX Bootcamp",
+    "Licensure Prep Bootcamp",
     "Simple Nursing",
     "ATI Comprehensive Predictor",
     "HESI Specialty Exams",
@@ -209,7 +209,7 @@ export default function InsightsPage() {
                   <div>
                     <h2 className="text-lg font-bold text-slate-900">Outcomes by Question Count</h2>
                     <p className="text-xs text-slate-500">
-                      NCLEX Computerized Adaptive Testing (CAT) stop rule distribution
+                      Computerized Adaptive Testing (CAT) stop rule distribution
                     </p>
                   </div>
                   <BarChart3 className="h-5 w-5 text-teal-600" />
@@ -242,7 +242,7 @@ export default function InsightsPage() {
                   <div className="flex items-start gap-3">
                     <Sparkles className="h-5 w-5 text-teal-700 flex-shrink-0 mt-0.5" />
                     <p className="text-xs leading-relaxed text-teal-900">
-                      <strong>Key Insight:</strong> 85 questions is the minimum stop rule on the Next Generation NCLEX.
+                      <strong>Key Insight:</strong> 85 questions is the minimum stop rule on computerized licensure examinations.
                       Candidates who prepare with targeted case studies and clinical judgment questions are twice as likely to finish at 85 questions.
                     </p>
                   </div>
@@ -440,8 +440,8 @@ export default function InsightsPage() {
                   onChange={(e) => setExamType(e.target.value)}
                   className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-teal-600 focus:outline-none"
                 >
-                  <option value="NCLEX-RN">NCLEX-RN</option>
-                  <option value="NCLEX-PN">NCLEX-PN</option>
+                  <option value="RN Licensure">RN Licensure</option>
+                  <option value="LPN Licensure">LPN Licensure</option>
                   <option value="HESI Exit">HESI Exit</option>
                   <option value="ATI Predictor">ATI Comprehensive Predictor</option>
                   <option value="NCK Licensure">NCK Licensure</option>

@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://quiznurse.com"),
   title: "QuizNurse — Nursing Examination Preparation Platform",
   description:
-    "QuizNurse is the premier nursing examination preparation and learning platform for NCLEX-RN, NCLEX-PN, ATI TEAS 7, HESI A2, and RN/LPN exit examinations.",
+    "QuizNurse is the premier nursing examination preparation and learning platform for RN, LPN, ATI TEAS 7, HESI A2, and clinical exit examinations.",
   icons: {
     icon: "/brand/favicon.svg",
     apple: "/brand/quiznurse-app-icon.svg",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   openGraph: {
     title: "QuizNurse — Nursing Examination Preparation Platform",
-    description: "Prepare with clinical confidence for NCLEX-RN, NCLEX-PN, ATI TEAS 7, and HESI A2 with QuizNurse.",
+    description: "Prepare with clinical confidence for RN, LPN, ATI TEAS 7, and HESI A2 with QuizNurse.",
     url: "https://quiznurse.com",
     siteName: "QuizNurse",
     images: [
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "QuizNurse — Nursing Examination Preparation Platform",
-    description: "Prepare with clinical confidence for NCLEX-RN, NCLEX-PN, ATI TEAS 7, and HESI A2 with QuizNurse.",
+    description: "Prepare with clinical confidence for RN, LPN, ATI TEAS 7, and HESI A2 with QuizNurse.",
     images: ["/brand/quiznurse-social-preview.svg"],
   },
 };

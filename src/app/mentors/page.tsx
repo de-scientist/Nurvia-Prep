@@ -17,7 +17,7 @@ import {
 
 const SPECIALTY_PILLS = [
   "All",
-  "NCLEX prep",
+  "Licensure prep",
   "Med-Surg",
   "ICU",
   "ER",
@@ -41,7 +41,7 @@ export default function MentorsPage() {
   // Modal state
   const [selectedMentor, setSelectedMentor] = React.useState<MentorProfileDto | null>(null);
   const [requestTopic, setRequestTopic] = React.useState("Clinical Transition Guidance");
-  const [requestTrack, setRequestTrack] = React.useState("NCLEX-RN");
+  const [requestTrack, setRequestTrack] = React.useState("RN Licensure");
   const [requestMessage, setRequestMessage] = React.useState("");
   const [submittingRequest, setSubmittingRequest] = React.useState(false);
   const [toastMessage, setToastMessage] = React.useState<string | null>(null);
@@ -253,7 +253,7 @@ export default function MentorsPage() {
                     onChange={(e) => setRequestTopic(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
                   >
-                    <option value="NCLEX Prioritization & Pacing">NCLEX Prioritization & Pacing</option>
+                    <option value="Clinical Prioritization & Pacing">Clinical Prioritization & Pacing</option>
                     <option value="Study Plan & Timeline Review">Study Plan & Timeline Review</option>
                     <option value="Clinical Residency & First Year Prep">Clinical Residency & First Year Prep</option>
                     <option value="IEN Credentialing & US State Board Registration">IEN Credentialing & US State Board Registration</option>
@@ -268,8 +268,8 @@ export default function MentorsPage() {
                     onChange={(e) => setRequestTrack(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
                   >
-                    <option value="NCLEX-RN">NCLEX-RN</option>
-                    <option value="NCLEX-PN">NCLEX-PN</option>
+                    <option value="RN Licensure">RN Licensure</option>
+                    <option value="LPN Licensure">LPN Licensure</option>
                     <option value="ATI Predictor">ATI Comprehensive Predictor</option>
                     <option value="HESI Exit">HESI Exit</option>
                     <option value="TEAS 7">ATI TEAS 7</option>

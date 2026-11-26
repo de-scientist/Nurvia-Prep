@@ -389,7 +389,7 @@ export const initialStudySets: StudySetItem[] = [
     hasRationales: true,
     hasNgnFormat: true,
     description:
-      "Cumulative exam covering every content area above — taken near graduation to benchmark NCLEX readiness.",
+      "Cumulative exam covering every content area above — taken near graduation to benchmark licensure readiness.",
     previewQuestion: {
       stem: "A nurse is prioritizing care for 4 admitted clients. Which client should the nurse assess first?",
       options: [
@@ -405,7 +405,7 @@ export const initialStudySets: StudySetItem[] = [
   // Additional study sets from Learner Library screenshot (media_1794209744175_4438dfcc.jpg)
   {
     id: "set-nclex-ready-1",
-    title: "Nclex-Rn Readiness Test 1",
+    title: "Readiness Benchmark Test 1",
     slug: "nclex-rn-readiness-test-1",
     category: "NCLEX RN",
     pathway: "RN",
@@ -414,7 +414,7 @@ export const initialStudySets: StudySetItem[] = [
     hasRationales: true,
     hasNgnFormat: true,
     description:
-      "Full computerized adaptive benchmark simulating NCLEX-RN test plan with Next Generation clinical judgment item types.",
+      "Full computerized adaptive benchmark simulating standardized licensure test plan with Next Generation clinical judgment item types.",
   },
   {
     id: "set-hesi-adult-health",
@@ -453,7 +453,7 @@ export const initialStudySets: StudySetItem[] = [
     hasRationales: true,
     hasNgnFormat: true,
     description:
-      "Comprehensive multi-specialty benchmark exam with detailed topic analytics and NCLEX probability estimation.",
+      "Comprehensive multi-specialty benchmark exam with detailed topic analytics and licensure probability estimation.",
   },
   {
     id: "set-bsn-206-foundations",

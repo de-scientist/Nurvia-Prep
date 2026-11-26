@@ -79,10 +79,10 @@ export default function MarkKIndexPage() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6 text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-teal/10 text-brand-teal text-xs font-bold uppercase tracking-wider">
               <GraduationCap className="w-3.5 h-3.5" />
-              <span>NCLEX High-Yield Framework</span>
+              <span>Clinical High-Yield Framework</span>
             </div>
             <h1 className="font-brand text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground max-w-3xl mx-auto leading-tight">
-              Mark K. NCLEX Lecture Notes Index
+              Mark K. Lecture Notes Index
             </h1>
             <p className="text-foreground-secondary text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
               Explore the 12 core clinical review lectures—with free public access to Lectures 1–3 and full 12-lecture access for signed-in QuizNurse learners.
@@ -273,7 +273,7 @@ export default function MarkKIndexPage() {
               Put Clinical Lecture Rules Into Practice
             </h2>
             <p className="text-sm text-foreground-secondary max-w-2xl mx-auto leading-relaxed">
-              Reinforce your lecture review with QuizNurse’s original NCLEX practice examinations and clinical rationales.
+              Reinforce your lecture review with QuizNurse’s original practice examinations and clinical rationales.
             </p>
             <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
               <Link href="/learner/exams">
@@ -284,7 +284,7 @@ export default function MarkKIndexPage() {
               </Link>
               <Link href="/nclex">
                 <Button variant="outline" size="lg" className="h-11 px-6 text-xs font-semibold">
-                  Explore NCLEX Hub
+                  Explore Licensure Hub
                 </Button>
               </Link>
             </div>

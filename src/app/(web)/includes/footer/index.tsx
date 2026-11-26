@@ -26,7 +26,7 @@ export default function Footer() {
               <p className="text-sm text-slate-600 dark:text-slate-400 max-w-sm leading-relaxed">
                 {APP_NAME} provides structured nursing exam preparation, Next-Gen clinical
                 judgment training, and personalized revision analytics across ATI TEAS,
-                HESI A2, RN, LPN, and NCLEX licensure tracks.
+                HESI A2, RN, LPN, and clinical licensure tracks.
               </p>
               <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                 <ShieldCheck className="w-4 h-4 text-[#0D9488] shrink-0" />
@@ -62,12 +62,12 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link href="/pages/exams/nclex-rn" className="hover:text-[#0D9488] transition-colors">
-                    NCLEX-RN Licensure
+                    RN Licensure
                   </Link>
                 </li>
                 <li>
                   <Link href="/pages/exams/nclex-pn" className="hover:text-[#0D9488] transition-colors">
-                    NCLEX-PN Licensure
+                    LPN Licensure
                   </Link>
                 </li>
               </ul>

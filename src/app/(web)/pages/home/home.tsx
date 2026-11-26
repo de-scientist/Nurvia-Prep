@@ -97,14 +97,14 @@ const HERO_TRACK_CHIPS = [
   { label: "HESI A2 Prep", href: "/pages/exams/hesi-a2", dashboard: "/dashboards/hesi-a2" },
   { label: "RN Nursing", href: "/pages/exams/rn-nursing", dashboard: "/dashboards/rn-nursing" },
   { label: "LPN Nursing", href: "/pages/exams/lpn-nursing", dashboard: "/dashboards/lpn-nursing" },
-  { label: "NCLEX-RN", href: "/pages/exams/nclex-rn", dashboard: "/dashboards/nclex-rn" },
-  { label: "NCLEX-PN", href: "/pages/exams/nclex-pn", dashboard: "/dashboards/nclex-pn" },
+  { label: "RN Licensure", href: "/pages/exams/nclex-rn", dashboard: "/dashboards/nclex-rn" },
+  { label: "LPN Licensure", href: "/pages/exams/nclex-pn", dashboard: "/dashboards/nclex-pn" },
 ];
 
 const PRACTICE_SPOTLIGHTS = [
   {
     id: "spotlight-ngn",
-    track: "NCLEX-RN",
+    track: "RN Licensure",
     focus: "Unfolding Case Studies",
     status: "NGN Ready",
     title: "Next-Gen Clinical Judgment Vignettes",
@@ -230,21 +230,21 @@ const STUDY_SETS: StudySetCardItem[] = [
   },
   {
     id: "set-nclex-rn-predictor",
-    title: "NCLEX-RN & Comprehensive Exit",
+    title: "RN Licensure & Comprehensive Exit",
     category: "EXIT EXAM",
-    examTrack: "NCLEX-RN",
+    examTrack: "RN",
     pathway: "RN Licensure",
     badge: "Predictor",
     description:
-      "Full-length cumulative readiness simulations mirroring NCLEX-RN and exit predictor blueprints with NGN unfolding case studies.",
+      "Full-length cumulative readiness simulations mirroring RN licensure and exit predictor blueprints with NGN unfolding case studies.",
     examHref: "/pages/exams/nclex-rn",
     dashboardHref: "/dashboards/nclex-rn",
   },
   {
     id: "set-nclex-pn-predictor",
-    title: "NCLEX-PN Practical Nurse Exit",
+    title: "LPN Practical Nurse Exit",
     category: "EXIT EXAM",
-    examTrack: "NCLEX-PN",
+    examTrack: "LPN",
     pathway: "LPN",
     badge: "Predictor",
     description:
@@ -574,7 +574,7 @@ export default function HomePage({ data }: HomePageProps) {
       mode: "Exam Mode",
       badge: "Simulation",
       icon: Clock,
-      desc: "Timed, proctored environment mirroring actual ATI, HESI, and NCLEX interface rules. Deferred results for true readiness testing.",
+      desc: "Timed, proctored environment mirroring actual ATI, HESI, and clinical examination interface rules. Deferred results for true readiness testing.",
       href: "/pages/entrance",
     },
     {
@@ -622,7 +622,7 @@ export default function HomePage({ data }: HomePageProps) {
               </h1>
 
               <p className="max-w-xl text-base leading-relaxed text-slate-600 dark:text-slate-300 sm:text-lg">
-                Work through ATI TEAS 7, HESI A2, RN, LPN, and NCLEX exit-exam practice at your own pace. Learn from clear clinical rationales, build comfort with NGN formats, and choose the study mode that fits today.
+                Work through ATI TEAS 7, HESI A2, RN, LPN, and clinical exit-exam practice at your own pace. Learn from clear clinical rationales, build comfort with NGN formats, and choose the study mode that fits today.
               </p>
 
               {/* Primary CTAs */}
@@ -831,24 +831,24 @@ export default function HomePage({ data }: HomePageProps) {
                 cta: "Open LPN Nursing",
               },
               {
-                title: "NCLEX-RN Licensure",
-                subtitle: "Next Generation NCLEX-RN",
+                title: "RN Licensure Examination",
+                subtitle: "Next Generation RN Preparation",
                 icon: Award,
-                desc: "Simulate the official NCLEX-RN testing environment with unfolding case studies, bow-tie items, matrix grids, and adaptive analytics.",
+                desc: "Simulate the official clinical testing environment with unfolding case studies, bow-tie items, matrix grids, and adaptive analytics.",
                 pills: ["NGN Case Studies", "Clinical Judgment", "Readiness Reports"],
                 pageHref: "/pages/exams/nclex-rn",
                 dashHref: "/dashboards/nclex-rn",
-                cta: "Open NCLEX-RN",
+                cta: "Open RN Licensure",
               },
               {
-                title: "NCLEX-PN Licensure",
+                title: "LPN Licensure Examination",
                 subtitle: "Practical Nurse Licensure",
                 icon: ShieldCheck,
-                desc: "Build licensure confidence for the NCLEX-PN with targeted prioritization, coordinated care, pharmacology, and NGN item formats.",
-                pills: ["NCLEX-PN Test Plan", "Detailed Rationales", "8 Exam Themes"],
+                desc: "Build licensure confidence for the practical nursing examination with targeted prioritization, coordinated care, pharmacology, and NGN item formats.",
+                pills: ["LPN Test Plan", "Detailed Rationales", "8 Exam Themes"],
                 pageHref: "/pages/exams/nclex-pn",
                 dashHref: "/dashboards/nclex-pn",
-                cta: "Open NCLEX-PN",
+                cta: "Open LPN Licensure",
               },
             ].map((track) => {
               const Icon = track.icon;
@@ -1129,7 +1129,7 @@ export default function HomePage({ data }: HomePageProps) {
                 Clinical Judgment Measurement Model
               </span>
               <h2 className="font-brand text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight">
-                Next Generation NCLEX (NGN) Formats Fully Supported
+                Next Generation (NGN) Formats Fully Supported
               </h2>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
                 Modern nursing assessments demand more than rote memorization. {APP_NAME}&apos;s 38-type question engine evaluates all six clinical judgment cognitive skills:

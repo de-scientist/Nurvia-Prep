@@ -116,7 +116,7 @@ function StudyGuidesContent() {
                         {currentTopic.subjectTitle}
                       </Badge>
                       <Badge className="bg-amber-50 text-amber-900 border-amber-200 font-bold text-xs">
-                        {currentTopic.nclexYield} NCLEX Yield
+                        {currentTopic.nclexYield} Yield
                       </Badge>
                       <span className="inline-flex items-center gap-1 text-xs text-slate-500 font-medium">
                         <Clock className="h-3.5 w-3.5 text-slate-400" />
@@ -132,7 +132,7 @@ function StudyGuidesContent() {
                     </p>
                   </div>
 
-                  {/* NCLEX Board Alerts */}
+                  {/* Board Alerts */}
                   {currentTopic.nclexAlerts.length > 0 && (
                     <div className="mt-6 rounded-2xl bg-amber-50/80 border border-amber-200/90 p-5">
                       <div className="flex items-start gap-3">
@@ -307,7 +307,7 @@ function StudyGuidesContent() {
                 Expanded Nursing Study Guide Library
               </h1>
               <p className="mt-2 text-base text-slate-600 max-w-3xl">
-                High-yield clinical summaries, NCLEX alerts, priority interventions, and comparison tables across 9 core nursing subjects.
+                High-yield clinical summaries, critical exam alerts, priority interventions, and comparison tables across 9 core nursing subjects.
               </p>
             </div>
 

@@ -14,7 +14,7 @@ import { MessageSquare, Heart, Plus, Send, Trash2 } from "lucide-react";
 
 const CHANNELS = [
   { id: "all", label: "All Channels" },
-  { id: "nclex-cohorts", label: "NCLEX 2026 Cohorts" },
+  { id: "nclex-cohorts", label: "Licensure 2026 Cohorts" },
   { id: "ati-hesi-debriefs", label: "ATI & HESI Debriefs" },
   { id: "clinical-cases", label: "NGN Case Studies" },
   { id: "wellness-support", label: "Resilience & Wellness" },
@@ -137,7 +137,7 @@ export default function CommunityPage() {
               Student Cohort Community
             </h1>
             <p className="text-xs sm:text-sm text-foreground-secondary">
-              Connect with fellow nursing candidates preparing for ATI proctored assessments and NCLEX licensure.
+              Connect with fellow nursing candidates preparing for ATI proctored assessments and clinical licensure.
             </p>
           </div>
           <Button

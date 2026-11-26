@@ -39,7 +39,7 @@ import Contact from "@/app/(web)/components/sections/Contact";
 import { useRouter } from "next/navigation";
 
 const DASHBOARD_NAME = "nclex-rn"; // Lowercase hyphened as per dashboard path expectation 
-const PROGRAM_NAME = "NCLEX RN";
+const PROGRAM_NAME = "RN Licensure";
 const PARENT_TABLE_NAME = "program";
 const PARENT_NAME = "NCLEX_RN"; // Uppercase and Underscore as per backend program Segment column expectation
 

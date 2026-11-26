@@ -3,7 +3,7 @@ import type { StudyGroupDto, CreateStudyGroupRequest } from '@/lib/api-types';
 const INITIAL_GROUPS: StudyGroupDto[] = [
   {
     id: 'grp-nclex-rn-dec',
-    title: 'NCLEX-RN December Intensive Study Cohort',
+    title: 'RN Licensure December Intensive Study Cohort',
     description: 'Daily 50 NGN practice questions and weekly evening Zoom case study review sessions. Focus on prioritization, delegation, and safety.',
     examTrack: 'NCLEX-RN',
     subject: 'All Subjects · Comprehensive',

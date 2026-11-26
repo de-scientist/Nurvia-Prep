@@ -10,10 +10,10 @@ import { SITE_URL, SITE_LINKS } from "@/lib/config/siteLinks";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${APP_NAME} — NCLEX-RN/PN, ATI TEAS 7, HESI A2 & Nursing Exam Prep`,
+    default: `${APP_NAME} — RN, LPN, ATI TEAS 7, HESI A2 & Nursing Exam Prep`,
     template: `%s | ${APP_NAME}`,
   },
-  description: `${APP_NAME} is the premier clinical exam preparation platform for nursing learners: NCLEX-RN, NCLEX-PN, ATI TEAS 7, HESI A2, and RN & LPN Q-Banks.`,
+  description: `${APP_NAME} is the premier clinical exam preparation platform for nursing learners: RN, LPN, ATI TEAS 7, HESI A2, and clinical nursing Q-Banks.`,
   applicationName: APP_NAME,
   robots: { index: true, follow: true },
   openGraph: { siteName: APP_NAME, type: "website", url: SITE_URL, title: APP_NAME },

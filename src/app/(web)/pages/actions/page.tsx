@@ -80,8 +80,8 @@ const SECTIONS: ActionSection[] = [
             { title: "HESI A2", description: "Prep content for the HESI A2 exam.", href: "/pages/exams/hesi-a2", icon: FiActivity },
             { title: "RN Nursing", description: "Prep content for RN Nursing.", href: "/pages/exams/rn-nursing", icon: FiActivity },
             { title: "LPN Nursing", description: "Prep content for LPN Nursing.", href: "/pages/exams/lpn-nursing", icon: FiActivity },
-            { title: "NCLEX-RN", description: "Prep content for the NCLEX-RN exam.", href: "/pages/exams/nclex-rn", icon: FiActivity },
-            { title: "NCLEX-PN", description: "Prep content for the NCLEX-PN exam.", href: "/pages/exams/nclex-pn", icon: FiActivity },
+            { title: "RN Licensure", description: "Prep content for RN Licensure exams.", href: "/pages/exams/nclex-rn", icon: FiActivity },
+            { title: "LPN Licensure", description: "Prep content for LPN Licensure exams.", href: "/pages/exams/nclex-pn", icon: FiActivity },
         ],
     },
     {

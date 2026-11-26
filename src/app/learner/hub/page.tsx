@@ -26,7 +26,7 @@ export default function StudyHubPage() {
     },
     {
       title: "Spaced Repetition Flashcards",
-      desc: "Smart flashcard decks covering drug suffixes, lab values, pediatric milestones, and NCLEX safety rules.",
+      desc: "Smart flashcard decks covering drug suffixes, lab values, pediatric milestones, and clinical safety rules.",
       icon: Layers,
       href: "/learner/flashcards",
       badge: "SRS Algorithm",

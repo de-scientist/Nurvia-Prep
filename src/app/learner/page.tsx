@@ -149,7 +149,7 @@ export default function LearnerDashboardPage() {
               className="flex items-center gap-2 rounded-xl border border-border bg-surface p-2.5 text-xs font-semibold text-foreground hover:border-teal-400 hover:text-teal-700 transition-all"
             >
               <GraduationCap className="h-4 w-4 text-teal-600" />
-              <span className="truncate">PrepFord NCLEX</span>
+              <span className="truncate">PrepFord Licensure</span>
             </a>
             <Link
               href="/study-guides"

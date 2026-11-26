@@ -26,7 +26,7 @@ export default function StudyHubLandingPage() {
   const learningTools = [
     {
       title: "Study Library",
-      desc: "Extensive question banks with step-by-step clinical rationales across ATI, HESI, and NCLEX tracks.",
+      desc: "Extensive question banks with step-by-step clinical rationales across ATI, HESI, and licensure tracks.",
       href: "/learner/library",
       badge: "Question Bank",
       icon: Library,
@@ -58,7 +58,7 @@ export default function StudyHubLandingPage() {
     },
     {
       title: "Study Planner & Milestones",
-      desc: "Structured daily pacing to keep you on schedule for proctored finals or your NCLEX test appointment.",
+      desc: "Structured daily pacing to keep you on schedule for proctored finals or your licensure test appointment.",
       href: "/learner/planner",
       badge: "Organization",
       icon: CalendarCheck,

@@ -8,8 +8,8 @@ export interface SiteLink {
 
 export const SITE_LINKS: SiteLink[] = [
   { name: "RN Nursing Exams", description: "Practice exams and Q-Banks for RN students: Med-Surg, Fundamentals, Maternal-Newborn, Mental Health and more.", href: "/rn-nursing" },
-  { name: "NCLEX-RN", description: "Realistic NCLEX-RN and Next Generation NCLEX-style questions with detailed rationales.", href: "/pages/exams/nclex-rn" },
-  { name: "NCLEX-PN", description: "NCLEX-PN practice questions and exit exam preparation for LPN/LVN students.", href: "/pages/exams/nclex-pn" },
+  { name: "RN Practice Tests", description: "Realistic RN and Next Generation clinical questions with detailed rationales.", href: "/pages/exams/nclex-rn" },
+  { name: "LPN Practice Tests", description: "LPN practice questions and exit exam preparation for LPN/LVN students.", href: "/pages/exams/nclex-pn" },
   { name: "ATI TEAS 7", description: "TEAS 7 practice tests and study guides to prepare for nursing school admission.", href: "/pages/exams/ati-teas" },
   { name: "HESI A2", description: "HESI A2 practice exams covering every section of the admission assessment.", href: "/pages/exams/hesi-a2" },
   { name: "LPN Nursing Exams", description: "LPN exit exams and proctored-style assessments with answers and explanations.", href: "/pages/exams/lpn-nursing" },

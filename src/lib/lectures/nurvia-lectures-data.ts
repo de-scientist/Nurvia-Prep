@@ -137,7 +137,7 @@ const NURVIA_LECTURES: readonly LectureSeedRecord[] = [
 
 **Other alarms**: low exhaled volume (leak or shallow breaths), apnea alarm (spontaneous mode breathing stopped), high respiratory rate (patient-ventilator asynchrony, pain, or anxiety).
 
-## NCLEX Practice Points
+## Clinical Practice Points
 - Sudden high-pressure alarm + absent breath sounds on one side + tracheal deviation = **tension pneumothorax**; prepare for needle decompression.
 - Never silence an alarm without assessing the patient first.
 - Suction only as needed, pre-oxygenate, limit to ~10 seconds per pass.`,
@@ -174,7 +174,7 @@ const NURVIA_LECTURES: readonly LectureSeedRecord[] = [
 - **Cause**: thiamine (vitamin B1) deficiency in chronic alcohol use. Always give thiamine **before** IV glucose — glucose infusion can precipitate or worsen it.
 - **Wernicke's encephalopathy (acute, reversible)**: confusion, ataxia, ophthalmoplegia (nystagmus/eye-movement palsy). Treat with immediate parenteral thiamine.
 - **Korsakoff psychosis (chronic, largely irreversible)**: anterograde amnesia, confabulation (fabricating stories to fill memory gaps), personality change.
-- NCLEX cue: a confused, ataxic alcoholic patient who confabulates = think thiamine deficiency, not intoxication alone.
+- Clinical cue: a confused, ataxic alcoholic patient who confabulates = think thiamine deficiency, not intoxication alone.
 
 ## Overdose Antidotes and Priorities
 
@@ -189,7 +189,7 @@ const NURVIA_LECTURES: readonly LectureSeedRecord[] = [
 
 **Decontamination**: activated charcoal within about an hour of ingestion for suitable agents; never induce emesis; charcoal is contraindicated with depressed consciousness unless the airway is protected.
 
-## NCLEX Practice Points
+## Clinical Practice Points
 - Airway, breathing, circulation always precede antidote administration.
 - Naloxone's duration is shorter than most opioids — keep monitoring for re-sedation.
 - Thiamine before glucose in any patient with alcohol use disorder receiving IV dextrose.
@@ -233,7 +233,7 @@ Post-thyroidectomy priorities: keep tracheostomy/suction at the bedside, monitor
 | Causes | Thyroid/parathyroid surgery, vitamin D deficiency, hypomagnesemia | Malignancy, hyperparathyroidism, thiazides, immobilization |
 | Treatment | IV calcium gluconate; treat coexisting low magnesium | IV fluids first, loop diuretics (NOT thiazides), calcitonin, bisphosphonates |
 
-## NCLEX Practice Points
+## Clinical Practice Points
 - Hyperparathyroidism = high calcium; watch for confusion and falls before the numbers.
 - After thyroidectomy, the calcium assessment matters as much as the airway.
 - Addison's = "low and slow" (sodium, glucose, blood pressure); Cushing's = "high everything" except potassium and immunity.`,
@@ -347,7 +347,7 @@ Blood flow is blocked → poor perfusion, shock.
     'psychotropics-communication',
     'Psychotropics/Communication',
     'Psychiatric & Substance Use',
-    'Master psychotropic monitoring (lithium, clozapine, MAOIs, antipsychotics) and therapeutic communication traps that decide psychiatric NCLEX questions.',
+    'Master psychotropic monitoring (lithium, clozapine, MAOIs, antipsychotics) and therapeutic communication traps that decide psychiatric licensure questions.',
     `## Psychotropic Medication Safety
 
 **Lithium**: therapeutic window 0.6-1.2 mEq/L. Teach consistent sodium and water intake (dehydration and NSAIDs raise levels). Early toxicity: coarse tremor, GI upset, ataxia — check a level before the morning dose (12 hours after the last dose).
@@ -366,7 +366,7 @@ Blood flow is blocked → poor perfusion, shock.
 
 **Do**: broad openings ("Tell me what you mean by..."), reflection, silence with presence, presenting reality ("I don't hear voices, but you seem frightened"), giving recognition without judgment, offering self, setting limits calmly.
 
-**Avoid — the classic NCLEX traps**:
+**Avoid — the classic exam traps**:
 - "Why" questions (defensive).
 - False reassurance ("Everything will be fine").
 - Giving advice or approval/disapproval.
@@ -376,7 +376,7 @@ Blood flow is blocked → poor perfusion, shock.
 
 **Anger/aggression**: de-escalate first — calm voice, respect personal space (arm's length), set clear limits, offer a quieter setting; restraints and seclusion are last resorts for imminent danger only, and never for staff convenience or as punishment.
 
-## NCLEX Practice Points
+## Clinical Practice Points
 - Psych questions choose the response that **explores the patient's meaning** — not the one that comforts the nurse.
 - Lithium + poor fluid intake or NSAIDs = toxicity; teach when levels matter.
 - Fever on clozapine is an emergency until agranulocytosis is excluded.`,
@@ -409,7 +409,7 @@ Blood flow is blocked → poor perfusion, shock.
 
 ### Nursing Priorities
 - **DI**: strict intake and output with hourly urine specific gravity early on, weigh daily, maintain access and give desmopressin as ordered; sudden confusion in a DI patient usually means hypernatremia.
-- **SIADH**: fluid restriction is the NCLEX answer; safety precautions while sodium is low (seizure precautions, reorientation); sodium correction must be gradual — rapid correction risks osmotic demyelination.
+- **SIADH**: fluid restriction is the expected answer; safety precautions while sodium is low (seizure precautions, reorientation); sodium correction must be gradual — rapid correction risks osmotic demyelination.
 - **DKA vs HHS**: DKA = type 1, ketones, fruity breath, Kussmaul respirations, acidosis. HHS = type 2, profound hyperglycemia without significant ketosis. Both need IV fluids first, then insulin infusion, then potassium monitoring — insulin drives potassium into cells; never give potassium before confirming urine output.
 
 ### Insulin Teaching Anchors
@@ -506,7 +506,7 @@ Blood flow is blocked → poor perfusion, shock.
 
 **Postpartum hemorrhage**: the 4 T's — tone (massage first), trauma (laceration/hematoma), tissue (retained placenta), thrombin (coagulopathy). Uterine atony is the most common cause: massage the fundus, empty the bladder, give oxytocics per order.
 
-## NCLEX Practice Points
+## Clinical Practice Points
 - Painless bleeding = previa (no exam); painful bleeding = abruption (prepare for delivery).
 - Cord prolapse: hand in the vagina lifting the presenting part — off the cord — all the way to the OR.
 - Fundal massage before any additional uterotonic.`,
@@ -550,7 +550,7 @@ The mnemonic pairs each fetal heart-rate pattern with its most likely cause — 
 4. Oxygen 8-10 L/min by facemask where indicated by policy.
 5. Assess tachysystole (more than 5 contractions in 10 minutes averaged over 30 minutes); notify the provider; prepare for operative delivery if the pattern does not improve.
 
-## NCLEX Practice Points
+## Clinical Practice Points
 - Early decels = head compression = **no intervention** needed beyond reassurance.
 - Variable decels with a sinusoidal-appearing pattern, prolonged bradycardia, or late decels with minimal variability = **move toward delivery**.
 - Maternal fever causes fetal tachycardia — treat the mother's temperature.`,
@@ -592,7 +592,7 @@ The mnemonic pairs each fetal heart-rate pattern with its most likely cause — 
 - **Nalbuphine/butorphanol**: mixed agonist-antagonists avoid respiratory depression but can precipitate withdrawal in opioid-dependent patients.
 - **Nitrous oxide/epidural**: hypotension is the hazard — IV fluid bolus before epidural, monitor BP, watch the bladder.
 
-## NCLEX Practice Points
+## Clinical Practice Points
 - Magnesium toxicity signs are reflex, respiratory, renal — in that order of concern.
 - Oxytocin problem? The answer is almost always "stop the oxytocin" before anything else.
 - RhoGAM timing: 28 weeks and within 72 hours postpartum.`,

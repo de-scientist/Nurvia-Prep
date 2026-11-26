@@ -89,7 +89,7 @@ export const DEVELOPER = {
 // -----------------------------------------------------------------------------
 export const SEO = {
   author: DEVELOPER.NAME || "QuizNurse Team",
-  keywords: "QuizNurse, Nursing Exam Preparation, NCLEX-RN, NCLEX-PN, ATI TEAS 7, HESI A2, RN, LPN, Nursing Study",
+  keywords: "QuizNurse, Nursing Exam Preparation, RN, LPN, ATI TEAS 7, HESI A2, Nursing Study",
   ogImage: `${CONTACT.CANONICALLINK || "https://quiznurse.com"}/brand/quiznurse-social-preview.svg`,
   siteUrl: CONTACT.CANONICALLINK || "https://quiznurse.com",
 };

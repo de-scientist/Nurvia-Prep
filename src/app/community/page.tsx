@@ -30,7 +30,7 @@ interface CommunityCategory {
 const communityCategories: CommunityCategory[] = [
   {
     id: "nclex-cohorts",
-    name: "NCLEX 2026 Test-Taker Cohorts",
+    name: "Licensure 2026 Test-Taker Cohorts",
     description: "Connect with nursing graduates testing in your upcoming window. Share testing center experiences and study routines.",
     badge: "Active Cohort",
     icon: Users,

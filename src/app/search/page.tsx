@@ -195,7 +195,7 @@ function SearchContent() {
             <Sparkles className="mx-auto h-10 w-10 text-teal-600" />
             <h3 className="mt-3 text-lg font-bold text-slate-800">Popular Search Topics</h3>
             <p className="mt-1 text-xs text-slate-500">
-              Jump directly into the most frequently reviewed clinical areas and NCLEX prep resources:
+              Jump directly into the most frequently reviewed clinical areas and licensure prep resources:
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
               {SUGGESTED_QUERIES.map((item) => (

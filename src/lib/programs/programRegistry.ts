@@ -25,9 +25,9 @@ export const NURSING_PROGRAMS: Record<NursingProgramSlug, NursingProgramMeta> = 
   'nclex-rn': {
     slug: 'nclex-rn',
     segment: 'NCLEX_RN',
-    name: 'NCLEX-RN Examination Prep',
-    shortTitle: 'NCLEX-RN',
-    subtitle: 'Next Generation NCLEX-RN clinical judgment and licensure readiness',
+    name: 'RN Licensure Examination Prep',
+    shortTitle: 'RN Licensure',
+    subtitle: 'Next Generation RN clinical judgment and licensure readiness',
     description:
       'Practice NGN case studies, prioritization, pharmacology, and client-needs domains with detailed clinical rationales.',
     focusAreas: [
@@ -42,8 +42,8 @@ export const NURSING_PROGRAMS: Record<NursingProgramSlug, NursingProgramMeta> = 
   'nclex-pn': {
     slug: 'nclex-pn',
     segment: 'NCLEX_PN',
-    name: 'NCLEX-PN Examination Prep',
-    shortTitle: 'NCLEX-PN',
+    name: 'LPN Licensure Examination Prep',
+    shortTitle: 'LPN Licensure',
     subtitle: 'Practical & vocational nursing licensure exam preparation',
     description:
       'Master safe and effective care, coordinated care, basic care and comfort, and LPN/LVN scope-of-practice scenarios.',

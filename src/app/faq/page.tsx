@@ -33,12 +33,12 @@ const faqs: FaqItem[] = [
     category: "Exam Preparation",
     question: "What is the difference between Review Mode and Exam Mode?",
     answer:
-      "In Review Mode (Learn-as-you-go), you receive immediate clinical judgment feedback and rationales directly after answering each question. In Exam Mode, you take a timed simulation without intermediate feedback, replicating the pressure, pacing, and interface rules of actual ATI, HESI, and NCLEX proctored assessments.",
+      "In Review Mode (Learn-as-you-go), you receive immediate clinical judgment feedback and rationales directly after answering each question. In Exam Mode, you take a timed simulation without intermediate feedback, replicating the pressure, pacing, and interface rules of actual ATI, HESI, and standardized proctored assessments.",
   },
   {
     id: "faq-03",
     category: "NGN & Clinical Judgment",
-    question: "Does QuizNurse support all Next Generation NCLEX (NGN) question item types?",
+    question: "Does QuizNurse support all Next Generation Clinical Judgment (NGN) question item types?",
     answer:
       "Yes. QuizNurse natively supports Extended Multiple Response, Extended Drag-and-Drop, Cloze (Drop-Down), Enhanced Hot Spot, Matrix / Grid, and 6-question Unfolding Clinical Case Studies that follow the NCSBN Clinical Judgment Measurement Model (CJMM).",
   },
@@ -47,7 +47,7 @@ const faqs: FaqItem[] = [
     category: "NGN & Clinical Judgment",
     question: "How does partial credit (polytomous) scoring work in NGN questions?",
     answer:
-      "QuizNurse accurately implements NCSBN scoring models: +/- Scoring (giving +1 point for correct responses and deducting -1 point for incorrect choices down to a minimum score of 0) and 0/1 Scoring (for drop-down and matrix cells), so your practice scores reflect true NCLEX scoring.",
+      "QuizNurse accurately implements NCSBN scoring models: +/- Scoring (giving +1 point for correct responses and deducting -1 point for incorrect choices down to a minimum score of 0) and 0/1 Scoring (for drop-down and matrix cells), so your practice scores reflect true standardized scoring.",
   },
   {
     id: "faq-05",

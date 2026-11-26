@@ -22,13 +22,13 @@ export default function NclexStudyRedirectPage() {
             Redirecting to PrepFord
           </h1>
           <p className="text-sm text-foreground-secondary leading-relaxed">
-            All dedicated NCLEX-RN and NCLEX-PN preparation is hosted exclusively on PrepFord.
+            All dedicated RN and LPN licensure preparation is hosted exclusively on PrepFord.
           </p>
         </div>
         <div>
           <a href="https://www.prepford.com/" rel="noopener noreferrer">
             <Button className="w-full flex items-center justify-center gap-2">
-              <span>Go to PrepFord NCLEX</span>
+              <span>Go to PrepFord</span>
               <ExternalLink className="h-4 w-4" />
             </Button>
           </a>

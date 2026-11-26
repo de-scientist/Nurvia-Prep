@@ -37,7 +37,7 @@ function LearnerExamsContent() {
     },
     PN_Exit: {
       title: "LPN Exit & Benchmark Predictor Exams",
-      subtitle: "Predictive exit examinations assessing readiness for NCLEX-PN licensure.",
+      subtitle: "Predictive exit examinations assessing readiness for LPN licensure.",
       icon: Award,
     },
     NursingMath: {

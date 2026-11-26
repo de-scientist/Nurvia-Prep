@@ -53,7 +53,7 @@ import RegisterModal from "@/app/(web)/auth/modals/Register";
 
 // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-const TARGET_NAME = "Nclex Rn";
+const TARGET_NAME = "RN Licensure";
 const TARGET_PANEL = "nclex-rn";
 const TARGET_SEGMENT = "NCLEX_RN";
 const REPORTS_ROUTE = `/dashboards/${TARGET_PANEL}/vista/assessment/exams/reports/relative`;
@@ -1077,7 +1077,7 @@ export default function AtiTeasHomePage() {
             <span className="absolute right-3 top-3 rounded-full bg-[#142B4A] px-2.5 py-0.5 text-[10px] font-bold text-white">Soon</span>
             <span className="text-2xl">🎯</span>
             <h6 className="mt-1.5 text-sm font-bold">CAT Exam</h6>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">Simulate real NCLEX testing.</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Simulate real examination testing.</p>
             <span className="mt-2.5 block rounded-xl bg-slate-100 dark:bg-slate-800 py-1.5 text-center text-xs font-semibold text-[#142B4A] dark:text-slate-200">Learn More</span>
           </button>
 
@@ -1398,7 +1398,7 @@ export default function AtiTeasHomePage() {
             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0D9488]/10 text-2xl">🎯</div>
             <h5 className="mb-1.5 text-lg font-bold text-[#142B4A] dark:text-white">CAT Exam — Coming Soon</h5>
             <p className="mb-5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-              Computerized Adaptive Testing is being built to simulate your real NCLEX experience, adapting difficulty to your performance.
+              Computerized Adaptive Testing is being built to simulate your real examination experience, adapting difficulty to your performance.
             </p>
             <div className="flex gap-2.5">
               <button

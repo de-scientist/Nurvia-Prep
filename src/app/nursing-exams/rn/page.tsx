@@ -48,7 +48,7 @@ export default function RNExamPathwayPage() {
               RN Examination & Clinical Judgment Hub
             </h1>
             <p className="mt-3 text-base text-slate-300 max-w-2xl leading-relaxed">
-              Master the Next Generation NCLEX-RN and high-stakes RN exit predictor examinations with full case studies, bowtie items, and clinical decision models.
+              Master high-stakes RN licensure and exit predictor examinations with full case studies, bowtie items, and clinical decision models.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -64,7 +64,7 @@ export default function RNExamPathwayPage() {
               </Link>
               <Link href="/nclex/study">
                 <Button variant="outline" className="rounded-xl border-teal-300 text-teal-100 hover:bg-teal-800/40 font-semibold px-5 py-2.5">
-                  NCLEX Study Hub
+                  Licensure Study Hub
                 </Button>
               </Link>
             </div>
@@ -126,7 +126,7 @@ export default function RNExamPathwayPage() {
                 </Card>
               </Link>
 
-              <Link href="/groups?track=NCLEX-RN">
+              <Link href="/groups?track=RN">
                 <Card className="rounded-2xl border-slate-200 bg-white p-5 shadow-sm hover:border-teal-300 hover:shadow-md transition-all h-full">
                   <div className="flex items-center gap-3 mb-2">
                     <Users className="h-5 w-5 text-rose-600" />

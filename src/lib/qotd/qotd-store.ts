@@ -39,7 +39,7 @@ const SEED_QUESTIONS: InternalQotdRecord[] = [
     title: 'IV Heparin Infusion and Elevated aPTT Management',
     stem: 'A client receiving an intravenous heparin infusion has an activated partial thromboplastin time (aPTT) of 120 seconds (laboratory reference control: 30 seconds). Which nursing action should the nurse take first?',
     category: 'Pharmacology & Parenteral Therapies',
-    examContext: 'NCLEX-RN / Med-Surg',
+    examContext: 'RN / Med-Surg',
     cognitiveSkill: 'TakeActions',
     clientNeedCategory: 'PhysiologicalIntegrity',
     options: [
@@ -82,7 +82,7 @@ const SEED_QUESTIONS: InternalQotdRecord[] = [
     title: 'Triage & Client Prioritization Following In-Hospital Fall',
     stem: 'A charge nurse finds an elderly client on the floor in their room. After assisting the client back to bed and taking initial vital signs, which nursing action is the most critical next step?',
     category: 'Management of Care',
-    examContext: 'NCLEX-RN / Leadership',
+    examContext: 'RN / Leadership',
     cognitiveSkill: 'PrioritizeHypotheses',
     clientNeedCategory: 'SafeEffectiveCareEnvironment',
     options: [
@@ -125,7 +125,7 @@ const SEED_QUESTIONS: InternalQotdRecord[] = [
     title: 'Pediatric Digoxin Toxicity Signs',
     stem: 'A 2-year-old child with congenital heart disease is receiving oral digoxin. Which assessment finding should alert the nurse to potential digoxin toxicity?',
     category: 'Pediatric Nursing & Pharmacology',
-    examContext: 'NCLEX-RN / Pediatrics',
+    examContext: 'RN / Pediatrics',
     cognitiveSkill: 'RecognizeCues',
     clientNeedCategory: 'PhysiologicalIntegrity',
     options: [

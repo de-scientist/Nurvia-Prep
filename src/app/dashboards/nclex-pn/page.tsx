@@ -51,7 +51,7 @@ import RegisterModal from "@/app/(web)/auth/modals/Register";
 
 // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-const TARGET_NAME = "Nclex Pn";
+const TARGET_NAME = "LPN Licensure";
 const TARGET_PANEL = "nclex-pn";
 const TARGET_SEGMENT = "NCLEX_PN";
 const REPORTS_ROUTE = `/dashboards/${TARGET_PANEL}/vista/assessment/exams/reports/relative`;

@@ -59,7 +59,7 @@ export default function LPNExamPathwayPage() {
               LPN/LVN Licensure & Scope Hub
             </h1>
             <p className="mt-3 text-base text-slate-300 max-w-2xl leading-relaxed">
-              Targeted preparation for the NextGen NCLEX-PN, PN exit examinations, pharmacology math, and scope-of-practice decision questions.
+              Targeted preparation for NextGen LPN licensure, PN exit examinations, pharmacology math, and scope-of-practice decision questions.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -84,10 +84,10 @@ export default function LPNExamPathwayPage() {
           {/* Scope of Practice Critical Rules */}
           <div className="mb-10">
             <h2 className="text-2xl font-bold text-slate-900">
-              NCLEX-PN Scope of Practice Guidelines
+              LPN/LVN Scope of Practice Guidelines
             </h2>
             <p className="mt-1 text-sm text-slate-600">
-              Delegation and assignment questions on the NCLEX-PN test whether you understand the legal boundaries between RN, LPN, and UAP.
+              Delegation and assignment questions test whether you understand the legal boundaries between RN, LPN, and UAP.
             </p>
 
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -105,7 +105,7 @@ export default function LPNExamPathwayPage() {
 
           {/* Quick Links */}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-            <Link href="/groups?track=NCLEX-PN">
+            <Link href="/groups?track=PN_LPN">
               <Card className="rounded-2xl border-slate-200 bg-white p-5 shadow-sm hover:border-teal-300 hover:shadow-md transition-all h-full">
                 <Users className="h-5 w-5 text-rose-600 mb-2" />
                 <h3 className="font-bold text-slate-900 text-sm">PN Study Groups</h3>

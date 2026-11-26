@@ -40,7 +40,7 @@ const POST_TYPES: { type: CommunityPostType; label: string; icon: React.ReactNod
     type: "ExamResult",
     label: "Exam Result",
     icon: <Trophy className="h-4 w-4" />,
-    desc: "Share your NCLEX, HESI, or ATI outcome, question count, and tips",
+    desc: "Share your licensure, HESI, or ATI outcome, question count, and tips",
   },
   {
     type: "StudyGroup",
@@ -70,7 +70,7 @@ export default function NewPostPage() {
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
 
   // Exam Result specific fields
-  const [examType, setExamType] = React.useState("NCLEX-RN");
+  const [examType, setExamType] = React.useState("RN Licensure");
   const [outcome, setOutcome] = React.useState<"Pass" | "Fail" | "Waiting">("Pass");
   const [questionCount, setQuestionCount] = React.useState(85);
   const [weeksStudied, setWeeksStudied] = React.useState(8);
@@ -262,7 +262,7 @@ export default function NewPostPage() {
                         selectedType === "Question"
                           ? "e.g., Why do we hold Digoxin if apical pulse is under 60 bpm?"
                           : selectedType === "ExamResult"
-                          ? "e.g., Passed NCLEX-RN at 85 questions! Here is what worked for me"
+                          ? "e.g., Passed RN Licensure at 85 questions! Here is what worked for me"
                           : "Be descriptive and clear..."
                       }
                       className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600"
@@ -287,8 +287,8 @@ export default function NewPostPage() {
                             onChange={(e) => setExamType(e.target.value)}
                             className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-1.5 text-xs text-slate-800"
                           >
-                            <option value="NCLEX-RN">NCLEX-RN</option>
-                            <option value="NCLEX-PN">NCLEX-PN</option>
+                            <option value="RN Licensure">RN Licensure</option>
+                            <option value="LPN Licensure">LPN Licensure</option>
                             <option value="HESI Exit">HESI Exit</option>
                             <option value="ATI Predictor">ATI Predictor</option>
                           </select>

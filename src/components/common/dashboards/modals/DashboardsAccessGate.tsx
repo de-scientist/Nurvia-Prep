@@ -19,8 +19,8 @@ const PANELS: Record<string, string> = {
   "pre-nursing": "Pre Nursing",
   "rn-nursing": "RN Nursing",
   "lpn-nursing": "LPN Nursing",
-  "nclex-rn": "NCLEX RN",
-  "nclex-pn": "NCLEX PN",
+  "nclex-rn": "RN Licensure",
+  "nclex-pn": "LPN Licensure",
   certification: "Certification",
 };
 

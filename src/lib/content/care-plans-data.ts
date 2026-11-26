@@ -95,7 +95,7 @@ export const CARE_PLAN_WRITING_GUIDES: readonly CarePlanWritingGuide[] = [
       'State SMART outcomes (Specific, Measurable, Achievable, Realistic, Time-bound).',
       'Pair each priority nursing action with an evidence-based physiological rationale.',
     ],
-    exampleNote: 'Ideal for rapid clinical handoff and NCLEX prioritization review.',
+    exampleNote: 'Ideal for rapid clinical handoff and clinical prioritization review.',
   },
   {
     id: 'guide-4-column',
@@ -134,7 +134,7 @@ export const CARE_PLAN_WRITING_GUIDES: readonly CarePlanWritingGuide[] = [
       'Nursing diagnosis describes the patient’s actual or potential response (e.g., Impaired Gas Exchange, Risk for Unstable Blood Glucose).',
       'Nurses treat the human response through monitoring, positioning, airway clearance, safety, and education.',
     ],
-    exampleNote: 'Essential for avoiding scope-of-practice errors on NCLEX and clinicals.',
+    exampleNote: 'Essential for avoiding scope-of-practice errors on examinations and clinicals.',
   },
 ];
 

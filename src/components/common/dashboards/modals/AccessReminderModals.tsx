@@ -451,7 +451,7 @@ export function AccessGate({
         tone="violet"
         badge={badge}
         title={`You're Subscribed To ${first.name}`}
-        description={`Your active plan doesn't include ${panelName}. Continue to the dashboard you're subscribed to, or add ${panelName} (and other programs like RN Nursing, HESI A2, NCLEX) with one of our easy plans.`}
+        description={`Your active plan doesn't include ${panelName}. Continue to the dashboard you're subscribed to, or add ${panelName} (and other programs like RN Nursing, HESI A2, Licensure) with one of our easy plans.`}
         points={otherSubscriptions.map((s) => `✓ Subscribed: ${s.name}`)}
         primaryLabel={`Take me to ${first.name}`}
         primaryHref={first.href}

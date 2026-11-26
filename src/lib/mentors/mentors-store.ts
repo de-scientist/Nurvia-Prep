@@ -24,7 +24,7 @@ const INITIAL_MENTORS: MentorProfileDto[] = [
     specialties: ['ICU', 'Med-Surg', 'NCLEX prep'],
     experienceYears: 8,
     examTracks: ['NCLEX-RN', 'HESI Exit'],
-    bio: 'Medical-Surgical and Cardiovascular ICU preceptor. Successfully mentored over 50 international and domestic nursing graduates to first-attempt NCLEX-RN success.',
+    bio: 'Medical-Surgical and Cardiovascular ICU preceptor. Successfully mentored over 50 international and domestic nursing graduates to first-attempt licensure success.',
     avatarUrl: '/assets/media/avatars/avatar-2.jpg',
     isVerified: true,
     availabilityStatus: 'Available',
