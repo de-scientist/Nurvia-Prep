@@ -107,7 +107,7 @@ const FALLBACK_DASHBOARDS = [
   { name: "RN Nursing Dashboard", slug: "rn-nursing" },
   { name: "LPN Nursing Dashboard", slug: "lpn-nursing" },
   { name: "RN Licensure Dashboard", slug: "nclex-rn" },
-  { name: "PN Licensure Dashboard", slug: "nclex-pn" },
+  { name: "LPN Licensure Dashboard", slug: "nclex-pn" },
 ];
 
 export default function Navbar() {

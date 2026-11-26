@@ -1,11 +1,22 @@
-// src/app/(web)/pages/heed/relative/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCheck, Clock, Inbox, Mail, MailOpen, RefreshCw, Star, Headset } from "lucide-react";
-import SearchBar from "@/lib/utils/data/SearchBar";
-import PerPageSelect from "@/lib/utils/data/PerPageSelect";
+import {
+  CheckCheck,
+  Clock,
+  Inbox,
+  Mail,
+  MailOpen,
+  RefreshCw,
+  Star,
+  Headset,
+  Search,
+  LogIn,
+  ArrowLeft,
+} from "lucide-react";
+import { useOptionalAuth } from "@/components/auth/auth-provider";
+import { useCurrentSystemUser } from "@/lib/hooks/users/account/current/useCurrentSystemUser";
 import { useRelativeHeedMessage } from "@/lib/hooks/users/heed/relative/useRelativeHeedMessage";
 import { useUpdateHeedMessageStatus } from "@/lib/hooks/users/heed/status/useUpdateHeedMessageStatus";
 import type { ClientReadStatus } from "@/lib/services/auth/supportService";
@@ -24,12 +35,14 @@ const FILTERS: { key: Filter; label: string; icon: React.ReactNode }[] = [
 
 function StatusBadge({ status }: { status?: string | null }) {
   const classes =
-    status === "Resolved" ? "bg-green-100 text-green-800"
-    : status === "Responded" ? "bg-blue-100 text-blue-800"
-    : "bg-yellow-100 text-yellow-800";
+    status === "Resolved"
+      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+      : status === "Responded"
+        ? "bg-[#D6E9E3] text-[#193B42] dark:bg-teal-950/60 dark:text-teal-300"
+        : "bg-[#F5EDE2] text-[#193B42] dark:bg-amber-950/60 dark:text-amber-300";
   return (
-    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold ${classes}`}>
-      {status || "—"}
+    <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${classes}`}>
+      {status || "Open"}
     </span>
   );
 }
@@ -47,11 +60,19 @@ const getVisiblePages = (current: number, total: number, windowSize = 2) => {
 };
 
 export default function RelativeHeedMessagesPage() {
+  const optionalAuth = useOptionalAuth();
+  const { user: sysUser, loading: sysLoading } = useCurrentSystemUser();
+  const isAuthenticated = Boolean(
+    sysUser || (optionalAuth?.status === "authenticated" && optionalAuth?.user)
+  );
+  const authChecking = optionalAuth?.status === "loading" || sysLoading;
+
   const [statusFilter, setStatusFilter] = useState<Filter>("All");
 
-  const { messages, setMessageSearch, isLoading, error, refetch } = useRelativeHeedMessage({
+  const { messages: rawMessages, setMessageSearch, isLoading, error, refetch } = useRelativeHeedMessage({
     items: 100,
-    clientStatus: statusFilter === "All" ? null : statusFilter,
+    clientStatus: null,
+    enabled: isAuthenticated,
   });
   const { updateStatus, isUpdating, error: updateError } = useUpdateHeedMessageStatus();
 
@@ -62,11 +83,38 @@ export default function RelativeHeedMessagesPage() {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      setMessageSearch(searchInput.trim());
+      if (isAuthenticated) {
+        setMessageSearch(searchInput.trim());
+      }
       setCurrentPage(1);
-    }, 400);
+    }, 350);
     return () => clearTimeout(t);
-  }, [searchInput, setMessageSearch]);
+  }, [searchInput, isAuthenticated, setMessageSearch]);
+
+  const counts = useMemo(
+    () => ({
+      All: rawMessages.length,
+      Unread: rawMessages.filter((m) => m.clientReadStatus === "Unread").length,
+      Later: rawMessages.filter((m) => m.clientReadStatus === "Later").length,
+      Starred: rawMessages.filter((m) => m.clientReadStatus === "Starred").length,
+    }),
+    [rawMessages]
+  );
+
+  const messages = useMemo(() => {
+    const q = searchInput.trim().toLowerCase();
+    return rawMessages.filter((m) => {
+      if (statusFilter !== "All" && m.clientReadStatus !== statusFilter) return false;
+      if (q) {
+        const hay = [m.title, m.message, m.response, m.category, m.status]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [rawMessages, statusFilter, searchInput]);
 
   useEffect(() => {
     setSelected((prev) => {
@@ -85,8 +133,8 @@ export default function RelativeHeedMessagesPage() {
   );
 
   const unreadIds = useMemo(
-    () => messages.filter((m) => m.clientReadStatus === "Unread").map((m) => m.guidId),
-    [messages]
+    () => rawMessages.filter((m) => m.clientReadStatus === "Unread").map((m) => m.guidId),
+    [rawMessages]
   );
 
   const allPageSelected = pageItems.length > 0 && pageItems.every((m) => selected.includes(m.guidId));
@@ -99,299 +147,443 @@ export default function RelativeHeedMessagesPage() {
 
   const apply = async (ids: string[], status: ClientReadStatus) => {
     const ok = await updateStatus(ids, status);
-    if (ok) setSelected([]);
+    if (ok) {
+      setSelected([]);
+      await refetch();
+    }
   };
 
   const iconBtn =
-    "flex h-8 w-8 items-center justify-center rounded-full border transition hover:scale-110 hover:bg-[var(--text-color)]/10 active:scale-95 disabled:opacity-40";
+    "flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface text-foreground-secondary transition hover:border-[#0A6265] hover:text-[#0A6265] disabled:opacity-40";
 
   return (
-    <main className="min-h-screen bg-[var(--content-bg)] px-3 pb-10 pt-20 text-[var(--text-color)]">
-      <div className="mx-auto max-w-4xl space-y-4">
+    <main className="min-h-screen bg-background px-4 pb-14 pt-8 text-foreground">
+      <div className="mx-auto max-w-4xl space-y-5">
+        {/* Top Back Navigation */}
+        <div className="flex items-center justify-between">
+          <Link
+            href="/learner"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground-secondary hover:text-[#0A6265]"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to Workspace</span>
+          </Link>
+        </div>
+
         {/* Header */}
-        <div className="rounded-2xl border border-[var(--text-color)]/40 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 px-5 py-4 text-center shadow-sm">
-          <h1 className="text-2xl font-extrabold md:text-3xl">Your Inbox</h1>
-          <p className="text-sm opacity-70">Conversations with our support team ⚓</p>
-          {unreadIds.length > 0 && (
-            <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-0.5 text-xs font-bold text-white">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
-              {unreadIds.length} new repl{unreadIds.length === 1 ? "y" : "ies"}
-            </span>
+        <div className="rounded-2xl border border-[#0A6265]/30 bg-gradient-to-r from-[#F1F6F4] via-surface to-[#F5EDE2]/60 dark:from-[#193B42]/50 dark:via-surface dark:to-surface px-6 py-5 text-center shadow-xs space-y-1.5">
+          <h1 className="font-brand text-2xl font-extrabold md:text-3xl text-foreground">
+            Message Support Inbox
+          </h1>
+          <p className="text-xs sm:text-sm text-foreground-secondary">
+            Conversations with our support team
+          </p>
+          {isAuthenticated && (
+            <div className="pt-1">
+              {unreadIds.length > 0 ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0A6265] px-3 py-0.5 text-xs font-bold text-white">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+                  {unreadIds.length} unread conversation{unreadIds.length === 1 ? "" : "s"}
+                </span>
+              ) : (
+                <span className="inline-flex items-center rounded-full bg-[#D6E9E3]/80 dark:bg-slate-800 px-3 py-0.5 text-xs font-semibold text-[#193B42] dark:text-teal-200">
+                  {counts.All > 0 ? "All caught up" : "Ready to assist"}
+                </span>
+              )}
+            </div>
           )}
         </div>
 
-        {/* New conversation */}
-        <HeedReplyBox />
-
-        {/* Filters + search */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex rounded-full border bg-[var(--text-color)]/5 p-1">
-            {FILTERS.map((f) => (
-              <button
-                key={f.key}
-                onClick={() => {
-                  setStatusFilter(f.key);
-                  setCurrentPage(1);
-                  setSelected([]);
-                }}
-                className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
-                  statusFilter === f.key
-                    ? "bg-blue-600 text-white shadow"
-                    : "opacity-70 hover:bg-[var(--text-color)]/10 hover:opacity-100"
-                }`}
+        {/* Guest Authentication Gate for Protected Inbox */}
+        {!authChecking && !isAuthenticated ? (
+          <div className="rounded-2xl border border-border bg-surface p-8 text-center space-y-4 shadow-xs">
+            <Inbox className="mx-auto h-10 w-10 text-[#0A6265]" />
+            <div className="space-y-1">
+              <h2 className="font-brand text-lg font-bold text-foreground">
+                Sign In to Access Your Support Inbox
+              </h2>
+              <p className="text-xs sm:text-sm text-foreground-secondary max-w-md mx-auto">
+                To protect learner privacy, viewing past support conversations and replies requires signing in to your QuizNurse account.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+              <Link
+                href={`/sign-in?returnTo=${encodeURIComponent("/pages/heed/relative")}`}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#0A6265] hover:bg-[#193B42] px-5 py-2.5 text-xs font-bold text-white shadow-xs transition"
               >
-                {f.icon}
-                {f.label}
-              </button>
-            ))}
-          </div>
-
-          <SearchBar
-            value={searchInput}
-            onChange={setSearchInput}
-            placeholder="Search conversations..."
-          />
-        </div>
-
-        {/* Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="flex cursor-pointer items-center gap-2 text-xs font-bold">
-              <input
-                type="checkbox"
-                checked={allPageSelected}
-                onChange={togglePageSelection}
-                disabled={pageItems.length === 0}
-              />
-              Select page
-            </label>
-
-            <PerPageSelect
-              value={perPage}
-              onChange={(v) => {
-                setPerPage(v);
-                setCurrentPage(1);
-              }}
-            />
-
-            <span className="text-xs font-bold opacity-70">
-              {pageItems.length} of {total}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {unreadIds.length > 0 && (
-              <button
-                onClick={() => apply(unreadIds, "Read")}
-                disabled={isUpdating}
-                className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition hover:bg-[var(--text-color)]/10 disabled:opacity-40"
+                <LogIn className="h-4 w-4" />
+                <span>Sign In to View Inbox</span>
+              </Link>
+              <Link
+                href="/auth/support"
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-5 py-2.5 text-xs font-semibold text-foreground hover:bg-surface-muted transition"
               >
-                <CheckCheck className="h-3.5 w-3.5" />
-                Mark all read
-              </button>
-            )}
-            <button
-              onClick={() => refetch()}
-              disabled={isLoading}
-              className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition hover:bg-[var(--text-color)]/10 disabled:opacity-40"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
-              Refresh
-            </button>
+                <span>Submit Guest Inquiry</span>
+              </Link>
+            </div>
           </div>
-        </div>
+        ) : (
+          <>
+            {/* New conversation */}
+            <HeedReplyBox onSent={() => void refetch()} />
 
-        {/* Bulk bar */}
-        {selected.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-blue-500/50 bg-blue-500/10 px-4 py-2 text-xs font-bold shadow-sm">
-            <span>{selected.length} selected</span>
-            <button onClick={() => apply(selected, "Read")} disabled={isUpdating} className="flex items-center gap-1 rounded-full border px-3 py-1 hover:bg-[var(--text-color)]/10 disabled:opacity-40"><MailOpen className="h-3 w-3" />Read</button>
-            <button onClick={() => apply(selected, "Unread")} disabled={isUpdating} className="flex items-center gap-1 rounded-full border px-3 py-1 hover:bg-[var(--text-color)]/10 disabled:opacity-40"><Mail className="h-3 w-3" />Unread</button>
-            <button onClick={() => apply(selected, "Later")} disabled={isUpdating} className="flex items-center gap-1 rounded-full border px-3 py-1 hover:bg-[var(--text-color)]/10 disabled:opacity-40"><Clock className="h-3 w-3" />Later</button>
-            <button onClick={() => apply(selected, "Starred")} disabled={isUpdating} className="flex items-center gap-1 rounded-full border px-3 py-1 hover:bg-[var(--text-color)]/10 disabled:opacity-40"><Star className="h-3 w-3" />Star</button>
-            <button onClick={() => setSelected([])} className="ml-auto rounded-full border px-3 py-1 hover:bg-[var(--text-color)]/10">Clear</button>
-          </div>
-        )}
-
-        {(error || updateError) && (
-          <div className="rounded-xl border border-red-500 bg-red-500/10 px-4 py-3 text-sm">
-            {error ?? updateError}
-          </div>
-        )}
-
-        {/* Skeletons */}
-        {!error && isLoading && messages.length === 0 && (
-          <div className="space-y-2">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="flex animate-pulse items-center gap-3 rounded-2xl border p-4">
-                <div className="h-12 w-12 rounded-full bg-[var(--text-color)]/10" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-3 w-1/3 rounded bg-[var(--text-color)]/10" />
-                  <div className="h-3 w-2/3 rounded bg-[var(--text-color)]/10" />
-                </div>
+            {/* Filters + search */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex flex-wrap rounded-2xl border border-border bg-surface-muted/60 p-1 gap-1">
+                {FILTERS.map((f) => {
+                  const count = counts[f.key as keyof typeof counts] ?? 0;
+                  return (
+                    <button
+                      key={f.key}
+                      type="button"
+                      onClick={() => {
+                        setStatusFilter(f.key);
+                        setCurrentPage(1);
+                        setSelected([]);
+                      }}
+                      className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
+                        statusFilter === f.key
+                          ? "bg-[#0A6265] text-white shadow-2xs"
+                          : "text-foreground-secondary hover:bg-surface hover:text-foreground"
+                      }`}
+                    >
+                      {f.icon}
+                      <span>
+                        {f.label}
+                        {count > 0 ? ` (${count})` : ""}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        )}
 
-        {/* Empty */}
-        {!error && !isLoading && messages.length === 0 && (
-          <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed px-4 py-14 text-center">
-            <Inbox className="h-10 w-10 opacity-40" />
-            <p className="text-sm font-semibold opacity-80">
-              {statusFilter === "All" ? "No replies yet" : `No ${statusFilter.toLowerCase()} messages`}
-            </p>
-            <p className="text-xs opacity-50">Start a conversation above and we will get back to you ⚓</p>
-          </div>
-        )}
-
-        {/* Conversation cards */}
-        <div className="space-y-2.5">
-          {pageItems.map((m) => {
-            const isUnread = m.clientReadStatus === "Unread";
-            const isStarred = m.clientReadStatus === "Starred";
-            const isLater = m.clientReadStatus === "Later";
-            const isSelected = selected.includes(m.guidId);
-
-            return (
-              <div
-                key={m.guidId}
-                className={`group relative flex items-center gap-3 overflow-hidden rounded-2xl border p-3.5 pl-4 transition duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
-                  isSelected
-                    ? "border-blue-500 bg-blue-500/10"
-                    : isUnread
-                    ? "border-red-500/50 bg-red-500/[0.04]"
-                    : "hover:bg-[var(--text-color)]/[0.04]"
-                }`}
-              >
-                {/* Unread accent bar */}
-                {isUnread && <span className="absolute inset-y-0 left-0 w-1 bg-red-500" />}
-
+              <div className="relative w-full sm:w-72">
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
                 <input
-                  type="checkbox"
-                  className="shrink-0"
-                  checked={isSelected}
-                  onChange={() => toggleSelect(m.guidId)}
-                  aria-label="Select conversation"
+                  type="search"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="Search conversations…"
+                  aria-label="Search conversations"
+                  className="w-full rounded-xl border border-border bg-surface pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-[#0A6265]"
                 />
-
-                <Link
-                  href={`/pages/heed/current?id=${m.guidId}`}
-                  className="flex min-w-0 flex-1 items-center gap-3"
-                >
-                  {/* Avatar */}
-                  <div className="relative shrink-0">
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-full text-lg font-extrabold text-white shadow ${categoryTone(m.category)}`}>
-                      {(m.title?.[0] ?? "?").toUpperCase()}
-                    </div>
-                    {isUnread && (
-                      <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 animate-pulse rounded-full border-2 border-[var(--content-bg)] bg-red-500" />
-                    )}
-                  </div>
-
-                  {/* Text */}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h2 className={`truncate text-sm md:text-base ${isUnread ? "font-extrabold" : "font-semibold"}`}>
-                        {m.title}
-                      </h2>
-                      {isStarred && <Star className="h-3.5 w-3.5 shrink-0 fill-yellow-400 text-yellow-500" />}
-                      {isLater && <Clock className="h-3.5 w-3.5 shrink-0 text-orange-500" />}
-                      <span className={`ml-auto shrink-0 text-[11px] ${isUnread ? "font-bold text-red-500" : "opacity-60"}`}>
-                        {timeAgo(m.respondedAt ?? m.updatedAt ?? m.createdAt)}
-                      </span>
-                    </div>
-
-                    <p className={`mt-0.5 line-clamp-2 text-xs md:text-sm ${isUnread ? "opacity-90" : "opacity-65"}`}>
-                      {m.response ? (
-                        <>
-                          <Headset className="mr-1 inline h-3.5 w-3.5 -translate-y-px text-blue-500" />
-                          <span className="font-semibold text-blue-500">Support: </span>
-                          {m.response}
-                        </>
-                      ) : (
-                        m.message
-                      )}
-                    </p>
-
-                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                      <StatusBadge status={m.status} />
-                      <span className="rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-bold text-gray-800">
-                        {m.category}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-
-                {/* Quick actions */}
-                <div className="flex shrink-0 flex-col items-center gap-1.5 sm:flex-row">
-                  <button
-                    onClick={() => apply([m.guidId], isStarred ? "Read" : "Starred")}
-                    disabled={isUpdating}
-                    title={isStarred ? "Remove star" : "Star"}
-                    className={iconBtn}
-                  >
-                    <Star className={`h-4 w-4 ${isStarred ? "fill-yellow-400 text-yellow-500" : ""}`} />
-                  </button>
-                  <button
-                    onClick={() => apply([m.guidId], isLater ? "Read" : "Later")}
-                    disabled={isUpdating}
-                    title={isLater ? "Remove from later" : "Mark for later"}
-                    className={iconBtn}
-                  >
-                    <Clock className={`h-4 w-4 ${isLater ? "text-orange-500" : ""}`} />
-                  </button>
-                  <button
-                    onClick={() => apply([m.guidId], isUnread ? "Read" : "Unread")}
-                    disabled={isUpdating}
-                    title={isUnread ? "Mark as read" : "Mark as unread"}
-                    className={iconBtn}
-                  >
-                    {isUnread ? <MailOpen className="h-4 w-4" /> : <Mail className="h-4 w-4" />}
-                  </button>
-                </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
 
-        {/* Pagination */}
-        {total > 0 && (
-          <div className="flex items-center justify-center gap-2 pt-2">
-            <button
-              disabled={safePage === 1}
-              onClick={() => setCurrentPage(safePage - 1)}
-              className="rounded-full border px-4 py-1.5 text-sm font-bold transition hover:bg-[var(--text-color)]/10 disabled:opacity-40"
-            >
-              Prior
-            </button>
+            {/* Toolbar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-2.5">
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="flex cursor-pointer items-center gap-2 text-xs font-bold text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={allPageSelected}
+                    onChange={togglePageSelection}
+                    disabled={pageItems.length === 0}
+                    className="rounded border-border text-[#0A6265] focus:ring-[#0A6265]"
+                  />
+                  Select page
+                </label>
 
-            {getVisiblePages(safePage, totalPages).map((p, i) =>
-              p === "ellipsis" ? (
-                <span key={`ellipsis-${i}`} className="select-none px-2 text-sm opacity-60">…</span>
-              ) : (
-                <button
-                  key={p}
-                  onClick={() => setCurrentPage(p)}
-                  className={`h-9 w-9 rounded-full border text-sm font-bold transition ${
-                    p === safePage
-                      ? "border-blue-600 bg-blue-600 text-white shadow"
-                      : "hover:bg-[var(--text-color)]/10"
-                  }`}
+                <select
+                  aria-label="Items per page"
+                  value={perPage}
+                  onChange={(e) => {
+                    setPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-semibold text-foreground"
                 >
-                  {p}
+                  {[10, 20, 50].map((n) => (
+                    <option key={n} value={n}>
+                      {n} / page
+                    </option>
+                  ))}
+                </select>
+
+                <span className="text-xs font-semibold text-foreground-secondary">
+                  Showing {pageItems.length} of {total}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {unreadIds.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => void apply(unreadIds, "Read")}
+                    disabled={isUpdating}
+                    className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground transition hover:border-[#0A6265] disabled:opacity-40"
+                  >
+                    <CheckCheck className="h-3.5 w-3.5 text-[#0A6265]" />
+                    Mark all read
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => void refetch()}
+                  disabled={isLoading}
+                  className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground transition hover:border-[#0A6265] disabled:opacity-40"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin text-[#0A6265]" : ""}`} />
+                  Refresh
                 </button>
-              )
+              </div>
+            </div>
+
+            {/* Bulk bar */}
+            {selected.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-[#0A6265]/40 bg-[#F1F6F4] dark:bg-teal-950/30 px-4 py-2.5 text-xs font-bold text-foreground shadow-2xs">
+                <span>{selected.length} selected</span>
+                <button
+                  type="button"
+                  onClick={() => void apply(selected, "Read")}
+                  disabled={isUpdating}
+                  className="flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-1 hover:border-[#0A6265] disabled:opacity-40"
+                >
+                  <MailOpen className="h-3 w-3" />
+                  Read
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void apply(selected, "Unread")}
+                  disabled={isUpdating}
+                  className="flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-1 hover:border-[#0A6265] disabled:opacity-40"
+                >
+                  <Mail className="h-3 w-3" />
+                  Unread
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void apply(selected, "Later")}
+                  disabled={isUpdating}
+                  className="flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-1 hover:border-[#0A6265] disabled:opacity-40"
+                >
+                  <Clock className="h-3 w-3" />
+                  Later
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void apply(selected, "Starred")}
+                  disabled={isUpdating}
+                  className="flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-1 hover:border-[#0A6265] disabled:opacity-40"
+                >
+                  <Star className="h-3 w-3" />
+                  Star
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelected([])}
+                  className="ml-auto rounded-full border border-border bg-surface px-3 py-1 hover:bg-surface-muted"
+                >
+                  Clear
+                </button>
+              </div>
             )}
 
-            <button
-              disabled={safePage === totalPages}
-              onClick={() => setCurrentPage(safePage + 1)}
-              className="rounded-full border px-4 py-1.5 text-sm font-bold transition hover:bg-[var(--text-color)]/10 disabled:opacity-40"
-            >
-              Next
-            </button>
-          </div>
+            {(error || updateError) && (
+              <div
+                role="alert"
+                className="rounded-xl border border-rose-300 bg-rose-50 dark:border-rose-900 dark:bg-rose-950/40 px-4 py-3 text-xs font-semibold text-rose-800 dark:text-rose-200"
+              >
+                {error ?? updateError}
+              </div>
+            )}
+
+            {/* Skeletons */}
+            {!error && isLoading && rawMessages.length === 0 && (
+              <div className="space-y-2.5">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="flex animate-pulse items-center gap-3 rounded-2xl border border-border bg-surface p-4">
+                    <div className="h-11 w-11 rounded-full bg-surface-muted" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-1/3 rounded bg-surface-muted" />
+                      <div className="h-3 w-2/3 rounded bg-surface-muted" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Empty */}
+            {!error && !isLoading && messages.length === 0 && (
+              <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border bg-surface px-4 py-14 text-center">
+                <Inbox className="h-10 w-10 text-foreground-muted" />
+                <p className="text-sm font-bold text-foreground">
+                  {statusFilter === "All"
+                    ? "No support conversations found"
+                    : `No ${statusFilter.toLowerCase()} conversations`}
+                </p>
+                <p className="text-xs text-foreground-secondary">
+                  Start a new conversation above and our team will respond directly here.
+                </p>
+              </div>
+            )}
+
+            {/* Conversation cards */}
+            <div className="space-y-2.5">
+              {pageItems.map((m) => {
+                const isUnread = m.clientReadStatus === "Unread";
+                const isStarred = m.clientReadStatus === "Starred";
+                const isLater = m.clientReadStatus === "Later";
+                const isSelected = selected.includes(m.guidId);
+
+                return (
+                  <div
+                    key={m.guidId}
+                    className={`group relative flex items-center gap-3 overflow-hidden rounded-2xl border p-4 transition duration-200 hover:shadow-sm ${
+                      isSelected
+                        ? "border-[#0A6265] bg-[#F1F6F4] dark:bg-teal-950/30"
+                        : isUnread
+                          ? "border-[#0A6265]/45 bg-[#F1F6F4]/55 dark:bg-teal-950/20"
+                          : "border-border bg-surface hover:border-[#0A6265]/35"
+                    }`}
+                  >
+                    {isUnread && <span className="absolute inset-y-0 left-0 w-1 bg-[#0A6265]" />}
+
+                    <input
+                      type="checkbox"
+                      className="shrink-0 rounded border-border text-[#0A6265]"
+                      checked={isSelected}
+                      onChange={() => toggleSelect(m.guidId)}
+                      aria-label="Select conversation"
+                    />
+
+                    <Link
+                      href={`/pages/heed/current?id=${encodeURIComponent(m.guidId)}`}
+                      className="flex min-w-0 flex-1 items-center gap-3"
+                    >
+                      <div className="relative shrink-0">
+                        <div
+                          className={`flex h-11 w-11 items-center justify-center rounded-full text-base font-extrabold text-white shadow-2xs ${categoryTone(m.category)}`}
+                        >
+                          {(m.title?.[0] ?? "S").toUpperCase()}
+                        </div>
+                        {isUnread && (
+                          <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-surface bg-[#0A6265]" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h2
+                            className={`truncate text-sm md:text-base text-foreground ${
+                              isUnread ? "font-extrabold" : "font-semibold"
+                            }`}
+                          >
+                            {m.title || `Inquiry: ${m.category}`}
+                          </h2>
+                          {isStarred && <Star className="h-3.5 w-3.5 shrink-0 fill-[#C58B43] text-[#C58B43]" />}
+                          {isLater && <Clock className="h-3.5 w-3.5 shrink-0 text-[#C58B43]" />}
+                          <span
+                            className={`ml-auto shrink-0 text-[11px] ${
+                              isUnread ? "font-bold text-[#0A6265]" : "text-foreground-muted"
+                            }`}
+                          >
+                            {timeAgo(m.respondedAt ?? m.updatedAt ?? m.createdAt)}
+                          </span>
+                        </div>
+
+                        <p className="mt-0.5 line-clamp-2 text-xs md:text-sm text-foreground-secondary">
+                          {m.response ? (
+                            <>
+                              <Headset className="mr-1 inline h-3.5 w-3.5 -translate-y-px text-[#0A6265]" />
+                              <span className="font-semibold text-[#0A6265] dark:text-teal-300">Support: </span>
+                              {m.response}
+                            </>
+                          ) : (
+                            m.message
+                          )}
+                        </p>
+
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                          <StatusBadge status={m.status} />
+                          <span className="rounded-full bg-surface-muted px-2.5 py-0.5 text-[10px] font-semibold text-foreground-secondary">
+                            {m.category}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+
+                    <div className="flex shrink-0 flex-col items-center gap-1.5 sm:flex-row">
+                      <button
+                        type="button"
+                        onClick={() => void apply([m.guidId], isStarred ? "Read" : "Starred")}
+                        disabled={isUpdating}
+                        title={isStarred ? "Remove star" : "Star"}
+                        aria-label={isStarred ? "Remove star" : "Star"}
+                        className={iconBtn}
+                      >
+                        <Star className={`h-4 w-4 ${isStarred ? "fill-[#C58B43] text-[#C58B43]" : ""}`} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void apply([m.guidId], isLater ? "Read" : "Later")}
+                        disabled={isUpdating}
+                        title={isLater ? "Remove from later" : "Mark for later"}
+                        aria-label={isLater ? "Remove from later" : "Mark for later"}
+                        className={iconBtn}
+                      >
+                        <Clock className={`h-4 w-4 ${isLater ? "text-[#C58B43]" : ""}`} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void apply([m.guidId], isUnread ? "Read" : "Unread")}
+                        disabled={isUpdating}
+                        title={isUnread ? "Mark as read" : "Mark as unread"}
+                        aria-label={isUnread ? "Mark as read" : "Mark as unread"}
+                        className={iconBtn}
+                      >
+                        {isUnread ? <MailOpen className="h-4 w-4" /> : <Mail className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Pagination */}
+            {total > 0 && (
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <button
+                  type="button"
+                  disabled={safePage === 1}
+                  onClick={() => setCurrentPage(safePage - 1)}
+                  className="rounded-xl border border-border bg-surface px-4 py-1.5 text-xs font-bold text-foreground transition hover:border-[#0A6265] disabled:opacity-40"
+                >
+                  Prior
+                </button>
+
+                {getVisiblePages(safePage, totalPages).map((p, i) =>
+                  p === "ellipsis" ? (
+                    <span key={`ellipsis-${i}`} className="select-none px-2 text-xs text-foreground-muted">
+                      …
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      key={p}
+                      onClick={() => setCurrentPage(p)}
+                      className={`h-8 w-8 rounded-xl border text-xs font-bold transition ${
+                        p === safePage
+                          ? "border-[#0A6265] bg-[#0A6265] text-white shadow-2xs"
+                          : "border-border bg-surface text-foreground hover:border-[#0A6265]"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+
+                <button
+                  type="button"
+                  disabled={safePage === totalPages}
+                  onClick={() => setCurrentPage(safePage + 1)}
+                  className="rounded-xl border border-border bg-surface px-4 py-1.5 text-xs font-bold text-foreground transition hover:border-[#0A6265] disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </main>

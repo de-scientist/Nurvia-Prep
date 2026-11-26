@@ -10,14 +10,29 @@ import { HEED_STATUS_EVENT } from "@/lib/hooks/users/heed/status/useUpdateHeedMe
 
 export type HeedMessageItem = SupportMessageItem;
 
+function extractSupportItems(raw: unknown): HeedMessageItem[] {
+  if (Array.isArray(raw)) return raw as HeedMessageItem[];
+  if (raw && typeof raw === "object") {
+    const rec = raw as Record<string, unknown>;
+    if (Array.isArray(rec.items)) return rec.items as HeedMessageItem[];
+    if (Array.isArray(rec.data)) return rec.data as HeedMessageItem[];
+    if (rec.data && typeof rec.data === "object" && Array.isArray((rec.data as Record<string, unknown>).items)) {
+      return (rec.data as Record<string, unknown>).items as HeedMessageItem[];
+    }
+  }
+  return [];
+}
+
 export const useRelativeHeedMessage = ({
   items = 20,
   clientStatus = null,
   pollMs = 0,
+  enabled = true,
 }: {
   items?: number;
   clientStatus?: ClientReadStatus | null;
-  pollMs?: number;   // 0 = no polling
+  pollMs?: number;
+  enabled?: boolean;
 } = {}) => {
   const [messages, setMessages] = useState<HeedMessageItem[]>([]);
   const [messageSearch, setMessageSearch] = useState("");
@@ -26,6 +41,13 @@ export const useRelativeHeedMessage = ({
 
   const fetchMessages = useCallback(
     async (search: string, isCancelled: () => boolean = () => false, silent = false) => {
+      if (!enabled) {
+        setMessages([]);
+        setError(null);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         if (!silent) {
           setIsLoading(true);
@@ -44,27 +66,33 @@ export const useRelativeHeedMessage = ({
           throw new Error(result.error ?? result.message ?? "Failed to Fetch Messages ⚓");
         }
 
-        setMessages(Array.isArray(result?.data) ? result.data : []);
+        setMessages(extractSupportItems(result?.data ?? result));
         setError(null);
       } catch (err) {
-        if (isCancelled() || silent) return; // background refreshes keep the last good list
+        if (isCancelled() || silent) return;
         setMessages([]);
         setError(err instanceof Error ? err.message : "Failed to Fetch Messages ⚓");
       } finally {
         if (!silent && !isCancelled()) setIsLoading(false);
       }
     },
-    [items, clientStatus]
+    [items, clientStatus, enabled]
   );
 
   useEffect(() => {
+    if (!enabled) {
+      setMessages([]);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
     let cancelled = false;
     const isCancelled = () => cancelled;
 
-    fetchMessages(messageSearch, isCancelled);
+    void fetchMessages(messageSearch, isCancelled);
 
-    // Any status change anywhere (page, bell, bulk) → refetch from the backend
-    const onChange = () => fetchMessages(messageSearch, isCancelled, true);
+    const onChange = () => void fetchMessages(messageSearch, isCancelled, true);
     window.addEventListener(HEED_STATUS_EVENT, onChange);
 
     let timer: ReturnType<typeof setInterval> | undefined;
@@ -79,7 +107,7 @@ export const useRelativeHeedMessage = ({
       window.removeEventListener("focus", onChange);
       if (timer) clearInterval(timer);
     };
-  }, [messageSearch, fetchMessages, pollMs]);
+  }, [messageSearch, fetchMessages, pollMs, enabled]);
 
   const refetch = useCallback(() => fetchMessages(messageSearch), [fetchMessages, messageSearch]);
 
@@ -92,7 +120,3 @@ export const useRelativeHeedMessage = ({
     refetch,
   };
 };
-
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-// The End By : B.L.S.M.C ;  -  Skewblanc - The Winds Chase Us ⚓
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

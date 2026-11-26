@@ -48,6 +48,7 @@ import { PageLoader, RedirectScreen } from "@/components/shared/feedback";
 import { UserAccountMenu } from "@/components/layout/user-account-menu";
 import { SuperadminSwitcher } from "@/components/layout/superadmin-switcher";
 import { NavbarSubscriptionButton } from "@/components/layout/NavbarSubscriptionButton";
+import { NavbarSupportMessaging } from "@/components/support/NavbarSupportMessaging";
 import { LearnerVerificationModal } from "@/components/auth/LearnerVerificationModal";
 interface NavSubItem {
   name: string;
@@ -93,7 +94,7 @@ export const learnerNavigation: NavSection[] = [
         ],
       },
       {
-        name: "LPN Exams",
+        name: "LPN Exams", /* LPN / PN Exams */
         href: "/learner/exams?track=PN_LPN",
         icon: Stethoscope,
         subItems: [
@@ -137,7 +138,7 @@ export const learnerNavigation: NavSection[] = [
     title: "RESOURCES",
     items: [
       { name: "Study Hub", href: "/learner/hub", icon: Layers },
-      { name: "NCLEX Prep Hub", href: "https://www.prepford.com/", icon: GraduationCap, badge: "PrepFord", external: true },
+      { name: "Licensure Prep Hub", href: "https://www.prepford.com/", icon: GraduationCap, badge: "PrepFord", external: true },
       { name: "Study Guides", href: "/study-guides", icon: FileText },
       { name: "Flashcards", href: "/learner/flashcards", icon: Layers, badge: "SRS" },
       { name: "Care Plans", href: "/care-plans", icon: HeartHandshake },
@@ -499,7 +500,7 @@ export function LearnerShell({
         )}
       >
         {/* Top Learner Navbar matching screenshot */}
-        <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-2 border-b border-border bg-surface/95 backdrop-blur-md px-4 sm:px-6 overflow-x-clip">
+        <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-2 border-b border-border bg-surface/95 backdrop-blur-md px-4 sm:px-6 overflow-x-clip">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <Button
               variant="ghost"
@@ -526,6 +527,7 @@ export function LearnerShell({
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
   <NavbarSubscriptionButton />
+  <NavbarSupportMessaging />
   {user && <SuperadminSwitcher />}
   <ThemeToggle />
   {user ? (
@@ -552,7 +554,7 @@ export function LearnerShell({
         </header>
 
         {/* Page Content Body */}
-        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 min-w-0 p-3.5 sm:p-5 lg:p-6 max-w-7xl w-full mx-auto">
           {user?.emailVerified === false ? (
             <div className="py-16 text-center space-y-3">
               <p className="text-sm font-semibold text-foreground">

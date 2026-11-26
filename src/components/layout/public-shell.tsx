@@ -20,6 +20,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { SeekModal } from "@/components/common/modals/seek/SeekModal";
 import { UserAccountMenu } from "@/components/layout/user-account-menu";
 import { UserAvatar } from "@/components/shared/avatar/UserAvatar";
+import { NavbarSupportMessaging } from "@/components/support/NavbarSupportMessaging";
 
 interface PublicNavItem {
   name: string;
@@ -167,6 +168,7 @@ export function PublicShell({ children }: PublicShellProps) {
             >
               <Search className="h-4 w-4" />
             </button>
+            <NavbarSupportMessaging />
             <ThemeToggle />
             {status === "authenticated" && user ? (
               <div className="hidden sm:flex items-center">
@@ -321,8 +323,8 @@ export function PublicShell({ children }: PublicShellProps) {
       <main className="flex-1">{children}</main>
 
       {/* Public Footer */}
-      <footer className="border-t border-border bg-surface mt-16 transition-colors">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <footer className="border-t border-border bg-surface mt-10 transition-colors">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:py-10 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             {/* Brand column */}
             <div className="md:col-span-2 space-y-4">

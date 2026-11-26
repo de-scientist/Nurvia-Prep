@@ -12,39 +12,16 @@ const getCookie = (name: string): string | null => {
   return match ? decodeURIComponent(match.split("=")[1]) : null;
 };
 
-const getCurrentSessionBadge = (): string | null => {
-  if (typeof window === "undefined") return null;
-  return getCookie("skew_blanc_session_badge");
-};
-
-const getCurrentSessionToken = (): string | null => {
-  if (typeof window === "undefined") return null;
-
-  const badge = getCurrentSessionBadge();
-  if (!badge) return null;
-
-  const sessionsRaw = getCookie("skew_blanc_session_line");
-  if (!sessionsRaw) return null;
-
-  try {
-    const sessions: Record<string, string> = JSON.parse(sessionsRaw);
-    return sessions[badge] || null;
-  } catch {
-    return null;
-  }
-};
-
 // --------------------------------------------------
 // PUBLIC API (NOT A REACT HOOK)
 // --------------------------------------------------
 export const renderSystemSessionHeaders = (): Record<string, string> => {
-  const castoLine = getCurrentSessionToken();
-  const castoBadge = getCurrentSessionBadge();
-
-  return {
-    ...(castoLine ? { "x-casto-line": castoLine } : {}),
-    ...(castoBadge ? { "x-casto-badge": castoBadge } : {}),
-  };
+  // Qlex-specific skew_blanc_session_* cookies are NOT read here.
+  // Heed/support pages use QuizNurse's authoritative HttpOnly session
+  // (via credentials: "include" or useOptionalAuth()), not Qlex session state.
+  // The proper x-casto-line / x-casto-badge headers for LexmaCasto calls
+  // should be obtained server-side via getNurviaCastoSessionHeaders() if needed.
+  return {};
 };
 
 // ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

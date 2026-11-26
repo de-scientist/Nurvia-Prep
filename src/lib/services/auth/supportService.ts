@@ -345,6 +345,7 @@ export const submitSupportIssue = (payload: {
   email: string;
   phone: string;
   category: string;
+  title?: string;
   message: string;
 }) => supportService("SupportMessage", "Store", payload);
 
