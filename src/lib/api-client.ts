@@ -819,6 +819,14 @@ function mapStudySetCardItem(item: Record<string, any>): import('./api-types').S
         ? item.featuredTestimonial.trim()
         : null,
     isSaved: false,
+    isNew:
+      typeof item.isNew === 'boolean'
+        ? item.isNew
+        : typeof item.is_new === 'boolean'
+          ? item.is_new
+          : typeof item.isNewExam === 'boolean'
+            ? item.isNewExam
+            : String(item.badge || item.tag || '').trim().toUpperCase() === 'NEW',
   };
 }
 

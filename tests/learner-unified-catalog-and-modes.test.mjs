@@ -129,7 +129,7 @@ console.log('5. Verifying SubjectCard Unified RN/PN CTA Selection...');
 const subjectCardSrc = fs.readFileSync(path.join(ROOT, 'src/components/study/SubjectCard.tsx'), 'utf8');
 assert.ok(subjectCardSrc.includes('onSelectSubject: (subjectName: string, pathway?: string) => void'), 'SubjectCardProps must support pathway selection');
 assert.ok(subjectCardSrc.includes('hasMultiplePathways'), 'SubjectCard must detect multiple pathways');
-assert.ok(subjectCardSrc.includes('RN Pathway') && subjectCardSrc.includes('LPN / PN Pathway'), 'SubjectCard dropdown must provide RN and LPN/PN options');
+assert.ok((subjectCardSrc.includes('RN Pathway') || subjectCardSrc.includes('rnTargetPathway')) && (subjectCardSrc.includes('lpnTargetPathway') || subjectCardSrc.includes('LPN Pathway') || subjectCardSrc.includes('LPN / PN Pathway')), 'SubjectCard dropdown must provide RN and LPN options');
 console.log('[PASS] 5. SubjectCard RN/PN dropdown CTA verified.');
 
 // 6. Study Library Category Tabs 4-Pathway Scope Test

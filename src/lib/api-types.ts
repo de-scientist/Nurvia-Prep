@@ -778,6 +778,7 @@ export interface StudySetCardDto {
   reviewCount: number;
   featuredTestimonial?: string | null;
   isSaved: boolean;
+  isNew?: boolean;
 }
 
 export interface ExamReviewDto {

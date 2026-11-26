@@ -78,9 +78,10 @@ runTest(6, "Subject filters appear directly below the result count", () => {
   assert.ok(countPos < subFilterPos, "Subject filters must appear directly below the result count");
 });
 
-runTest(7, "Subject filters are not dropdowns", () => {
+runTest(7, "Subject filters are not dropdowns and wrap onto multiple rows", () => {
   assert.ok(studyViewSrc.includes("availableSubjectFilters.map"), "Subject filters must be mapped to visible buttons");
-  assert.ok(studyViewSrc.includes("overflow-x-auto"), "Subject filters must be a horizontally scrollable chip row");
+  assert.ok(studyViewSrc.includes("flex-wrap"), "Subject filters must be a multi-line wrapping flex row");
+  assert.ok(!studyViewSrc.includes("overflow-x-auto"), "Subject filters must not horizontally scroll");
 });
 
 runTest(8, "Academic & Examination Filters is absent", () => {

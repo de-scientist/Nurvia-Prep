@@ -186,6 +186,14 @@ export async function GET(
           : null,
     reviewCount: Number(verifiedItem.reviewCount ?? 0),
     isSaved: false,
+    isNew:
+      typeof verifiedItem.isNew === 'boolean'
+        ? verifiedItem.isNew
+        : typeof verifiedItem.is_new === 'boolean'
+          ? verifiedItem.is_new
+          : typeof verifiedItem.isNewExam === 'boolean'
+            ? verifiedItem.isNewExam
+            : String(verifiedItem.badge || verifiedItem.tag || '').trim().toUpperCase() === 'NEW',
   };
 
   const subjectsCovered = [verifiedItem.subjectName, verifiedItem.courseName, verifiedItem.programName]

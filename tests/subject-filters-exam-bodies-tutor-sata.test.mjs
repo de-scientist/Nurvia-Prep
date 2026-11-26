@@ -451,15 +451,11 @@ const studySetCardSrc = readRel("src/components/study/StudySetCard.tsx");
 const cardActionsSrc = readRel("src/components/study/StudySetCardActions.tsx");
 
 // 23. Filter chips wrap on multiple lines without horizontal slider
-// Subject filter: single horizontal row with horizontal scrolling
+// Subject filter: multi-row wrapping without horizontal scrolling
 // Exam Bodies filter: natural multi-row wrapping
 assert.ok(
-  studyViewSrc.includes('overflow-x-auto items-center gap-1.5 whitespace-nowrap" role="tablist" aria-label="Available subject filters"'),
-  "Subject filters must use horizontal scrolling"
-);
-assert.ok(
-  studyViewSrc.includes('whitespace-nowrap'),
-  "Subject filter must use whitespace-nowrap to prevent wrapping"
+  studyViewSrc.includes('flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Available subject filters"'),
+  "Subject filters must wrap on multiple rows without horizontal scrolling"
 );
 assert.ok(
   categoryTabsSrc.includes('flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Exam Bodies filter chips"'),

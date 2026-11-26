@@ -168,7 +168,7 @@ export function StudySetCardActions({
   };
 
   return (
-    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60">
+    <div className="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-border/60">
       {canTutor ? (
         <Link
           href={buildStudySessionHref(studySet.id, "Tutor", studySet.allowedLayouts)}

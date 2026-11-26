@@ -18,6 +18,7 @@ import type { AdvancedFilterState } from "./StudyLibraryAdvancedFilters";
 import {
   StudyLibraryCategoryTabs,
   PATHWAY_LABELS,
+  simplifySubjectName,
 } from "./StudyLibraryCategoryTabs";
 import { StudyLibraryHeader } from "./StudyLibraryHeader";
 import { StudyLibrarySearch } from "./StudyLibrarySearch";
@@ -594,7 +595,7 @@ export function StudyLibraryView({
           )}
 
           {/* C. Subject Filters — Directly below Result Count (Wrapped Multi-line Chips, Not a Dropdown) */}
-          <div className="flex overflow-x-auto items-center gap-1.5 whitespace-nowrap" role="tablist" aria-label="Available subject filters">
+          <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Available subject filters">
             {availableSubjectFilters.map((subName) => {
               const isActive =
                 (subName === "All Subjects" && selectedSubjectFilter === "All") ||
@@ -610,13 +611,13 @@ export function StudyLibraryView({
                     setPageNumber(1);
                   }}
                   className={cn(
-                    "rounded-lg px-2.5 py-1 text-xs font-medium transition-all border flex-shrink-0",
+                    "rounded-md px-2 py-0.5 text-[11px] sm:text-xs font-medium transition-all border",
                     isActive
                       ? "bg-brand-teal/15 text-brand-tealDark dark:text-teal-200 border-brand-teal/40 font-semibold shadow-2xs"
                       : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted hover:text-foreground"
                   )}
                 >
-                  {subName}
+                  {simplifySubjectName(subName)}
                 </button>
               );
             })}

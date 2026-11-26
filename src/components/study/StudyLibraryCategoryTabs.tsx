@@ -43,9 +43,40 @@ export function getExamBodyLabel(categoryId: string): string {
   return EXAM_BODY_LABELS[categoryId] || categoryId.replace(/([a-z])([A-Z])/g, "$1 $2");
 }
 
+export function simplifyExamBodyLabel(label: string): string {
+  if (label === "Exit Predictor" || label === "ExitPredictor") return "EXIT";
+  if (label === "Course Curriculum" || label === "RegularCourse") return "Core";
+  const upper = label.toUpperCase();
+  if (upper.includes("KAPLAN")) return "KAPLAN";
+  if (upper.includes("HESI")) return "HESI";
+  if (upper.includes("ATI")) return "ATI";
+  if (upper.includes("EXIT")) return "EXIT";
+  return label;
+}
+
+export function simplifySubjectName(name: string): string {
+  const trimmed = name.trim();
+  const lower = trimmed.toLowerCase();
+  if (lower === "all" || lower === "all subjects") return "All Subjects";
+  if (lower.includes("medical-surgical") || lower.includes("med-surg") || lower.includes("med surg") || lower.includes("medical surgical")) return "Medical-Surgical";
+  if (lower.includes("pediatric") || lower.includes("peds") || lower.includes("child")) return "Pediatrics";
+  if (lower.includes("mental health") || lower.includes("psych")) return "Mental Health";
+  if (lower.includes("fundamental") || lower.includes("foundation")) return "Fundamentals";
+  if (lower.includes("pharmacol")) return "Pharmacology";
+  if (lower.includes("leadership") || lower.includes("delegation") || lower.includes("management")) return "Leadership";
+  if (lower.includes("adult health")) return "Adult Health";
+  if (lower.includes("health assessment") || lower.includes("assessment")) return "Health Assessment";
+  if (lower.includes("maternal") || lower.includes("newborn") || lower.includes("obstetric") || lower.includes("maternity") || lower.includes("women")) return "Maternity";
+  if (lower.includes("dosage") || lower.includes("calculation")) return "Dosage Calculations";
+  if (lower.includes("nutrition")) return "Nutrition";
+  if (lower.includes("community")) return "Community Health";
+  if (lower.includes("pathophysiology")) return "Pathophysiology";
+  return trimmed;
+}
+
 export const NURSING_SUBJECT_FILTERS = [
   { id: "All", label: "All Subjects" },
-  { id: "Medical-Surgical Nursing", label: "Medical-Surgical Nursing" },
+  { id: "Medical-Surgical Nursing", label: "Medical-Surgical" },
   { id: "Pediatrics", label: "Pediatrics" },
   { id: "Mental Health Nursing", label: "Mental Health" },
   { id: "Fundamentals of Nursing", label: "Fundamentals" },
@@ -53,7 +84,7 @@ export const NURSING_SUBJECT_FILTERS = [
   { id: "Leadership & Delegation", label: "Leadership" },
   { id: "Adult Health Nursing", label: "Adult Health" },
   { id: "Health Assessment", label: "Health Assessment" },
-  { id: "Maternal & Newborn Nursing (OB)", label: "Maternal & Newborn" },
+  { id: "Maternal & Newborn Nursing (OB)", label: "Maternity" },
   { id: "Dosage Calculations", label: "Dosage Calculations" },
   { id: "Nutrition", label: "Nutrition" },
   { id: "Community Health Nursing", label: "Community Health" },
@@ -64,8 +95,8 @@ export const EXAM_BODIES = [
   { id: "All", label: "All Exam Bodies" },
   { id: "ATI", label: "ATI" },
   { id: "HESI", label: "HESI" },
-  { id: "RegularCourse", label: "Course Curriculum" },
-  { id: "ExitPredictor", label: "Exit Predictor" },
+  { id: "RegularCourse", label: "Core" },
+  { id: "ExitPredictor", label: "EXIT" },
 ] as const;
 
 export function StudyLibraryCategoryTabs({
@@ -100,11 +131,12 @@ export function StudyLibraryCategoryTabs({
         : (["ATI", "HESI", "RegularCourse", "ExitPredictor"] as ExamCategory[]);
 
     const uniqueCats = Array.from(new Set(cats));
-    const items: Array<{ id: string; label: string; type: "category" | "course" }> = [
-      { id: "All", label: "All Exam Bodies", type: "category" },
+    const items: Array<{ id: string; label: string; displayLabel: string; type: "category" | "course" }> = [
+      { id: "All", label: "All Exam Bodies", displayLabel: "All", type: "category" },
       ...uniqueCats.map((cat) => ({
         id: cat,
         label: getExamBodyLabel(cat),
+        displayLabel: simplifyExamBodyLabel(getExamBodyLabel(cat)),
         type: "category" as const,
       })),
     ];
@@ -112,7 +144,12 @@ export function StudyLibraryCategoryTabs({
     if (courses && courses.length > 0) {
       for (const c of courses) {
         if (!items.some((item) => item.label.toLowerCase() === c.name.toLowerCase())) {
-          items.push({ id: c.name, label: c.name, type: "course" });
+          items.push({
+            id: c.name,
+            label: c.name,
+            displayLabel: simplifyExamBodyLabel(c.name),
+            type: "course",
+          });
         }
       }
     }
@@ -156,14 +193,14 @@ export function StudyLibraryCategoryTabs({
     const unique = Array.from(new Set(list.filter(Boolean)));
     return [
       { id: "All", label: "All Subjects" },
-      ...unique.map((s) => ({ id: s, label: s })),
+      ...unique.map((s) => ({ id: s, label: simplifySubjectName(s) })),
     ];
   }, [selectedPathway, rnSubjects, lpnSubjects, availableSubjects]);
 
   const currentSubject = selectedSubject || "All";
 
   return (
-    <div className="space-y-3" role="group" aria-label="Study library filters">
+    <div className="space-y-2.5" role="group" aria-label="Study library filters">
       {/* 1. Visible Pathway Filters — Displayed as visible filter chips or segmented tabs (NOT a dropdown) */}
       {!isExamView && (
         <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Pathway filter tabs">
@@ -178,7 +215,7 @@ export function StudyLibraryCategoryTabs({
                 aria-selected={isActive}
                 onClick={() => onSelectPathway(pathOption)}
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all shadow-2xs border",
+                  "rounded-md px-2.5 py-1 text-xs font-semibold transition-all shadow-2xs border",
                   isActive
                     ? "bg-brand-teal text-white border-brand-teal shadow-xs font-bold"
                     : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted hover:text-foreground"
@@ -191,9 +228,9 @@ export function StudyLibraryCategoryTabs({
         </div>
       )}
 
-      {/* 2. Visible Exam Bodies Filters — For Examination Library (Inline wrapped row, NOT a dropdown) */}
+      {/* 2. Visible Exam Bodies Filters — For Examination Library (All options visible without vertical scrolling) */}
       {isExamView && (
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Exam Bodies filter chips">
             {examBodyOptions.map((body) => {
               const isActive =
@@ -220,13 +257,13 @@ export function StudyLibraryCategoryTabs({
                     }
                   }}
                   className={cn(
-                    "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all border",
+                    "rounded-md px-2.5 py-1 text-xs font-semibold transition-all border",
                     isActive
                       ? "bg-brand-teal text-white border-brand-teal shadow-xs font-bold"
                       : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted hover:text-foreground"
                   )}
                 >
-                  {body.label}
+                  {body.displayLabel || body.label}
                 </button>
               );
             })}
