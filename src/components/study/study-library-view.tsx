@@ -19,7 +19,10 @@ import {
   StudyLibraryCategoryTabs,
   PATHWAY_LABELS,
   simplifySubjectName,
+  RN_EXAM_BODY_CATEGORIES,
+  LPN_EXAM_BODY_CATEGORIES,
 } from "./StudyLibraryCategoryTabs";
+import { compareExitExams, isExitExam, isAtiBody, isHesiBody } from "@/lib/utils/exams/compareExams";
 import { StudyLibraryHeader } from "./StudyLibraryHeader";
 import { StudyLibrarySearch } from "./StudyLibrarySearch";
 import {
@@ -87,7 +90,7 @@ export function StudyLibraryView({
   const [pathway, setPathway] = React.useState<string>(queryTrack);
   const [category, setCategory] = React.useState<string>(queryCategory);
   const [selectedSubjectFilter, setSelectedSubjectFilter] = React.useState<string>("All");
-  const [exitFilter, setExitFilter] = React.useState<"All" | "RN_Exit" | "PN_Exit">("All");
+  const [exitFilter, setExitFilter] = React.useState<"All" | "ATI" | "HESI">("All");
 
   const [searchInput, setSearchInput] = React.useState(searchParams?.get("q") || "");
   const [debouncedSearch, setDebouncedSearch] = React.useState(searchInput);
@@ -304,7 +307,18 @@ export function StudyLibraryView({
           if (!response.success || !response.data) {
             setError(response.message || "Unable to load examinations for this subject.");
           } else {
-            setStudySets(response.data.items);
+            const items = response.data.items || [];
+            const sorted = [...items].sort((a, b) => {
+              const aExit = isExitExam(a);
+              const bExit = isExitExam(b);
+              if (aExit && bExit) {
+                return compareExitExams(a, b);
+              }
+              if (aExit && !bExit) return 1;
+              if (!aExit && bExit) return -1;
+              return String(a.title ?? '').localeCompare(String(b.title ?? ''));
+            });
+            setStudySets(sorted);
             setTotalCount(response.data.totalCount);
             setTotalPages(Math.max(1, response.data.totalPages || Math.ceil(response.data.totalCount / PAGE_SIZE)));
             hasLoadedOnceRef.current = true;
@@ -384,6 +398,7 @@ export function StudyLibraryView({
     setSelectedSubjectIds([]);
     setSelectedProgramId("");
     setSelectedSubjectFilter("All");
+    setExitFilter("All");
     setAdvanced((prev) => ({ ...prev, subject: "", examId: "", course: "" }));
     setCategory("All");
     setPageNumber(1);
@@ -392,7 +407,10 @@ export function StudyLibraryView({
   const handleSelectPathway = (next: string) => {
     setPathway(next);
     setSelectedSubjectFilter("All");
-    if (category === "ExitPredictor" && next !== "All" && next !== "RN_Exit" && next !== "PN_Exit") {
+    setExitFilter("All");
+    const isNextLpn = next === "PN_LPN" || next === "PN_Exit" || next === "LPN";
+    const validCats = isNextLpn ? (LPN_EXAM_BODY_CATEGORIES as readonly string[]) : (RN_EXAM_BODY_CATEGORIES as readonly string[]);
+    if (category !== "All" && !validCats.includes(category)) {
       setCategory("All");
     }
     if (isExamView) {
@@ -439,18 +457,14 @@ export function StudyLibraryView({
     setPageNumber(1);
   };
 
-  const isExitSubject = (s: SubjectCardDto) =>
-    s.category === "ExitPredictor" ||
-    s.pathway === "RN_Exit" ||
-    s.pathway === "PN_Exit" ||
-    s.title.toLowerCase().includes("exit");
+  const isExitSubject = (s: SubjectCardDto) => isExitExam(s);
 
   const regularSubjects = React.useMemo(() => {
     return subjects.filter((s) => !isExitSubject(s));
   }, [subjects]);
 
   const exitSubjects = React.useMemo(() => {
-    return subjects.filter((s) => isExitSubject(s));
+    return subjects.filter((s) => isExitSubject(s)).sort(compareExitExams);
   }, [subjects]);
 
   // Dynamic Subject Filters for the active pathway
@@ -485,8 +499,9 @@ export function StudyLibraryView({
 
   const visibleExitSubjects = React.useMemo(() => {
     return exitSubjects.filter((s) => {
-      if (exitFilter === "RN_Exit") return isPathwayMatch(s.pathway, "RN_Exit");
-      if (exitFilter === "PN_Exit") return isPathwayMatch(s.pathway, "PN_Exit");
+      if (exitFilter === "All") return true;
+      if (exitFilter === "ATI") return isAtiBody(s) && !isHesiBody(s);
+      if (exitFilter === "HESI") return isHesiBody(s) && !isAtiBody(s);
       return true;
     });
   }, [exitSubjects, exitFilter]);
@@ -693,42 +708,54 @@ export function StudyLibraryView({
                     Comprehensive exit predictor and readiness examinations for RN and LPN nursing candidates.
                   </p>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0" role="group" aria-label="Exit examination filters">
+                <div className="flex items-center gap-1.5 shrink-0" role="group" aria-label="Exit examination provider filters">
                   <button
                     type="button"
-                    onClick={() => setExitFilter("All")}
+                    aria-pressed={exitFilter === "All"}
+                    onClick={() => {
+                      setExitFilter("All");
+                      setPageNumber(1);
+                    }}
                     className={cn(
-                      "rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors border shadow-2xs",
+                      "rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors border shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal",
                       exitFilter === "All"
-                        ? "bg-brand-teal text-white border-brand-teal shadow-xs"
-                        : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted"
+                        ? "bg-brand-teal text-white border-brand-teal shadow-xs font-bold"
+                        : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted hover:text-foreground"
                     )}
                   >
-                    All Exit Exams
+                    All
                   </button>
                   <button
                     type="button"
-                    onClick={() => setExitFilter("RN_Exit")}
+                    aria-pressed={exitFilter === "ATI"}
+                    onClick={() => {
+                      setExitFilter((prev) => (prev === "ATI" ? "All" : "ATI"));
+                      setPageNumber(1);
+                    }}
                     className={cn(
-                      "rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors border shadow-2xs",
-                      exitFilter === "RN_Exit"
-                        ? "bg-brand-teal text-white border-brand-teal shadow-xs"
-                        : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted"
+                      "rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors border shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal",
+                      exitFilter === "ATI"
+                        ? "bg-brand-teal text-white border-brand-teal shadow-xs font-bold"
+                        : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted hover:text-foreground"
                     )}
                   >
-                    RN Exit
+                    ATI
                   </button>
                   <button
                     type="button"
-                    onClick={() => setExitFilter("PN_Exit")}
+                    aria-pressed={exitFilter === "HESI"}
+                    onClick={() => {
+                      setExitFilter((prev) => (prev === "HESI" ? "All" : "HESI"));
+                      setPageNumber(1);
+                    }}
                     className={cn(
-                      "rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors border shadow-2xs",
-                      exitFilter === "PN_Exit"
-                        ? "bg-brand-teal text-white border-brand-teal shadow-xs"
-                        : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted"
+                      "rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors border shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal",
+                      exitFilter === "HESI"
+                        ? "bg-brand-teal text-white border-brand-teal shadow-xs font-bold"
+                        : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted hover:text-foreground"
                     )}
                   >
-                    LPN Exit
+                    HESI
                   </button>
                 </div>
               </div>

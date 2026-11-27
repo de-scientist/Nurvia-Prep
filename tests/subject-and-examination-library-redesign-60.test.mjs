@@ -256,18 +256,24 @@ runTest(37, "All Exit Exams section is displayed below regular RN and LPN subjec
   assert.ok(regPos < exitPos, "All Exit Exams section must appear below regular subjects");
 });
 
-runTest(38, "RN Exit filter works", () => {
-  assert.ok(studyViewSrc.includes('exitFilter === "RN_Exit"'), "RN Exit filter supported in exit section");
-  assert.ok(studyViewSrc.includes('isPathwayMatch(s.pathway, "RN_Exit")'), "Filters exit exams to RN Exit pathway");
+runTest(38, "ATI provider filter works in All Exit Exams", () => {
+  assert.ok(studyViewSrc.includes('exitFilter === "ATI"'), "ATI provider filter supported in exit section");
+  assert.ok(studyViewSrc.includes('isAtiBody(s)'), "Filters exit exams to ATI provider");
 });
 
-runTest(39, "LPN Exit filter works", () => {
-  assert.ok(studyViewSrc.includes('exitFilter === "PN_Exit"'), "LPN Exit filter supported in exit section");
-  assert.ok(studyViewSrc.includes('isPathwayMatch(s.pathway, "PN_Exit")'), "Filters exit exams to LPN Exit pathway");
+runTest(39, "HESI provider filter works in All Exit Exams", () => {
+  assert.ok(studyViewSrc.includes('exitFilter === "HESI"'), "HESI provider filter supported in exit section");
+  assert.ok(studyViewSrc.includes('isHesiBody(s)'), "Filters exit exams to HESI provider");
 });
 
-runTest(40, "All Exit Exams filter displays both applicable pathways", () => {
-  assert.ok(studyViewSrc.includes('exitFilter === "All"'), "All Exit Exams filter displays both RN and LPN exit sets");
+runTest(40, "All Exit Exams provider filters replace old pathway filter chips", () => {
+  assert.ok(studyViewSrc.includes('exitFilter === "All"'), "Default provider filter displays full exit collection");
+  const exitSection = studyViewSrc.slice(studyViewSrc.indexOf('aria-label="Exit examination provider filters"'));
+  assert.ok(!exitSection.includes("All Exit Exams"), "All Exit Exams chip removed from provider filter group");
+  assert.ok(!exitSection.includes("RN Exit"), "RN Exit chip removed from provider filter group");
+  assert.ok(!exitSection.includes("LPN Exit"), "LPN Exit chip removed from provider filter group");
+  assert.ok(/>\s*ATI\s*</.test(exitSection), "ATI filter chip present in provider filter group");
+  assert.ok(/>\s*HESI\s*</.test(exitSection), "HESI filter chip present in provider filter group");
 });
 
 runTest(41, "Search works within Exit examination results", () => {
