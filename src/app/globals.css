@@ -260,6 +260,53 @@ h1, h2, h3, h4, .font-brand {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   QUIZNURSE — Subject Library Horizontal Filter Scrollbar
+   Visible on desktop/laptop, subtle, accessible clinical warmth styling
+   Deep Teal: #0A6265 | Forest Slate: #193B42 | Eucalyptus Mist: #F1F6F4 | Soft Sage: #D6E9E3
+   ───────────────────────────────────────────────────────────── */
+.subject-filter-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #0A6265 #F1F6F4;
+}
+
+.subject-filter-scrollbar::-webkit-scrollbar {
+  height: 6px;
+  display: block;
+}
+
+.subject-filter-scrollbar::-webkit-scrollbar-track {
+  background: #F1F6F4;
+  border-radius: 9999px;
+}
+
+.subject-filter-scrollbar::-webkit-scrollbar-thumb {
+  background: #0A6265;
+  border-radius: 9999px;
+  border: 1px solid #D6E9E3;
+}
+
+.subject-filter-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #193B42;
+}
+
+.dark .subject-filter-scrollbar {
+  scrollbar-color: #2DD4BF #18263B;
+}
+
+.dark .subject-filter-scrollbar::-webkit-scrollbar-track {
+  background: #18263B;
+}
+
+.dark .subject-filter-scrollbar::-webkit-scrollbar-thumb {
+  background: #2DD4BF;
+  border: 1px solid #27364A;
+}
+
+.dark .subject-filter-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #5EEAD4;
+}
+
+/* ─────────────────────────────────────────────────────────────
    NURVIA Prep — Authentication Experience Animations
    Refined, purposeful, and fully respects prefers-reduced-motion
    ───────────────────────────────────────────────────────────── */

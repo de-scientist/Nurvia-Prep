@@ -451,26 +451,16 @@ console.log("\n--- Section E: Examination Cards & Filter Multi-line Layout ---")
 const studySetCardSrc = readRel("src/components/study/StudySetCard.tsx");
 const cardActionsSrc = readRel("src/components/study/StudySetCardActions.tsx");
 
-// 23. Filter chips wrap on multiple lines without horizontal slider
-// Subject filter: multi-row wrapping without horizontal scrolling
-// Exam Bodies filter: natural multi-row wrapping
+// 23. Subject filters and Exam Bodies filters both use horizontal scrollers
 assert.ok(
-  studyViewSrc.includes('flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Available subject filters"'),
-  "Subject filters must wrap on multiple rows without horizontal scrolling"
+  studyViewSrc.includes('overflow-x-auto') && studyViewSrc.includes('aria-label="Available subject filters"'),
+  "Subject filters must use a dedicated horizontal scroller"
 );
 assert.ok(
-  categoryTabsSrc.includes('flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Exam Bodies filter chips"'),
-  "Exam Bodies filters must wrap on multiple rows"
+  categoryTabsSrc.includes('overflow-x-auto') && categoryTabsSrc.includes('aria-label="Exam Bodies filter chips"'),
+  "Exam Bodies filters must use a horizontal scroller as updated in Section 5.1"
 );
-assert.ok(
-  !studyViewSrc.includes('pb-1 scrollbar-none" role="tablist" aria-label="Available subject filters"'),
-  "Subject filters must not use pb-1 scrollbar-none styling"
-);
-assert.ok(
-  !categoryTabsSrc.includes('pb-1 scrollbar-none" role="tablist" aria-label="Exam Bodies filter chips"'),
-  "Exam Bodies filters must not use pb-1 scrollbar-none styling"
-);
-console.log("[PASS] 23. Filter groups wrap naturally onto subsequent rows without horizontal sliding.");
+console.log("[PASS] 23. Filter groups layout verified: Subject filters and Exam Bodies both horizontally scroll.");
 
 // 24. Exactly two card action buttons: Exam Mode and Tutor Mode
 assert.ok(cardActionsSrc.includes("Tutor Mode"), "Card actions must expose Tutor Mode");

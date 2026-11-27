@@ -3,7 +3,7 @@
  * Covers:
  * 1. Capstone classification: Capstone is an ordinary subject, NOT an Exit examination
  * 2. Exit examination ordering: ATI Exit first, then HESI Exit
- * 3. Descending chronological ordering: 2026 before 2025 before 2024
+ * 3. Descending chronological ordering: 2026 before 2025 before 2024 before 2023
  * 4. Exact 6 Exam Body filter categories per pathway (RN vs LPN)
  * 5. Strict mutual exclusivity: RN has GENERAL (no KAP-LAN), LPN has KAP-LAN (no GENERAL)
  * 6. Responsive non-scrolling wrapping layout
@@ -71,6 +71,8 @@ const sampleExitExams = [
   { id: "ati-2026", title: "ATI RN Comprehensive Predictor 2026", category: "ATI" },
   { id: "ati-2025", title: "ATI RN Comprehensive Predictor 2025", category: "ATI" },
   { id: "hesi-2025", title: "HESI RN Exit Exam 2025", category: "HESI" },
+  { id: "ati-2023", title: "ATI RN Comprehensive Predictor 2023", category: "ATI" },
+  { id: "hesi-2023", title: "HESI RN Exit Exam 2023", category: "HESI" },
 ];
 
 const sorted = [...sampleExitExams].sort(compareExitExams);
@@ -80,9 +82,11 @@ assert.deepStrictEqual(sortedTitles, [
   "ATI RN Comprehensive Predictor 2026",
   "ATI RN Comprehensive Predictor 2025",
   "ATI RN Comprehensive Predictor 2024",
+  "ATI RN Comprehensive Predictor 2023",
   "HESI RN Exit Exam 2026",
   "HESI RN Exit Exam 2025",
   "HESI RN Exit Exam 2024",
+  "HESI RN Exit Exam 2023",
 ]);
 console.log("[PASS] Exit examinations correctly sort ATI first, then HESI, in descending chronological order.");
 

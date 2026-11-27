@@ -78,10 +78,19 @@ runTest(6, "Subject filters appear directly below the result count", () => {
   assert.ok(countPos < subFilterPos, "Subject filters must appear directly below the result count");
 });
 
-runTest(7, "Subject filters are not dropdowns and wrap onto multiple rows", () => {
+runTest(7, "Subject filters are visible, single-line and horizontally scrollable", () => {
   assert.ok(studyViewSrc.includes("availableSubjectFilters.map"), "Subject filters must be mapped to visible buttons");
-  assert.ok(studyViewSrc.includes("flex-wrap"), "Subject filters must be a multi-line wrapping flex row");
-  assert.ok(!studyViewSrc.includes("overflow-x-auto"), "Subject filters must not horizontally scroll");
+  const subFilterMatch = studyViewSrc.match(/<div[^>]*aria-label="Available subject filters"[^>]*>[\s\S]*?availableSubjectFilters\.map[\s\S]*?<\/div>/);
+  assert.ok(subFilterMatch, "Subject filter container must be defined with aria-label='Available subject filters'");
+  const container = subFilterMatch[0];
+  assert.ok(container.includes("flex-nowrap"), "Subject filter container must have flex-nowrap");
+  assert.ok(container.includes("overflow-x-auto"), "Subject filter container must have overflow-x-auto");
+  assert.ok(container.includes("overflow-y-hidden"), "Subject filter container must have overflow-y-hidden");
+  assert.ok(container.includes("whitespace-nowrap"), "Subject filter container must have whitespace-nowrap");
+  assert.ok(container.includes("shrink-0"), "Subject chip buttons must have shrink-0");
+  assert.ok(container.includes('role="tablist"'), "Subject filter container must retain role='tablist'");
+  assert.ok(container.includes('role="tab"'), "Subject chip buttons must retain role='tab'");
+  assert.ok(container.includes("setSelectedSubjectFilter"), "Subject selection handler must remain intact");
 });
 
 runTest(8, "Academic & Examination Filters is absent", () => {

@@ -39,6 +39,18 @@ export const EXAM_BODY_LABELS: Record<string, string> = {
   Certification: "Certification",
 };
 
+import {
+  RN_EXAM_BODY_CATEGORIES,
+  LPN_EXAM_BODY_CATEGORIES,
+  getPathwayExamBodyCategories,
+} from "@/lib/utils/exams/compareExams";
+
+export {
+  RN_EXAM_BODY_CATEGORIES,
+  LPN_EXAM_BODY_CATEGORIES,
+  getPathwayExamBodyCategories,
+};
+
 export function getExamBodyLabel(categoryId: string): string {
   return EXAM_BODY_LABELS[categoryId] || categoryId.replace(/([a-z])([A-Z])/g, "$1 $2");
 }
@@ -199,7 +211,7 @@ export function StudyLibraryCategoryTabs({
   const currentSubject = selectedSubject || "All";
 
   return (
-    <div className="space-y-2.5" role="group" aria-label="Study library filters">
+    <div className="space-y-2.5 w-full min-w-0" role="group" aria-label="Study library filters">
       {/* 1. Visible Pathway Filters — Displayed as visible filter chips or segmented tabs (NOT a dropdown) */}
       {!isExamView && (
         <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Pathway filter tabs">
@@ -227,42 +239,44 @@ export function StudyLibraryCategoryTabs({
         </div>
       )}
 
-      {/* 2. Visible Exam Bodies Filters — For Examination Library (All options visible without vertical scrolling) */}
+      {/* 2. Visible Exam Bodies Filters — For Examination Library (Horizontal scrolling filter strip) */}
       {isExamView && (
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Exam Bodies filter chips">
-            {examBodyOptions.map((body) => {
+        <div className="w-full min-w-0 relative" aria-label="Exam Bodies filter chips">
+          <div
+            className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1 scroll-smooth focus:outline-none"
+            role="tablist"
+            aria-label="Filter examinations by category"
+          >
+            {getPathwayExamBodyCategories(selectedPathway).map((catName) => {
               const isActive =
-                (body.id === "All" && selectedCategory === "All" && (!selectedCourse || selectedCourse === "All")) ||
-                (body.type === "category" && selectedCategory === body.id) ||
-                (body.type === "course" && selectedCourse === body.id);
+                selectedCategory === catName ||
+                (catName === "ATI EXAMS" && selectedCategory === "ATI") ||
+                (catName === "HESI EXAMS" && selectedCategory === "HESI") ||
+                (catName === "GENERAL EXAMS" && (selectedCategory === "RegularCourse" || selectedCategory === "Core")) ||
+                (catName === "KAP-LAN EXAMS" && selectedCategory === "Kaplan");
 
               return (
                 <button
-                  key={body.id}
+                  key={catName}
                   type="button"
                   role="tab"
                   aria-selected={isActive}
                   onClick={() => {
-                    if (body.id === "All") {
-                      onSelectCategory("All");
-                      if (onSelectCourse) onSelectCourse("");
-                    } else if (body.type === "course") {
-                      if (onSelectCourse) onSelectCourse(body.id);
+                    if (selectedCategory === catName) {
                       onSelectCategory("All");
                     } else {
-                      onSelectCategory(body.id);
-                      if (onSelectCourse) onSelectCourse("");
+                      onSelectCategory(catName);
                     }
+                    if (onSelectCourse) onSelectCourse("");
                   }}
                   className={cn(
-                    "rounded-md px-2.5 py-1 text-xs font-semibold transition-all border",
+                    "rounded-lg px-2.5 sm:px-3 py-1 text-xs font-semibold transition-all border whitespace-nowrap shrink-0 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-teal",
                     isActive
                       ? "bg-brand-teal text-white border-brand-teal shadow-xs font-bold"
                       : "bg-surface text-foreground-secondary border-border hover:bg-surface-muted hover:text-foreground"
                   )}
                 >
-                  {body.displayLabel || body.label}
+                  {catName}
                 </button>
               );
             })}
