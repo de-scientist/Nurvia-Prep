@@ -22,6 +22,7 @@ import {
 import { classifyError, isRetryableError, ErrorType } from './utils/error-utils';
 import { parseApiResponse } from './api-response';
 import { buildApiUrl, DEDICATED_AUTH_ROUTES } from './api-url.mjs';
+import { compareExitExams, isExitExam, isAtiBody, isHesiBody } from './utils/exams/compareExams';
 import {
   buildCoursesByIdMap,
   buildExamsBySubjectMap,
@@ -264,7 +265,7 @@ export function classifyAuthoritativePathway(item: Record<string, any>): Pathway
       courseName || null,
       subjectName || rawTitle
     );
-    const titleExit = /\b(exit|predictor|capstone)\b/i.test(rawTitle);
+    const titleExit = /\b(exit|predictor)\b/i.test(rawTitle) && !/\bcapstone\b/i.test(rawTitle);
 
     let finalPathway = inferred.pathway;
     if (explicitPathway && ['RN', 'PN_LPN', 'RN_Exit', 'PN_Exit'].includes(explicitPathway)) {
@@ -348,7 +349,9 @@ export function classifyAuthoritativePathway(item: Record<string, any>): Pathway
     .join(' ')
     .toLowerCase();
 
-  const isExit = /exit|predictor|capstone/i.test(`${courseName} ${subjectName} ${rawTitle}`) || assId === 9;
+  const isExit =
+    (/\b(exit|predictor)\b/i.test(`${courseName} ${subjectName} ${rawTitle}`) || assId === 9) &&
+    !/\bcapstone\b/i.test(`${courseName} ${subjectName} ${rawTitle}`);
   const isPN =
     /\b(pn|lpn|practical)\b/i.test(nonDescHaystack) ||
     assId === 5 ||
@@ -1934,19 +1937,31 @@ export const nurviaApi = {
         if (reqCategory && reqCategory !== 'all') {
           const canonicalCat = classification.category ?? inferExamCategory(item);
           const reqCatLower = reqCategory.toLowerCase();
+          const itemTitle = String(item.title ?? '');
+          const itemCourse = String(item.courseName ?? item.course ?? '');
+          const itemText = `${itemCourse} ${itemTitle}`;
+          const isItemExit = isExitExam({ ...item, pathway: classification.pathway, category: canonicalCat });
+          const isItemAti = isAtiBody({ ...item, category: canonicalCat });
+          const isItemHesi = isHesiBody({ ...item, category: canonicalCat });
 
-          if (reqCatLower === 'ati') {
-            if (canonicalCat !== 'ATI') return false;
-          } else if (reqCatLower === 'hesi') {
-            if (canonicalCat !== 'HESI') return false;
-          } else if (reqCatLower === 'kaplan') {
-            const series = detectCourseSeries(typeof item.courseName === 'string' ? item.courseName : typeof item.course === 'string' ? item.course : '');
-            const titleMatch = /\bkap-?lan\b/i.test(String(item.title ?? ''));
-            if (series !== 'KAPLAN' && !titleMatch) return false;
+          if (reqCatLower === 'ati exit exams' || reqCatLower === 'ati exit') {
+            if (!isItemExit || !isItemAti) return false;
+          } else if (reqCatLower === 'hesi exit exams' || reqCatLower === 'hesi exit') {
+            if (!isItemExit || !isItemHesi) return false;
+          } else if (reqCatLower === 'ati exams' || reqCatLower === 'ati') {
+            if (isItemExit || !isItemAti) return false;
+          } else if (reqCatLower === 'hesi exams' || reqCatLower === 'hesi') {
+            if (isItemExit || !isItemHesi) return false;
+          } else if (reqCatLower === 'examplify exams' || reqCatLower === 'examplify' || reqCatLower === 'rhemplify') {
+            if (!/rhemplify|examplify/i.test(itemText)) return false;
+          } else if (reqCatLower === 'kap-lan exams' || reqCatLower === 'kaplan exams' || reqCatLower === 'kaplan') {
+            if (!/kap-?lan/i.test(itemText)) return false;
+          } else if (reqCatLower === 'general exams' || reqCatLower === 'general' || reqCatLower === 'regularcourse' || reqCatLower === 'core') {
+            const isKaplan = /kap-?lan/i.test(itemText);
+            const isExamplify = /rhemplify|examplify/i.test(itemText);
+            if (isItemExit || isItemAti || isItemHesi || isKaplan || isExamplify) return false;
           } else if (reqCatLower === 'exitpredictor' || reqCatLower === 'exit') {
-            if (canonicalCat !== 'ExitPredictor') return false;
-          } else if (reqCatLower === 'regularcourse' || reqCatLower === 'core') {
-            if (canonicalCat !== 'RegularCourse') return false;
+            if (!isItemExit) return false;
           } else if (reqCatLower === 'certification') {
             if (canonicalCat !== 'Certification') return false;
           } else {
@@ -2032,6 +2047,17 @@ export const nurviaApi = {
       })
       .map(mapStudySetCardItem)
       .filter((item) => Boolean(item.id));
+
+    mappedItems.sort((a, b) => {
+      const aExit = isExitExam(a);
+      const bExit = isExitExam(b);
+      if (aExit && bExit) {
+        return compareExitExams(a, b);
+      }
+      if (aExit && !bExit) return 1;
+      if (!aExit && bExit) return -1;
+      return String(a.title ?? '').localeCompare(String(b.title ?? ''));
+    });
 
     const totalCount = mappedItems.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
@@ -2205,6 +2231,14 @@ export const nurviaApi = {
     };
 
     filteredSubjects.sort((a, b) => {
+      const aExit = isExitExam(a);
+      const bExit = isExitExam(b);
+      if (aExit && bExit) {
+        return compareExitExams(a, b);
+      }
+      if (aExit && !bExit) return 1;
+      if (!aExit && bExit) return -1;
+
       const rankA = getCanonicalSortRank(a.title);
       const rankB = getCanonicalSortRank(b.title);
       if (rankA !== rankB) return rankA - rankB;

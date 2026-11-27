@@ -7,6 +7,7 @@ import type {
   SubjectCardDto,
   SubjectEquivalenceDto,
 } from '../api-types';
+import { compareExitExams } from '../utils/exams/compareExams';
 
 /**
  * Positive program allowlist for NURVIA Prep learner-facing Study Library.
@@ -39,7 +40,7 @@ export const PARALLEL_CURRICULUM_SERIES = new Set<CourseSeries>(['ATI', 'RHEMPLI
 const UNAUTHORIZED_EXAM_FAMILY_PATTERN =
   /\bnclex\b|\bged\b|\bati\s*teas\b|\bhesi\s*a2\b|\baccuplacer\b|explicit\s+dynamic/i;
 
-const EXIT_NAME_PATTERN = /\b(exit|predictor|capstone)\b/i;
+const EXIT_NAME_PATTERN = /\b(exit|predictor)\b/i;
 
 interface DisciplineRule {
   key: string;
@@ -1183,6 +1184,9 @@ export function consolidateRnAndLpnSubjects(
     };
     const rDiff = rank(a) - rank(b);
     if (rDiff !== 0) return rDiff;
+    if (rank(a) === 3) {
+      return compareExitExams(a, b);
+    }
     const tDiff = a.title.localeCompare(b.title);
     if (tDiff !== 0) return tDiff;
     const pDiff = String(a.pathway).localeCompare(String(b.pathway));
