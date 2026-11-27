@@ -83,6 +83,7 @@ const {
 const {
   EXAM_BODY_LABELS,
   getExamBodyLabel,
+  simplifyExamBodyLabel,
   NURSING_SUBJECT_FILTERS,
   EXAM_BODIES,
 } = await import("../src/components/study/StudyLibraryCategoryTabs.tsx");

@@ -1932,9 +1932,26 @@ export const nurviaApi = {
         }
 
         if (reqCategory && reqCategory !== 'all') {
-          const inferredCat = (classification.category ?? inferExamCategory(item)).toLowerCase();
-          const itemCat = String(item.category ?? item.type ?? item.assessmentName ?? '').trim().toLowerCase();
-          if (inferredCat !== reqCategory && !itemCat.includes(reqCategory)) return false;
+          const canonicalCat = classification.category ?? inferExamCategory(item);
+          const reqCatLower = reqCategory.toLowerCase();
+
+          if (reqCatLower === 'ati') {
+            if (canonicalCat !== 'ATI') return false;
+          } else if (reqCatLower === 'hesi') {
+            if (canonicalCat !== 'HESI') return false;
+          } else if (reqCatLower === 'kaplan') {
+            const series = detectCourseSeries(typeof item.courseName === 'string' ? item.courseName : typeof item.course === 'string' ? item.course : '');
+            const titleMatch = /\bkap-?lan\b/i.test(String(item.title ?? ''));
+            if (series !== 'KAPLAN' && !titleMatch) return false;
+          } else if (reqCatLower === 'exitpredictor' || reqCatLower === 'exit') {
+            if (canonicalCat !== 'ExitPredictor') return false;
+          } else if (reqCatLower === 'regularcourse' || reqCatLower === 'core') {
+            if (canonicalCat !== 'RegularCourse') return false;
+          } else if (reqCatLower === 'certification') {
+            if (canonicalCat !== 'Certification') return false;
+          } else {
+            if (canonicalCat.toLowerCase() !== reqCatLower) return false;
+          }
         }
 
         if (constraints.reqProgramRaw) {
@@ -2120,23 +2137,34 @@ export const nurviaApi = {
       }
 
       if (reqCategory && reqCategory !== 'all') {
-        const c = item.category.toLowerCase();
-        const t = item.title.toLowerCase();
         const rawCat = String(reqCategory).toLowerCase();
-        const matchesCategory =
-          c === rawCat ||
-          c.includes(rawCat) ||
-          t === rawCat ||
-          t.includes(rawCat) ||
-          (rawCat === 'med-surg' && (t.includes('med-surg') || t.includes('medical-surgical') || t.includes('med surg') || t.includes('medical surgical'))) ||
-          (rawCat === 'pediatrics' && (t.includes('pediatric') || t.includes('peds') || t.includes('child'))) ||
-          (rawCat === 'mental health' && (t.includes('mental health') || t.includes('psych'))) ||
-          (rawCat === 'fundamentals' && t.includes('fundamental')) ||
-          (rawCat === 'pharmacology' && (t.includes('pharmacol') || t.includes('dosage') || t.includes('drug'))) ||
-          (rawCat === 'leadership' && (t.includes('leadership') || t.includes('management') || t.includes('professional'))) ||
-          (rawCat === 'adult health' && t.includes('adult health')) ||
-          (rawCat === 'health assessment' && (t.includes('health assessment') || t.includes('physical assessment') || t.includes('assessment'))) ||
-          (rawCat === 'maternal & newborn' && (t.includes('maternal') || t.includes('newborn') || t.includes('obstetric') || t.includes('maternity') || t.includes('women')));
+        let matchesCategory = false;
+        if (rawCat === 'ati') {
+          matchesCategory = item.category === 'ATI' || (/\bati\b/i.test(item.title) && !/\bhesi\b/i.test(item.title));
+        } else if (rawCat === 'hesi') {
+          matchesCategory = item.category === 'HESI' || (/\bhesi\b/i.test(item.title) && !/\bati\b/i.test(item.title));
+        } else if (rawCat === 'kaplan') {
+          matchesCategory = /\bkap-?lan\b/i.test(item.title);
+        } else if (rawCat === 'exitpredictor' || rawCat === 'exit') {
+          matchesCategory = item.category === 'ExitPredictor' || /\bexit\b/i.test(item.title);
+        } else if (rawCat === 'regularcourse' || rawCat === 'core') {
+          matchesCategory = item.category === 'RegularCourse';
+        } else {
+          const c = item.category.toLowerCase();
+          const t = item.title.toLowerCase();
+          matchesCategory =
+            c === rawCat ||
+            t === rawCat ||
+            (rawCat === 'med-surg' && (t.includes('med-surg') || t.includes('medical-surgical') || t.includes('med surg') || t.includes('medical surgical'))) ||
+            (rawCat === 'pediatrics' && (t.includes('pediatric') || t.includes('peds') || t.includes('child'))) ||
+            (rawCat === 'mental health' && (t.includes('mental health') || t.includes('psych'))) ||
+            (rawCat === 'fundamentals' && t.includes('fundamental')) ||
+            (rawCat === 'pharmacology' && (t.includes('pharmacol') || t.includes('dosage') || t.includes('drug'))) ||
+            (rawCat === 'leadership' && (t.includes('leadership') || t.includes('management') || t.includes('professional'))) ||
+            (rawCat === 'adult health' && t.includes('adult health')) ||
+            (rawCat === 'health assessment' && (t.includes('health assessment') || t.includes('physical assessment'))) ||
+            (rawCat === 'maternal & newborn' && (t.includes('maternal') || t.includes('newborn') || t.includes('obstetric') || t.includes('maternity') || t.includes('women')));
+        }
         if (!matchesCategory) return false;
       }
       if (reqSchool) {

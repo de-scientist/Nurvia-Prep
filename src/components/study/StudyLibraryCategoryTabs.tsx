@@ -46,11 +46,10 @@ export function getExamBodyLabel(categoryId: string): string {
 export function simplifyExamBodyLabel(label: string): string {
   if (label === "Exit Predictor" || label === "ExitPredictor") return "EXIT";
   if (label === "Course Curriculum" || label === "RegularCourse") return "Core";
-  const upper = label.toUpperCase();
-  if (upper.includes("KAPLAN")) return "KAPLAN";
-  if (upper.includes("HESI")) return "HESI";
-  if (upper.includes("ATI")) return "ATI";
-  if (upper.includes("EXIT")) return "EXIT";
+  if (/\bKAPLAN\b/i.test(label)) return "KAPLAN";
+  if (/\bHESI\b/i.test(label)) return "HESI";
+  if (/\bATI\b/i.test(label)) return "ATI";
+  if (/\bEXIT\b/i.test(label)) return "EXIT";
   return label;
 }
 
