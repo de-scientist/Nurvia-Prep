@@ -1029,18 +1029,19 @@ function ExamSessionContent() {
     }
 
     if (nextMode === "Tutor") {
-      if (!stageAvailability.tutor.canEnter) {
+      const tutorPermitted = modePermissions?.canTutor ?? stageAvailability.tutor.canEnter;
+      if (!tutorPermitted) {
         setModeSwitchNotice(
-          stageAvailability.tutor.reason ||
-            modePermissions?.tutorReason ||
+          modePermissions?.tutorReason ||
+            stageAvailability.tutor.reason ||
             "Tutor mode is not enabled for this examination by backend policy."
         );
         return;
       }
+      setDeliveryMode("Tutor");
       if (isSubmitted) {
         transitionToStage("tutor");
       } else {
-        setDeliveryMode("Tutor");
         setStage("tutor");
       }
       return;
