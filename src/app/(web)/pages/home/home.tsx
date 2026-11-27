@@ -617,7 +617,7 @@ export default function HomePage({ data }: HomePageProps) {
                   Turn Practice Into <span className="text-[#0D9488]">ATI</span>,
                 </span>
                 <span className="block">
-                  <span className="text-[#0D9488]">HESI</span>, and <span className="text-[#0D9488]">General</span> Readiness
+                  <span className="text-[#0D9488]">HESI</span>, and <span className="text-[#0D9488]">Examplify</span> Readiness
                 </span>
               </h1>
 

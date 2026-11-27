@@ -146,7 +146,7 @@ export default function HomePage() {
                   Turn Practice Into <span className="text-brand-teal">ATI</span>,
                 </span>
                 <span className="block">
-                  <span className="text-brand-teal">HESI</span>, and <span className="text-brand-teal">General</span> Readiness
+                  <span className="text-brand-teal">HESI</span>, and <span className="text-brand-teal">Examplify</span> Readiness
                 </span>
               </h1>
               <p className="max-w-lg text-sm leading-relaxed text-foreground-secondary sm:text-base">

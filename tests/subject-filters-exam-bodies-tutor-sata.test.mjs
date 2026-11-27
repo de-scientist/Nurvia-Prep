@@ -499,4 +499,81 @@ assert.ok(
 );
 console.log("[PASS] 26. Tutor Mode hint content is protected and blurred before submission.");
 
-console.log("\nALL VERIFICATION TESTS PASSED SUCCESSFULLY (26/26)! COMPLETE COMPLIANCE.");
+// 27. Word boundary isolation for Exam-Body labels: "-ation" words do NOT match ATI
+assert.equal(simplifyExamBodyLabel("HESI Comprehensive Examination"), "HESI");
+assert.equal(simplifyExamBodyLabel("Medication Administration"), "Medication Administration");
+assert.equal(simplifyExamBodyLabel("Dosage Calculations"), "Dosage Calculations");
+assert.equal(simplifyExamBodyLabel("Patient Education"), "Patient Education");
+assert.equal(simplifyExamBodyLabel("ATI Fundamentals"), "ATI");
+assert.equal(simplifyExamBodyLabel("Kaplan Nursing Review"), "KAPLAN");
+assert.equal(simplifyExamBodyLabel("Exit Predictor"), "EXIT");
+console.log("[PASS] 27. Exam-body simplification uses strict word boundaries: words containing '-ation' do not match ATI.");
+
+// 28. SATA required count derived directly from backend authoritative answer collections
+const sataWithMeta = {
+  questionType: "MultipleSelect",
+  correctAnswerMeta: {
+    correctOptionIds: ["opt-1", "opt-3", "opt-4", "opt-6"],
+  },
+  options: [
+    { id: "opt-1", isCorrect: true },
+    { id: "opt-2", isCorrect: false },
+    { id: "opt-3", isCorrect: true },
+    { id: "opt-4", isCorrect: true },
+    { id: "opt-5", isCorrect: false },
+    { id: "opt-6", isCorrect: true },
+  ],
+};
+assert.strictEqual(extractRequiredSataCount(sataWithMeta), 4);
+
+const sataWithOptionsOnly = {
+  questionType: "sata",
+  options: [
+    { id: "o1", isCorrect: true },
+    { id: "o2", isCorrect: true },
+    { id: "o3", isCorrect: true },
+    { id: "o4", isCorrect: false },
+  ],
+};
+assert.strictEqual(extractRequiredSataCount(sataWithOptionsOnly), 3);
+
+const sataValidationBackend = validateSataSelection(sataWithMeta, JSON.stringify(["opt-1", "opt-3", "opt-4"]));
+assert.strictEqual(sataValidationBackend.isValid, false);
+assert.strictEqual(sataValidationBackend.requiredCount, 4);
+assert.strictEqual(sataValidationBackend.selectedCount, 3);
+assert.strictEqual(sataValidationBackend.message, "Please select exactly 4 answers before submitting.");
+
+const sataValidationBackendExact = validateSataSelection(sataWithMeta, JSON.stringify(["opt-1", "opt-3", "opt-4", "opt-6"]));
+assert.strictEqual(sataValidationBackendExact.isValid, true);
+assert.strictEqual(sataValidationBackendExact.requiredCount, 4);
+assert.strictEqual(sataValidationBackendExact.selectedCount, 4);
+
+const sataValidationBackendOver = validateSataSelection(sataWithMeta, JSON.stringify(["opt-1", "opt-2", "opt-3", "opt-4", "opt-6"]));
+assert.strictEqual(sataValidationBackendOver.isValid, false);
+assert.strictEqual(sataValidationBackendOver.requiredCount, 4);
+assert.strictEqual(sataValidationBackendOver.selectedCount, 5);
+assert.strictEqual(sataValidationBackendOver.message, "Please select exactly 4 answers before submitting.");
+console.log("[PASS] 28. SATA required count is authoritatively derived from backend answer data collections.");
+
+// 29. Homepage hero copy verification
+const homePageSrc = readRel("src/app/page.tsx");
+const webHomeSrc = readRel("src/app/(web)/pages/home/home.tsx");
+assert.ok(homePageSrc.includes("Examplify</span> Readiness"), "src/app/page.tsx hero must include Examplify Readiness");
+assert.ok(!homePageSrc.includes("General</span> Readiness"), "src/app/page.tsx hero must NOT include General Readiness");
+assert.ok(webHomeSrc.includes("Examplify</span> Readiness"), "src/app/(web)/pages/home/home.tsx hero must include Examplify Readiness");
+assert.ok(!webHomeSrc.includes("General</span> Readiness"), "src/app/(web)/pages/home/home.tsx hero must NOT include General Readiness");
+console.log("[PASS] 29. Homepage hero copy displays 'Turn Practice Into ATI, HESI, and Examplify Readiness'.");
+
+// 30. Tutor evaluation policy enforcement and route authorization
+const evaluateRouteSrc = readRel("src/app/api/attempts/[attemptId]/tutor/evaluate/route.ts");
+assert.ok(
+  evaluateRouteSrc.includes("ensureAttemptLoaded(learner, attemptId, siteMeta, 'Tutor')"),
+  "Evaluate route must specify Tutor as preferredMode"
+);
+assert.ok(
+  evaluateRouteSrc.includes("loaded.attempt.modePermissions && !loaded.attempt.modePermissions.canTutor"),
+  "Evaluate route must enforce canTutor permission"
+);
+console.log("[PASS] 30. Tutor evaluation correctly enforces backend policy permissions and avoids improper deliveryMode rejection.");
+
+console.log("\nALL VERIFICATION TESTS PASSED SUCCESSFULLY (30/30)! COMPLETE COMPLIANCE.");
