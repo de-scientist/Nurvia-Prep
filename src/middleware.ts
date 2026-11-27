@@ -1,5 +1,6 @@
 // Placed at Root Level : src\middleware.ts
 import { NextResponse, type NextRequest } from "next/server";
+import { resolveCanonicalOrigin } from "@/lib/api-config.mjs";
 
 function safeDecode(v: string): string {
   try {
@@ -28,7 +29,12 @@ export function middleware(req: NextRequest) {
 
   const isApiCall = req.nextUrl.pathname.startsWith("/api");
   const pageReferer = req.headers.get("referer") || "";
-  const appOrigin = (process.env.SKEW_LINE_APP_DOMAIN || req.nextUrl.origin).replace(/\/+$/, "");
+  let appOrigin: string;
+  try {
+    appOrigin = resolveCanonicalOrigin(process.env);
+  } catch {
+    appOrigin = (process.env.SKEW_LINE_APP_DOMAIN || req.nextUrl.origin).replace(/\/+$/, "");
+  }
   const currentUrl =
     isApiCall && pageReferer
       ? pageReferer

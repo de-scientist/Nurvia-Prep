@@ -27,7 +27,12 @@ const nextConfig: NextConfig = {
     SKEW_LINE_APP_DEBUG: process.env.SKEW_LINE_APP_DEBUG,
     SKEW_LINE_APP_TIMEZONE: process.env.SKEW_LINE_APP_TIMEZONE,
     SKEW_LINE_APP_LOCALE: process.env.SKEW_LINE_APP_LOCALE,
-    SKEW_LINE_APP_DOMAIN: process.env.SKEW_LINE_APP_DOMAIN,
+    SKEW_LINE_APP_DOMAIN:
+      process.env.NODE_ENV === "production" && process.env.VERCEL_ENV !== "preview"
+        ? (process.env.SKEW_LINE_APP_DOMAIN && !process.env.SKEW_LINE_APP_DOMAIN.includes("localhost")
+            ? process.env.SKEW_LINE_APP_DOMAIN
+            : "https://quiznurse.com")
+        : process.env.SKEW_LINE_APP_DOMAIN,
 
     // ---------------------------------------------------------------------
     // CONTACT & SOCIAL MEDIA

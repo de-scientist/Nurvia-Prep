@@ -1,12 +1,20 @@
 import "server-only";
 import { headers } from "next/headers";
 import { APP_KEY, APP_DOMAIN, SITE_HEADER_NAME } from "./config";
+import { resolveCanonicalOrigin } from "@/lib/api-config.mjs";
 
 export async function getSiteHeaders(): Promise<Record<string, string>> {
   const h = await headers();
+  let canonicalDomain: string;
+  try {
+    canonicalDomain = resolveCanonicalOrigin(process.env);
+  } catch {
+    canonicalDomain = APP_DOMAIN;
+  }
+
   return {
     "x-site-key": APP_KEY,
-    "x-site-domain": APP_DOMAIN,
+    "x-site-domain": canonicalDomain,
     "x-site-name": SITE_HEADER_NAME,
     "x-site-path": h.get("x-current-path") || "",
     "x-site-ip-address": h.get("x-current-ip") || "",
