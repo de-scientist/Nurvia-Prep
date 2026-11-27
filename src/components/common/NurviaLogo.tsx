@@ -8,8 +8,8 @@ export interface NurviaLogoProps extends QuizNurseLogoProps {
 }
 
 export function NurviaLogo({
-  label = "QuizNurse",
-  subtitle = "NURSING EXAMINATION PREPARATION",
+  label: _label = "QuizNurse",
+  subtitle,
   ...props
 }: NurviaLogoProps) {
   return <QuizNurseLogo subtitle={subtitle} {...props} />;

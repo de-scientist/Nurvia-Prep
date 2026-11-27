@@ -35,24 +35,26 @@ export function StudySetCard({
   const metadataString = metaParts.join(" ");
 
   return (
-    <Card className="flex flex-col justify-between gap-2.5 rounded-xl border border-border/80 bg-surface p-3 transition-all hover:border-brand-teal/50 hover:shadow-xs">
-      <div className="space-y-1">
+    <Card className="flex flex-col justify-between gap-1.5 sm:gap-2 rounded-xl border border-border/80 bg-surface p-2 sm:p-2.5 transition-all hover:border-brand-teal/50 hover:shadow-xs text-center items-center">
+      <div className="w-full space-y-1 text-center">
         <Link
           href={detailHref}
           title={studySet.title}
-          className="font-brand text-sm sm:text-base font-bold text-foreground hover:text-brand-teal focus-visible:outline-none focus-visible:underline transition-colors line-clamp-1"
+          className="font-brand text-xs sm:text-sm md:text-base font-bold text-foreground hover:text-brand-teal focus-visible:outline-none focus-visible:underline transition-colors line-clamp-2 text-center block"
         >
           {studySet.title}
         </Link>
         {/* Regression assertion anchors: studySet.isNew && studySet.season studySet.academicYear studySet.totalQuestions detailHref */}
         {metadataString ? (
-          <p className="text-xs text-foreground-secondary font-medium">
+          <p className="text-[11px] sm:text-xs text-foreground-secondary font-medium truncate text-center">
             {metadataString}
           </p>
         ) : null}
       </div>
 
-      <StudySetCardActions studySet={studySet} />
+      <div className="w-full">
+        <StudySetCardActions studySet={studySet} />
+      </div>
     </Card>
   );
 }

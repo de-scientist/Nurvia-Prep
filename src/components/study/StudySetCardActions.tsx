@@ -168,12 +168,12 @@ export function StudySetCardActions({
   };
 
   return (
-    <div className="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-border/60">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1.5 border-t border-border/60 w-full">
       {canTutor ? (
         <Link
           href={buildStudySessionHref(studySet.id, "Tutor", studySet.allowedLayouts)}
           onClick={(e) => handleLaunchMode("Tutor", e)}
-          className="block"
+          className="block w-full"
         >
           <Button
             variant="outline"
@@ -208,7 +208,7 @@ export function StudySetCardActions({
         <Link
           href={buildStudySessionHref(studySet.id, "Exam", studySet.allowedLayouts)}
           onClick={(e) => handleLaunchMode("Exam", e)}
-          className="block"
+          className="block w-full"
         >
           <Button
             size="sm"

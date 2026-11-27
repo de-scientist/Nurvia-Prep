@@ -91,13 +91,13 @@ export function QuizNurseLogo({
   href = "/",
   className,
   inverted = false,
-  subtitle = "NURSING EXAMINATION PREPARATION",
+  subtitle,
 }: QuizNurseLogoProps) {
   const sizeMap = {
-    sm: { symbol: 26, text: "text-lg", sub: "text-[8.5px]" },
-    md: { symbol: 34, text: "text-2xl", sub: "text-[9.5px]" },
-    lg: { symbol: 44, text: "text-3xl", sub: "text-xs" },
-    xl: { symbol: 56, text: "text-4xl", sub: "text-sm" },
+    sm: { symbol: 24, text: "text-base sm:text-lg", sub: "text-[8px]" },
+    md: { symbol: 30, text: "text-lg sm:text-xl md:text-2xl", sub: "text-[9px]" },
+    lg: { symbol: 38, text: "text-2xl sm:text-3xl", sub: "text-xs" },
+    xl: { symbol: 48, text: "text-3xl sm:text-4xl", sub: "text-sm" },
   };
 
   const { symbol: symbolSize, text: textSize, sub: subSize } = sizeMap[size];
@@ -106,20 +106,22 @@ export function QuizNurseLogo({
     const stackedContent = (
       <div className={cn("inline-flex flex-col items-center text-center select-none", className)}>
         <QuizNurseSymbol size={symbolSize * 1.3} inverted={inverted} />
-        <div className="mt-2 flex flex-col items-center leading-none">
+        <div className="mt-1.5 flex flex-col items-center leading-none">
           <span className={cn("font-brand font-extrabold tracking-tight", textSize)}>
             <span className={inverted ? "text-white" : "text-[#193B42] dark:text-white"}>Quiz</span>
             <span className={inverted ? "text-teal-300" : "text-[#0A6265] dark:text-teal-400"}>Nurse</span>
           </span>
-          <span
-            className={cn(
-              "font-semibold tracking-wider uppercase mt-1",
-              subSize,
-              inverted ? "text-slate-300" : "text-slate-500 dark:text-slate-400"
-            )}
-          >
-            {subtitle}
-          </span>
+          {Boolean(subtitle) && (
+            <span
+              className={cn(
+                "font-semibold tracking-wider uppercase mt-1",
+                subSize,
+                inverted ? "text-slate-300" : "text-slate-500 dark:text-slate-400"
+              )}
+            >
+              {subtitle}
+            </span>
+          )}
         </div>
       </div>
     );
@@ -135,19 +137,19 @@ export function QuizNurseLogo({
   }
 
   const content = (
-    <div className={cn("inline-flex items-center gap-2.5 select-none", className)}>
+    <div className={cn("inline-flex items-center gap-2 sm:gap-2.5 select-none", className)}>
       <QuizNurseSymbol size={symbolSize} inverted={inverted} />
 
       {variant !== "symbol" && (
-        <div className="flex flex-col leading-none">
+        <div className="flex flex-col justify-center leading-none">
           <span className={cn("font-brand font-extrabold tracking-tight transition-colors", textSize)}>
             <span className={inverted ? "text-white" : "text-[#193B42] dark:text-white"}>Quiz</span>
             <span className={inverted ? "text-teal-300" : "text-[#0A6265] dark:text-teal-400"}>Nurse</span>
           </span>
-          {variant === "full" && (
+          {Boolean(subtitle) && variant === "full" && (
             <span
               className={cn(
-                "font-semibold tracking-wider uppercase mt-1 transition-colors",
+                "hidden min-[400px]:inline-block font-semibold tracking-wider uppercase mt-1 transition-colors whitespace-nowrap",
                 subSize,
                 inverted ? "text-slate-300" : "text-slate-500 dark:text-slate-400"
               )}

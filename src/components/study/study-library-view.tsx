@@ -609,7 +609,7 @@ export function StudyLibraryView({
             />
           )}
 
-          {/* C. Subject Filters — Directly below Result Count (Wrapped Multi-line Chips, Not a Dropdown) */}
+          {/* C. Subject Filters — Directly below Result Count (Single-line Horizontal Scrolling Filter Strip) */}
           <div
             className="w-full min-w-0 flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap scroll-smooth subject-filter-scrollbar pb-2.5 pt-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-teal/40"
             role="tablist"
@@ -667,7 +667,7 @@ export function StudyLibraryView({
           )}
 
           {!isInitialLoading && !error && visibleRegularSubjects.length > 0 && (
-            <div className={cn("grid gap-3.5 md:grid-cols-2 xl:grid-cols-3 transition-opacity duration-200", isUpdating && "opacity-60 pointer-events-none")}>
+            <div className={cn("grid gap-2.5 sm:gap-3.5 grid-cols-2 xl:grid-cols-3 transition-opacity duration-200", isUpdating && "opacity-60 pointer-events-none")}>
               {visibleRegularSubjects.map((subject) => (
                 <SubjectCard
                   key={subject.presentationId ?? subject.id}
@@ -775,7 +775,7 @@ export function StudyLibraryView({
                   No exit examinations match the current filter.
                 </div>
               ) : (
-                <div className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-2.5 sm:gap-3.5 grid-cols-2 xl:grid-cols-3">
                   {visibleExitSubjects.map((subject) => (
                     <SubjectCard
                       key={subject.presentationId ?? subject.id}
@@ -886,7 +886,7 @@ export function StudyLibraryView({
 
           {!isInitialLoading && !error && studySets.length > 0 && (
             <>
-              <div className={cn("grid gap-3.5 md:grid-cols-2 xl:grid-cols-3 transition-opacity duration-200", isUpdating && "opacity-60 pointer-events-none")}>
+              <div className={cn("grid gap-2.5 sm:gap-3.5 grid-cols-2 xl:grid-cols-3 transition-opacity duration-200", isUpdating && "opacity-60 pointer-events-none")}>
                 {studySets.map((studySet) => (
                   <StudySetCard
                     key={studySet.id}

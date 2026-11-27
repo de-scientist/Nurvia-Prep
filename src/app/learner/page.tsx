@@ -386,21 +386,15 @@ export default function LearnerDashboardPage() {
                 </Link>
               </div>
               {exams.length ? (
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {exams.map((exam) => (
-                    <Card key={exam.id} className="flex flex-col justify-between gap-4 p-5 hover:border-brand-teal/50 transition-colors">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="rounded-full bg-brand-teal/10 px-2 py-0.5 text-[10px] font-bold text-brand-teal uppercase">
-                            {exam.pathway.replace("_", " ")} · {exam.category}
-                          </span>
-                          {exam.difficulty && (
-                            <span className="text-[11px] font-medium text-foreground-muted capitalize">
-                              {exam.difficulty}
-                            </span>
-                          )}
+                    <Card key={exam.id} className="flex flex-col justify-between gap-2.5 p-3.5 sm:p-4 rounded-xl hover:border-brand-teal/50 transition-colors">
+                      <div className="space-y-1.5">
+                        <div className="sr-only">
+                          <span>{exam.pathway.replace("_", " ")} · {exam.category}</span>
+                          {exam.difficulty && <span>{exam.difficulty}</span>}
                         </div>
-                        <h3 className="font-brand text-base font-bold text-foreground line-clamp-2">{exam.title}</h3>
+                        <h3 className="font-brand text-sm sm:text-base font-bold text-foreground line-clamp-2">{exam.title}</h3>
                         <p className="line-clamp-2 text-xs leading-relaxed text-foreground-secondary">{exam.description}</p>
                         <p className="text-xs text-foreground-muted">{exam.totalQuestions} questions · {exam.timeLimitMinutes} minutes</p>
                       </div>
@@ -410,8 +404,9 @@ export default function LearnerDashboardPage() {
                             ? `/exam-session?examId=${encodeURIComponent(exam.id)}`
                             : `/sign-in?returnTo=${encodeURIComponent(`/exam-session?examId=${encodeURIComponent(exam.id)}`)}`
                         }
+                        className="block w-full"
                       >
-                        <Button className="w-full">Start Exam</Button>
+                        <Button size="sm" className="w-full h-7.5 px-2.5 py-1 text-xs font-semibold rounded-md bg-brand-teal hover:bg-brand-tealDark text-white shadow-2xs">Start Exam</Button>
                       </Link>
                     </Card>
                   ))}

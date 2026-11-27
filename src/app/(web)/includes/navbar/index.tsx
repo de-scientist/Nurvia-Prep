@@ -187,7 +187,7 @@ export default function Navbar() {
           <Sparkles className="w-3 h-3" /> QuizNurse Education
         </span>
         <span className="hidden sm:inline">
-          {APP_NAME} — Nursing Examination Preparation Platform. Clinical judgment, ATI TEAS &amp; HESI A2 preparation.
+          {APP_NAME} — Clinical judgment, ATI TEAS &amp; HESI A2 preparation.
         </span>
         <span className="sm:hidden">{APP_NAME} — Examination Preparation</span>
       </div>
@@ -201,14 +201,13 @@ export default function Navbar() {
             : "border-b border-slate-200/80 dark:border-slate-800/80"
         }`}
       >
-        <div className="mx-auto flex h-14 sm:h-15 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 gap-3">
+        <div className="mx-auto flex h-14 sm:h-15 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8 gap-2 sm:gap-3">
           {/* Brand Logo & Wordmark */}
-          <div onClick={() => setActiveDropdown(null)}>
+          <div className="shrink-0 flex items-center" onClick={() => setActiveDropdown(null)}>
             <NurviaLogo
               size="md"
               variant="full"
               label="QuizNurse"
-              subtitle="EXAMINATION PREPARATION"
             />
           </div>
 
@@ -334,19 +333,19 @@ export default function Navbar() {
               <div className="hidden sm:flex items-center gap-2">
                 <Link
                   href="/auth/login"
-                  className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors hover:border-[#0D9488]/60 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors hover:border-[#0D9488]/60 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap shrink-0"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/auth/register"
-                  className="inline-flex h-9 items-center justify-center rounded-lg bg-[#0D9488] hover:bg-[#0F766E] px-3.5 text-xs font-semibold text-white shadow-2xs transition-colors"
+                  className="inline-flex h-9 items-center justify-center rounded-lg bg-[#0D9488] hover:bg-[#0F766E] px-3.5 text-xs font-semibold text-white shadow-2xs transition-colors whitespace-nowrap shrink-0"
                 >
                   Sign Up
                 </Link>
                 <Link
                   href="/pages/entrance"
-                  className="hidden lg:inline-flex h-9 items-center justify-center rounded-lg bg-[#142B4A] hover:bg-[#0F2036] px-3.5 text-xs font-semibold text-white shadow-2xs transition-colors"
+                  className="hidden lg:inline-flex h-9 items-center justify-center rounded-lg bg-[#142B4A] hover:bg-[#0F2036] px-3.5 text-xs font-semibold text-white shadow-2xs transition-colors whitespace-nowrap shrink-0"
                 >
                   Explore Exams
                 </Link>
@@ -359,14 +358,14 @@ export default function Navbar() {
                   onMouseEnter={() => setActiveDropdown("account")}
                   aria-expanded={activeDropdown === "account"}
                   aria-haspopup="true"
-                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#142B4A] hover:bg-[#0F2036] px-3.5 text-xs font-semibold text-white shadow-2xs transition-colors"
+                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#142B4A] hover:bg-[#0F2036] px-3.5 text-xs font-semibold text-white shadow-2xs transition-colors whitespace-nowrap shrink-0"
                 >
-                  <LayoutDashboard className="w-3.5 h-3.5 text-[#2DD4BF]" />
-                  <span className="max-w-[110px] truncate">
+                  <LayoutDashboard className="w-3.5 h-3.5 text-[#2DD4BF] shrink-0" />
+                  <span className="max-w-[110px] truncate whitespace-nowrap">
                     {user.userName || "My Account"}
                   </span>
                   <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform ${
+                    className={`w-3.5 h-3.5 shrink-0 transition-transform ${
                       activeDropdown === "account" ? "rotate-180" : ""
                     }`}
                   />
@@ -492,7 +491,7 @@ export default function Navbar() {
           <div className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-xs bg-white dark:bg-[#0F172A] border-l border-slate-200 dark:border-slate-800 p-6 shadow-2xl flex flex-col justify-between overflow-y-auto">
             <div className="space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
-                <NurviaLogo size="sm" variant="full" label="QuizNurse" subtitle="EXAMINATION PREPARATION" />
+                <NurviaLogo size="sm" variant="full" label="QuizNurse" />
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(false)}
