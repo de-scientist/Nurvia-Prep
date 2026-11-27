@@ -83,9 +83,9 @@ export function SingleChoiceRenderer({
           if (isOptCorrect) {
             borderClass =
               "border-emerald-500 bg-emerald-50/90 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 ring-1 ring-emerald-500 font-medium";
-          } else if (isSelected && !isOptCorrect) {
+          } else if (isSelected) {
             borderClass =
-              "border-rose-500 bg-rose-50/90 dark:bg-rose-950/40 text-rose-950 dark:text-rose-100 ring-1 ring-rose-500 font-medium";
+              "border-rose-500/80 bg-rose-50/80 dark:bg-rose-950/30 text-rose-950 dark:text-rose-100 ring-1 ring-rose-500/60 font-medium";
           }
         }
 
@@ -107,29 +107,21 @@ export function SingleChoiceRenderer({
               </span>
               <RichQuestionContent content={opt.optionText} as="span" className="flex-1 leading-relaxed" />
               {isReview && (
-                <span className="shrink-0 pt-0.5 flex items-center gap-1.5">
-                  {isOptCorrect && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                <span className="shrink-0 pt-0.5 flex items-center gap-1.5 font-semibold text-[11px]">
+                  {isOptCorrect ? (
+                    <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
                       <CheckCircle2 className="w-4 h-4" />
-                      {isSelected ? "Your Answer · Correct" : "Correct Answer"}
+                      <span>{isSelected ? "Your Answer · Correct ✓" : "Correct Answer ✓"}</span>
                     </span>
-                  )}
-                  {isSelected && !isOptCorrect && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-700 dark:text-rose-300">
+                  ) : isSelected ? (
+                    <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-300">
                       <XCircle className="w-4 h-4" />
-                      Your Answer · Incorrect
+                      <span>Your Answer · Incorrect ✕</span>
                     </span>
-                  )}
+                  ) : null}
                 </span>
               )}
             </button>
-
-            {isReview && opt.specificRationale && (
-              <div className="text-xs text-foreground-secondary ml-10 p-2.5 rounded-lg bg-surface-muted border border-border/50">
-                <span className="font-semibold text-foreground">Rationale: </span>
-                <RichQuestionContent content={opt.specificRationale} as="span" />
-              </div>
-            )}
           </div>
         );
       })}

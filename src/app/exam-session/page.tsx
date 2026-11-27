@@ -44,7 +44,6 @@ import {
 } from "@/lib/api-types";
 import {
   isResponseAnswered,
-  resolveNormalizedQuestionType,
   scoreCanonicalQuestion,
   wasCanonicalOptionSelected,
 } from "@/lib/attempts/strata-answer-core.mjs";
@@ -1138,8 +1137,19 @@ function ExamSessionContent() {
   const isTutorRevealed = (q: RendererQuestion) =>
     deliveryMode === "Tutor" && !isSubmitted && Boolean(tutorEvaluations[q.id]);
 
+  const isAssessmentRevealed = (q: RendererQuestion) => {
+    if (deliveryMode !== "Exam" || stage !== "assessment") return false;
+    const ans = latestAnswersRef.current[q.id] ?? answers[q.id] ?? null;
+    if (!ans) return false;
+    if (isSataQuestion(q.questionType)) {
+      const sataVal = validateSataSelection(q, ans);
+      return sataVal.isValid;
+    }
+    return isResponseAnswered(ans);
+  };
+
   const reviewStateFor = (q: RendererQuestion) =>
-    isSubmitted || isReviewContent || deliveryMode === "Review" || isTutorRevealed(q);
+    isSubmitted || isReviewContent || deliveryMode === "Review" || isTutorRevealed(q) || isAssessmentRevealed(q);
 
   const scrollToQuestion = (qId: string) => {
     const el = allInOneRefs.current[qId];

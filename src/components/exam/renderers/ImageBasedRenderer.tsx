@@ -158,22 +158,17 @@ export function ImageBasedRenderer({
                     {opt.isCorrect ? (
                       <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        {isSelected ? "Your Answer · Correct" : "Correct Answer"}
+                        {isSelected ? "Your Answer · Correct ✓" : "Correct Answer ✓"}
                       </span>
                     ) : isSelected ? (
                       <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-300">
                         <XCircle className="w-4 h-4 text-rose-500" />
-                        Your Answer · Incorrect
+                        Your Answer · Incorrect ✕
                       </span>
                     ) : null}
                   </span>
                 )}
               </button>
-              {isReview && opt.specificRationale && (
-                <div className="text-[11px] text-foreground-secondary bg-surface-muted p-2 rounded-lg border border-border/50">
-                  <RichQuestionContent content={opt.specificRationale} as="span" />
-                </div>
-              )}
             </div>
           );
         })}

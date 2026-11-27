@@ -91,9 +91,9 @@ export function TrueFalseRenderer({
             if (opt.isCorrect) {
               borderClass =
                 "border-emerald-500 bg-emerald-50/90 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 ring-2 ring-emerald-500";
-            } else if (isSelected && opt.isCorrect === false) {
+            } else if (isSelected) {
               borderClass =
-                "border-rose-500 bg-rose-50/90 dark:bg-rose-950/40 text-rose-950 dark:text-rose-100 ring-2 ring-rose-500";
+                "border-rose-500/80 bg-rose-50/80 dark:bg-rose-950/30 text-rose-950 dark:text-rose-100 ring-2 ring-rose-500/60";
             }
           }
 
@@ -119,15 +119,19 @@ export function TrueFalseRenderer({
                 {isTrue ? <Check className="w-6 h-6" /> : <X className="w-6 h-6" />}
               </div>
               <RichQuestionContent content={opt.optionText} as="span" />
-              {isReview && opt.isCorrect && (
-                <span className="text-xs font-sans text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1 mt-1">
-                  <CheckCircle2 className="w-4 h-4" />
-                  {isSelected ? "Your Answer · Correct" : "Correct Answer"}
-                </span>
-              )}
-              {isReview && isSelected && opt.isCorrect === false && (
-                <span className="text-xs font-sans text-rose-700 dark:text-rose-300 font-semibold flex items-center gap-1 mt-1">
-                  <XCircle className="w-4 h-4" /> Your Answer · Incorrect
+              {isReview && (
+                <span className="text-xs font-sans font-semibold flex items-center gap-1 mt-1">
+                  {opt.isCorrect ? (
+                    <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>{isSelected ? "Your Answer · Correct ✓" : "Correct Answer ✓"}</span>
+                    </span>
+                  ) : isSelected ? (
+                    <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-300">
+                      <XCircle className="w-4 h-4" />
+                      <span>Your Answer · Incorrect ✕</span>
+                    </span>
+                  ) : null}
                 </span>
               )}
             </button>
