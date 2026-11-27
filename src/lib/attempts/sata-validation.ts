@@ -130,6 +130,24 @@ export function extractRequiredSataCount(question: {
   correctCount?: number;
   maxSelections?: number;
 }): number | null {
+  // 1. Authoritative backend correct-answer collection
+  if (question.correctAnswerMeta) {
+    if (Array.isArray(question.correctAnswerMeta.correctOptionIds) && question.correctAnswerMeta.correctOptionIds.length > 0) {
+      return question.correctAnswerMeta.correctOptionIds.length;
+    }
+    if (Array.isArray(question.correctAnswerMeta.correctCellIds) && question.correctAnswerMeta.correctCellIds.length > 0) {
+      return question.correctAnswerMeta.correctCellIds.length;
+    }
+  }
+
+  if (Array.isArray(question.options) && question.options.length > 0) {
+    const correctCount = question.options.filter((o) => o && o.isCorrect === true).length;
+    if (correctCount > 0) {
+      return correctCount;
+    }
+  }
+
+  // 2. Explicit count fields
   if (typeof question.requiredSelections === 'number' && question.requiredSelections > 0) {
     return question.requiredSelections;
   }
@@ -143,6 +161,7 @@ export function extractRequiredSataCount(question: {
     return question.maxSelections;
   }
 
+  // 3. Fallback: Parse from stem/instructions if backend answer metadata is absent (e.g. mock test items)
   const textToSearch = `${question.instructions || ''} ${question.metaStem || ''} ${question.stem || ''}`;
 
   // Pattern 1: "(Select 4)" or "(Choose 3)" or "[Select 3]" or "(Select exactly 4)"
@@ -170,24 +189,6 @@ export function extractRequiredSataCount(question: {
   if (optionsMatch) {
     const parsed = parseNumOrWord(optionsMatch[1]);
     if (parsed !== null) return parsed;
-  }
-
-  // Pattern 4: Metadata check if available on client
-  if (question.correctAnswerMeta) {
-    if (Array.isArray(question.correctAnswerMeta.correctOptionIds) && question.correctAnswerMeta.correctOptionIds.length > 0) {
-      return question.correctAnswerMeta.correctOptionIds.length;
-    }
-    if (Array.isArray(question.correctAnswerMeta.correctCellIds) && question.correctAnswerMeta.correctCellIds.length > 0) {
-      return question.correctAnswerMeta.correctCellIds.length;
-    }
-  }
-
-  // Pattern 5: Direct options isCorrect check if available
-  if (Array.isArray(question.options)) {
-    const correctCount = question.options.filter((o) => o && o.isCorrect === true).length;
-    if (correctCount > 0) {
-      return correctCount;
-    }
   }
 
   return null;
@@ -231,7 +232,7 @@ export function validateSataSelection(
         isValid: false,
         requiredCount,
         selectedCount,
-        message: `Select ${requiredCount} answers to continue. You have selected ${selectedCount}.`,
+        message: `Please select exactly ${requiredCount} answers before submitting.`,
       };
     }
     return { isValid: true, requiredCount, selectedCount };
@@ -243,7 +244,7 @@ export function validateSataSelection(
       isValid: false,
       requiredCount: null,
       selectedCount,
-      message: 'Select at least 1 answer to continue.',
+      message: 'Please select at least 1 answer before submitting.',
     };
   }
 

@@ -1075,7 +1075,7 @@ function ExamSessionContent() {
         const ans = latestAnswersRef.current[q.id] ?? answers[q.id] ?? null;
         const validation = validateSataSelection(q, ans);
         if (!validation.isValid) {
-          const msg = validation.message || "Select the required number of answers to continue.";
+          const msg = validation.message || (validation.requiredCount ? `Please select exactly ${validation.requiredCount} answers before submitting.` : "Please select the required number of answers before submitting.");
           feedback.warn(msg);
           setSubmissionError(msg);
           setIsSubmitModalOpen(false);
@@ -1452,7 +1452,7 @@ function ExamSessionContent() {
             const ans = latestAnswersRef.current[q.id] ?? answers[q.id] ?? null;
             const validation = validateSataSelection(q, ans);
             if (!validation.isValid) {
-              const msg = validation.message || "Select the required number of answers to continue.";
+              const msg = validation.message || (validation.requiredCount ? `Please select exactly ${validation.requiredCount} answers before submitting.` : "Please select the required number of answers before submitting.");
               feedback.warn(msg);
               setSubmissionError(msg);
               if (layout === "Sequential") {

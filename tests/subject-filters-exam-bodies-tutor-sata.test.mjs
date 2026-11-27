@@ -297,7 +297,7 @@ for (const count of [2, 3, 4, 5]) {
   assert.strictEqual(underRes.requiredCount, count);
   assert.strictEqual(underRes.selectedCount, count - 1);
   assert.ok(
-    underRes.message?.includes(`Select ${count} answers to continue. You have selected ${count - 1}.`),
+    underRes.message?.includes(`Please select exactly ${count} answers before submitting.`),
     `Message must indicate exact count requirement for ${count}`
   );
 
@@ -315,7 +315,7 @@ for (const count of [2, 3, 4, 5]) {
   assert.strictEqual(overRes.requiredCount, count);
   assert.strictEqual(overRes.selectedCount, count + 1);
   assert.ok(
-    overRes.message?.includes(`Select ${count} answers to continue. You have selected ${count + 1}.`),
+    overRes.message?.includes(`Please select exactly ${count} answers before submitting.`),
     `Message must indicate exact count requirement for ${count}`
   );
 }
@@ -360,7 +360,7 @@ const zeroRes = validateSataSelection(sataQ3, null);
 assert.strictEqual(zeroRes.isValid, false, "Zero answers must be invalid for SATA requiring 3");
 assert.strictEqual(zeroRes.selectedCount, 0);
 assert.strictEqual(zeroRes.requiredCount, 3);
-assert.ok(zeroRes.message?.includes("Select 3 answers to continue. You have selected 0."));
+assert.ok(zeroRes.message?.includes("Please select exactly 3 answers before submitting."));
 
 const zeroEmptyRes = validateSataSelection(sataQ3, JSON.stringify({ SelectedOptionIds: [] }));
 assert.strictEqual(zeroEmptyRes.isValid, false, "Empty array must be invalid for SATA requiring 3");

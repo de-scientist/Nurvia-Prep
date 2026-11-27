@@ -173,7 +173,7 @@ describe("Phase 8 — Frontend SATA Selection Validation", () => {
       assert.strictEqual(res3.isValid, false);
       assert.strictEqual(res3.requiredCount, 4);
       assert.strictEqual(res3.selectedCount, 3);
-      assert.strictEqual(res3.message, "Select 4 answers to continue. You have selected 3.");
+      assert.strictEqual(res3.message, "Please select exactly 4 answers before submitting.");
 
       // 4 selected -> valid
       const res4 = validateSataSelection(q, JSON.stringify(["o1", "o2", "o3", "o4"]));
@@ -186,7 +186,7 @@ describe("Phase 8 — Frontend SATA Selection Validation", () => {
       assert.strictEqual(res5.isValid, false);
       assert.strictEqual(res5.requiredCount, 4);
       assert.strictEqual(res5.selectedCount, 5);
-      assert.strictEqual(res5.message, "Select 4 answers to continue. You have selected 5.");
+      assert.strictEqual(res5.message, "Please select exactly 4 answers before submitting.");
     });
 
     it("falls back to requiring at least 1 selection when required count is unspecified", () => {
@@ -198,12 +198,12 @@ describe("Phase 8 — Frontend SATA Selection Validation", () => {
       // 0 selected -> invalid
       const res0 = validateSataSelection(q, JSON.stringify([]));
       assert.strictEqual(res0.isValid, false);
-      assert.strictEqual(res0.message, "Select at least 1 answer to continue.");
+      assert.strictEqual(res0.message, "Please select at least 1 answer before submitting.");
 
       // null answer -> invalid
       const resNull = validateSataSelection(q, null);
       assert.strictEqual(resNull.isValid, false);
-      assert.strictEqual(resNull.message, "Select at least 1 answer to continue.");
+      assert.strictEqual(resNull.message, "Please select at least 1 answer before submitting.");
 
       // 1 selected -> valid
       const res1 = validateSataSelection(q, JSON.stringify(["o1"]));

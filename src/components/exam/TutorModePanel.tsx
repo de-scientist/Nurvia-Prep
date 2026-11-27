@@ -129,7 +129,7 @@ export function TutorModePanel({
     if (question && isSataQuestion(question.questionType)) {
       const validation = validateSataSelection(question, serializedAnswer);
       if (!validation.isValid) {
-        const msg = validation.message || "Select the required number of answers to continue.";
+        const msg = validation.message || (validation.requiredCount ? `Please select exactly ${validation.requiredCount} answers before submitting.` : "Please select the required number of answers before submitting.");
         feedback.warn(msg);
         setError(msg);
         return;
