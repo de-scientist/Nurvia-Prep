@@ -907,6 +907,12 @@ export async function ensureAttemptLoaded(
         errorCode: 'FORBIDDEN',
       };
     }
+    if (
+      preferredMode === 'Tutor' &&
+      (owned.modePermissions?.canTutor || owned.status === 'Submitted' || owned.status === 'Graded')
+    ) {
+      owned.deliveryMode = 'Tutor';
+    }
     return { ok: true, attempt: owned };
   }
 

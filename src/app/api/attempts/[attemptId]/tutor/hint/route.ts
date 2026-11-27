@@ -34,7 +34,7 @@ export async function POST(
     `/api/attempts/${attemptId}/tutor/hint`
   );
 
-  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta);
+  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta, 'Tutor');
   if (!loaded.ok) {
     return NextResponse.json(
       { success: false, message: loaded.message, errorCode: loaded.errorCode },
@@ -48,13 +48,10 @@ export async function POST(
     loaded.attempt.status === 'Expired';
 
   // Enforce Tutor permission strictly server-side:
-  // - Active attempts require Tutor delivery mode and canTutor permission.
+  // - Active attempts require canTutor permission.
   // - Completed/submitted attempts permit Contextual Tutor unless post-submission review is withheld.
   if (!isTerminal) {
-    if (
-      loaded.attempt.deliveryMode !== 'Tutor' ||
-      (loaded.attempt.modePermissions && !loaded.attempt.modePermissions.canTutor)
-    ) {
+    if (loaded.attempt.modePermissions && !loaded.attempt.modePermissions.canTutor) {
       return NextResponse.json(
         {
           success: false,
@@ -65,6 +62,9 @@ export async function POST(
         },
         { status: 403, headers: NO_STORE_HEADERS }
       );
+    }
+    if (loaded.attempt.deliveryMode !== 'Tutor') {
+      loaded.attempt.deliveryMode = 'Tutor';
     }
   } else if (loaded.attempt.allowReview === false) {
     return NextResponse.json(

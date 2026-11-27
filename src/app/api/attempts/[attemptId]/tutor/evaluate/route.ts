@@ -31,7 +31,7 @@ export async function POST(
     `/api/attempts/${attemptId}/tutor/evaluate`
   );
 
-  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta);
+  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta, 'Tutor');
   if (!loaded.ok) {
     return NextResponse.json(
       { success: false, message: loaded.message, errorCode: loaded.errorCode },
@@ -45,10 +45,7 @@ export async function POST(
     loaded.attempt.status === 'Expired';
 
   if (!isTerminal) {
-    if (
-      loaded.attempt.deliveryMode !== 'Tutor' ||
-      (loaded.attempt.modePermissions && !loaded.attempt.modePermissions.canTutor)
-    ) {
+    if (loaded.attempt.modePermissions && !loaded.attempt.modePermissions.canTutor) {
       return NextResponse.json(
         {
           success: false,
@@ -59,6 +56,9 @@ export async function POST(
         },
         { status: 403, headers: NO_STORE_HEADERS }
       );
+    }
+    if (loaded.attempt.deliveryMode !== 'Tutor') {
+      loaded.attempt.deliveryMode = 'Tutor';
     }
   } else if (loaded.attempt.allowReview === false) {
     return NextResponse.json(

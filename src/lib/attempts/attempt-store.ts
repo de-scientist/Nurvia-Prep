@@ -789,8 +789,17 @@ class AttemptStore {
       return { success: false, error: 'Forbidden.', status: 403 };
     }
 
-    const q = raw.questions.find((item) => item.id === questionId);
+    const q = raw.questions.find(
+      (item) =>
+        item.id === questionId ||
+        item.guidId === questionId ||
+        String(item.numericId) === questionId
+    );
     if (!q) return { success: false, error: 'Question not found.', status: 404 };
+
+    if (raw.modePermissions?.canTutor && raw.deliveryMode !== 'Tutor') {
+      raw.deliveryMode = 'Tutor';
+    }
 
     let title = 'Clinical Hint';
     let content = 'Consider core physiological principles and patient safety priorities.';
@@ -861,8 +870,17 @@ class AttemptStore {
       return { success: false, error: 'Forbidden.', status: 403 };
     }
 
-    const q = raw.questions.find((item) => item.id === questionId);
+    const q = raw.questions.find(
+      (item) =>
+        item.id === questionId ||
+        item.guidId === questionId ||
+        String(item.numericId) === questionId
+    );
     if (!q) return { success: false, error: 'Question not found.', status: 404 };
+
+    if (raw.modePermissions?.canTutor && raw.deliveryMode !== 'Tutor') {
+      raw.deliveryMode = 'Tutor';
+    }
 
     const scored = scoreCanonicalQuestion(q, responseJson);
     const isCorrect = scored.isCorrect;

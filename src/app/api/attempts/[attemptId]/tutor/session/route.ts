@@ -34,7 +34,7 @@ export async function GET(
     `/api/attempts/${attemptId}/tutor/session`
   );
 
-  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta);
+  const loaded = await ensureAttemptLoaded(learner, attemptId, siteMeta, 'Tutor');
   if (!loaded.ok) {
     return NextResponse.json(
       { success: false, message: loaded.message, errorCode: loaded.errorCode },
@@ -68,20 +68,20 @@ export async function GET(
     loaded.attempt.status === 'Expired';
 
   if (!isTerminal) {
-    if (
-      loaded.attempt.deliveryMode !== 'Tutor' ||
-      (loaded.attempt.modePermissions && !loaded.attempt.modePermissions.canTutor)
-    ) {
+    if (loaded.attempt.modePermissions && !loaded.attempt.modePermissions.canTutor) {
       return NextResponse.json(
         {
           success: false,
           message:
             loaded.attempt.modePermissions?.tutorReason ||
             'Tutor session is not enabled for this examination by backend policy.',
-            errorCode: 'TUTOR_NOT_PERMITTED',
+          errorCode: 'TUTOR_NOT_PERMITTED',
         },
         { status: 403, headers: NO_STORE_HEADERS }
       );
+    }
+    if (loaded.attempt.deliveryMode !== 'Tutor') {
+      loaded.attempt.deliveryMode = 'Tutor';
     }
   } else if (loaded.attempt.allowReview === false) {
     return NextResponse.json(
